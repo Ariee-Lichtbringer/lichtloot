@@ -1465,6 +1465,7 @@ body{
 .portal-avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(250,204,21,.65);background:linear-gradient(135deg,#123a62,#06101f);font-size:22px}
 .portal-profile strong,.portal-profile small{display:block}.portal-profile strong{font-size:16px}.portal-profile small{margin-top:2px;color:#86efac;font-size:12px}
 .portal-profile-arrow{margin-left:auto;color:#facc15;font-size:18px}
+.login-small-link{display:block;width:max-content;margin:12px auto 0;padding:3px 5px;border:0;background:transparent;color:#94a3b8;font-size:12px;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.login-small-link:hover{color:#38bdf8}
 .guild-soon-note{display:none}
 .start-shell{width:min(1420px,calc(100vw - 40px));margin:0 auto;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.9fr);gap:20px}
 .welcome-panel{grid-column:1;align-self:start;padding:38px;border-radius:20px;min-height:420px;display:flex;flex-direction:column;justify-content:center;text-align:left;background:linear-gradient(135deg,rgba(7,19,36,.96),rgba(8,20,38,.84));border:1px solid rgba(250,204,21,.42);box-shadow:0 20px 52px rgba(0,0,0,.34);overflow:hidden;position:relative}
@@ -1479,8 +1480,12 @@ body{
 #loggedInPanel .dashboard-box{padding:0;border:0;background:transparent}
 #loggedInPanel .dashboard-title{font-family:Georgia,serif;color:var(--gold);font-size:22px;text-transform:none;letter-spacing:0;margin-bottom:14px}
 .dashboard-characters{display:grid;gap:10px}
-.dashboard-char{display:flex;align-items:center;min-height:64px;border-radius:12px;padding:13px 16px;background:rgba(14,27,48,.88);border:1px solid rgba(255,255,255,.15);font-size:16px}
-.dashboard-char small{margin-left:8px}
+.dashboard-char{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:12px;min-height:68px;border-radius:13px;padding:10px 14px;background:linear-gradient(135deg,rgba(14,27,48,.92),rgba(6,14,28,.88));border:1px solid color-mix(in srgb,currentColor 42%,transparent);font-size:16px;box-shadow:inset 3px 0 currentColor}
+.dashboard-class-icon{width:42px;height:42px;border-radius:9px;object-fit:cover;border:1px solid color-mix(in srgb,currentColor 55%,#fff 15%);box-shadow:0 6px 14px rgba(0,0,0,.36)}
+.dashboard-char-copy{min-width:0}.dashboard-char-name{display:block;color:currentColor;font-size:17px;font-weight:950;line-height:1.15}.dashboard-char small{display:block;margin:4px 0 0;color:#dbeafe;font-size:12px;font-weight:750;opacity:.88}
+.dashboard-guild-picker{position:relative;margin:0 0 16px}.dashboard-guild{width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(250,204,21,.3);border-radius:13px;background:linear-gradient(135deg,rgba(250,204,21,.09),rgba(14,45,72,.32));color:white;text-align:left;cursor:pointer}.dashboard-guild:hover{border-color:rgba(250,204,21,.62);background:linear-gradient(135deg,rgba(250,204,21,.14),rgba(14,55,88,.42))}.dashboard-guild img,.dashboard-guild-option img{width:46px;height:46px;border-radius:10px;object-fit:contain;background:rgba(2,6,23,.5)}.dashboard-guild span{display:block;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.dashboard-guild strong{display:block;margin-top:3px;color:#facc15;font-size:17px}.dashboard-guild-copy{min-width:0;flex:1}.dashboard-guild-arrow{color:#facc15;font-size:18px;transition:transform .2s}.dashboard-guild[aria-expanded="true"] .dashboard-guild-arrow{transform:rotate(180deg)}
+.dashboard-guild-menu{position:absolute;left:0;right:0;top:calc(100% + 7px);z-index:80;padding:7px;border:1px solid rgba(250,204,21,.38);border-radius:14px;background:rgba(3,11,24,.98);box-shadow:0 18px 44px rgba(0,0,0,.58)}.dashboard-guild-option{width:100%;display:flex;align-items:center;gap:11px;padding:9px;border:1px solid transparent;border-radius:10px;background:transparent;color:white;text-align:left;cursor:pointer}.dashboard-guild-option:hover,.dashboard-guild-option.active{border-color:rgba(250,204,21,.32);background:rgba(250,204,21,.09)}.dashboard-guild-option img{width:38px;height:38px}.dashboard-guild-option strong{display:block;color:#f8fafc;font-size:14px}.dashboard-guild-option small{display:block;margin-top:2px;color:#94a3b8;font-size:11px}.dashboard-guild-empty{padding:12px;color:#cbd5e1;font-size:12px;line-height:1.4}
+.class-krieger{color:#c79c6e}.class-paladin{color:#f58cba}.class-jaeger{color:#abd473}.class-schurke{color:#fff569}.class-priester{color:#fff}.class-schamane{color:#0070de}.class-magier{color:#69ccf0}.class-hexenmeister{color:#9482c9}.class-druide{color:#ff7d0a}
 .dashboard-actions{grid-template-columns:1fr 1fr}
 .mylichtloot-card{grid-column:1 / -1}
 .account-creation-panel{grid-column:1;display:grid;grid-template-columns:minmax(285px,.82fr) minmax(340px,1.18fr);align-items:stretch;gap:26px;padding:0 28px 0 0;border:1px solid rgba(250,204,21,.5);border-radius:22px;background:linear-gradient(120deg,rgba(7,31,56,.98),rgba(5,15,30,.96) 60%,rgba(41,29,10,.58));box-shadow:0 24px 58px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.04);overflow:hidden}
@@ -1635,8 +1640,8 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <div class="player-login-card" id="loginCard">
         <div id="loggedOutPanel">
           <h2>SpielerLogin</h2>
-          <p>Gib deine Gilde und deinen SpielerLogin ein. Danach bleiben deine Charaktere für diese Gilde gespeichert.</p>
-          <select id="homeGuildPin" class="login-input" onchange="selectGuildForLogin(this.value)">
+          <p>Gib deinen SpielerLogin ein.</p>
+          <select id="homeGuildPin" class="login-input hidden" onchange="selectGuildForLogin(this.value)">
             <option value="Lichtbringer">Lichtbringer</option>
             <option value="Die Nachtwächter">Die Nachtwächter</option>
           </select>
@@ -1644,20 +1649,10 @@ body.show-mylichtloot .account-creation-panel{display:none}
           <div class="login-actions">
             <button class="big-btn primary-action" onclick="homePlayerLogin()">Einloggen</button>
           </div>
-          <div id="homeLoginStatus" class="status">Noch keinen SpielerLogin? Nutze unten „Ich bin neu bei LichtLoot“.</div>
+          <div id="homeLoginStatus" class="status">SpielerLogin eingeben und anmelden.</div>
+          <button class="login-small-link" type="button" onclick="showResetLogin()">SpielerLogin vergessen? Account zurücksetzen</button>
 
-          <div class="choice-grid">
-            <button class="choice-card new-user-highlight" onclick="showCreateLogin()">
-              <strong id="brandNewLoginTitle">Ich bin neu bei LichtLoot</strong>
-              <span>SpielerLogin erstellen</span>
-            </button>
-            <button class="choice-card" onclick="showResetLogin()">
-              <strong>SpielerLogin vergessen?</strong>
-              <span>Mit Sicherheitsfrage zurücksetzen</span>
-            </button>
-          </div>
-
-          <div class="dashboard-box" style="margin-top:14px">
+          <div class="dashboard-box hidden" style="margin-top:14px">
             <div class="dashboard-title">GildenleiterLogin</div>
             <select id="leaderGuildName" class="login-input" onchange="selectGuildForLogin(this.value)">
               <option value="Lichtbringer">Lichtbringer</option>
@@ -1672,13 +1667,21 @@ body.show-mylichtloot .account-creation-panel{display:none}
         <div id="loggedInPanel" class="hidden">
           <h2 id="welcomeTitle">Willkommen</h2>
           <p><span class="ok">✓ SpielerLogin aktiv</span><br>Dein Login ist gespeichert. Du kannst dich jetzt für mehrere Raids eintragen.</p>
+          <div class="dashboard-guild-picker">
+          <button id="dashboardGuildButton" class="dashboard-guild" type="button" aria-expanded="false" onclick="toggleDashboardGuildMenu()">
+            <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.png" alt="">
+            <span class="dashboard-guild-copy"><span>Aktive Lootgilde · wechseln</span><strong id="dashboardGuildName">Lootgilde</strong></span>
+            <span class="dashboard-guild-arrow">⌄</span>
+          </button>
+          <div id="dashboardGuildMenu" class="dashboard-guild-menu hidden"></div>
+          </div>
           <div class="dashboard-box">
             <div class="dashboard-title">Deine Charaktere</div>
             <div id="dashboardCharacters" class="dashboard-characters">Charaktere werden geladen …</div>
           </div>
           <div class="dashboard-actions">
             <a id="dashboardRaidLink" class="big-btn dashboard-link" href="start.html">Zu den Raids</a>
-            <button class="big-btn subtle" onclick="logoutPlayerLogin()">SpielerLogin wechseln</button>
+            <button class="big-btn subtle" onclick="logoutPlayerLogin()">Abmelden</button>
           </div>
           <div id="dashboardLoginStatus" class="status">Bereit. Öffne jetzt einen Raid und gib dort nur noch den PrioPin ein.</div>
         </div>
@@ -2087,6 +2090,7 @@ const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
 const CURRENT_GUILD_QUERY = CURRENT_GUILD_SLUG ? "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) : "";
 let activeGuildSlug = CURRENT_GUILD_SLUG;
+let loginGuilds = [];
 
 function withGuildSlugUrl(url, slug){
   const cleanSlug=String(slug || "").trim().toLowerCase();
@@ -2141,6 +2145,7 @@ async function loadGuildDropdowns(){
     const data=await response.json();
     if(!response.ok || !data.success) throw new Error(data.error || "Gilden konnten nicht geladen werden.");
     const guilds=(data.guilds || []).slice().sort((a,b)=>displayGuildName(a).localeCompare(displayGuildName(b),"de"));
+    loginGuilds=guilds;
     const options=guilds.map(guild=>{
       const name=displayGuildName(guild);
       return `<option value="${safeHtml(name)}">${safeHtml(name)}</option>`;
@@ -2152,6 +2157,7 @@ async function loadGuildDropdowns(){
       const value=preferred ? displayGuildName(preferred) : previous;
       if(value && [...select.options].some(option=>option.value===value)) select.value=value;
     });
+    renderDashboardGuildMenu();
     return guilds;
   }catch(error){
     console.error("Gildenliste konnte nicht geladen werden:",error);
@@ -2416,6 +2422,8 @@ function applyGuildBrand(guild){
   const actionTitle=document.getElementById("actionPanelTitle");
   const copyright=document.getElementById("brandCopyright");
   const logoEl=document.querySelector(".logo-banner");
+  const dashboardGuildLogo=document.getElementById("dashboardGuildLogo");
+  const dashboardGuildName=document.getElementById("dashboardGuildName");
 
   if(welcome) welcome.textContent="Willkommen auf " + brand;
   if(text) text.textContent=brand+" ist das Prio- und Punktesystem deiner Gilde. Über deinen SpielerLogin greifst du auf deine Charaktere, Prios und Punkte zu.";
@@ -2425,17 +2433,20 @@ function applyGuildBrand(guild){
   if(actionTitle) actionTitle.textContent="Mein " + brand;
   if(copyright) copyright.innerHTML="&copy; 2026 " + safeHtml(brand) + ". Alle Rechte vorbehalten.";
   if(logoEl && logo) logoEl.src=logo;
+  if(dashboardGuildLogo) dashboardGuildLogo.src=guildLogoUrl(guild);
+  if(dashboardGuildName) dashboardGuildName.textContent=guildName;
   if(background) document.body.style.backgroundImage="linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.90)),url('"+background.replace(/'/g,"%27")+"')";
 
   const loginStatus=document.getElementById("homeLoginStatus");
-  if(loginStatus) loginStatus.innerHTML='Noch keinen SpielerLogin? Nutze unten „Ich bin neu bei '+safeHtml(brand)+'“.';
+  if(loginStatus) loginStatus.textContent='SpielerLogin eingeben und anmelden.';
 
   return {brand,guildName};
 }
 
 function guildLogoUrl(guild){
   const logo=String(guild?.logoUrl || "").trim();
-  if(currentActiveGuildSlug() === "lichtloot") return logo || "images/content.png";
+  const slug=String(guild?.slug || currentActiveGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return logo || "images/content.png";
   if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
   return logo;
 }
@@ -4858,6 +4869,78 @@ function logoutPlayerLogin(){
 function classColorClass(className){
   return 'class-' + String(className || '').trim().toLowerCase().replace('ä','ae').replace('ö','oe').replace('ü','ue').replace('ß','ss');
 }
+function classIconUrl(className){
+  const key=String(className || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return ({
+    krieger:'images/krieger.png',
+    paladin:'images/Pala.png',
+    jager:'images/jäger.png',
+    schurke:'images/schurke.png',
+    priester:'images/priester.png',
+    schamane:'images/schamane.png',
+    magier:'images/magier.png',
+    hexenmeister:'images/hexenmeister.png',
+    druide:'images/druide.png'
+  })[key] || 'images/lichtloot-neutral-icon-modern-v3.png';
+}
+function savedLoginForGuild(slug){
+  const key=playerLoginStorageKey(slug);
+  return String(localStorage.getItem(key) || sessionStorage.getItem(key) || '').trim();
+}
+function dashboardAccountGuilds(){
+  const guilds=loginGuilds.length ? loginGuilds : (currentGuildInfo ? [currentGuildInfo] : []);
+  return guilds.filter(guild=>savedLoginForGuild(guild.slug));
+}
+function renderDashboardGuildMenu(){
+  const menu=document.getElementById('dashboardGuildMenu');
+  if(!menu) return;
+  const guilds=dashboardAccountGuilds();
+  if(!guilds.length){
+    menu.innerHTML='<div class="dashboard-guild-empty">Weitere Lootgilden erscheinen hier automatisch, sobald du dich dort einmal mit deinem SpielerLogin angemeldet hast.</div>';
+    return;
+  }
+  menu.innerHTML=guilds.map(guild=>{
+    const slug=String(guild.slug || '').trim().toLowerCase();
+    const active=slug===currentActiveGuildSlug() ? ' active' : '';
+    return '<button class="dashboard-guild-option'+active+'" type="button" data-guild-slug="'+safeHtml(slug)+'">'
+      +'<img src="'+safeHtml(guildLogoUrl(guild))+'" alt="">'
+      +'<span><strong>'+safeHtml(displayGuildName(guild))+'</strong><small>'+(active?'Aktuell ausgewählt':'Zu dieser Lootgilde wechseln')+'</small></span>'
+      +'</button>';
+  }).join('');
+  menu.querySelectorAll('[data-guild-slug]').forEach(button=>button.addEventListener('click',()=>switchDashboardGuild(button.dataset.guildSlug)));
+}
+function closeDashboardGuildMenu(){
+  const button=document.getElementById('dashboardGuildButton');
+  const menu=document.getElementById('dashboardGuildMenu');
+  if(button) button.setAttribute('aria-expanded','false');
+  if(menu) menu.classList.add('hidden');
+}
+function toggleDashboardGuildMenu(){
+  const button=document.getElementById('dashboardGuildButton');
+  const menu=document.getElementById('dashboardGuildMenu');
+  if(!button || !menu) return;
+  const opening=menu.classList.contains('hidden');
+  if(opening) renderDashboardGuildMenu();
+  menu.classList.toggle('hidden',!opening);
+  button.setAttribute('aria-expanded',String(opening));
+}
+async function switchDashboardGuild(slug){
+  const guild=loginGuilds.find(entry=>String(entry.slug || '').trim().toLowerCase()===String(slug || '').trim().toLowerCase());
+  const pin=savedLoginForGuild(slug);
+  if(!guild || !pin) return;
+  closeDashboardGuildMenu();
+  activeGuildSlug=String(guild.slug || '').trim().toLowerCase();
+  currentGuildInfo=guild;
+  syncGuildInputs(displayGuildName(guild),true);
+  applyGuildBrand(guild);
+  const raidLink=document.getElementById('dashboardRaidLink');
+  if(raidLink) raidLink.href=withCurrentGuildUrl('start.html');
+  const target=new URL(window.location.href);
+  target.searchParams.set('guild',activeGuildSlug);
+  history.replaceState(null,'',target.href);
+  await loadDashboardForPin(pin);
+  renderDashboardGuildMenu();
+}
 async function loadDashboardForPin(pin){
   const status=document.getElementById('homeLoginStatus');
   const dashStatus=document.getElementById('dashboardLoginStatus');
@@ -4888,6 +4971,7 @@ async function loadDashboardForPin(pin){
 
   localStorage.setItem(playerLoginStorageKey(),pin);
   sessionStorage.setItem(playerLoginStorageKey(),pin);
+  renderDashboardGuildMenu();
 
   if(login) login.classList.add('hidden');
   if(dash) dash.classList.remove('hidden');
@@ -4908,7 +4992,10 @@ async function loadDashboardForPin(pin){
       const name=ch.char || ch.player || ch.name || ch.Charakter || '';
       const cls=ch.className || ch.klasse || ch.Klasse || '';
       const server=ch.server || ch.Server || '';
-      return '<span class="dashboard-char '+classColorClass(cls)+'">'+safeHtml(name)+'<small>'+safeHtml(cls)+(server?' · '+safeHtml(server):'')+'</small></span>';
+      return '<span class="dashboard-char '+classColorClass(cls)+'">'
+        +'<img class="dashboard-class-icon" src="'+safeHtml(classIconUrl(cls))+'" alt="'+safeHtml(cls)+'">'
+        +'<span class="dashboard-char-copy"><strong class="dashboard-char-name">'+safeHtml(name)+'</strong><small>'+safeHtml(cls)+(server?' · '+safeHtml(server):'')+'</small></span>'
+        +'</span>';
     }).join('');
   }
 
@@ -4928,7 +5015,8 @@ async function homePlayerLogin(){
   if(status) status.innerHTML='<span class="warn">SpielerLogin wird geprüft …</span>';
 
   try{
-    await activateGuildFromInput("homeGuildPin");
+    const guild=await activateGuildFromInput("homeGuildPin");
+    applyGuildBrand(guild);
     const ok=await loadDashboardForPin(pin);
     if(ok && status) status.innerHTML='<span class="ok">✓ SpielerLogin aktiv.</span>';
   }catch(error){
@@ -4963,6 +5051,9 @@ document.addEventListener('DOMContentLoaded',async function(){
   }
   const openMode=new URLSearchParams(window.location.search).get('open');
   if(openMode === 'createLogin' && typeof showCreateLogin === 'function') showCreateLogin();
+  document.addEventListener('click',event=>{
+    if(!event.target.closest('.dashboard-guild-picker')) closeDashboardGuildMenu();
+  });
 });
 </script>
 <button id="indexEmergencyPrioButton" type="button" onclick="(function(){var p=window.prompt('Bitte Prio-PIN des Raids eingeben:');if(p)window.location.href='notfall/?pin='+encodeURIComponent(p.trim());})()" style="position:fixed;right:18px;bottom:18px;z-index:99999;background:#b91c1c;color:#fff;border:2px solid #f87171;border-radius:14px;padding:14px 20px;font-weight:900;box-shadow:0 10px 30px #0009;cursor:pointer">🚨 Notfall-Prio</button>
