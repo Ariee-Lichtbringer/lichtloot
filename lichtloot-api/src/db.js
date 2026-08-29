@@ -30,12 +30,31 @@ export const p0Pool = process.env.P0_DATABASE_URL
     })
   : null;
 
+// Random-Raids sind vollständig von Lootgilden und reinen P0-Anmeldern
+// getrennt. Es gibt absichtlich keinen Fallback auf DATABASE_URL.
+export const randomPool = process.env.RANDOM_DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.RANDOM_DATABASE_URL,
+      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      max: Number(process.env.RANDOM_PG_POOL_MAX || 5),
+      connectionTimeoutMillis: Number(process.env.PG_CONNECT_TIMEOUT_MS || 5000),
+      idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30000),
+      query_timeout: Number(process.env.PG_QUERY_TIMEOUT_MS || 15000),
+      statement_timeout: Number(process.env.PG_STATEMENT_TIMEOUT_MS || 12000),
+      application_name: "lichtloot-api-random-raids"
+    })
+  : null;
+
 pool.on("error", error => {
   console.error("Unerwarteter PostgreSQL-Poolfehler:", error.message || error);
 });
 
 p0Pool?.on("error", error => {
   console.error("Unerwarteter P0-PostgreSQL-Poolfehler:", error.message || error);
+});
+
+randomPool?.on("error", error => {
+  console.error("Unerwarteter Random-Raid-PostgreSQL-Poolfehler:", error.message || error);
 });
 
 export async function query(text, params = []) {
@@ -49,6 +68,15 @@ export async function p0Query(text, params = []) {
     throw error;
   }
   return p0Pool.query(text, params);
+}
+
+export async function randomQuery(text, params = []) {
+  if (!randomPool) {
+    const error = new Error("RANDOM_DATABASE_URL ist nicht konfiguriert. Random-Raids bleiben zum Schutz der Lootgilden-Daten deaktiviert.");
+    error.statusCode = 503;
+    throw error;
+  }
+  return randomPool.query(text, params);
 }
 
 export async function getGuildBySlug(slug) {
