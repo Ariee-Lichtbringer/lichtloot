@@ -8138,6 +8138,11 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
     }
   }
 
+  if (!result.rows[0]) {
+    const error = new Error("Vorlage konnte nicht gespeichert oder anschließend bestätigt werden.");
+    error.statusCode = templateId ? 404 : 500;
+    throw error;
+  }
   return { success: true, template: normalizeRaidHelperTemplateRow(result.rows[0]) };
 }
 
