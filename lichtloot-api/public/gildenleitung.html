@@ -6415,6 +6415,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="tools">
           <input id="raidArchiveSearch" type="search" placeholder="Raid, Datum oder PIN suchen..." oninput="renderRaidArchive()">
         </div>
+        <div id="raidArchiveRaidFilters" class="po-signup-filter-row" style="margin:10px 0 14px"></div>
         <div id="raidArchiveContent" class="active-raid-list">
           <div class="muted">Noch keine Daten geladen.</div>
         </div>
@@ -8070,8 +8071,9 @@ async function loadPoItemSettingsPanel(){
 function renderPoItemSettingsPanel(){
   const box = document.getElementById("poItemSettingsContent");
   if(!box) return;
-  const raidOptions = ["mc","bwl","aq40","naxx","zg","aq20","ony"].map(key =>
-    `<option value="${escapeAttr(key)}" ${key === poItemSettingsRaid ? "selected" : ""}>${escapeHtml(RAID_OPTIONS[key]?.name || key.toUpperCase())}</option>`
+  const poItemRaidLabels = {"zg-prime":"ZG Prime","zg-late":"ZG Late-Night","zg-mittwoch":"ZG Mittwoch"};
+  const raidOptions = ["mc","bwl","aq40","naxx","zg","zg-prime","zg-late","zg-mittwoch","aq20","ony"].map(key =>
+    `<option value="${escapeAttr(key)}" ${key === poItemSettingsRaid ? "selected" : ""}>${escapeHtml(poItemRaidLabels[key] || RAID_OPTIONS[key]?.name || key.toUpperCase())}</option>`
   ).join("");
   const needle = normalize(poItemSettingsSearch);
   const rows = poItemSettingsRows.filter(item => !needle || normalize([item.name,item.boss,item.slot,item.itemId].join(" ")).includes(needle));
@@ -8103,7 +8105,7 @@ function renderPoItemSettingsPanel(){
 async function setPoPlusItemEnabled(itemId,enabled,checkbox){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   try{
-    const result=await railwayWrite({action:"guildSetPoItem",masterCode,itemId,setting:"poplus",enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
+    const result=await railwayWrite({action:"guildSetPoItem",masterCode,itemId,raid:poItemSettingsRaid,setting:"poplus",enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
     if(!result.success)throw new Error(result.error||"P0+-Item konnte nicht gespeichert werden.");
     const row=poItemSettingsRows.find(item=>String(item.id||item.itemId)===String(itemId));
     if(row){row.poPlusEnabled=Boolean(enabled);if(enabled)row.poEnabled=true;}
@@ -8125,7 +8127,7 @@ function setPoItemSettingsSearch(input){
 async function setPoItemEnabled(itemId, enabled, checkbox){
   const masterCode = document.getElementById("masterCode")?.value.trim();
   try{
-    const result = await railwayWrite({ action:"guildSetPoItem", masterCode, itemId, enabled:enabled ? "true" : "false", updatedBy:"Gildenleitung" });
+    const result = await railwayWrite({ action:"guildSetPoItem", masterCode, itemId, raid:poItemSettingsRaid, enabled:enabled ? "true" : "false", updatedBy:"Gildenleitung" });
     if(!result.success) throw new Error(result.error || "P0-Item konnte nicht gespeichert werden.");
     const row = poItemSettingsRows.find(item => String(item.id || item.itemId) === String(itemId));
     if(row){
@@ -8160,7 +8162,7 @@ async function setAllVisiblePoItemSetting(setting,enabled){
   if(!confirm(`${itemIds.length} sichtbare ${label}-Items wirklich alle ${action}?${isPoPlus?" P0 wird dabei ebenfalls aktiviert.":""}`)) return;
   try{
     setStatus(`${label}-Items werden ${enabled?"freigegeben":"abgewählt"} ...`,"");
-    const result=await railwayWrite({action:"guildSetPoItemsBulk",masterCode,itemIds:JSON.stringify(itemIds),setting,enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
+    const result=await railwayWrite({action:"guildSetPoItemsBulk",masterCode,itemIds:JSON.stringify(itemIds),raid:poItemSettingsRaid,setting,enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
     if(!result.success) throw new Error(result.error||`${label}-Items konnten nicht gespeichert werden.`);
     const selected=new Set(itemIds);
     poItemSettingsRows.forEach(item=>{
@@ -9368,9 +9370,35 @@ function renderRaids(){
   updateRaidBulkActions();
 }
 
+let raidArchiveRaidFilter="all";
+
+function setRaidArchiveRaidFilter(value){
+  raidArchiveRaidFilter=String(value||"all").toLowerCase();
+  renderRaidArchive();
+}
+
+function raidArchiveFilterKey(raid){
+  const key=getRaidKey(raid);
+  return key==="zg"||key.startsWith("zg-") ? "zg" : key;
+}
+
+function renderRaidArchiveFilters(){
+  const box=document.getElementById("raidArchiveRaidFilters");
+  if(!box)return;
+  const filters=[["all","Alle"],["naxx","Naxx"],["aq40","AQ40"],["bwl","BWL"],["mc","MC"],["zg","ZG"]];
+  box.innerHTML=filters.map(([key,label])=>`<button class="small-btn ${raidArchiveRaidFilter===key?"primary":"ghost"}" type="button" onclick="setRaidArchiveRaidFilter('${key}')">${label}</button>`).join("");
+}
+
+function renderRaidArchiveP0State(raid){
+  if(!canTransferP0PlusFromRaid(raid))return '<span class="muted">–</span>';
+  const done=hasP0PlusTransfer(raid);
+  return `<span class="transfer-light ${done?"done":"open"}"><span class="transfer-dot"></span>${done?`P0+ übertragen (${escapeHtml(String(raid.p0PlusTransferCount||1))})`:"P0+ nicht übertragen"}</span>`;
+}
+
 function renderRaidArchive(){
   const box = document.getElementById("raidArchiveContent");
   if(!box) return;
+  renderRaidArchiveFilters();
   const search = normalize(document.getElementById("raidArchiveSearch")?.value || "");
   const archived = [];
   const deleted = [];
@@ -9378,8 +9406,11 @@ function renderRaidArchive(){
   (guildData.raids || []).forEach(raid => {
     const status = normalize(raid.status || "");
     const isDeleted = ["gelöscht","geloescht","deleted"].includes(status) || Boolean(raid.deletedAt);
-    const isArchived = ["archiviert","archive","archived"].includes(status);
+    const raidDate=String(raid.raidDate||raid.date||"").slice(0,10);
+    const isFinishedPastRaid=/^\d{4}-\d{2}-\d{2}$/.test(raidDate) && raidDate<todayIsoDate();
+    const isArchived = ["archiviert","archive","archived"].includes(status) || (!isDeleted && isFinishedPastRaid);
     if(!isArchived && !isDeleted) return;
+    if(raidArchiveRaidFilter!=="all" && raidArchiveFilterKey(raid)!==raidArchiveRaidFilter) return;
     const haystack = normalize([
       raid.raidName, raid.raid, raid.raidDate, raid.raidTime,
       raid.playerPin, raid.leadPin, raid.raidId, raid.guild
@@ -9395,7 +9426,7 @@ function renderRaidArchive(){
   sortRaids(deleted);
 
   const renderRows = (raids, deletedGroup) => {
-    if(!raids.length) return `<tr><td colspan="7" class="muted">Keine ${deletedGroup ? "gelöschten" : "archivierten"} Raids vorhanden.</td></tr>`;
+    if(!raids.length) return `<tr><td colspan="8" class="muted">Keine ${deletedGroup ? "gelöschten" : "archivierten"} Raids vorhanden.</td></tr>`;
     return raids.map(raid => `
       <tr>
         <td><strong>${escapeHtml(raid.raidName || raid.raid || "Raid")}</strong><div class="muted">${escapeHtml(raid.raidId || raid.id || "")}</div></td>
@@ -9404,6 +9435,7 @@ function renderRaidArchive(){
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
         <td>${statusBadge(deletedGroup ? "gelöscht" : "archiviert")}</td>
         <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
+        <td>${renderRaidArchiveP0State(raid)}</td>
         <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button></td>
       </tr>
     `).join("");
@@ -9412,7 +9444,7 @@ function renderRaidArchive(){
     <section class="active-raid-group">
       <h3 class="active-raid-group-title">${escapeHtml(title)} (${raids.length})</h3>
       <div class="table-wrap"><table class="player-login-table">
-        <thead><tr><th>Raid</th><th>Datum</th><th>Prio-PIN</th><th>LeadPIN</th><th>Status</th><th>Gilde</th><th>Aktion</th></tr></thead>
+        <thead><tr><th>Raid</th><th>Datum</th><th>Prio-PIN</th><th>LeadPIN</th><th>Status</th><th>Gilde</th><th>P0+-Status</th><th>Aktion</th></tr></thead>
         <tbody>${renderRows(raids, deletedGroup)}</tbody>
       </table></div>
     </section>`;
