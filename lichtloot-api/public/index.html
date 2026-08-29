@@ -1275,7 +1275,33 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 .form-actions{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:12px;}
 .form-actions.single{grid-template-columns:1fr;}
 .security-note{font-size:12px;color:#dbeafe;line-height:1.45;margin-top:8px;opacity:.9;}
+.account-form-intro{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;margin:0 0 16px;border:1px solid rgba(56,189,248,.36);border-radius:14px;background:rgba(14,116,144,.12);color:#dbeafe;line-height:1.45}.account-form-intro strong{display:block;color:#fff;margin-bottom:3px}.account-form-intro span{font-size:24px}
+.account-step{position:relative;grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:18px 16px 16px 62px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(2,6,23,.5)}
+.account-step::before{content:attr(data-step);position:absolute;left:16px;top:17px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(250,204,21,.65);background:rgba(250,204,21,.14);color:#facc15;font-weight:950}
+.account-step-title{grid-column:1/-1;color:#facc15;font-size:16px;font-weight:950}.account-step-title small{display:block;margin-top:3px;color:#cbd5e1;font-size:12px;font-weight:600}
+.field-help{display:block;margin-top:6px;color:#94a3b8;font-size:12px;line-height:1.35;text-transform:none;letter-spacing:0;font-weight:600}
+.account-checklist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.account-check{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.55);color:#94a3b8;font-size:13px;font-weight:800}.account-check.done{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.1);color:#86efac}
+.account-submit{min-height:54px;font-size:17px!important}.account-submit:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.4)}
+.field-error{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.14)!important}.status.account-error{border-color:rgba(239,68,68,.55);background:rgba(127,29,29,.2);color:#fecaca;font-weight:800}
+body.show-mylichtloot #actionPanel{width:min(1080px,100%);margin:0 auto;padding:30px 34px!important;border-color:rgba(250,204,21,.45);background:linear-gradient(145deg,rgba(9,20,37,.98),rgba(4,12,25,.96))!important;box-shadow:0 24px 70px rgba(0,0,0,.46)!important}
+body.show-mylichtloot #actionPanel>h2{font-family:Georgia,serif;font-size:32px;margin:0 0 5px;color:#ffd15c}
+body.show-mylichtloot #actionPanel>p{margin:0 0 22px;color:#b9c8da;font-size:15px}
+#lichtlootPinSection .form-card{padding:0;border:0;background:transparent;margin:0}
+#lichtlootPinSection .form-card>h3,#lichtlootPinSection .form-card>.hint{display:none}
+#lichtlootPinSection .account-form-intro{margin-bottom:18px;padding:16px 18px;background:linear-gradient(135deg,rgba(15,80,112,.24),rgba(8,32,56,.7));border-color:rgba(56,189,248,.3);box-shadow:inset 0 1px rgba(255,255,255,.04)}
+#lichtlootPinSection .clean-form{gap:14px}
+#lichtlootPinSection .account-step{grid-template-columns:repeat(3,minmax(0,1fr));padding:20px 20px 20px 70px;border-color:rgba(148,163,184,.2);background:linear-gradient(145deg,rgba(4,12,27,.8),rgba(8,19,36,.68));box-shadow:0 12px 30px rgba(0,0,0,.18)}
+#lichtlootPinSection .account-step::before{left:20px;top:20px;width:34px;height:34px;background:linear-gradient(145deg,rgba(250,204,21,.26),rgba(133,98,18,.14));box-shadow:0 0 18px rgba(250,204,21,.12)}
+#lichtlootPinSection .account-step-title{font-size:18px;margin-bottom:2px}
+#lichtlootPinSection .account-step input,#lichtlootPinSection .account-step select{min-height:48px;border-color:rgba(148,163,184,.25);background:rgba(1,7,20,.82)}
+#lichtlootPinSection .account-step input:focus,#lichtlootPinSection .account-step select:focus{border-color:#facc15;box-shadow:0 0 0 3px rgba(250,204,21,.1)}
+#lichtlootPinSection .account-checklist{margin:18px 0 12px}.account-check{text-align:center}.account-check.done{box-shadow:inset 0 0 18px rgba(34,197,94,.06)}
+#lichtlootPinSection .account-submit{border-color:rgba(250,204,21,.62);background:linear-gradient(105deg,rgba(142,108,25,.75),rgba(31,70,117,.88));box-shadow:0 10px 24px rgba(0,0,0,.22)}
+#lichtlootPinSection .account-submit:not(:disabled):hover{transform:translateY(-1px);filter:brightness(1.12)}
+#lichtlootPinSection #playerPinStatus{text-align:center;margin-top:12px;padding:12px}
 @media(max-width:700px){.clean-form{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}}
+@media(max-width:900px){#lichtlootPinSection .account-step{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){body.show-mylichtloot #actionPanel{padding:22px 16px!important}#lichtlootPinSection .account-step{grid-template-columns:1fr;padding:62px 16px 18px}#lichtlootPinSection .account-step::before{left:16px;top:15px}.account-checklist{grid-template-columns:1fr}}
 
 /* === IDIOTENSICHERES DASHBOARD === */
 .compact-help{padding:18px 20px!important}
@@ -1412,11 +1438,85 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 </style>
 
 
+<style>
+/* === Startseite V3: freigegebener Portal-Entwurf === */
+body{
+  background:
+    radial-gradient(circle at 24% 12%,rgba(26,112,170,.28),transparent 34%),
+    radial-gradient(circle at 82% 38%,rgba(140,92,18,.18),transparent 30%),
+    linear-gradient(rgba(1,8,19,.72),rgba(1,7,17,.94)),
+    url('./images/back.jpeg') center top/cover fixed no-repeat;
+}
+.overlay{padding:0 0 24px;backdrop-filter:none}
+.header{
+  position:sticky;top:0;z-index:5000;
+  width:100%;min-height:86px;margin:0 0 38px;padding:0 max(28px,calc((100vw - 1420px)/2));
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:34px;
+  border-bottom:1px solid rgba(250,204,21,.42);
+  background:linear-gradient(180deg,rgba(2,10,22,.98),rgba(2,10,22,.90));
+  box-shadow:0 12px 34px rgba(0,0,0,.32);
+}
+.header .logo-banner{width:210px;max-height:104px;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.portal-nav{display:flex;align-items:stretch;gap:6px;height:86px}
+.portal-nav a{position:relative;display:flex;align-items:center;padding:0 22px;color:#e5e7eb;text-decoration:none;font-size:14px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.portal-nav a:hover,.portal-nav a.active{color:var(--gold)}
+.portal-nav a.active::after{content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:3px;border-radius:3px;background:var(--gold);box-shadow:0 0 14px rgba(250,204,21,.7)}
+.portal-profile{display:flex;align-items:center;gap:11px;min-width:220px;padding:10px 14px;border:1px solid rgba(250,204,21,.28);border-radius:14px;background:rgba(10,19,34,.84);color:white;cursor:pointer;text-align:left}
+.portal-avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(250,204,21,.65);background:linear-gradient(135deg,#123a62,#06101f);font-size:22px}
+.portal-profile strong,.portal-profile small{display:block}.portal-profile strong{font-size:16px}.portal-profile small{margin-top:2px;color:#86efac;font-size:12px}
+.portal-profile-arrow{margin-left:auto;color:#facc15;font-size:18px}
+.guild-soon-note{display:none}
+.start-shell{width:min(1420px,calc(100vw - 40px));margin:0 auto;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.9fr);gap:20px}
+.welcome-panel{grid-column:1;align-self:start;padding:38px;border-radius:20px;min-height:420px;display:flex;flex-direction:column;justify-content:center;text-align:left;background:linear-gradient(135deg,rgba(7,19,36,.96),rgba(8,20,38,.84));border:1px solid rgba(250,204,21,.42);box-shadow:0 20px 52px rgba(0,0,0,.34);overflow:hidden;position:relative}
+.new-user-highlight::before,.new-user-highlight::after{display:none!important}
+.welcome-panel::after{content:"";position:absolute;inset:0 0 0 52%;background:radial-gradient(circle at center,rgba(46,112,160,.16),transparent 68%);pointer-events:none}
+.welcome-panel h1{font-family:Georgia,serif;font-size:clamp(38px,4vw,58px);line-height:1.06;margin:0 0 22px;text-align:left;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.55)}
+.welcome-panel h1::first-letter{color:inherit}
+.welcome-panel p{max-width:700px;margin:0;color:#d8e2ef;font-size:17px;line-height:1.6;text-align:left}
+.main-login-layout{display:contents!important}
+.player-login-card{grid-column:2;grid-row:1 / span 2;position:static!important;min-height:252px;padding:26px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(7,18,34,.97),rgba(5,13,26,.93))!important;box-shadow:0 20px 52px rgba(0,0,0,.34)!important}
+.player-login-card h2{font-family:Georgia,serif;font-size:25px!important}
+#loggedInPanel .dashboard-box{padding:0;border:0;background:transparent}
+#loggedInPanel .dashboard-title{font-family:Georgia,serif;color:var(--gold);font-size:22px;text-transform:none;letter-spacing:0;margin-bottom:14px}
+.dashboard-characters{display:grid;gap:10px}
+.dashboard-char{display:flex;align-items:center;min-height:64px;border-radius:12px;padding:13px 16px;background:rgba(14,27,48,.88);border:1px solid rgba(255,255,255,.15);font-size:16px}
+.dashboard-char small{margin-left:8px}
+.dashboard-actions{grid-template-columns:1fr 1fr}
+.mylichtloot-card{grid-column:1 / -1}
+.account-creation-panel{grid-column:1;display:grid;grid-template-columns:minmax(285px,.82fr) minmax(340px,1.18fr);align-items:stretch;gap:26px;padding:0 28px 0 0;border:1px solid rgba(250,204,21,.5);border-radius:22px;background:linear-gradient(120deg,rgba(7,31,56,.98),rgba(5,15,30,.96) 60%,rgba(41,29,10,.58));box-shadow:0 24px 58px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.04);overflow:hidden}
+.account-art{min-height:300px;position:relative;overflow:hidden;background:linear-gradient(90deg,rgba(2,8,18,0),rgba(5,18,34,.22))}
+.account-art-image{width:100%;height:100%;display:block;object-fit:cover;object-position:center;filter:saturate(1.08) contrast(1.04)}
+.account-art::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,rgba(6,21,40,.98)),linear-gradient(0deg,rgba(2,8,18,.42),transparent 45%);pointer-events:none}
+.account-copy{align-self:center;padding:30px 0}
+.account-art-main{width:128px;height:128px;border:3px solid rgba(250,204,21,.72);border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#16456d,#071426);box-shadow:0 0 0 10px rgba(250,204,21,.08),0 18px 36px rgba(0,0,0,.42);font-size:62px}
+.account-art-list{font-size:62px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.45))}
+.account-copy h2{font-family:Georgia,serif;color:#ffd15c;font-size:27px;margin:0 0 8px}.account-copy>p{color:#d4deea;font-size:14px;line-height:1.5;margin:0 0 15px}
+.account-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.account-benefit{display:flex;align-items:center;gap:10px;padding:10px 12px;border-right:1px solid rgba(255,255,255,.12)}.account-benefit:last-child{border-right:0}.account-benefit span{width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(250,204,21,.42);border-radius:50%;background:rgba(250,204,21,.08);font-size:20px}.account-benefit strong{display:block;font-size:14px}.account-benefit small{display:block;color:#cbd5e1;margin-top:2px}
+.account-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.account-primary{min-width:270px}.account-login-link{border:0;background:transparent;color:#38bdf8;font-weight:800;cursor:pointer}.account-login-link:hover{text-decoration:underline}
+body.show-mylichtloot .account-creation-panel{display:none}
+.steps-panel{display:none!important}
+.portal-bottom-grid{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.random-raid-panel{min-height:190px;padding:28px!important;border-radius:20px!important;display:flex;align-items:center;background:linear-gradient(135deg,rgba(7,27,50,.97),rgba(5,16,31,.91))!important;border-color:rgba(250,204,21,.42)!important}
+.random-panel-head{width:100%;grid-template-columns:1fr!important;gap:18px!important}.random-raid-panel h2{font-family:Georgia,serif;font-size:28px!important}.random-raid-panel p{font-size:15px!important;max-width:560px}.random-panel-actions{justify-content:flex-start!important}.random-panel-actions .big-btn{min-width:190px!important}
+.site-footer{width:100%;margin:0;padding:22px;text-align:center;border-top:1px solid rgba(250,204,21,.28);background:rgba(2,9,19,.9)}
+@media(max-width:1000px){.header{grid-template-columns:auto 1fr}.portal-nav{display:none}.portal-profile{justify-self:end}.start-shell{grid-template-columns:1fr}.welcome-panel,.player-login-card,.account-creation-panel,.portal-bottom-grid{grid-column:1}.player-login-card{grid-row:auto}.account-creation-panel{grid-template-columns:1fr;padding:0}.account-art{min-height:260px}.account-art::after{background:linear-gradient(0deg,rgba(6,21,40,.98),transparent 55%)}.account-copy{padding:0 28px 30px}.portal-bottom-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.header{padding:0 14px;gap:10px}.header .logo-banner{width:140px}.portal-profile{min-width:0}.portal-profile>span:nth-child(2){display:none}.start-shell{width:min(100% - 24px,1420px)}.welcome-panel{padding:25px}.welcome-panel h1{font-size:36px}.account-creation-panel{padding:24px}.account-benefits{grid-template-columns:1fr}.account-benefit{border-right:0}.account-actions,.random-panel-actions{display:grid}.account-primary,.random-panel-actions .big-btn{width:100%;min-width:0!important}.portal-bottom-grid{gap:12px}}
+</style>
+
+
 </head>
 <body>
 <div class="overlay">
   <div class="header">
-    <img src="images/content.png" alt="LichtLoot" class="logo-banner">
+    <img src="images/lichtloot-logo.png" alt="LichtLoot" class="logo-banner">
+    <nav class="portal-nav" aria-label="Hauptnavigation">
+      <a href="javascript:void(0)" onclick="document.getElementById('guildSignupPanel')?.scrollIntoView({behavior:'smooth'})">Hilfe</a>
+    </nav>
+    <button class="portal-profile" type="button" onclick="document.getElementById('loginCard')?.scrollIntoView({behavior:'smooth',block:'center'})">
+      <span class="portal-avatar">👤</span>
+      <span><strong id="portalProfileName">SpielerLogin</strong><small id="portalProfileStatus">Jetzt einloggen</small></span>
+      <span class="portal-profile-arrow">⌄</span>
+    </button>
   </div>
   <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für LichtLoot beantragen.</div>
 
@@ -1632,11 +1732,13 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 <div id="lichtlootPinSection" class="lichtloot-section hidden">
   <div class="form-card">
     <h3>SpielerLogin erstellen</h3>
-    <p class="hint">Lege hier deinen SpielerLogin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen SpielerLogin später zurücksetzen.</p>
+    <div class="account-form-intro"><span>👋</span><div><strong>Das dauert nur etwa eine Minute.</strong>Fülle die drei Schritte von oben nach unten aus. Pflichtfelder sind mit * markiert.</div></div>
 
-    <div class="clean-form">
+    <div class="clean-form" id="createLoginForm">
+      <div class="account-step" data-step="1">
+        <div class="account-step-title">Deinen Charakter auswählen<small>Damit LichtLoot weiß, wer du im Spiel bist.</small></div>
       <div class="full">
-        <label>Gilde</label>
+        <label>Deine Gilde *</label>
         <select id="pinGuildName" onchange="selectGuildForLogin(this.value)">
           <option value="Lichtbringer">Lichtbringer</option>
           <option value="Die Nachtwächter">Die Nachtwächter</option>
@@ -1644,13 +1746,14 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
 
       <div>
-        <label>Charaktername</label>
-        <input id="pinCharName" type="text" placeholder="z. B. Ariee" oninput="loadFixedPlayerPinForChar()">
+        <label>Dein Charaktername *</label>
+        <input id="pinCharName" type="text" placeholder="Genau wie im Spiel, z. B. Ariee" oninput="updateCreateLoginGuide(); loadFixedPlayerPinForChar()">
+        <span class="field-help">Ohne Servername und ohne Sonderzeichen ergänzen.</span>
       </div>
 
       <div>
-        <label>Server</label>
-        <select id="pinServer" onchange="loadFixedPlayerPinForChar()">
+        <label>Dein Server *</label>
+        <select id="pinServer" onchange="updateCreateLoginGuide(); loadFixedPlayerPinForChar()">
           <option value="">Server wählen</option>
           <option>Everlook</option>
           <option>Lakeshire</option>
@@ -1658,8 +1761,8 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
 
       <div>
-        <label>Klasse</label>
-        <select id="pinClass" onchange="loadFixedPlayerPinForChar()">
+        <label>Deine Klasse *</label>
+        <select id="pinClass" onchange="updateCreateLoginGuide(); loadFixedPlayerPinForChar()">
           <option value="">Klasse auswählen</option>
           <option>Krieger</option>
           <option>Paladin</option>
@@ -1672,15 +1775,22 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <option>Druide</option>
         </select>
       </div>
-
-      <div>
-        <label>Wunsch-SpielerLogin</label>
-        <input id="customPlayerPin" type="text" placeholder="4–8 Zeichen, z. B. ARIEE25" maxlength="8" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
       </div>
 
+      <div class="account-step" data-step="2">
+        <div class="account-step-title">Deinen persönlichen SpielerLogin festlegen<small>Diesen Code brauchst du später zum Einloggen. Bitte gut merken.</small></div>
       <div class="full">
-        <label>Sicherheitsfrage</label>
-        <select id="securityQuestion">
+        <label>Gewünschter SpielerLogin *</label>
+        <input id="customPlayerPin" type="text" placeholder="4–8 Zeichen, z. B. ARIEE25" minlength="4" maxlength="8" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); updateCreateLoginGuide()">
+        <span class="field-help">Erlaubt sind 4–8 Buchstaben oder Zahlen. Keine Leerzeichen.</span>
+      </div>
+      </div>
+
+      <div class="account-step" data-step="3">
+        <div class="account-step-title">Login absichern<small>Damit kannst du deinen SpielerLogin später selbst zurücksetzen.</small></div>
+      <div class="full">
+        <label>Sicherheitsfrage *</label>
+        <select id="securityQuestion" onchange="updateCreateLoginGuide()">
           <option value="">Sicherheitsfrage auswählen</option>
           <option value="pet">Wie hieß dein erstes Haustier?</option>
           <option value="city">In welcher Stadt wurdest du geboren?</option>
@@ -1690,25 +1800,31 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
 
       <div class="full">
-        <label>Antwort auf die Sicherheitsfrage</label>
-        <input id="securityAnswer" type="text" placeholder="Antwort eingeben">
-        <div class="security-note">Bitte merke dir die Antwort genau. Groß- und Kleinschreibung wird beim Zurücksetzen nicht gewertet.</div>
+        <label>Deine Antwort *</label>
+        <input id="securityAnswer" type="text" placeholder="Antwort eingeben und gut merken" oninput="updateCreateLoginGuide()">
+        <div class="security-note">Die Antwort kennt nur du. Groß- und Kleinschreibung ist später egal.</div>
+      </div>
       </div>
     </div>
 
-    <label style="display:block;margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;">SpielerLogin-Status</label>
-    <div class="form-actions">
+    <div class="account-checklist" aria-live="polite">
+      <div id="checkCharacter" class="account-check">○ Charakter vollständig</div>
+      <div id="checkLogin" class="account-check">○ SpielerLogin gültig</div>
+      <div id="checkSecurity" class="account-check">○ Absicherung vollständig</div>
+    </div>
+
+    <div class="form-actions hidden" id="createdLoginOutput">
       <div id="fixedPlayerPin" class="pin-output">----</div>
       <button id="copyPlayerPinBtn" class="copy-btn hidden" onclick="copyText('fixedPlayerPin')">Kopieren</button>
     </div>
 
     <div class="form-actions single">
-      <button id="createPlayerPinBtn" class="tool-btn" onclick="createPlayerPinFromSheet()">SpielerLogin erstellen</button>
+      <button id="createPlayerPinBtn" class="tool-btn account-submit" onclick="createPlayerPinFromSheet()">Jetzt SpielerLogin erstellen</button>
     </div>
 
     <div id="resetPinArea" class="hidden"></div>
 
-    <div id="playerPinStatus" class="status">Bitte Charaktername, Server, Klasse, Wunsch-Pin und Sicherheitsfrage ausfüllen.</div>
+    <div id="playerPinStatus" class="status">Beginne oben mit Schritt 1.</div>
   </div>
 </div>
 
@@ -1816,6 +1932,25 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
     </section>
 
+    <section class="account-creation-panel" id="createAccountPanel">
+      <div class="account-art" aria-hidden="true">
+        <img class="account-art-image" src="images/lichtloot-account-hero.jpg" alt="">
+      </div>
+      <div class="account-copy">
+        <h2>Spieleraccount erstellen</h2>
+        <p>Erstelle deinen Spieleraccount und verwalte deine Charaktere, Prios und Punkte zentral in LichtLoot.</p>
+        <div class="account-benefits">
+          <div class="account-benefit"><span>♟</span><div><strong>Charaktere</strong><small>verwalten</small></div></div>
+          <div class="account-benefit"><span>▤</span><div><strong>Prios</strong><small>eintragen</small></div></div>
+          <div class="account-benefit"><span>▥</span><div><strong>Punkte</strong><small>einsehen</small></div></div>
+        </div>
+        <div class="account-actions">
+          <button class="big-btn account-primary" type="button" onclick="showCreateLogin()">Spieleraccount erstellen</button>
+          <button class="account-login-link" type="button" onclick="document.getElementById('loginCard')?.scrollIntoView({behavior:'smooth',block:'center'})">Bereits registriert? SpielerLogin öffnen</button>
+        </div>
+      </div>
+    </section>
+
     <section class="steps-panel compact-help">
       <h2 id="brandHowTitle">So funktioniert LichtLoot</h2>
       <div class="steps-list steps-list-3">
@@ -1825,6 +1960,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
     </section>
 
+    <div class="portal-bottom-grid">
     <section class="random-raid-panel" id="randomRaidPanel">
       <div class="random-panel-head">
         <div>
@@ -1849,6 +1985,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
         </div>
       </div>
     </section>
+    </div>
   </main>
 
   <div id="raidCreateBox" class="hidden"></div>
@@ -2266,7 +2403,7 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo=guildLogoUrl(guild);
+  const logo="images/lichtloot-logo.png";
   const background=guild?.backgroundUrl || "";
   if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
   if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
@@ -2743,8 +2880,42 @@ function hidePlayerPinValue(text){
 
 function showPlayerPinValue(pin){
   document.getElementById("fixedPlayerPin").textContent=pin || "----";
+  document.getElementById("createdLoginOutput")?.classList.remove("hidden");
   const copyBtn=document.getElementById("copyPlayerPinBtn");
   if(copyBtn) copyBtn.classList.remove("hidden");
+}
+
+function updateCreateLoginGuide(){
+  const values={
+    charName:document.getElementById("pinCharName")?.value.trim() || "",
+    server:document.getElementById("pinServer")?.value.trim() || "",
+    className:document.getElementById("pinClass")?.value.trim() || "",
+    login:document.getElementById("customPlayerPin")?.value.trim() || "",
+    question:document.getElementById("securityQuestion")?.value.trim() || "",
+    answer:document.getElementById("securityAnswer")?.value.trim() || ""
+  };
+  const states={
+    checkCharacter:Boolean(values.charName && values.server && values.className),
+    checkLogin:/^[A-Z0-9]{4,8}$/.test(values.login),
+    checkSecurity:Boolean(values.question && values.answer)
+  };
+  Object.entries(states).forEach(([id,done])=>{
+    const element=document.getElementById(id);
+    if(!element) return;
+    element.classList.toggle("done",done);
+    element.textContent=(done ? "✓ " : "○ ") + ({checkCharacter:"Charakter vollständig",checkLogin:"SpielerLogin gültig",checkSecurity:"Absicherung vollständig"}[id]);
+  });
+  const button=document.getElementById("createPlayerPinBtn");
+  if(button && !button.classList.contains("hidden")) button.disabled=!Object.values(states).every(Boolean);
+}
+
+function showCreateLoginError(id,message){
+  document.querySelectorAll("#createLoginForm .field-error").forEach(element=>element.classList.remove("field-error"));
+  const field=document.getElementById(id);
+  if(field){field.classList.add("field-error");field.focus();field.scrollIntoView({behavior:"smooth",block:"center"});}
+  const status=document.getElementById("playerPinStatus");
+  status.classList.add("account-error");
+  status.innerHTML='<span class="bad">'+safeHtml(message)+'</span>';
 }
 
 async function loadFixedPlayerPinForChar(){
@@ -2821,24 +2992,30 @@ async function loadFixedPlayerPinForChar(){
 async function createPlayerPinFromSheet(){
   const input=getPlayerPinInput();
   const status=document.getElementById("playerPinStatus");
+  status.classList.remove("account-error");
 
   if(!input){
-    alert("Bitte Charaktername und Server eingeben.");
+    const charName=document.getElementById("pinCharName")?.value.trim();
+    showCreateLoginError(charName ? "pinServer" : "pinCharName",charName ? "Bitte wähle deinen Server aus." : "Bitte gib zuerst deinen Charakternamen ein.");
     return;
   }
 
   if(!input.className){
-    alert("Bitte Klasse auswählen.");
+    showCreateLoginError("pinClass","Bitte wähle deine Klasse aus.");
     return;
   }
 
-  if(!input.customPin){
-    alert("Bitte Wunsch-SpielerLogin eingeben.");
+  if(!/^[A-Z0-9]{4,8}$/.test(input.customPin || "")){
+    showCreateLoginError("customPlayerPin","Dein SpielerLogin muss aus 4–8 Buchstaben oder Zahlen bestehen.");
     return;
   }
 
-  if(!input.securityQuestion || !input.securityAnswer){
-    status.innerHTML='<span class="bad">Bitte Sicherheitsfrage auswählen und Antwort eingeben.</span>';
+  if(!input.securityQuestion){
+    showCreateLoginError("securityQuestion","Bitte wähle eine Sicherheitsfrage aus.");
+    return;
+  }
+  if(!input.securityAnswer){
+    showCreateLoginError("securityAnswer","Bitte gib deine Antwort auf die Sicherheitsfrage ein.");
     return;
   }
 
@@ -2877,6 +3054,7 @@ async function createPlayerPinFromSheet(){
     }
 
     showPlayerPinValue(result.pin);
+    document.querySelectorAll("#createLoginForm input,#createLoginForm select").forEach(element=>element.disabled=true);
     status.innerHTML='<span class="ok">✓ Dein SpielerAccount wurde erstellt.</span><br><strong>Bitte diesen SpielerLogin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<span class="pending-approval-notice">Dein SpielerAccount muss durch die Gildenleitung erst noch freigegeben werden.</span>';
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
@@ -4640,6 +4818,7 @@ function setActionPanel(title,hint,tab){
 function showCreateLogin(){
   syncGuildInputs();
   setActionPanel('SpielerLogin erstellen','Lege deinen SpielerLogin einmal an. Danach gilt er für alle Raids.','pin');
+  updateCreateLoginGuide();
 }
 function showResetLogin(){
   setActionPanel('SpielerLogin zurücksetzen','Nutze deine Sicherheitsfrage, wenn du deinen SpielerLogin vergessen hast.','reset');
@@ -4669,6 +4848,12 @@ function logoutPlayerLogin(){
   document.body.classList.remove('show-mylichtloot');
   const pinField=document.getElementById('homePlayerPin');
   if(pinField) pinField.value='';
+  const profileName=document.getElementById('portalProfileName');
+  const profileStatus=document.getElementById('portalProfileStatus');
+  const welcomeHero=document.getElementById('brandWelcomeTitle');
+  if(profileName) profileName.textContent='SpielerLogin';
+  if(profileStatus){profileStatus.textContent='Jetzt einloggen';profileStatus.style.color='#cbd5e1';}
+  if(welcomeHero) welcomeHero.textContent='Willkommen auf LichtLoot';
 }
 function classColorClass(className){
   return 'class-' + String(className || '').trim().toLowerCase().replace('ä','ae').replace('ö','oe').replace('ü','ue').replace('ß','ss');
@@ -4711,6 +4896,12 @@ async function loadDashboardForPin(pin){
   const firstName=first.char || first.player || first.name || first.Charakter || 'Spieler';
   const welcome=document.getElementById('welcomeTitle');
   if(welcome) welcome.textContent='Willkommen ' + firstName;
+  const profileName=document.getElementById('portalProfileName');
+  const profileStatus=document.getElementById('portalProfileStatus');
+  const welcomeHero=document.getElementById('brandWelcomeTitle');
+  if(profileName) profileName.textContent=firstName;
+  if(profileStatus){profileStatus.textContent='SpielerLogin aktiv';profileStatus.style.color='#86efac';}
+  if(welcomeHero) welcomeHero.textContent='Willkommen zurück, ' + firstName;
 
   if(charsBox){
     charsBox.innerHTML=rawChars.map(ch=>{
