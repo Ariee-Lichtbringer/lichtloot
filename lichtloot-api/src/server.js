@@ -4,7 +4,7 @@ import express from "express";
 import nodemailer from "nodemailer";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { pool, p0Pool, p0Query, query, requireGuild } from "./db.js";
+import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -165,6 +165,10 @@ await ensureRaidSchema().catch(error => {
 
 await ensureP0OnlySchema().catch(error => {
   console.warn("Separates P0-only-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
+await ensureRandomRaidSchema().catch(error => {
+  console.warn("Separates Random-Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
 await ensurePoPostEntriesSchema().catch(error => {
@@ -20105,6 +20109,79 @@ async function createRaidForBot({ guildId, query: params }) {
   });
 }
 
+async function ensureRandomRaidSchema() {
+  if (!randomPool) return { success: false, configured: false };
+  await randomQuery(
+    `create table if not exists random_raids (
+       id uuid primary key,
+       external_raid_id text not null unique,
+       raid_type text not null,
+       raid_name text not null,
+       group_name text not null default 'Random',
+       raid_date date not null,
+       raid_time time,
+       prio_pin text not null unique,
+       lead_pin text not null unique,
+       status text not null default 'geschlossen',
+       published boolean not null default false,
+       archived_at timestamptz,
+       settings_json jsonb not null default '{}'::jsonb,
+       created_by text,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await randomQuery(
+    `create table if not exists random_characters (
+       id uuid primary key,
+       raid_id uuid not null references random_raids(id) on delete cascade,
+       name text not null,
+       server text not null default '',
+       class_name text not null default '',
+       spec_name text not null default '',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (raid_id, name, server)
+     )`
+  );
+  await randomQuery(
+    `create table if not exists random_prios (
+       id uuid primary key,
+       raid_id uuid not null references random_raids(id) on delete cascade,
+       character_id uuid not null references random_characters(id) on delete cascade,
+       p1_item_id text,
+       p1_item_name text,
+       p2_item_id text,
+       p2_item_name text,
+       p3_item_id text,
+       p3_item_name text,
+       p0_selected boolean not null default false,
+       p0_plus boolean not null default false,
+       p0_item_id text,
+       p0_item_name text,
+       bench boolean not null default false,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (raid_id, character_id)
+     )`
+  );
+  await randomQuery(
+    `create table if not exists random_signups (
+       id uuid primary key,
+       raid_id uuid not null references random_raids(id) on delete cascade,
+       character_id uuid not null references random_characters(id) on delete cascade,
+       role_name text not null default '',
+       status text not null default 'angemeldet',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (raid_id, character_id)
+     )`
+  );
+  await randomQuery(`create index if not exists random_raids_date_idx on random_raids (raid_date desc, raid_time desc)`);
+  await randomQuery(`create index if not exists random_prios_raid_idx on random_prios (raid_id, updated_at desc)`);
+  return { success: true, configured: true };
+}
+
 async function createRandomRaid({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late", "aq20", "ony"]);
@@ -20120,6 +20197,64 @@ async function createRandomRaid({ guildId, query: params }) {
     const error = new Error("PrioPIN oder LeadPIN fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+
+  // Random-Raids enden ab hier ausschließlich in RANDOM_DATABASE_URL. Die
+  // nachfolgende alte Gildenlogik bleibt vorerst als Migrationsreferenz im
+  // Quelltext, wird durch diese Rückgabe aber nicht mehr ausgeführt.
+  {
+    await ensureRandomRaidSchema();
+    const randomRaidDate = parseDateValue(params.raidDate || params.datum || params.date);
+    const randomRaidTime = clean(params.raidTime || params.uhrzeit || params.time) || null;
+    if (!randomRaidDate) {
+      const error = new Error("Raid-Datum fehlt.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const randomInternalId = randomUUID();
+    const randomExternalId = clean(params.raidId || params.RaidID || params.raidID) || `RANDOM-${raidType}-${Date.now()}`;
+    const randomRaidName = clean(params.raidName) || displayRaidName(raidType);
+    const randomGroupName = clean(params.groupName || params.guildName || params.gilde || params.guildDisplayName) || "Random";
+    const randomCreator = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) || "Random-Raidlead";
+    const savedRandomRaid = await randomQuery(
+      `insert into random_raids (
+         id, external_raid_id, raid_type, raid_name, group_name, raid_date,
+         raid_time, prio_pin, lead_pin, status, created_by, settings_json
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
+       returning *`,
+      [
+        randomInternalId,
+        randomExternalId,
+        raidType,
+        randomRaidName,
+        randomGroupName,
+        randomRaidDate,
+        randomRaidTime,
+        prioPin,
+        leadPin,
+        normalizeStatus(params.status || "geschlossen"),
+        randomCreator,
+        JSON.stringify({ source: "public-random-raid", version: 1 })
+      ]
+    );
+    const saved = savedRandomRaid.rows[0];
+    return {
+      success: true,
+      id: saved.id,
+      raidId: saved.external_raid_id,
+      RaidID: saved.external_raid_id,
+      raid: saved.raid_type,
+      raidName: saved.raid_name,
+      raidDate: saved.raid_date,
+      raidTime: saved.raid_time,
+      guild: saved.group_name,
+      playerPin: saved.prio_pin,
+      prioPin: saved.prio_pin,
+      leadPin: saved.lead_pin,
+      status: saved.status,
+      randomRaid: true,
+      storage: "separate-random-database"
+    };
   }
 
   const creator = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller);
@@ -23766,6 +23901,60 @@ async function validateLeadPin({ guildId, query: params }) {
   }
 
   return { success: true, managerMode: "raidlead", ...normalizeRaidRow(raid) };
+}
+
+function normalizeRandomRaidRow(row) {
+  if (!row) return null;
+  const raidDate = row.raid_date instanceof Date ? row.raid_date.toISOString().slice(0, 10) : clean(row.raid_date);
+  return {
+    id: row.id,
+    internalRaidId: row.id,
+    raidId: row.external_raid_id,
+    RaidID: row.external_raid_id,
+    raid: row.raid_type,
+    raidName: row.raid_name,
+    raidDate,
+    date: raidDate,
+    raidTime: clean(row.raid_time),
+    time: clean(row.raid_time),
+    guild: row.group_name,
+    gilde: row.group_name,
+    playerPin: row.prio_pin,
+    prioPin: row.prio_pin,
+    leadPin: row.lead_pin,
+    status: row.status,
+    published: Boolean(row.published),
+    randomRaid: true,
+    storage: "separate-random-database"
+  };
+}
+
+async function validateRandomLeadPin(params = {}) {
+  await ensureRandomRaidSchema();
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (!leadPin) return { success: false, error: "Falsche Random LeadPIN." };
+  const result = await randomQuery(
+    `select * from random_raids
+     where lower(lead_pin) = lower($1) and archived_at is null
+     order by raid_date desc, created_at desc limit 1`,
+    [leadPin]
+  );
+  if (!result.rows[0]) return { success: false, error: "Falsche Random LeadPIN." };
+  return { success: true, managerMode: "random-raidlead", ...normalizeRandomRaidRow(result.rows[0]) };
+}
+
+async function findRandomRaidByPrioPin(params = {}) {
+  await ensureRandomRaidSchema();
+  const prioPin = clean(params.playerPin || params.prioPin || params.raidPin || params.pin);
+  if (!prioPin) return { success: false, error: "Bitte Random PrioPIN eingeben." };
+  const result = await randomQuery(
+    `select * from random_raids
+     where lower(prio_pin) = lower($1) and archived_at is null
+     order by raid_date desc, created_at desc limit 1`,
+    [prioPin]
+  );
+  if (!result.rows[0]) return { success: false, error: "Kein Raid zu dieser Random PrioPIN gefunden." };
+  return { success: true, ...normalizeRandomRaidRow(result.rows[0]) };
 }
 
 async function findRaidByPrioPin({ guildId, query: params }) {
@@ -28696,12 +28885,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "findRaidByPrioPin") {
-      const raid = await findRaidByPrioPin({ guildId: guild.id, query: req.query });
+      const raid = ["1", "true", "yes", "ja"].includes(clean(req.query.random).toLowerCase())
+        ? await findRandomRaidByPrioPin(req.query)
+        : await findRaidByPrioPin({ guildId: guild.id, query: req.query });
       return res.json({ ...raid, guild: guild.slug });
     }
 
     if (action === "validateLeadPin") {
-      const raid = await validateLeadPin({ guildId: guild.id, query: req.query });
+      const raid = ["1", "true", "yes", "ja"].includes(clean(req.query.random).toLowerCase())
+        ? await validateRandomLeadPin(req.query)
+        : await validateLeadPin({ guildId: guild.id, query: req.query });
       return res.json({ ...raid, guild: guild.slug });
     }
 
