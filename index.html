@@ -1280,6 +1280,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 .account-step::before{content:attr(data-step);position:absolute;left:16px;top:17px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(250,204,21,.65);background:rgba(250,204,21,.14);color:#facc15;font-weight:950}
 .account-step-title{grid-column:1/-1;color:#facc15;font-size:16px;font-weight:950}.account-step-title small{display:block;margin-top:3px;color:#cbd5e1;font-size:12px;font-weight:600}
 .field-help{display:block;margin-top:6px;color:#94a3b8;font-size:12px;line-height:1.35;text-transform:none;letter-spacing:0;font-weight:600}
+.discord-field-label{display:flex;align-items:center;gap:7px}.discord-field-label img{width:18px;height:18px;object-fit:contain}
 .account-checklist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.account-check{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.55);color:#94a3b8;font-size:13px;font-weight:800}.account-check.done{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.1);color:#86efac}
 .account-submit{min-height:54px;font-size:17px!important}.account-submit:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.4)}
 .field-error{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.14)!important}.status.account-error{border-color:rgba(239,68,68,.55);background:rgba(127,29,29,.2);color:#fecaca;font-weight:800}
@@ -1786,6 +1787,11 @@ body.show-mylichtloot .account-creation-panel{display:none}
         <label>Gewünschter SpielerLogin *</label>
         <input id="customPlayerPin" type="text" placeholder="4–8 Zeichen, z. B. ARIEE25" minlength="4" maxlength="8" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); updateCreateLoginGuide()">
         <span class="field-help">Erlaubt sind 4–8 Buchstaben oder Zahlen. Keine Leerzeichen.</span>
+      </div>
+      <div class="full">
+        <label class="discord-field-label"><img src="images/discord.svg" alt="">Discord-Name (optional)</label>
+        <input id="accountDiscordName" type="text" maxlength="80" placeholder="z. B. Ariee oder ariee123">
+        <span class="field-help">Optional: Wird dein Name eindeutig gefunden und erlaubst du Direktnachrichten, informiert dich der P0-Bot nach der Freischaltung per Discord-DM.</span>
       </div>
       </div>
 
@@ -2866,8 +2872,10 @@ function getPlayerPinInput(){
   const customPin=customPinField ? customPinField.value.trim().toUpperCase() : "";
   const securityQuestionField=document.getElementById("securityQuestion");
   const securityAnswerField=document.getElementById("securityAnswer");
+  const discordNameField=document.getElementById("accountDiscordName");
   const securityQuestion=securityQuestionField ? securityQuestionField.value.trim() : "";
   const securityAnswer=securityAnswerField ? securityAnswerField.value.trim() : "";
+  const discordName=discordNameField ? discordNameField.value.trim().replace(/^@+/,"") : "";
 
   if(!charName || !server){
     return null;
@@ -2878,6 +2886,7 @@ function getPlayerPinInput(){
     server:server,
     className:className,
     customPin:customPin,
+    discordName:discordName,
     securityQuestion:securityQuestion,
     securityAnswer:securityAnswer
   };
@@ -3047,6 +3056,7 @@ async function createPlayerPinFromSheet(){
     "&server=" + encodeURIComponent(input.server) +
     "&className=" + encodeURIComponent(input.className) +
     "&customPin=" + encodeURIComponent(input.customPin) +
+    "&discordName=" + encodeURIComponent(input.discordName || "") +
     "&securityQuestion=" + encodeURIComponent(input.securityQuestion || "") +
     "&securityAnswer=" + encodeURIComponent(input.securityAnswer || "") +
     "&t=" + Date.now();
@@ -3066,7 +3076,12 @@ async function createPlayerPinFromSheet(){
 
     showPlayerPinValue(result.pin);
     document.querySelectorAll("#createLoginForm input,#createLoginForm select").forEach(element=>element.disabled=true);
-    status.innerHTML='<span class="ok">✓ Dein SpielerAccount wurde erstellt.</span><br><strong>Bitte diesen SpielerLogin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<span class="pending-approval-notice">Dein SpielerAccount muss durch die Gildenleitung erst noch freigegeben werden.</span>';
+    const discordNotice=input.discordName
+      ? (result.discordLinkStatus === "linked"
+          ? '<br><span class="field-help">Discord wurde verknüpft. Nach der Freischaltung versucht der P0-Bot, dir eine DM zu senden.</span>'
+          : '<br><span class="warn">Der Discord-Name konnte nicht eindeutig gefunden werden. Dein SpielerAccount wurde trotzdem normal erstellt; es wird lediglich keine Freischaltungs-DM gesendet.</span>')
+      : '';
+    status.innerHTML='<span class="ok">✓ Dein SpielerAccount wurde erstellt.</span><br><strong>Bitte diesen SpielerLogin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<span class="pending-approval-notice">Dein SpielerAccount muss durch die Gildenleitung erst noch freigegeben werden.</span>'+discordNotice;
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
 
