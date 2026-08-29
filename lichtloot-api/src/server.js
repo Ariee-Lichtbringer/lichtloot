@@ -23111,13 +23111,16 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     )
     : { rows: [] };
   if (linkedRegularRaid) {
-    for (const approvedSignup of signupResult.rows.filter(row => clean(row.approval_status).toLowerCase() === "approved")) {
+    // Eine P0-Anmeldung ist bereits mit dem Eintragen verbindlich und muss
+    // deshalb auch im noch offenen Zustand auf der Lootseite sichtbar sein.
+    // Nur abgelehnte Einträge werden nicht in den verknüpften Raid übernommen.
+    for (const visibleSignup of signupResult.rows.filter(row => clean(row.approval_status).toLowerCase() !== "rejected")) {
       await syncReviewedP0OnlySignupToLinkedRaid({
         guildId,
         p0Event: raid,
         linkedRaid: linkedRegularRaid,
-        signup: approvedSignup,
-        approvalStatus: "approved"
+        signup: visibleSignup,
+        approvalStatus: clean(visibleSignup.approval_status).toLowerCase() || "pending"
       });
     }
   }
@@ -23137,6 +23140,21 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       [guildId, linkedP0OnlyEvent.id]
     )
     : { rows: [] };
+  // Wenn der Bot den normalen Raid zuerst findet, liegen dessen Discord-P0-
+  // Anmeldungen weiterhin im verknüpften separaten Datensatz. Vor dem Lesen
+  // der Prioliste werden auch diese offenen und freigegebenen Einträge
+  // übernommen. Das betrifft unter anderem die reinen MC- und BWL-Anmelder.
+  if (linkedP0OnlyEvent && !raid.p0_only) {
+    for (const visibleSignup of linkedP0OnlySignupResult.rows.filter(row => clean(row.approval_status).toLowerCase() !== "rejected")) {
+      await syncReviewedP0OnlySignupToLinkedRaid({
+        guildId,
+        p0Event: linkedP0OnlyEvent,
+        linkedRaid: raid,
+        signup: visibleSignup,
+        approvalStatus: clean(visibleSignup.approval_status).toLowerCase() || "pending"
+      });
+    }
+  }
   const raidIdentityValues = Array.from(new Set([
     clean(raid.id),
     clean(raid.external_raid_id),
@@ -23508,12 +23526,21 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         [guildId, raid.id, item.id]
       );
       await client.query("commit");
+      const linkedRaid = await resolveLinkedRegularRaidForP0Event(guildId, raid, { persist: true });
+      const linkedPrioSync = await syncReviewedP0OnlySignupToLinkedRaid({
+        guildId,
+        p0Event: raid,
+        linkedRaid,
+        signup: signupResult.rows[0],
+        approvalStatus: "pending"
+      });
       return {
         success: true,
         raid: normalizeRaidRow(raid),
         signup: normalizeP0SignupRow({ ...signupResult.rows[0], raid_public_id: raid.external_p0_id, raid_type: raid.raid_type }),
         itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow),
-        syncedPrio: false,
+        syncedPrio: Boolean(linkedPrioSync?.synced),
+        linkedPrioSync,
         storage: "separate-p0-database"
       };
     }
@@ -23739,7 +23766,7 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
       await client.query("rollback");
       return { success: true, skipped: true, reason: "character_missing" };
     }
-    if (approvalStatus !== "approved") {
+    if (approvalStatus === "rejected") {
       const removed = await client.query(
         `delete from prios
          where raid_id=$1 and character_id=$2
