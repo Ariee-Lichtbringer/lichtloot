@@ -1508,7 +1508,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 <body>
 <div class="overlay">
   <div class="header">
-    <img src="images/content.png" alt="LichtLoot" class="logo-banner">
+    <img src="images/lichtloot-logo.png" alt="LichtLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
       <a href="javascript:void(0)" onclick="document.getElementById('guildSignupPanel')?.scrollIntoView({behavior:'smooth'})">Hilfe</a>
     </nav>
@@ -2403,7 +2403,7 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo=guildLogoUrl(guild);
+  const logo="images/lichtloot-logo.png";
   const background=guild?.backgroundUrl || "";
   if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
   if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
