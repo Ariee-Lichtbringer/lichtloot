@@ -1992,7 +1992,7 @@ async function loadRaidPrioCheck(){
 }
 
 function raidleadSignupNames(){
-  const excluded=new Set(["absent","abgemeldet","declined"]),seen=new Set();
+  const excluded=new Set(["absent","abgemeldet","declined","bench","ersatzbank","reserve","late","spät","spaet","tentative","maybe","vielleicht","unsicher"]),seen=new Set();
   return (currentRaidSignupRows||[]).filter(row=>!excluded.has(String(row.status||row.signupStatus||"").toLowerCase())).map(row=>String(row.player||row.char||row.playerName||row.characterName||row.name||"").trim()).filter(name=>{const key=normalizeDcPlayerName(name);if(!key||seen.has(key))return false;seen.add(key);return true;});
 }
 
@@ -2030,8 +2030,53 @@ function renderEntryMetrics(){
       <span class="entry-metric">Angemeldet <strong>${signupNames.length}</strong></span>
       <span class="entry-metric">Fehlende Prioeinträge <strong class="${missingClass}">${missingRows.length}</strong></span>
     </div>
-    <div class="status" style="margin-top:7px"><strong>Fehlende Prioeinträge:</strong> ${renderRaidleadMissingPrioChips(missingRows)}</div>
+    <div class="status" style="margin-top:7px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:7px">
+        <strong>Fehlende Prioeinträge:</strong>
+        ${missingRows.length?`<button id="missingPrioDiscordButton" class="btn small-btn" type="button" onclick="sendMissingPrioDiscordReminder()"><img src="images/discord.svg" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">Discord-Erinnerung senden</button>`:""}
+      </div>
+      ${renderRaidleadMissingPrioChips(missingRows)}
+    </div>
   `;
+}
+
+async function sendMissingPrioDiscordReminder(){
+  if(!currentRaidHasSignupHelper){
+    alert("Diese Erinnerung gibt es nur für vollständige Raidanmelder.");
+    return;
+  }
+  const missingNames=raidleadMissingPrioNames();
+  if(!missingNames.length){
+    alert("Alle angemeldeten Charaktere haben bereits eine Prio eingetragen.");
+    return;
+  }
+  const button=document.getElementById("missingPrioDiscordButton");
+  if(button){button.disabled=true;button.textContent="Wird gesendet …";}
+  const params=new URLSearchParams({
+    guild:currentGuildSlug(),
+    action:"queueRaidMissingPrioReminder",
+    raidId:currentRaidData?.raidId||"",
+    leadPin:currentRaidData?.leadPin||document.getElementById("raidPinInput")?.value.trim()||"",
+    t:String(Date.now())
+  });
+  try{
+    const response=await fetch(RAID_API_URL+"?"+params.toString(),{method:"GET",cache:"no-store"});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||result.success===false)throw new Error(result.error||"Discord-Erinnerung konnte nicht gesendet werden.");
+    if(!result.queued){
+      alert(result.message||"Es fehlen keine Prioeinträge mehr.");
+      await loadPriosFromSheet(currentRaidData?.leadPin||"");
+      await loadRaidPrioCheck();
+      renderRaidView();
+      return;
+    }
+    alert("Die Discord-Erinnerung wurde für "+result.missingCharacters.length+" Charakter(e) vorgemerkt.");
+  }catch(error){
+    console.error(error);
+    alert(error.message||"Discord-Erinnerung konnte nicht gesendet werden.");
+  }finally{
+    if(button){button.disabled=false;button.innerHTML='<img src="images/discord.svg" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">Discord-Erinnerung senden';}
+  }
 }
 
 function updateRaidNavigation(){
