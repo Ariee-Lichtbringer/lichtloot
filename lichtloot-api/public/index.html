@@ -2622,6 +2622,7 @@ async function openRandomPrioFromStart(){
     const url =
       LICHTLOOT_API_URL +
       "?action=findRaidByPrioPin" +
+      "&random=1" +
       "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
       "&playerPin=" + encodeURIComponent(pin) +
       "&t=" + Date.now();
@@ -2664,6 +2665,7 @@ async function openRandomRaidleadFromStart(){
     const url =
       LICHTLOOT_API_URL +
       "?action=validateLeadPin" +
+      "&random=1" +
       "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
       "&leadPin=" + encodeURIComponent(pin) +
       "&t=" + Date.now();
