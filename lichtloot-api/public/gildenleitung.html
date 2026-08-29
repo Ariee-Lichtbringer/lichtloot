@@ -5715,8 +5715,8 @@ body.worldbuff-only .master-only{display:none!important}
           </section>
 
           <div class="raid-helper-wizard-nav">
-            <button id="raidHelperWizardBack" class="btn ghost" type="button" onclick="moveRaidHelperWizard(-1)">← Zurück</button>
-            <button id="raidHelperWizardNext" class="btn" type="button" onclick="moveRaidHelperWizard(1)">Weiter →</button>
+            <button id="raidHelperWizardBack" class="btn ghost" type="button">← Zurück</button>
+            <button id="raidHelperWizardNext" class="btn" type="button">Weiter →</button>
           </div>
 
           <div id="raidHelperLegacyCreateTools" class="tools hidden">
@@ -5927,85 +5927,11 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="raid-helper-view-head">
           <div><h3>Raid-Vorlagen</h3><span>Eine Vorlage auswählen, bearbeiten oder direkt für einen neuen Raidanmelder verwenden.</span></div>
           <div class="raid-helper-template-actions">
-            <button class="small-btn good" type="button" onclick="newRaidHelperTemplate()">Neue Vorlage erstellen</button>
+            <button class="small-btn good" type="button" onclick="openNewRaidHelperTemplateInCreate()">Neue Vorlage erstellen</button>
             <button class="small-btn ghost" type="button" onclick="loadRaidHelperTemplates()">Aktualisieren</button>
           </div>
         </div>
-        <div class="raid-helper-template-editor">
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
-              <span class="raid-helper-card-icon">▱</span>
-              <div>
-                <h3>Vorlage bearbeiten</h3>
-                <p>Speichern, duplizieren oder als Raidanmelder übernehmen.</p>
-              </div>
-            </div>
-            <input id="raidHelperTemplateId" type="hidden">
-            <div class="raid-helper-template-fields">
-              <div class="field">
-                <label for="raidHelperTemplateRaid">Raid</label>
-                <select id="raidHelperTemplateRaid" onchange="updateRaidHelperTemplateDefaults(false)">
-                  <option value="zg">Zul Gurub</option>
-                  <option value="zg-mittwoch">ZG Mittwoch</option>
-                  <option value="zg-prime">ZG PRIME</option>
-                  <option value="zg-late">ZG LATE</option>
-                  <option value="aq20">AQ20</option>
-                  <option value="aq40">AQ40</option>
-                  <option value="bwl">BWL</option>
-                  <option value="mc">MC</option>
-                  <option value="naxx">Naxxramas</option>
-                  <option value="ony">Onyxia</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateTitle">Titel</label>
-                <input id="raidHelperTemplateTitle" type="text" placeholder="ZG Raid 21 Uhr">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateMax">Gesamt</label>
-                <input id="raidHelperTemplateMax" type="number" min="1" value="20">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateTanks">Tanks</label>
-                <input id="raidHelperTemplateTanks" type="number" min="0" value="1">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateHeals">Heals</label>
-                <input id="raidHelperTemplateHeals" type="number" min="0" value="4">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateDds">DD</label>
-                <input id="raidHelperTemplateDds" type="number" min="0" value="15">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateDeadline">Anmeldeschluss</label>
-                <input id="raidHelperTemplateDeadline" type="time" value="20:30">
-              </div>
-              <div class="field">
-                <label for="raidHelperTemplateChannel">Discord-Channel</label>
-                <select id="raidHelperTemplateChannel"></select>
-              </div>
-              <div class="field raid-helper-editor-wide">
-                <label for="raidHelperTemplateImageUrl">Bild-URL (Bild unten im Discord-Anmelder)</label>
-                <input id="raidHelperTemplateImageUrl" type="url" placeholder="https://…/bild.jpg">
-              </div>
-            </div>
-          </section>
-          <section class="raid-helper-card">
-            <div class="field">
-              <label for="raidHelperTemplateDescription">Beschreibung / Regeln</label>
-              <textarea id="raidHelperTemplateDescription"></textarea>
-            </div>
-            <div class="raid-helper-template-actions">
-              <button class="small-btn primary" type="button" onclick="saveRaidHelperTemplate()">Speichern</button>
-              <button class="small-btn good" type="button" onclick="applyRaidHelperTemplateFromEditor()">Vorlage nutzen</button>
-              <button class="small-btn ghost" type="button" onclick="planRaidHelperTemplateRepostFromEditor()">Repost planen</button>
-              <button class="small-btn ghost" type="button" onclick="newRaidHelperTemplate()">Neue Vorlage</button>
-              <button class="small-btn danger" type="button" onclick="deleteRaidHelperTemplate()">Löschen</button>
-            </div>
-            <div id="raidHelperTemplateStatus" class="status raid-helper-template-status">Bereit.</div>
-          </section>
-        </div>
+        <div id="raidHelperTemplateStatus" class="status raid-helper-template-status">Es werden nur gespeicherte Vorlagen angezeigt.</div>
         <div id="raidHelperTemplateGrid" class="raid-helper-template-grid"></div>
       </div>
       <div id="raidHelperTab-poSignup" class="raid-helper-tab-panel raid-helper-view hidden">
@@ -7839,7 +7765,7 @@ function setRaidHelperWizardStep(step){
   if(back) back.disabled=raidHelperWizardStep===1;
   if(next){
     next.textContent=raidHelperWizardStep===5
-      ? (raidHelperEditingScheduleIdentifier ? "Rhythmus speichern" : "Raidanmelder jetzt erstellen")
+      ? (raidHelperEditingTemplateIdentifier ? "Vorlage speichern" : (raidHelperEditingScheduleIdentifier ? "Rhythmus speichern" : "Raidanmelder jetzt erstellen"))
       : "Weiter →";
     next.classList.toggle("good",raidHelperWizardStep===5);
   }
@@ -7871,6 +7797,9 @@ function moveRaidHelperWizard(direction){
   }
   setRaidHelperWizardStep(raidHelperWizardStep+Number(direction||0));
 }
+
+document.getElementById("raidHelperWizardBack")?.addEventListener("click",()=>moveRaidHelperWizard(-1));
+document.getElementById("raidHelperWizardNext")?.addEventListener("click",()=>moveRaidHelperWizard(1));
 
 function openP0OnlyCreatorFromDashboard(){
   openRaidHelperPanel("poCreate");
@@ -7934,6 +7863,20 @@ function openNewRaidHelperForm(){
   document.getElementById("raidHelperCustomInstanceField")?.classList.add("hidden");
   setRaidHelperTab("createEvent");
   updateRaidHelperPreview();
+}
+
+function openNewRaidHelperTemplateInCreate(){
+  openNewRaidHelperForm();
+  raidHelperEditingTemplateIdentifier = "__new__";
+  const defaults = raidHelperTemplateDefaults("zg");
+  applyRaidHelperTemplateObject(defaults);
+  raidHelperEditingTemplateIdentifier = "__new__";
+  setRaidHelperWizardStep(1);
+  const box = document.getElementById("raidHelperTemplateEditMode");
+  const title = document.getElementById("raidHelperTemplateEditModeTitle");
+  if(title) title.textContent = "Neue Vorlage mit der vollständigen Maske erstellen und anschließend speichern.";
+  box?.classList.remove("hidden");
+  document.getElementById("raidHelperTab-createEvent")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function closeRaidCenter(){
@@ -11512,6 +11455,7 @@ function cancelRaidHelperEventCreateEdit(){
 }
 
 function submitRaidHelperCreateOrEdit(){
+  if(raidHelperEditingTemplateIdentifier) return saveRaidHelperTemplateFromCreate();
   if(raidHelperEditingScheduleIdentifier) return saveRaidHelperScheduleFromCreate();
   return raidHelperEditingRaidIdentifier ? saveRaidHelperEventFromCreate() : createRaidHelperSignup();
 }
@@ -13134,21 +13078,22 @@ async function loadRaidHelperTemplates(){
 function renderRaidHelperTemplates(){
   const grid = document.getElementById("raidHelperTemplateGrid");
   if(!grid) return;
-  renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
-  const list = allRaidHelperTemplates();
-  if(!document.getElementById("raidHelperTemplateTitle")?.value.trim()){
-    fillRaidHelperTemplateEditor(list[0] || raidHelperTemplateDefaults("zg"));
+  const list = raidHelperTemplates.filter(item=>item && !item.builtin && item.id);
+  if(!list.length){
+    grid.innerHTML = '<div class="status">Noch keine gespeicherte Vorlage vorhanden. Nutze oben „Neue Vorlage erstellen“.</div>';
+    return;
   }
   grid.innerHTML = list.map(item => {
     const key = raidHelperTemplateKey(item);
     const raidKey = String(item.raid || item.raidType || "zg").trim().toLowerCase();
     const raid = RAID_OPTIONS[raidKey] || {};
     const text = item.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
-    const badge = item.builtin ? "Standard" : "Gespeichert";
+    const badge = "Gespeichert";
+    const imageUrl = defaultRaidHelperImageUrl(raidKey) || item.raidImageUrl || item.imageUrl || `images/raid-templates/${raidKey}.jpg`;
     return `
       <article class="raid-helper-template-card" style="--template-accent:${raidHelperRaidColorRgb(raidKey)}">
         <div class="raid-helper-template-visual">
-          <img src="images/raid-templates/${escapeAttr(raidKey)}.jpg" alt="${escapeAttr(raid.name || raidKey.toUpperCase())}">
+          <img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raid.name || raidKey.toUpperCase())}">
         </div>
         <div class="raid-helper-template-main">
           <div class="raid-helper-template-card-head">
@@ -13186,8 +13131,7 @@ function raidHelperRaidColorRgb(raidKey){
 function editRaidHelperTemplate(identifier){
   const template = findRaidHelperTemplate(identifier);
   if(!template) return;
-  fillRaidHelperTemplateEditor(template);
-  raidHelperEditingTemplateIdentifier = raidHelperTemplateKey(template);
+  raidHelperEditingTemplateIdentifier = String(template.id || raidHelperTemplateKey(template));
   applyRaidHelperTemplateObject(template);
   const box = document.getElementById("raidHelperTemplateEditMode");
   const title = document.getElementById("raidHelperTemplateEditModeTitle");
@@ -13234,24 +13178,21 @@ async function saveRaidHelperTemplateFromCreate(){
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
-      signupDeadline:original.signupDeadline || "",
+      signupDeadline:raidHelperValue("raidHelperSignupDeadline"),
       discordChannelId:raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID,
-      raidImageUrl:raidHelperValue("raidHelperImageUrl") || original.raidImageUrl || defaultRaidHelperImageUrl(raidKey)
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey) || raidHelperValue("raidHelperImageUrl") || original.raidImageUrl
       ,settingsJson:JSON.stringify(settings)
     });
     if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
     const saved = result.template;
-    raidHelperTemplates = raidHelperTemplates.filter(item => String(item.id) !== String(saved.id));
-    raidHelperTemplates.push(saved);
-    raidHelperEditingTemplateIdentifier = raidHelperTemplateKey(saved);
-    fillRaidHelperTemplateEditor(saved);
-    renderRaidHelperTemplates();
-    const modeTitle = document.getElementById("raidHelperTemplateEditModeTitle");
-    if(modeTitle) modeTitle.textContent = `„${saved.title || title}“ wurde gespeichert. Du kannst sie weiter bearbeiten.`;
-    if(status){
-      status.textContent = "Vorlage gespeichert.";
-      status.className = "status good";
-    }
+    if(!saved?.id) throw new Error("Die Vorlage wurde vom Server nicht bestätigt.");
+    await loadRaidHelperTemplates();
+    const confirmed = raidHelperTemplates.find(item=>String(item.id)===String(saved.id));
+    if(!confirmed || String(confirmed.title||"")!==String(title)) throw new Error("Die gespeicherte Vorlage konnte nicht erneut bestätigt werden.");
+    raidHelperEditingTemplateIdentifier = "";
+    document.getElementById("raidHelperTemplateEditMode")?.classList.add("hidden");
+    setRaidHelperTab("templates");
+    setRaidHelperTemplateStatus(`Vorlage „${confirmed.title || title}“ wurde dauerhaft gespeichert.`, "good");
   }catch(error){
     if(status){
       status.textContent = error.message || "Vorlage konnte nicht gespeichert werden.";
@@ -13331,6 +13272,7 @@ function applyRaidHelperTemplateObject(template){
   const heals = document.getElementById("raidHelperHeals");
   const dds = document.getElementById("raidHelperDds");
   const channel = document.getElementById("raidHelperChannel");
+  const setValue=(id,value)=>{const field=document.getElementById(id);if(field)field.value=value??"";};
   if(select) select.value = raidKey;
   if(title) title.value = template.title || (raidKey === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung");
   if(desc) desc.value = template.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
@@ -13338,10 +13280,10 @@ function applyRaidHelperTemplateObject(template){
   if(tanks) tanks.value = template.tankSlots ?? tanks.value;
   if(heals) heals.value = template.healSlots ?? heals.value;
   if(dds) dds.value = template.ddSlots ?? dds.value;
+  setValue("raidHelperSignupDeadline",template.signupDeadline || "");
   if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
   setRaidHelperLinks(template);
   const settings=template.settings&&typeof template.settings==="object"?{...template.settings,...template}:template;
-  const setValue=(id,value)=>{const field=document.getElementById(id);if(field)field.value=value??"";};
   setValue("raidHelperLootMaster",settings.lootMaster||"");
   setValue("raidHelperAnnouncementMessage",settings.announcementMessage||"");
   const signupOnly=document.getElementById("raidHelperSignupOnly");
@@ -13367,7 +13309,7 @@ function applyRaidHelperTemplateObject(template){
   updateRaidHelperDefaults();
   updateFreeEmbedBuilder();
   const imageUrl = document.getElementById("raidHelperImageUrl");
-  if(imageUrl) imageUrl.value = template.raidImageUrl || template.imageUrl || defaultRaidHelperImageUrl(raidKey);
+  if(imageUrl) imageUrl.value = defaultRaidHelperImageUrl(raidKey) || template.raidImageUrl || template.imageUrl || "";
   renderRaidHelperDiscordChannels();
   updateRaidHelperPreview();
 }
@@ -16332,11 +16274,10 @@ function defaultRaidHelperImageUrl(raidKey){
   }
   if(!raw)return "";
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
-  if(CURRENT_GUILD_SLUG !== "lichtloot"){
-    const images=currentGuildInfo?.layout?.raidImages || {};
-    return String(images[raw] || images[key] || "").trim();
-  }
-  return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
+  const images=currentGuildInfo?.layout?.raidImages || {};
+  const configured=String(images[raw] || images[key] || "").trim();
+  if(configured)return configured;
+  return `images/raid-templates/${key}.jpg`;
 }
 
 function buildRaidHelperPreviewText(){
