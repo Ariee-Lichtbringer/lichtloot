@@ -23110,6 +23110,17 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       [guildId, linkedRegularRaid.id]
     )
     : { rows: [] };
+  if (linkedRegularRaid) {
+    for (const approvedSignup of signupResult.rows.filter(row => clean(row.approval_status).toLowerCase() === "approved")) {
+      await syncReviewedP0OnlySignupToLinkedRaid({
+        guildId,
+        p0Event: raid,
+        linkedRaid: linkedRegularRaid,
+        signup: approvedSignup,
+        approvalStatus: "approved"
+      });
+    }
+  }
   // Eine öffentliche P0-ID kann einen normalen Raid mit einem historischen
   // Eintrag in der separaten P0-Datenbank verbinden. Der Discord-Post muss in
   // diesem Fall beide Speicher lesen; andernfalls verschwinden die dort
@@ -23698,6 +23709,91 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
   }
 }
 
+async function syncReviewedP0OnlySignupToLinkedRaid({
+  guildId,
+  p0Event,
+  linkedRaid: suppliedLinkedRaid,
+  signup,
+  approvalStatus
+}) {
+  if (!p0Event?.p0_only || !signup?.id || !signup?.character_id) {
+    return { success: true, skipped: true, reason: "not_linkable" };
+  }
+  const linkedRaid = suppliedLinkedRaid
+    || await resolveLinkedRegularRaidForP0Event(guildId, p0Event, { persist: true });
+  if (!linkedRaid) {
+    return { success: true, skipped: true, reason: "linked_raid_missing" };
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const character = (await client.query(
+      `select c.*
+       from characters c
+       join players p on p.id=c.player_id
+       where p.guild_id=$1 and c.id=$2
+       limit 1`,
+      [guildId, signup.character_id]
+    )).rows[0];
+    if (!character) {
+      await client.query("rollback");
+      return { success: true, skipped: true, reason: "character_missing" };
+    }
+    if (approvalStatus !== "approved") {
+      const removed = await client.query(
+        `delete from prios
+         where raid_id=$1 and character_id=$2
+           and comment::text like $3`,
+        [linkedRaid.id, character.id, `%\"p0OnlySignupId\":\"${signup.id}\"%`]
+      );
+      await client.query("commit");
+      return { success: true, removed: removed.rowCount, linkedRaidId: raidPublicId(linkedRaid) };
+    }
+    const item = (await client.query(
+      `select id,name
+       from items
+       where id=$1 and lower(raid_type)=any($2)
+       limit 1`,
+      [signup.item_id, raidTypeSearchValues(linkedRaid.raid_type)]
+    )).rows[0];
+    if (!item) {
+      await client.query("rollback");
+      return { success: true, skipped: true, reason: "item_missing" };
+    }
+    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name);
+    await removeDuplicatePriosForCharacterName(client, linkedRaid.id, character);
+    await removeDuplicatePriosForPlayerLogin(client, linkedRaid.id, character);
+    const comment = JSON.stringify({
+      p0Selected: "ja",
+      p0Plus: itemRequiresRelease ? "ja" : "nein",
+      p0Item: item.name,
+      raidTime: linkedRaid.raid_time || "",
+      source: "discord-p0",
+      p0OnlySignupId: signup.id,
+      p0OnlyEventId: p0Event.id,
+      discordUserId: signup.discord_user_id || ""
+    });
+    await client.query(
+      `insert into prios (raid_id,character_id,p1_item_id,p2_item_id,p3_item_id,comment)
+       values ($1,$2,$3,$3,$3,$4)
+       on conflict (raid_id,character_id) do update
+         set p1_item_id=excluded.p1_item_id,
+             p2_item_id=excluded.p2_item_id,
+             p3_item_id=excluded.p3_item_id,
+             comment=excluded.comment,
+             updated_at=now()`,
+      [linkedRaid.id, character.id, item.id, comment]
+    );
+    await client.query("commit");
+    return { success: true, synced: true, linkedRaidId: raidPublicId(linkedRaid) };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function reviewP0DiscordSignup({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensureRaidSchema();
@@ -23777,6 +23873,14 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
     ? await p0Query(`select * from p0_only_events where id=$1 and guild_id=$2 limit 1`, [signup.event_id, guildId])
     : await query(`select * from raids where id = $1 and guild_id = $2 limit 1`, [signup.raid_id, guildId]);
   const raid = p0OnlyReview ? normalizeP0OnlyEventRow(raidResult.rows[0]) || {} : raidResult.rows[0] || {};
+  const linkedPrioSync = p0OnlyReview
+    ? await syncReviewedP0OnlySignupToLinkedRaid({
+      guildId,
+      p0Event: raid,
+      signup,
+      approvalStatus
+    })
+    : { success: true, skipped: true, reason: "regular_raid_signup" };
   if (clean(signup.discord_channel_id)) {
     await enqueueBotUpdate({
       guildId,
@@ -23818,6 +23922,7 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
     success: true,
     signup: normalizeP0SignupRow(signup),
     itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow),
+    linkedPrioSync,
     raidAnnouncementRefresh
   };
 }
