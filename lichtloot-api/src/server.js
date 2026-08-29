@@ -6958,6 +6958,191 @@ async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
   }
 }
 
+async function ensureRaidMissingPrioRemindersQueued() {
+  await ensureRaidSchema();
+  const upcomingRaids = await query(
+    `select r.id, r.guild_id, r.external_raid_id, r.raid_type, r.name,
+            r.raid_date, r.raid_time, r.raid_pin, r.player_link,
+            r.discord_channel_id
+     from raids r
+     where r.deleted_at is null
+       and r.raidhelper_enabled = true
+       and r.prio_enabled = true
+       and coalesce(r.discord_channel_id, '') <> ''
+       and coalesce(r.external_raid_id, '') !~* '^P0-'
+       and lower(coalesce(r.status, '')) not in
+         ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+       and coalesce(r.raid_time, '') ~ '^[0-9]{1,2}:[0-9]{2}'
+       and ((r.raid_date::timestamp + substring(r.raid_time from '([0-9]{1,2}:[0-9]{2})')::time)
+              at time zone 'Europe/Berlin')
+           between now() + interval '29 minutes' and now() + interval '31 minutes'
+       and not exists (
+         select 1
+         from bot_update_queue q
+         where q.guild_id = r.guild_id
+           and q.type = 'raid_missing_prio_reminder'
+           and coalesce(q.payload->>'source', 'automatic') = 'automatic'
+           and q.payload->>'raidId' = coalesce(nullif(r.external_raid_id, ''), r.id::text)
+           and q.payload->>'raidDate' = r.raid_date::text
+       )
+     order by r.raid_date, r.raid_time
+     limit 50`
+  );
+
+  const attendingStatuses = ['signed', 'registered', 'angemeldet', 'confirmed', 'fest'];
+  for (const raid of upcomingRaids.rows) {
+    const internalMissing = await query(
+      `select c.name as player_name
+       from raid_signups rs
+       join characters c on c.id = rs.character_id
+       join players signup_player on signup_player.id = c.player_id
+       where rs.raid_id = $1
+         and lower(coalesce(rs.status, 'signed')) = any($2)
+         and not exists (
+           select 1
+           from prios pr
+           join characters prio_character on prio_character.id = pr.character_id
+           where pr.raid_id = $1
+             and prio_character.player_id = signup_player.id
+             and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
+         )
+       order by lower(c.name)`,
+      [raid.id, attendingStatuses]
+    );
+    const externalMissing = await query(
+      `select res.player_name
+       from raid_external_signups res
+       where res.guild_id = $1 and res.raid_id = $2
+         and lower(coalesce(res.status, 'signed')) = any($3)
+         and not exists (
+           select 1
+           from prios pr
+           join characters c on c.id = pr.character_id
+           join players p on p.id = c.player_id
+           where pr.raid_id = $2 and p.guild_id = $1
+             and lower(c.name) = lower(res.player_name)
+             and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
+         )
+       order by lower(res.player_name)`,
+      [raid.guild_id, raid.id, attendingStatuses]
+    );
+    const missingCharacters = Array.from(new Map(
+      [...internalMissing.rows, ...externalMissing.rows]
+        .map(row => clean(row.player_name))
+        .filter(Boolean)
+        .map(name => [name.toLocaleLowerCase('de-DE'), name])
+    ).values());
+    if (!missingCharacters.length) continue;
+
+    await enqueueBotUpdate({
+      guildId: raid.guild_id,
+      type: 'raid_missing_prio_reminder',
+      payload: {
+        raidId: raidPublicId(raid),
+        raid: normalizeRaidType(raid.raid_type),
+        raidName: raid.name || displayRaidName(raid.raid_type),
+        raidDate: raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date),
+        raidTime: clean(raid.raid_time),
+        prioPin: clean(raid.raid_pin || raid.player_link),
+        channelId: clean(raid.discord_channel_id),
+        discordChannelId: clean(raid.discord_channel_id),
+        source: 'automatic',
+        missingCharacters
+      }
+    });
+  }
+}
+
+async function queueRaidMissingPrioReminder({ guildId, query: params }) {
+  await ensureRaidSchema();
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (clean(raid.lead_pin) && leadPin !== clean(raid.lead_pin)) {
+    const error = new Error("LeadPIN passt nicht zu diesem Raid.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (raid.raidhelper_enabled !== true || raid.p0_only === true || /^P0-/i.test(clean(raid.external_raid_id))) {
+    const error = new Error("Discord-Prio-Erinnerungen sind nur bei vollständigen Raidanmeldern verfügbar.");
+    error.statusCode = 409;
+    throw error;
+  }
+  if (!clean(raid.discord_channel_id)) {
+    const error = new Error("Für diesen Raid ist kein Discord-Channel gespeichert.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const attendingStatuses = ['signed', 'registered', 'angemeldet', 'confirmed', 'fest'];
+  const internalMissing = await query(
+    `select c.name as player_name
+     from raid_signups rs
+     join characters c on c.id = rs.character_id
+     join players signup_player on signup_player.id = c.player_id
+     where rs.raid_id = $1
+       and lower(coalesce(rs.status, 'signed')) = any($2)
+       and not exists (
+         select 1 from prios pr
+         join characters prio_character on prio_character.id = pr.character_id
+         where pr.raid_id = $1
+           and prio_character.player_id = signup_player.id
+           and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
+       )
+     order by lower(c.name)`,
+    [raid.id, attendingStatuses]
+  );
+  const externalMissing = await query(
+    `select res.player_name
+     from raid_external_signups res
+     where res.guild_id = $1 and res.raid_id = $2
+       and lower(coalesce(res.status, 'signed')) = any($3)
+       and not exists (
+         select 1 from prios pr
+         join characters c on c.id = pr.character_id
+         join players p on p.id = c.player_id
+         where pr.raid_id = $2 and p.guild_id = $1
+           and lower(c.name) = lower(res.player_name)
+           and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
+       )
+     order by lower(res.player_name)`,
+    [guildId, raid.id, attendingStatuses]
+  );
+  const missingCharacters = Array.from(new Map(
+    [...internalMissing.rows, ...externalMissing.rows]
+      .map(row => clean(row.player_name))
+      .filter(Boolean)
+      .map(name => [name.toLocaleLowerCase('de-DE'), name])
+  ).values());
+  if (!missingCharacters.length) {
+    return { success: true, queued: false, missingCharacters: [], message: "Alle angemeldeten Charaktere haben eine Prio eingetragen." };
+  }
+
+  const raidDate = raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date);
+  const queued = await enqueueBotUpdate({
+    guildId,
+    type: 'raid_missing_prio_reminder',
+    payload: {
+      raidId: raidPublicId(raid),
+      raid: normalizeRaidType(raid.raid_type),
+      raidName: raid.name || raid.raid_name || displayRaidName(raid.raid_type),
+      raidDate,
+      raidTime: clean(raid.raid_time),
+      prioPin: clean(raid.raid_pin || raid.player_link),
+      channelId: clean(raid.discord_channel_id),
+      discordChannelId: clean(raid.discord_channel_id),
+      source: 'raidlead_manual',
+      requestedAt: new Date().toISOString(),
+      missingCharacters
+    }
+  });
+  return { ...queued, queued: true, missingCharacters };
+}
+
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued(guildId);
@@ -7004,6 +7189,7 @@ async function getBotQueue({ guildId, query: params }) {
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued();
+  await ensureRaidMissingPrioRemindersQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
   // Wurde ein Bot während der Verarbeitung beendet, wird sein Auftrag nach
@@ -29160,6 +29346,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "queueRaidleadBossTokenNotice") {
       const queued = await queueRaidleadBossTokenNotice({ guildId: guild.id, query: req.query });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "queueRaidMissingPrioReminder") {
+      const queued = await queueRaidMissingPrioReminder({ guildId: guild.id, query: req.query });
       return res.json({ ...queued, guild: guild.slug });
     }
 
