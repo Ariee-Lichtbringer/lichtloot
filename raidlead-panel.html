@@ -2797,7 +2797,7 @@ function renderRows(){
       currentReleased && isP0Plus && isAllowedP0Raid()
         ? `<button class="btn warning small-btn"
              onclick="clearP0PlusForPlayer('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
-             P0+ erhalten
+             Item erhalten
            </button>`
         : "";
 
@@ -3317,10 +3317,10 @@ async function clearP0PlusForPlayer(player,server,itemName){
   if(!masterCode) return;
 
   const confirmed = confirm(
-    "P0+ Punkte löschen?\n\n" +
+    "Item als erhalten markieren?\n\n" +
     "Spieler: " + player + "\n" +
     "Item: " + itemName + "\n\n" +
-    "Alle gesammelten P0+ Punkte dieses Spielers auf dieses Item werden gelöscht."
+    "Alle gesammelten P0+ Punkte dieses Spielers auf dieses Item werden vollständig gelöscht."
   );
 
   if(!confirmed){
