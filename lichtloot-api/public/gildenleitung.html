@@ -8834,6 +8834,14 @@ function isAllowedP0RaidForRaid(raid){
   return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid));
 }
 
+function isZgRaidForP0Transfer(raid){
+  return getRaidKey(raid)==="zg" || getRaidKey(raid).startsWith("zg-");
+}
+
+function canTransferP0PlusFromRaid(raid){
+  return isAllowedP0RaidForRaid(raid) || isZgRaidForP0Transfer(raid);
+}
+
 function hasP0PlusTransfer(raidOrResult){
   return Boolean(
     raidOrResult &&
@@ -9083,7 +9091,7 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
+              ${canTransferP0PlusFromRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="${isZgRaidForP0Transfer(raid) ? `openP0PlusTransferDialog('${escapeAttr(raid.raidId)}')` : `transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')`}">P0+ übertragen</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
           </div>
@@ -9349,7 +9357,7 @@ function renderRaids(){
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
             <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM</button>
-            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
+            ${canTransferP0PlusFromRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="${isZgRaidForP0Transfer(raid) ? `openP0PlusTransferDialog('${escapeAttr(raid.raidId)}')` : `transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')`}">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">P0+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archivieren</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
@@ -17534,7 +17542,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
       </div>
       <div class="prio-toolbar-actions">
         <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatusFromModal('${escapeAttr(raidId)}')">${listOpen ? "Prio schließen" : "Prio öffnen"}</button>
-        ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(transferState) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raidId)}')">P0+ Punkte übertragen</button>` : ""}
+        ${canTransferP0PlusFromRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(transferState) ? "ghost" : "good"}" type="button" onclick="${isZgRaidForP0Transfer(raid) ? `openP0PlusTransferDialog('${escapeAttr(raidId)}')` : `transferP0PlusFromGuild('${escapeAttr(raidId)}')`}">P0+ Punkte übertragen</button>` : ""}
         <div class="muted">${prios.length ? `${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}` : "Keine Einträge"}</div>
       </div>
     </div>
@@ -17673,7 +17681,44 @@ async function toggleRaidPrioStatusFromModal(raidId){
   if(raid) openPrioModal(raidId);
 }
 
-async function transferP0PlusFromGuild(raidId){
+function openP0PlusTransferDialog(raidId){
+  const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id||"")===String(raidId));
+  if(!raid){setStatus("Raid wurde nicht gefunden.","bad");return;}
+  document.getElementById("p0PlusTransferTargetModal")?.remove();
+  const backdrop=document.createElement("div");
+  backdrop.id="p0PlusTransferTargetModal";
+  backdrop.className="raid-center-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:520px">
+    <h3>P0+ Ziel für ZG auswählen</h3>
+    <p>Die Prios stammen aus <strong>${escapeHtml(raid.raidName||"ZG Raid")}</strong>. Wähle die P0+-Datenbank, in die diese Punkte übertragen werden sollen.</p>
+    <label style="display:grid;gap:7px">ZG-Rhythmus
+      <select data-target>
+        <option value="zg-prime">ZG Prime</option>
+        <option value="zg-late">ZG Late-Night</option>
+        <option value="zg-mittwoch">ZG Mittwoch</option>
+      </select>
+    </label>
+    <div class="raid-helper-notify-actions" style="margin-top:16px">
+      <button class="small-btn ghost" type="button" data-close>Abbrechen</button>
+      <button class="small-btn good" type="button" data-transfer>P0+ übertragen</button>
+    </div>
+    <div class="status" data-status>Bitte Ziel kontrollieren.</div>
+  </div>`;
+  const close=()=>backdrop.remove();
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop)close();});
+  backdrop.querySelector("[data-close]").onclick=close;
+  backdrop.querySelector("[data-transfer]").onclick=async()=>{
+    const button=backdrop.querySelector("[data-transfer]");
+    const target=backdrop.querySelector("[data-target]").value;
+    button.disabled=true;
+    const success=await transferP0PlusFromGuild(raidId,target,{skipConfirm:true});
+    if(success)close();
+    else button.disabled=false;
+  };
+  document.body.appendChild(backdrop);
+}
+
+async function transferP0PlusFromGuild(raidId,targetRaid="",options={}){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -17684,14 +17729,16 @@ async function transferP0PlusFromGuild(raidId){
     setStatus("Raid wurde nicht gefunden.", "bad");
     return;
   }
-  if(!isAllowedP0RaidForRaid(raid)){
+  const destination=String(targetRaid||getRaidKey(raid)).trim().toLowerCase();
+  if(!["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(destination)){
     setStatus("P0+ Übertragung ist für diesen Raid nicht aktiviert.", "bad");
-    return;
+    return false;
   }
 
   const label = `${raid.raidName || raid.raid || "Raid"} ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim();
-  const ok = confirm(`P0+ Punkte für ${label} nach Railway übertragen?`);
-  if(!ok) return;
+  const destinationLabel={"zg-prime":"ZG Prime","zg-late":"ZG Late-Night","zg-mittwoch":"ZG Mittwoch"}[destination]||RAID_OPTIONS[destination]?.name||destination.toUpperCase();
+  const ok = options.skipConfirm || confirm(`P0+ Punkte für ${label} nach ${destinationLabel} übertragen?`);
+  if(!ok) return false;
 
   try{
     setStatus("P0+ Punkte werden nach Railway übertragen ...", "");
@@ -17699,12 +17746,13 @@ async function transferP0PlusFromGuild(raidId){
       action:"transferP0PlusPoints",
       masterCode,
       raidId: raid.raidId || "",
-      raid: getRaidKey(raid)
+      raid: getRaidKey(raid),
+      targetRaid:destination
     });
 
     if(!result.success){
       setStatus(result.error || "P0+ Punkte konnten nicht übertragen werden.", "bad");
-      return;
+      return false;
     }
 
     raid.p0PlusTransferred = Boolean(result.p0PlusTransferred || Number(result.p0PlusTransferCount || 0) > 0);
@@ -17716,9 +17764,14 @@ async function transferP0PlusFromGuild(raidId){
     setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.${skipped ? " " + skipped + " doppelte übersprungen." : ""}`, "good");
 
     const modal = document.getElementById("prioModal");
-    if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
+    if(modal && !modal.classList.contains("hidden")){
+      const archived=["archiviert","archive","archived","gelöscht","geloescht","deleted"].includes(normalize(raid.status||""))||Boolean(raid.deletedAt);
+      openPrioModal(raidId,archived);
+    }
+    return true;
   }catch(error){
     setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+    return false;
   }
 }
 
