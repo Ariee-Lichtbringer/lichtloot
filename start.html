@@ -6009,17 +6009,25 @@ function openDashboardCharacterMiniRaid(index){
   openLootPageWithPin(key,activeRaidPin(raid));
 }
 
+async function requestDashboardGearData(params){
+  const query=new URLSearchParams({...params,guild:CURRENT_GUILD_SLUG,t:Date.now()});
+  const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result?.error)throw new Error(result?.error||"Ausrüstungsdaten konnten nicht geladen werden.");
+  return result;
+}
+
 async function renderDashboardInlineGear(){
   const target=document.getElementById("dashboardInlineGear"),character=selectedDashboardCharacter();
   if(!target) return;
   if(!character){target.innerHTML='<div class="character-overview-empty">Charakter auswählen, um die Ausrüstung zu laden.</div>';return;}
   const name=String(character.name||character.character||"").trim();
+  const server=String(character.server||"").trim();
   target.innerHTML='<div class="character-overview-empty">Ausrüstung wird geladen …</div>';
   try{
-    if(typeof window.apiJsonp!=="function") throw new Error("API nicht verfügbar");
     const [armoryResult,logsResult]=await Promise.allSettled([
-      window.apiJsonp({action:"getPublicClassicArmoryGear",playerName:name}),
-      window.apiJsonp({action:"getPublicLogAnalysisPlayerProfile",playerName:name})
+      requestDashboardGearData({action:"getPublicClassicArmoryGear",playerName:name,server}),
+      requestDashboardGearData({action:"getPublicLogAnalysisPlayerProfile",playerName:name,server})
     ]);
     const armory=armoryResult.status==="fulfilled"&&!armoryResult.value?.error?armoryResult.value:null;
     const logProfile=logsResult.status==="fulfilled"&&!logsResult.value?.error?logsResult.value?.profile:null;
@@ -6041,7 +6049,7 @@ function openOwnCharacterGear(){
   try{character=JSON.parse(select.value)||{};}catch(error){character={name:select.value};}
   const name=String(character.name||character.char||character.player||"").trim();
   if(!name){if(status)status.innerHTML='<span class="bad">Der ausgewählte Charakter konnte nicht gelesen werden.</span>';return;}
-  if(typeof window.apiJsonp!=="function")window.apiJsonp=async params=>{const query=new URLSearchParams({...params,guild:CURRENT_GUILD_SLUG,t:Date.now()});const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});const result=await response.json();if(!response.ok||result?.error)throw new Error(result?.error||"Ausrüstungsdaten konnten nicht geladen werden.");return result;};
+  if(typeof window.apiJsonp!=="function")window.apiJsonp=requestDashboardGearData;
   if(typeof window.openPrioPlayerGear!=="function"){if(status)status.innerHTML='<span class="bad">Die Ausrüstungsansicht ist noch nicht geladen.</span>';return;}
   window.openPrioPlayerGear(name);
 }
@@ -9930,7 +9938,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   <a href="datenschutz.html">Datenschutz</a>
 </footer>
 
-<script src="loot/player-gear-popup.js?v=20260830-1700"></script>
+<script src="loot/player-gear-popup.js?v=20260830-1750"></script>
 <script src="pin-visibility.js"></script>
 </body>
 </html>
