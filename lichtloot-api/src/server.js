@@ -4449,6 +4449,40 @@ function classicArmoryRequestParams(value){
 async function classicArmoryPost(endpoint,params){const response=await fetch(`https://classic-armory.org/api/v1/character${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`ClassicArmory antwortet mit HTTP ${response.status}.`);return response.json();}
 const publicClassicArmoryGearCache=new Map();
 const classicArmorySlotLabels={HEAD:"Kopf",NECK:"Hals",SHOULDERS:"Schultern",BACK:"Rücken",CHEST:"Brust",SHIRT:"Hemd",TABARD:"Wappenrock",WRIST:"Handgelenke",HANDS:"Hände",WAIST:"Taille",LEGS:"Beine",FEET:"Füße",FINGER_1:"Ring 1",FINGER_2:"Ring 2",TRINKET_1:"Schmuck 1",TRINKET_2:"Schmuck 2",MAIN_HAND:"Waffenhand",OFF_HAND:"Schildhand",RANGED:"Distanz"};
+function officialBlizzardItemTooltip(item){
+  const lines=[];
+  if(item?.binding?.name)lines.push(item.binding.name);
+  if(item?.item_subclass?.name||item?.inventory_type?.name)lines.push([item.item_subclass?.name,item.inventory_type?.name].filter(Boolean).join(" · "));
+  if(item?.armor?.value)lines.push(`${item.armor.value} Rüstung`);
+  (item?.stats||[]).forEach(stat=>lines.push(clean(stat?.display?.display_string||`${stat?.value||""} ${stat?.type?.name||""}`)));
+  (item?.spells||[]).forEach(spell=>{if(spell?.description)lines.push(clean(spell.description));});
+  if(item?.weapon?.damage?.display_string)lines.push(item.weapon.damage.display_string);
+  if(item?.weapon?.attack_speed?.display_string)lines.push(item.weapon.attack_speed.display_string);
+  if(item?.weapon?.dps?.display_string)lines.push(item.weapon.dps.display_string);
+  if(item?.set?.display_string)lines.push(item.set.display_string);
+  (item?.set?.effects||[]).forEach(effect=>{if(effect?.display_string)lines.push(effect.display_string);});
+  if(item?.requirements?.level?.display_string)lines.push(item.requirements.level.display_string);
+  return lines.filter(Boolean).join("\n");
+}
+function normalizeOfficialBlizzardGearItem(item,index){
+  const slotType=clean(item?.slot?.type).toUpperCase(),itemId=Number(item?.id||item?.item?.id||0)||0;
+  const iconUrl=(item?.media?.content?.assets||[]).find(asset=>asset?.key==="icon")?.value||"";
+  return{itemId,name:clean(item?.name||`Ausrüstung ${index+1}`),slot:classicArmorySlotLabels[slotType]||clean(item?.slot?.name||slotType||"Ausrüstung"),slotType,itemLevel:Number(item?.level||item?.item_level||0)||"",quality:item?.quality?.type||item?.quality?.name||"",iconUrl:clean(iconUrl),enchant:(item?.enchantments||[]).map(entry=>clean(entry?.display_string).replace(/^Verzaubert:\s*/i,"")).filter(Boolean).join(" · "),tooltip:officialBlizzardItemTooltip(item),statsText:officialBlizzardItemTooltip(item),wowhead:itemId?`https://www.wowhead.com/classic/de/item=${itemId}`:""};
+}
+async function fetchOfficialBlizzardArmoryProfile({region="eu",realm,name}){
+  const url=`https://worldofwarcraft.blizzard.com/de-de/classic1x/${encodeURIComponent(region)}/armory/character/${encodeURIComponent(clean(realm).toLowerCase())}/${encodeURIComponent(clean(name).toLowerCase())}`;
+  const response=await fetch(url,{headers:{"accept":"text/html,application/xhtml+xml","accept-language":"de-DE,de;q=0.9","user-agent":"LichtLoot/1.0 Blizzard-Armory-Profil"},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw new Error(`Blizzard Armory antwortet mit HTTP ${response.status}.`);
+  const html=await response.text(),marker="var characterProfileInitialState = ",start=html.indexOf(marker);
+  if(start<0)throw new Error("Blizzard Armory enthält für diesen Charakter noch keine Profildaten.");
+  const jsonStart=start+marker.length,jsonEndCandidates=[html.indexOf(";\n</script>",jsonStart),html.indexOf(";\r\n</script>",jsonStart),html.indexOf(";</script>",jsonStart)].filter(index=>index>=0),jsonEnd=Math.min(...jsonEndCandidates);
+  if(jsonEnd<0)throw new Error("Blizzard-Profildaten konnten nicht gelesen werden.");
+  const state=JSON.parse(html.slice(jsonStart,jsonEnd)),character=state?.character||{};
+  const gear=Object.values(character.gear||{}).filter(Boolean).map(normalizeOfficialBlizzardGearItem);
+  if(!gear.length)throw new Error("Blizzard Armory hat für diesen Charakter noch keine Ausrüstung gespeichert.");
+  const stats=Object.fromEntries((character?.stats?.overview||[]).filter(Boolean).map(stat=>[clean(stat.enum),stat?.value?.value??stat?.details?.effective??""]));
+  return{success:true,source:"blizzard-armory",armoryUrl:url,updatedAt:clean(character?.lastUpdatedTimestamp?.iso8601),character:{name:clean(character.name||name),server:clean(character?.realm?.name||realm),className:clean(character?.class?.name||character?.class?.slug),level:Number(character.level||0)||"",race:clean(character?.race?.name),faction:clean(character?.faction?.name),gender:clean(character?.gender?.name),itemLevel:Number(character.averageItemLevel||stats.ITEMLEVEL||0)||"",renderUrl:clean(character?.render?.foreground?.url||character?.renderRaw?.url),avatarUrl:clean(character?.avatar?.url),specs:(character?.specs||[]).map(spec=>({name:clean(spec.name),points:Number(spec.spentPoints||0),active:Boolean(spec.active)})),stats,pvp:{honorableKills:Number(character?.pvp?.honorableKills?.value||0),rank:Number(character?.pvp?.rank?.value||0)}},gear};
+}
 function normalizeClassicArmoryGearItem(item,index){
   const slotType=clean(item?.slot_type||item?.slot?.type||item?.slot?.id).toUpperCase();
   const enchantParts=Array.isArray(item?.enchant_display)?item.enchant_display.filter(Boolean):[];
@@ -4481,6 +4515,11 @@ async function getPublicClassicArmoryGear({guildId,query:params={}}){
   const cacheKey=`${requestParams.region}:${requestParams.realm}:${requestParams.name.toLowerCase()}`;
   const cached=publicClassicArmoryGearCache.get(cacheKey);
   if(cached&&cached.expiresAt>Date.now())return cached.value;
+  try{
+    const official=await fetchOfficialBlizzardArmoryProfile({region:requestParams.region,realm:stored.server,name:stored.name});
+    publicClassicArmoryGearCache.set(cacheKey,{value:official,expiresAt:Date.now()+5*60*1000});
+    return official;
+  }catch(error){console.warn(`Blizzard Armory konnte für ${stored.name}-${stored.server} nicht geladen werden; Classic Armory wird verwendet:`,error.message||error);}
   const [characterData,equipmentData]=await Promise.all([classicArmoryPost("",requestParams),classicArmoryPost("/equipment",requestParams)]);
   const character=characterData?.character||{};
   let gear=(equipmentData?.equipment||[]).map(normalizeClassicArmoryGearItem).filter(item=>item.itemId||item.name);
