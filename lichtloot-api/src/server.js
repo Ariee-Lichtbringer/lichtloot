@@ -4742,7 +4742,9 @@ function poReleaseFlagsFromRows(rows) {
 
 const WCL_PO_ATTENDANCE_GUILD_IDS = { lichtloot:755306, lichtbringer:755306, nachtloot:703333 };
 const WCL_PO_ATTENDANCE_ZONES = { mc:2000, bwl:2002, aq40:2005, naxx:2006 };
+const WCL_RAID_PARTICIPATION_ZONES = { mc:2000, ony:2001, bwl:2002, zg:2003, "zg-mittwoch":2003, "zg-prime":2003, "zg-late":2003, aq20:2004, aq40:2005, naxx:2006 };
 const wclPoAttendanceCache = new Map();
+const wclRaidParticipationCache = new Map();
 function normalizeAttendanceName(value) { return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 async function getWclPoAttendance(raid,wclGuildId) {
   const zoneId=WCL_PO_ATTENDANCE_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
@@ -4753,6 +4755,33 @@ async function getWclPoAttendance(raid,wclGuildId) {
   const raids=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[]; const players={};
   raids.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;if(!players[key])players[key]={attended:0,bench:0};if(Number(player?.presence)===1)players[key].attended+=1;if(Number(player?.presence)===2)players[key].bench+=1;}));
   const value={total:Math.min(16,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
+}
+
+function wclRaidDateInBerlin(value) {
+  const timestamp=Number(value||0); if(!timestamp)return "";
+  return new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(timestamp));
+}
+
+async function getWclRaidParticipation(raid,wclGuildId,raidDate) {
+  const raidKey=normalizePoReleaseRaid(raid)||normalizeRaidType(raid),zoneId=WCL_RAID_PARTICIPATION_ZONES[raidKey],targetDate=clean(raidDate).slice(0,10);
+  if(!zoneId||!wclGuildId||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return {available:false,players:{},reports:[]};
+  const cacheKey=`${wclGuildId}:${zoneId}:${targetDate}`,cached=wclRaidParticipationCache.get(cacheKey);
+  if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const token=await getWarcraftLogsAccessToken(),reports=[];
+  const gqlQuery="query($guildID:Int!,$zoneID:Int!,$page:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:16,page:$page){data{code startTime players{name type presence}}}}}}";
+  for(let page=1;page<=20;page+=1){
+    const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId,page});
+    const entries=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[];
+    if(!entries.length)break;
+    entries.forEach(entry=>{if(wclRaidDateInBerlin(entry?.startTime)===targetDate)reports.push(entry);});
+    const dated=entries.map(entry=>wclRaidDateInBerlin(entry?.startTime)).filter(Boolean);
+    if(reports.length||entries.length<16||(dated.length&&dated.every(value=>value<targetDate)))break;
+  }
+  const players={};
+  reports.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;const presence=Number(player?.presence||0);if(presence===1||presence===2)players[key]={participated:true,bench:presence===2};}));
+  const value={available:reports.length>0,players,reports:reports.map(entry=>({code:clean(entry.code),url:clean(entry.code)?`https://vanilla.warcraftlogs.com/reports/${clean(entry.code)}`:"",date:targetDate}))};
+  wclRaidParticipationCache.set(cacheKey,{value,expiresAt:Date.now()+10*60*1000});
+  return value;
 }
 
 async function getCharacterPoReleaseRows(guildId) {
@@ -22829,31 +22858,17 @@ async function getPublishedPrios({ guildId, query: params }) {
     [guildId, `RaidID: ${raidPublicId(raid)}`, `RaidID: ${raid.id}`, `RaidID: ${raid.raid_pin}`]
   );
   const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
-  let wclParticipationAvailable = false;
-  let wclParticipationSource = { title: "", url: "" };
-  const wclParticipants = new Set();
+  let wclParticipation = { available:false, players:{}, reports:[] };
   try {
     const raidDate = raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date).slice(0, 10);
     if (raidDate) {
-      const wclResult = await query(
-        `select la.raid, la.title, la.report_url, la.updated_at, m.player_name
-         from log_analyses la
-         left join log_analysis_player_metrics m on m.analysis_id = la.id
-         where la.guild_id = $1 and la.raid_date = $2::date
-         order by la.updated_at desc nulls last`,
-        [guildId, raidDate]
-      );
-      const matchingRows = wclResult.rows.filter(row => normalizeRaidType(row.raid) === normalizeRaidType(raid.raid_type));
-      wclParticipationAvailable = matchingRows.length > 0;
-      const sourceRow = matchingRows.find(row => clean(row.report_url) || clean(row.title)) || matchingRows[0];
-      if (sourceRow) wclParticipationSource = { title: clean(sourceRow.title) || "Warcraft Logs", url: clean(sourceRow.report_url) };
-      matchingRows.forEach(row => {
-        const key = normalizeAttendanceName(row.player_name);
-        if (key) wclParticipants.add(key);
-      });
+      const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
+      const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
+      const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+      wclParticipation=await getWclRaidParticipation(raid.raid_type,wclGuildId,raidDate);
     }
   } catch (error) {
-    console.warn("Warcraft-Logs-Teilnahme für Plündermeister konnte nicht geladen werden:", error.message || error);
+    console.warn("Direkte Warcraft-Logs-Teilnahme für Plündermeister konnte nicht geladen werden:", error.message || error);
   }
   const raidStatus = normalizeStatus(raid.status);
   const published = ["geöffnet", "veröffentlicht", "published"].includes(raidStatus.toLowerCase());
@@ -22899,14 +22914,14 @@ async function getPublishedPrios({ guildId, query: params }) {
         prioCreatedAt: row.prio_created_at || "",
         PrioUpdatedAt: row.prio_updated_at || "",
         prioUpdatedAt: row.prio_updated_at || "",
-        WclParticipation: wclParticipationAvailable
-          ? (wclParticipants.has(normalizeAttendanceName(row.player)) ? "participated" : "not_found")
+        WclParticipation: wclParticipation.available
+          ? (wclParticipation.players[normalizeAttendanceName(row.player)]?.participated ? "participated" : "not_found")
           : "no_data",
-        wclParticipation: wclParticipationAvailable
-          ? (wclParticipants.has(normalizeAttendanceName(row.player)) ? "participated" : "not_found")
+        wclParticipation: wclParticipation.available
+          ? (wclParticipation.players[normalizeAttendanceName(row.player)]?.participated ? "participated" : "not_found")
           : "no_data",
-        wclSourceTitle: wclParticipationSource.title,
-        wclSourceUrl: wclParticipationSource.url,
+        wclSourceTitle: wclParticipation.reports[0]?.code ? `Warcraft Logs ${wclParticipation.reports[0].code}` : "Warcraft Logs",
+        wclSourceUrl: wclParticipation.reports[0]?.url || "",
         Bench: row.bench || "",
         bench: row.bench || ""
       };
