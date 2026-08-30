@@ -22829,6 +22829,32 @@ async function getPublishedPrios({ guildId, query: params }) {
     [guildId, `RaidID: ${raidPublicId(raid)}`, `RaidID: ${raid.id}`, `RaidID: ${raid.raid_pin}`]
   );
   const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
+  let wclParticipationAvailable = false;
+  let wclParticipationSource = { title: "", url: "" };
+  const wclParticipants = new Set();
+  try {
+    const raidDate = raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date).slice(0, 10);
+    if (raidDate) {
+      const wclResult = await query(
+        `select la.raid, la.title, la.report_url, la.updated_at, m.player_name
+         from log_analyses la
+         left join log_analysis_player_metrics m on m.analysis_id = la.id
+         where la.guild_id = $1 and la.raid_date = $2::date
+         order by la.updated_at desc nulls last`,
+        [guildId, raidDate]
+      );
+      const matchingRows = wclResult.rows.filter(row => normalizeRaidType(row.raid) === normalizeRaidType(raid.raid_type));
+      wclParticipationAvailable = matchingRows.length > 0;
+      const sourceRow = matchingRows.find(row => clean(row.report_url) || clean(row.title)) || matchingRows[0];
+      if (sourceRow) wclParticipationSource = { title: clean(sourceRow.title) || "Warcraft Logs", url: clean(sourceRow.report_url) };
+      matchingRows.forEach(row => {
+        const key = normalizeAttendanceName(row.player_name);
+        if (key) wclParticipants.add(key);
+      });
+    }
+  } catch (error) {
+    console.warn("Warcraft-Logs-Teilnahme für Plündermeister konnte nicht geladen werden:", error.message || error);
+  }
   const raidStatus = normalizeStatus(raid.status);
   const published = ["geöffnet", "veröffentlicht", "published"].includes(raidStatus.toLowerCase());
   return {
@@ -22873,6 +22899,14 @@ async function getPublishedPrios({ guildId, query: params }) {
         prioCreatedAt: row.prio_created_at || "",
         PrioUpdatedAt: row.prio_updated_at || "",
         prioUpdatedAt: row.prio_updated_at || "",
+        WclParticipation: wclParticipationAvailable
+          ? (wclParticipants.has(normalizeAttendanceName(row.player)) ? "participated" : "not_found")
+          : "no_data",
+        wclParticipation: wclParticipationAvailable
+          ? (wclParticipants.has(normalizeAttendanceName(row.player)) ? "participated" : "not_found")
+          : "no_data",
+        wclSourceTitle: wclParticipationSource.title,
+        wclSourceUrl: wclParticipationSource.url,
         Bench: row.bench || "",
         bench: row.bench || ""
       };
