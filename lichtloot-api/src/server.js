@@ -4447,6 +4447,50 @@ function classicArmoryRequestParams(value){
   }catch{return null;}
 }
 async function classicArmoryPost(endpoint,params){const response=await fetch(`https://classic-armory.org/api/v1/character${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`ClassicArmory antwortet mit HTTP ${response.status}.`);return response.json();}
+const publicClassicArmoryGearCache=new Map();
+const classicArmorySlotLabels={HEAD:"Kopf",NECK:"Hals",SHOULDERS:"Schultern",BACK:"Rücken",CHEST:"Brust",SHIRT:"Hemd",TABARD:"Wappenrock",WRIST:"Handgelenke",HANDS:"Hände",WAIST:"Taille",LEGS:"Beine",FEET:"Füße",FINGER_1:"Ring 1",FINGER_2:"Ring 2",TRINKET_1:"Schmuck 1",TRINKET_2:"Schmuck 2",MAIN_HAND:"Waffenhand",OFF_HAND:"Schildhand",RANGED:"Distanz"};
+function normalizeClassicArmoryGearItem(item,index){
+  const slotType=clean(item?.slot_type||item?.slot?.type||item?.slot?.id).toUpperCase();
+  const enchantParts=Array.isArray(item?.enchant_display)?item.enchant_display.filter(Boolean):[];
+  const itemId=Number(item?.item_id||item?.itemId||item?.id||0)||0;
+  return{
+    itemId,
+    name:clean(item?.name||item?.item?.name||`Ausrüstung ${index+1}`),
+    slot:classicArmorySlotLabels[slotType]||clean(item?.slot?.name||item?.slot_name||slotType||"Ausrüstung"),
+    slotType,
+    itemLevel:Number(item?.item_level||item?.itemLevel||item?.level||0)||"",
+    quality:item?.quality?.name||item?.quality_name||item?.quality||"",
+    iconUrl:clean(item?.icon_url||item?.icon||item?.item?.icon),
+    enchant:enchantParts.join(" · ")||clean(item?.enchant_name||item?.enchantName),
+    wowhead:itemId?`https://www.wowhead.com/classic/de/item=${itemId}`:""
+  };
+}
+async function getPublicClassicArmoryGear({guildId,query:params={}}){
+  const playerName=clean(params.playerName||params.player||params.character);
+  if(!playerName){const error=new Error("Spielername fehlt.");error.statusCode=400;throw error;}
+  const found=await query(
+    `select c.name,c.server,c.class_name
+       from characters c join players p on p.id=c.player_id
+      where p.guild_id=$1 and lower(c.name)=lower($2)
+      order by c.is_main desc,c.created_at asc limit 1`,
+    [guildId,playerName]
+  );
+  const stored=found.rows[0];
+  if(!stored?.server){const error=new Error("Für diesen Spieler ist kein Server hinterlegt.");error.statusCode=404;throw error;}
+  const requestParams={region:clean(params.region||"eu").toLowerCase(),flavor:"classic-era",realm:clean(stored.server).toLowerCase(),name:stored.name};
+  const cacheKey=`${requestParams.region}:${requestParams.realm}:${requestParams.name.toLowerCase()}`;
+  const cached=publicClassicArmoryGearCache.get(cacheKey);
+  if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const [characterData,equipmentData]=await Promise.all([classicArmoryPost("",requestParams),classicArmoryPost("/equipment",requestParams)]);
+  const character=characterData?.character||{};
+  let gear=(equipmentData?.equipment||[]).map(normalizeClassicArmoryGearItem).filter(item=>item.itemId||item.name);
+  if(!gear.length){const error=new Error("Classic Armory hat für diesen Charakter noch keine Ausrüstung gespeichert.");error.statusCode=404;throw error;}
+  const localizedItems=await getWowheadGermanItemMetadataByIds(gear.map(item=>item.itemId).filter(Boolean));
+  gear=gear.map(item=>{const localized=localizedItems.get(String(item.itemId));return localized?{...item,...localized,name:localized.name||item.name,slot:item.slot||localized.slot||"",quality:item.quality||localized.quality||"",iconUrl:localized.iconUrl||localized.icon||item.iconUrl,itemLevel:localized.itemLevel||item.itemLevel||"",enchant:item.enchant}:item;});
+  const value={success:true,source:"classic-armory",updatedAt:clean(character.updated_at||character.last_updated||equipmentData?.updated_at),character:{name:clean(character.name||stored.name),server:clean(character.realm_name||stored.server),className:clean(character.class_name||stored.class_name),itemLevel:Number(character.item_level||0)||""},gear};
+  publicClassicArmoryGearCache.set(cacheKey,{value,expiresAt:Date.now()+5*60*1000});
+  return value;
+}
 function armoryNumber(value){return Number(value?.effective??value?.value??value??0)||0;}
 function armoryGearText(equipment){return (equipment||[]).flatMap(item=>[item.name,...(item.spells||[]).map(spell=>spell.description),...(item.enchant_display||[])]).join(" ");}
 function armoryPercentFromGear(text,pattern){let total=0;for(const match of text.matchAll(pattern))total+=Number(match[1]||0);return total;}
@@ -28895,6 +28939,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicLogAnalysisPlayerProfile") {
       const profile = await getPublicLogAnalysisPlayerProfile({ guildId: guild.id, query: req.query });
       return res.json({ ...profile, guild: guild.slug });
+    }
+
+    if (action === "getPublicClassicArmoryGear") {
+      const gear = await getPublicClassicArmoryGear({ guildId: guild.id, query: req.query });
+      return res.json({ ...gear, guild: guild.slug });
     }
 
     if (action === "getPublicLogAnalysisWebLegacy") {
