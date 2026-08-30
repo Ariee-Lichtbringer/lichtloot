@@ -7077,6 +7077,10 @@ function clearMasterCode(){
 }
 
 function apiJsonp(params){
+  const action=String(params?.action||"");
+  if(action==="getPublicClassicArmoryGear"||action==="getPublicLogAnalysisPlayerProfile"){
+    return railwayApi(params);
+  }
   return new Promise((resolve, reject) => {
     const callbackName = "guildApi_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     const query = new URLSearchParams(Object.assign({}, params, { callback: callbackName, t: Date.now() }));
@@ -21460,6 +21464,6 @@ function escapeQuotes(value){
     .replace(/'/g,"\\'");
 }
 </script>
-<script src="loot/player-gear-popup.js?v=20260830-gear-admin"></script>
+<script src="loot/player-gear-popup.js?v=20260830-1745"></script>
 </body>
 </html>
