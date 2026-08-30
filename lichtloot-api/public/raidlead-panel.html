@@ -502,6 +502,7 @@ th{
 .prio-player-server{color:#94a3b8;font-weight:700}
 .prio-entry-time{display:block;margin-top:5px;color:#fb923c;font-size:12px;font-weight:850;white-space:nowrap}
 .prio-wcl-attendance{display:block;margin-top:3px;font-size:11px;font-weight:900}.prio-wcl-attendance.participated{color:#4ade80}.prio-wcl-attendance.not-found{color:#f87171}.prio-wcl-attendance.no-data{color:#94a3b8}.prio-wcl-attendance a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.prio-player-hover{position:relative;display:inline-block;cursor:help;outline:none}.prio-player-hover>strong{text-decoration:underline;text-decoration-style:dotted;text-decoration-color:#64748b;text-underline-offset:3px}.prio-player-info-card{position:absolute;z-index:80;display:none;left:0;top:calc(100% + 8px);width:max-content;max-width:min(360px,80vw);padding:10px 12px;border:1px solid #475569;border-radius:9px;background:#07111f;color:#e5e7eb;text-align:left;box-shadow:0 16px 42px rgba(0,0,0,.72)}.prio-player-info-card:before{content:"";position:absolute;left:18px;top:-6px;width:10px;height:10px;border-left:1px solid #475569;border-top:1px solid #475569;background:#07111f;transform:rotate(45deg)}.prio-player-hover:hover .prio-player-info-card,.prio-player-hover:focus .prio-player-info-card,.prio-player-hover:focus-within .prio-player-info-card{display:block}
 
 
 }
@@ -1442,6 +1443,7 @@ const RAID_API_URL =
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
 let currentGuildInfo = null;
+let currentPrioListDisplay = {};
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
 function titleFromSlug(slug){
   return String(slug || "Lootsystem").split(/[-_\s]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Lootsystem";
@@ -1929,6 +1931,7 @@ async function loadPriosFromSheet(leadPin){
       wclSourceUrl: p.wclSourceUrl || p.WclSourceUrl || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
+    currentPrioListDisplay=result.prioListDisplay&&typeof result.prioListDisplay==="object"?result.prioListDisplay:{};
 
   }catch(error){
     console.error(error);
@@ -2586,7 +2589,9 @@ function renderBenchName(entry){
     : participation==="not_found"
       ? `<span class="prio-wcl-attendance not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
       : '<span class="prio-wcl-attendance no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
-  return `<strong>${safe(entry.player || "-")}</strong>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${timestamp ? `<span class="prio-entry-time">Eingetragen am ${safe(timestamp.date)} um ${safe(timestamp.time)} Uhr</span>` : ""}${attendance}`;
+  const directTimestamp=currentPrioListDisplay.prioEntryUnderName===true,directAttendance=currentPrioListDisplay.attendanceUnderName===true;
+  const hoverContent=`${directTimestamp?"":timestamp||'<span class="prio-entry-time">Kein Eintragszeitpunkt gespeichert</span>'}${directAttendance?"":attendance}`;
+  return `<span class="prio-player-hover" tabindex="0"><strong>${safe(entry.player || "-")}</strong>${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
 }
 
 function formatPrioEntryTimestamp(value){
