@@ -22858,6 +22858,14 @@ async function getPublishedPrios({ guildId, query: params }) {
     [guildId, `RaidID: ${raidPublicId(raid)}`, `RaidID: ${raid.id}`, `RaidID: ${raid.raid_pin}`]
   );
   const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
+  let prioListDisplay = {};
+  try {
+    const layoutResult=await query(`select coalesce(layout_json,'{}'::jsonb) as layout_json from guild_settings where guild_id=$1 limit 1`,[guildId]);
+    const saved=layoutResult.rows[0]?.layout_json?.prioListDisplay;
+    if(saved&&typeof saved==="object"&&!Array.isArray(saved))prioListDisplay={prioEntryUnderName:saved.prioEntryUnderName===true,attendanceUnderName:saved.attendanceUnderName===true};
+  } catch (error) {
+    console.warn("Priolisten-Anzeigeeinstellungen konnten nicht geladen werden:",error.message||error);
+  }
   let wclParticipation = { available:false, players:{}, reports:[] };
   try {
     const raidDate = raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date).slice(0, 10);
@@ -22877,6 +22885,7 @@ async function getPublishedPrios({ guildId, query: params }) {
     ...normalizedRaid,
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
+    prioListDisplay,
     published,
     open: raidStatus !== "geöffnet" && !published,
     prios: result.rows.map((row, index) => {
