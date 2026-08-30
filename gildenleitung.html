@@ -4714,6 +4714,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .prio-list-entry-time{display:block;margin-top:4px;color:#fb923c;font-size:11px;font-weight:850;white-space:nowrap}
 .prio-list-wcl{display:block;margin-top:3px;font-size:10px;font-weight:900}.prio-list-wcl.participated{color:#4ade80}.prio-list-wcl.not-found{color:#f87171}.prio-list-wcl.no-data{color:#94a3b8}.prio-list-wcl a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.prio-list-player-hover{position:relative;display:inline-block;cursor:help;outline:none}.prio-list-player-hover>strong{text-decoration:underline;text-decoration-style:dotted;text-decoration-color:#64748b;text-underline-offset:3px}.prio-list-player-card{position:absolute;z-index:80;display:none;left:0;top:calc(100% + 8px);width:max-content;max-width:min(360px,80vw);padding:10px 12px;border:1px solid #475569;border-radius:9px;background:#07111f;color:#e5e7eb;text-align:left;box-shadow:0 16px 42px rgba(0,0,0,.72)}.prio-list-player-card:before{content:"";position:absolute;left:18px;top:-6px;width:10px;height:10px;border-left:1px solid #475569;border-top:1px solid #475569;background:#07111f;transform:rotate(45deg)}.prio-list-player-hover:hover .prio-list-player-card,.prio-list-player-hover:focus .prio-list-player-card,.prio-list-player-hover:focus-within .prio-list-player-card{display:block}
 
 .epic{color:#c084fc}
 .rare{color:var(--blue)}
@@ -8610,6 +8611,12 @@ function renderLootLayoutPanel(){
               <label class="layout-loot-toggle"><input id="layoutLootMiniRaids" type="checkbox" ${layout.lootPageSections?.miniRaids !== false ? "checked" : ""}><span><strong>Mini-Raidkacheln</strong><small>Die aktuellen 20er- und 40er-Raids links unter dem letzten Menüpunkt anzeigen.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutLootGearPlanner" type="checkbox" ${layout.lootPageSections?.gearPlanner !== false ? "checked" : ""}><span><strong>Ausrüstungsplaner</strong><small>Die Schaltfläche zum Ausrüstungsplaner auf den Lootseiten anzeigen.</small></span></label>
             </div>
+            <h4 style="margin:18px 0 5px">Informationen unter Spielernamen</h4>
+            <p class="muted" style="margin:0 0 10px">Ohne Haken bleiben die Angaben platzsparend in der Hover-Karte am Namen.</p>
+            <div class="layout-loot-toggle-grid">
+              <label class="layout-loot-toggle"><input id="layoutPrioEntryUnderName" type="checkbox" ${layout.prioListDisplay?.prioEntryUnderName === true ? "checked" : ""}><span><strong>Prioeintrag einblenden</strong><small>Datum und Uhrzeit der Prio direkt unter dem Spielernamen anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutAttendanceUnderName" type="checkbox" ${layout.prioListDisplay?.attendanceUnderName === true ? "checked" : ""}><span><strong>Anwesenheit einblenden</strong><small>Warcraft-Logs-Teilnahme direkt unter dem Spielernamen anzeigen.</small></span></label>
+            </div>
             <div class="field" style="margin-top:14px">
               <label>Umfang der PO-Freigaben</label>
               <select id="layoutLootPoReleaseScope"><option value="all" ${layout.lootPagePoReleaseScope !== "raid" ? "selected" : ""}>Alle PO-Freigaben anzeigen</option><option value="raid" ${layout.lootPagePoReleaseScope === "raid" ? "selected" : ""}>Nur die zum angezeigten Raid passende PO-Freigabe</option></select>
@@ -8718,6 +8725,7 @@ async function saveLootLayoutPanel(){
     lootPageSections:{worldbuffs:Boolean(document.getElementById("layoutLootWorldbuffs")?.checked),worldbuffAgreement:Boolean(document.getElementById("layoutLootWorldbuffAgreement")?.checked),raidSignup:Boolean(document.getElementById("layoutLootRaidSignup")?.checked),poReleases:Boolean(document.getElementById("layoutLootPoReleases")?.checked),miniRaids:Boolean(document.getElementById("layoutLootMiniRaids")?.checked),gearPlanner:Boolean(document.getElementById("layoutLootGearPlanner")?.checked)},
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
     lootPageSectionsByRaid,
+    prioListDisplay:{prioEntryUnderName:Boolean(document.getElementById("layoutPrioEntryUnderName")?.checked),attendanceUnderName:Boolean(document.getElementById("layoutAttendanceUnderName")?.checked)},
     startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),poReleaseRequest:Boolean(document.getElementById("layoutStartPoReleaseRequest")?.checked),discordGuildId:layoutFieldValue("layoutStartDiscordGuildId").replace(/\D/g,""),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
     guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),raidSheet:Boolean(document.getElementById("layoutGuildNavRaidSheet")?.checked),loganalysen:Boolean(document.getElementById("layoutGuildNavLoganalysen")?.checked),lootMaster:Boolean(document.getElementById("layoutGuildNavLootMaster")?.checked),p0Items:Boolean(document.getElementById("layoutGuildNavP0Items")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
@@ -17608,7 +17616,9 @@ function renderPrioPlayerDetails(prio){
     : participation==="not_found"
       ? `<span class="prio-list-wcl not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
       : '<span class="prio-list-wcl no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
-  return `<strong>${name}</strong>${bench}${timestamp}${attendance}`;
+  const settings=currentGuildInfo?.layout?.prioListDisplay||{},directTimestamp=settings.prioEntryUnderName===true,directAttendance=settings.attendanceUnderName===true;
+  const hoverContent=`${directTimestamp?"":timestamp||'<span class="prio-list-entry-time">Kein Eintragszeitpunkt gespeichert</span>'}${directAttendance?"":attendance}`;
+  return `<span class="prio-list-player-hover" tabindex="0"><strong>${name}</strong>${hoverContent?`<span class="prio-list-player-card">${hoverContent}</span>`:""}</span>${bench}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
 }
 
 function renderPrioModalContent(result, raid, forceListOpen = false){
