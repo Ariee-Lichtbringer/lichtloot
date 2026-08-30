@@ -2582,6 +2582,7 @@ function isBenchPrio(entry){
 function renderBenchName(entry){
   const server = String(entry.server || "").trim();
   const timestamp = formatPrioEntryTimestamp(entry.prioCreatedAt || entry.prioUpdatedAt);
+  const timestampHtml=timestamp?`<span class="prio-entry-time">Eingetragen am ${safe(timestamp.date)} um ${safe(timestamp.time)} Uhr</span>`:'<span class="prio-entry-time">Kein Eintragszeitpunkt gespeichert</span>';
   const participation=String(entry.wclParticipation||"no_data");
   const source=entry.wclSourceUrl?`<a href="${safe(entry.wclSourceUrl)}" target="_blank" rel="noopener">Warcraft Logs</a>`:"Warcraft Logs";
   const attendance=participation==="participated"
@@ -2590,8 +2591,8 @@ function renderBenchName(entry){
       ? `<span class="prio-wcl-attendance not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
       : '<span class="prio-wcl-attendance no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
   const directTimestamp=currentPrioListDisplay.prioEntryUnderName===true,directAttendance=currentPrioListDisplay.attendanceUnderName===true;
-  const hoverContent=`${directTimestamp?"":timestamp||'<span class="prio-entry-time">Kein Eintragszeitpunkt gespeichert</span>'}${directAttendance?"":attendance}`;
-  return `<span class="prio-player-hover" tabindex="0"><strong>${safe(entry.player || "-")}</strong>${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
+  const hoverContent=`${directTimestamp?"":timestampHtml}${directAttendance?"":attendance}`;
+  return `<span class="prio-player-hover" tabindex="0"><strong>${safe(entry.player || "-")}</strong>${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${directTimestamp?timestampHtml:""}${directAttendance?attendance:""}`;
 }
 
 function formatPrioEntryTimestamp(value){
