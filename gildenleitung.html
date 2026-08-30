@@ -4712,6 +4712,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   text-transform:uppercase;
 }
 
+.prio-list-entry-time{display:block;margin-top:4px;color:#fb923c;font-size:11px;font-weight:850;white-space:nowrap}
+.prio-list-wcl{display:block;margin-top:3px;font-size:10px;font-weight:900}.prio-list-wcl.participated{color:#4ade80}.prio-list-wcl.not-found{color:#f87171}.prio-list-wcl.no-data{color:#94a3b8}.prio-list-wcl a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+
 .epic{color:#c084fc}
 .rare{color:var(--blue)}
 .uncommon{color:#4ade80}
@@ -17591,6 +17594,23 @@ function closePrioModal(){
   document.getElementById("prioModal").classList.add("hidden");
 }
 
+function renderPrioPlayerDetails(prio){
+  const name=escapeHtml(prio.Spieler||prio.player||"-");
+  const bench=isBenchPrio(prio)?'<span class="bench-label">Bench</span>':"";
+  const rawDate=prio.PrioCreatedAt||prio.prioCreatedAt||prio.PrioUpdatedAt||prio.prioUpdatedAt||"";
+  const date=rawDate?new Date(rawDate):null;
+  const timestamp=date&&!Number.isNaN(date.getTime())?`<span class="prio-list-entry-time">Eingetragen am ${escapeHtml(date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}))} um ${escapeHtml(date.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}))} Uhr</span>`:"";
+  const participation=String(prio.WclParticipation||prio.wclParticipation||"no_data");
+  const url=String(prio.wclSourceUrl||prio.WclSourceUrl||"").trim();
+  const source=url?`<a href="${escapeAttr(url)}" target="_blank" rel="noopener">Warcraft Logs</a>`:"Warcraft Logs";
+  const attendance=participation==="participated"
+    ? `<span class="prio-list-wcl participated">✓ Laut ${source} am Raid teilgenommen</span>`
+    : participation==="not_found"
+      ? `<span class="prio-list-wcl not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
+      : '<span class="prio-list-wcl no-data">– Noch keine passende Warcraft-Logs-Analyse vorhanden</span>';
+  return `<strong>${name}</strong>${bench}${timestamp}${attendance}`;
+}
+
 function renderPrioModalContent(result, raid, forceListOpen = false){
   const prios = sortPriosWithMainFirst(Array.isArray(result.prios) ? result.prios : []);
   const listOpen = forceListOpen || isPrioListVisibleForGuild(result, raid);
@@ -17640,7 +17660,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
           ${prios.map((prio, index) => `
             <tr class="${isBenchPrio(prio) ? "bench-prio-row" : ""}">
               <td>${index + 1}</td>
-              <td><strong>${escapeHtml(prio.Spieler || "-")}</strong>${isBenchPrio(prio) ? '<span class="bench-label">Bench</span>' : ""}</td>
+              <td>${renderPrioPlayerDetails(prio)}</td>
               <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
               <td>${renderPrioValue(prio.P1, listOpen)}</td>
               <td>${renderPrioValue(prio.P2, listOpen)}</td>
