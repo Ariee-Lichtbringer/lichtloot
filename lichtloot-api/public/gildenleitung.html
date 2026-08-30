@@ -5257,6 +5257,10 @@ body.worldbuff-only .dashboard-column>*:not(#worldbuffPanel){display:none!import
 body.worldbuff-only #worldbuffPanel{display:block!important;width:100%;max-width:none}
 body.worldbuff-only .master-only{display:none!important}
 </style>
+<style id="admin-gear-links-style">
+.admin-gear-link{appearance:none;display:inline-flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:950;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(var(--cyan-rgb,34,211,238),.38);text-underline-offset:3px}
+.admin-gear-link:before{content:"⚔";color:#5eead4;font-size:.82em;text-decoration:none}.admin-gear-link:hover,.admin-gear-link:focus-visible{color:#5eead4;text-decoration-color:currentColor;outline:none}.character-chip .admin-gear-link{font-size:inherit}.player-identity-title .admin-gear-link{font-size:1.05rem}
+</style>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -9682,8 +9686,8 @@ function renderPlayers(){
     return `
     <tr>
       <td class="player-identity-cell">
-        <div class="player-identity-title"><strong>${escapeHtml(group.main.char || "-")}</strong><span class="muted">${escapeHtml(group.main.server || "")}</span></div>
-        ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
+        <div class="player-identity-title">${renderAdminGearLink(group.main.char || "-",group.main.server)}<span class="muted">${escapeHtml(group.main.server || "")}</span></div>
+        ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${renderAdminGearLink(twink.char || "-",twink.server)} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
         <div class="player-class-list">${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("") || "-"}</div>
       </td>
       <td class="player-access-cell">${renderPlayerRoleControl(group)}</td>
@@ -18381,7 +18385,7 @@ function renderP0ReleasePanelContent(){
 }
 
 function poRequestTypeLabel(entry){if(entry?.requestType==="recruit"||entry?.requestType==="p1p3")return `Aufhebung Rekrutenstatus ${(entry?.raid||"").toUpperCase()}`;return `P0 Freigabe ${(entry?.raid||"").toUpperCase()}`;}
-function renderPoReleaseRequestsBlock(){const pending=poReleaseRequests.filter(entry=>entry.status==="pending");const allSelected=poReleaseRequests.length>0&&poReleaseRequests.every(entry=>selectedPoReleaseRequestIds.has(String(entry.id)));return `<div class="p0-review-block" style="border-color:#21c77a"><div class="section-head"><div><h3>PO-Freigabeanträge <span class="badge warn">${pending.length} offen</span></h3><p>Armory, Screenshot und Voraussetzungen prüfen. Eine Freigabe aktualisiert die Tabelle automatisch.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="small-btn good" type="button" onclick="bulkApprovePoReleaseRequests()" ${selectedPoReleaseRequestIds.size?"":"disabled"}>Ausgewählte freigeben</button><button class="small-btn danger" type="button" onclick="bulkDeletePoReleaseRequests()" ${selectedPoReleaseRequestIds.size?"":"disabled"}>Ausgewählte löschen</button></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Eingang</th><th>Aktion</th><th style="width:42px;text-align:center"><input type="checkbox" aria-label="Alle Anträge auswählen" ${allSelected?"checked":""} onchange="toggleAllPoReleaseRequests(this.checked)"></th></tr></thead><tbody>${poReleaseRequests.length?poReleaseRequests.map((entry,index)=>`<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(entry.status==="approved"?"freigegeben":entry.status==="rejected"?"abgelehnt":"offen")}</span></td><td><strong>${escapeHtml(entry.name||"-")}</strong><br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td>${escapeHtml(poRequestTypeLabel(entry))}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn primary" type="button" onclick="openPoReleaseRequestReview(${index})">Prüfen</button><button class="small-btn danger" type="button" onclick="deletePoReleaseRequest(${index})">Löschen</button></div></td><td style="text-align:center"><input type="checkbox" aria-label="${escapeAttr(`${entry.name||"Antrag"} auswählen`)}" ${selectedPoReleaseRequestIds.has(String(entry.id))?"checked":""} onchange="togglePoReleaseRequestSelection('${escapeAttr(String(entry.id))}',this.checked)"></td></tr>`).join(""):'<tr><td colspan="6" class="muted">Keine Anträge vorhanden.</td></tr>'}</tbody></table></div></div>`;}
+function renderPoReleaseRequestsBlock(){const pending=poReleaseRequests.filter(entry=>entry.status==="pending");const allSelected=poReleaseRequests.length>0&&poReleaseRequests.every(entry=>selectedPoReleaseRequestIds.has(String(entry.id)));return `<div class="p0-review-block" style="border-color:#21c77a"><div class="section-head"><div><h3>P0-Freigabeanträge <span class="badge warn">${pending.length} offen</span></h3><p>Armory, Screenshot und Voraussetzungen prüfen. Eine Freigabe aktualisiert die Tabelle automatisch.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="small-btn good" type="button" onclick="bulkApprovePoReleaseRequests()" ${selectedPoReleaseRequestIds.size?"":"disabled"}>Ausgewählte freigeben</button><button class="small-btn danger" type="button" onclick="bulkDeletePoReleaseRequests()" ${selectedPoReleaseRequestIds.size?"":"disabled"}>Ausgewählte löschen</button></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Eingang</th><th>Aktion</th><th style="width:42px;text-align:center"><input type="checkbox" aria-label="Alle Anträge auswählen" ${allSelected?"checked":""} onchange="toggleAllPoReleaseRequests(this.checked)"></th></tr></thead><tbody>${poReleaseRequests.length?poReleaseRequests.map((entry,index)=>`<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(entry.status==="approved"?"freigegeben":entry.status==="rejected"?"abgelehnt":"offen")}</span></td><td>${renderAdminGearLink(entry.name||"-",entry.server)}<br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td>${escapeHtml(poRequestTypeLabel(entry))}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn primary" type="button" onclick="openPoReleaseRequestReview(${index})">Prüfen</button><button class="small-btn danger" type="button" onclick="deletePoReleaseRequest(${index})">Löschen</button></div></td><td style="text-align:center"><input type="checkbox" aria-label="${escapeAttr(`${entry.name||"Antrag"} auswählen`)}" ${selectedPoReleaseRequestIds.has(String(entry.id))?"checked":""} onchange="togglePoReleaseRequestSelection('${escapeAttr(String(entry.id))}',this.checked)"></td></tr>`).join(""):'<tr><td colspan="6" class="muted">Keine Anträge vorhanden.</td></tr>'}</tbody></table></div></div>`;}
 
 function togglePoReleaseRequestSelection(requestId,checked){if(checked)selectedPoReleaseRequestIds.add(String(requestId));else selectedPoReleaseRequestIds.delete(String(requestId));renderP0ReleasePanelContent();}
 function toggleAllPoReleaseRequests(checked){selectedPoReleaseRequestIds=checked?new Set(poReleaseRequests.map(entry=>String(entry.id))):new Set();renderP0ReleasePanelContent();}
@@ -18553,6 +18557,14 @@ function lichtbringerRecruitStatusHtml(entry){
     : '<span class="po-release-state empty" title="Rekrutenstatus aktiv">aktiv</span>';
 }
 
+function renderAdminGearLink(name, server){
+  const character=String(name || "").trim();
+  if(!character || character === "-") return escapeHtml(character || "-");
+  const serverLabel=String(server || "").trim();
+  const title=`Ausrüstung von ${character}${serverLabel ? ` · ${serverLabel}` : ""} anzeigen`;
+  return `<button class="admin-gear-link" type="button" title="${escapeAttr(title)}" aria-label="${escapeAttr(title)}" onclick="openPrioPlayerGear('${escapeAttr(escapeJsString(character))}')">${escapeHtml(character)}</button>`;
+}
+
 function renderPoReleaseRows(){
   const tbody = document.getElementById("poReleaseRows");
   if(!tbody) return;
@@ -18579,7 +18591,7 @@ function renderPoReleaseRows(){
     const server = entry.server ? `<br><span class="muted">${escapeHtml(entry.server)}</span>` : "";
     return `
       <tr>
-        <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
+        <td>${renderAdminGearLink(entry.name || entry.char || "-",entry.server)}${server}</td>
         <td>${entry.className ? `<span class="${escapeAttr(classColor(entry.className))}">${escapeHtml(entry.className)}</span>` : '<span class="muted">-</span>'}</td>
         <td><span class="pin">xxx</span></td>
         ${poReleaseVisibleColumns.has("recruit") ? `
@@ -19093,7 +19105,7 @@ function renderP0ReviewRows(){
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td>${escapeHtml(raidLabel)}</td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong><br><span class="muted">${escapeHtml(entry.server || "")}</span></td>
+        <td>${renderAdminGearLink(entry.player || "-",entry.server)}<br><span class="muted">${escapeHtml(entry.server || "")}</span></td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>${escapeHtml(entry.discordName || "-")}</td>
         <td>
@@ -19187,7 +19199,7 @@ function renderP0PlusRows(){
     return `
       <tr>
         <td>${escapeHtml(entry.raid || "-")}</td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+        <td>${renderAdminGearLink(entry.player || "-",entry.server)}</td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>${escapeHtml(entry.slot || "-")}</td>
         <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
@@ -21448,5 +21460,6 @@ function escapeQuotes(value){
     .replace(/'/g,"\\'");
 }
 </script>
+<script src="loot/player-gear-popup.js?v=20260830-gear-admin"></script>
 </body>
 </html>
