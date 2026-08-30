@@ -4546,7 +4546,29 @@ function nachtlootP0Thresholds(raid,className,specialization){
   };
   return table[raid]?.[cls]||{};
 }
-function armoryEnchantRule(slot,label,...alternatives){return{slot,label,alternatives:alternatives.map(value=>value.split("+").map(token=>token.trim().toLowerCase()))};}
+function armoryEnchantRule(slot,label,...alternatives){return{slot,label,alternatives:alternatives.map(value=>value.split(/\+(?=[a-zäöü])/i).map(token=>token.trim().toLowerCase()))};}
+function armoryEnchantMetricPattern(metric){
+  const key=clean(metric).toLowerCase().replace(/\s+/g," ");
+  const aliases={
+    "all stats":["all stats","stats","alle werte","werte"],stats:["all stats","stats","alle werte","werte"],
+    agility:["agility","beweglichkeit"],strength:["strength","stärke","staerke"],stamina:["stamina","ausdauer"],intellect:["intellect","intelligenz"],
+    healing:["healing","heilkraft","heilung"],"spell damage":["spell damage","zauberschaden"],"shadow damage":["shadow damage","schattenschaden"],
+    "fire damage":["fire damage","feuerschaden"],"frost damage":["frost damage","frostschaden"],"attack power":["attack power","angriffskraft"],
+    "ranged attack power":["ranged attack power","distanzangriffskraft","distanz ap"],health:["health","leben"],mana:["mana"],
+    hit:["hit","treffer","trefferchance"],dodge:["dodge","ausweichen"],damage:["damage","schaden"]
+  };
+  return aliases[key]||[key];
+}
+function armoryEnchantNumericTokenMet(actual,token){
+  const requirement=clean(token).toLowerCase().match(/^(.+?)\s*\+\s*(\d+(?:[.,]\d+)?)\s*(%)?$/);
+  if(!requirement)return false;
+  const minimum=Number(requirement[2].replace(",",".")),needsPercent=Boolean(requirement[3]);
+  return armoryEnchantMetricPattern(requirement[1]).some(alias=>{
+    const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),patterns=[new RegExp(`${escaped}\\s*\\+\\s*(\\d+(?:[.,]\\d+)?)\\s*(${needsPercent?"%":"%?"})`,"i"),new RegExp(`\\+\\s*(\\d+(?:[.,]\\d+)?)\\s*(${needsPercent?"%":"%?"})?\\s*${escaped}`,"i")];
+    return patterns.some(pattern=>{const match=actual.match(pattern);return match&&Number(String(match[1]).replace(",","."))>=minimum;});
+  });
+}
+function armoryEnchantTokenMet(actual,token){return actual.includes(token)||armoryEnchantNumericTokenMet(actual,token);}
 function nachtlootExactEnchantRules(raid,className,specialization,requestType){
   const cls=armoryClassKey(className),spec=clean(specialization).toLowerCase(),full=requestType!=="recruit",rules=[],add=(...items)=>rules.push(...items),R=armoryEnchantRule;
   const speed=R("FEET","Bewegungstempo","speed","minor speed");
@@ -4570,7 +4592,7 @@ function nachtlootExactEnchantRules(raid,className,specialization,requestType){
 }
 function evaluateExactArmoryEnchants(entry,equipment){
   const bySlot=new Map((equipment||[]).map(item=>[item.slot_type||item.slot?.type,item]));
-  return nachtlootExactEnchantRules(normalizePoReleaseRaid(entry.raid),entry.className,entry.specialization,entry.requestType).map(rule=>{const item=bySlot.get(rule.slot),actual=(item?.enchant_display||[]).join(" · "),normalized=clean(actual).toLowerCase();const met=Boolean(item&&normalized&&rule.alternatives.some(alternative=>alternative.every(token=>normalized.includes(token))));return{key:`enchant:${rule.slot}:${rule.label}`,label:rule.label,actual:actual||"keine passende Verzauberung",met};});
+  return nachtlootExactEnchantRules(normalizePoReleaseRaid(entry.raid),entry.className,entry.specialization,entry.requestType).map(rule=>{const item=bySlot.get(rule.slot),actual=(item?.enchant_display||[]).join(" · "),normalized=clean(actual).toLowerCase();const met=Boolean(item&&normalized&&rule.alternatives.some(alternative=>alternative.every(token=>armoryEnchantTokenMet(normalized,token))));return{key:`enchant:${rule.slot}:${rule.label}`,label:rule.label,actual:actual||"keine passende Verzauberung",met};});
 }
 function evaluateNachtlootArmoryData({entry,character,equipment,stats,spellBonuses}){
   const raid=normalizePoReleaseRaid(entry.raid),cls=armoryClassKey(entry.className),gearText=armoryGearText(equipment),checks=[];
