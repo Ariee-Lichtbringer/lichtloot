@@ -7402,7 +7402,9 @@ async function loadOverview(options){
     // SpielerLogin-Status und Freigaben liegen in Railway/Postgres. Ein
     // Fallback auf Apps Script würde nach einem erfolgreichen Speichern alte
     // "pending"-Daten anzeigen und die Freigabe scheinbar zurücknehmen.
-    const result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode });
+    const overviewRequest = railwayApi({ action:"getGuildLeadershipOverview", masterCode });
+    const discordRolesRequest = railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()}).catch(()=>null);
+    const result = await overviewRequest;
     if(!result.success){
       setGuildLocked(true);
       setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
@@ -7432,8 +7434,8 @@ async function loadOverview(options){
       players: Array.isArray(result.players) ? result.players : []
     };
     try{
-      const roleResult=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
-      playerAccessDiscordRoles=Array.isArray(roleResult.roles)?roleResult.roles:[];
+      const roleResult=await discordRolesRequest;
+      playerAccessDiscordRoles=Array.isArray(roleResult?.roles)?roleResult.roles:[];
     }catch(error){ playerAccessDiscordRoles=[]; }
     refreshEmergencyImportRaids();
     raidHelperAttendanceCache = null;
@@ -7460,21 +7462,43 @@ async function loadOverview(options){
   }
 }
 
+let deferredRenderGeneration=0;
+
+function scheduleLeadershipRenderTasks(tasks,generation){
+  const runNext=deadline=>{
+    if(generation!==deferredRenderGeneration||!tasks.length)return;
+    do{
+      const task=tasks.shift();
+      try{task();}catch(error){console.warn("Verzögertes Rendering fehlgeschlagen:",error);}
+    }while(tasks.length&&deadline?.timeRemaining?.()>8);
+    if(!tasks.length||generation!==deferredRenderGeneration)return;
+    if(typeof requestIdleCallback==="function")requestIdleCallback(runNext,{timeout:700});
+    else setTimeout(()=>runNext({timeRemaining:()=>0}),16);
+  };
+  if(typeof requestIdleCallback==="function")requestIdleCallback(runNext,{timeout:350});
+  else setTimeout(()=>runNext({timeRemaining:()=>0}),0);
+}
+
 function renderAll(){
+  const generation=++deferredRenderGeneration;
+  // Sichtbare Dashboard-Inhalte zuerst zeichnen. Die großen, zunächst
+  // geschlossenen Verwaltungsbereiche folgen in kurzen Leerlauf-Schritten.
   renderSummary();
   renderDashboardCards();
-  renderRaidHelperCalendar();
-  renderRaidHelperCurrentEvents();
-  renderRaidHelperPastEvents();
-  renderRaidHelperScheduleRules();
-  renderRaidHelperScheduledEvents();
-  renderRaidHelperTemplates();
-  renderRaidHelperPoSignupTab();
-  renderRaidHelperWarcraftLogsSources();
   renderPlayerMiniList();
   renderRaids();
-  renderRaidArchive();
-  renderPlayers();
+  scheduleLeadershipRenderTasks([
+    renderPlayers,
+    renderRaidHelperCurrentEvents,
+    renderRaidHelperCalendar,
+    renderRaidHelperPastEvents,
+    renderRaidArchive,
+    renderRaidHelperScheduleRules,
+    renderRaidHelperScheduledEvents,
+    renderRaidHelperTemplates,
+    renderRaidHelperPoSignupTab,
+    renderRaidHelperWarcraftLogsSources
+  ],generation);
 }
 
 function scrollToDashboard(){
