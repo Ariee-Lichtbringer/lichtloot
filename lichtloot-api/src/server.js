@@ -4461,7 +4461,10 @@ function officialBlizzardItemTooltip(item){
   if(item?.weapon?.dps?.display_string)lines.push(item.weapon.dps.display_string);
   if(item?.set?.display_string)lines.push(item.set.display_string);
   (item?.set?.effects||[]).forEach(effect=>{if(effect?.display_string)lines.push(effect.display_string);});
+  if(item?.durability?.display_string)lines.push(item.durability.display_string);
   if(item?.requirements?.level?.display_string)lines.push(item.requirements.level.display_string);
+  const price=item?.sell_price?.display_strings;
+  if(price){const coins=[[price.gold,"Gold"],[price.silver,"Silber"],[price.copper,"Kupfer"]].filter(([value])=>value!==undefined&&value!==null&&value!=="").map(([value,label])=>`${value} ${label}`);if(coins.length)lines.push(`${price.header||"Verkaufspreis:"} ${coins.join(" ")}`);}
   return lines.filter(Boolean).join("\n");
 }
 function normalizeOfficialBlizzardGearItem(item,index){
