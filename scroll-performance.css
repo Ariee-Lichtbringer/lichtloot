@@ -1,0 +1,39 @@
+/* Keep scrolling cheap on systems where fixed backgrounds and large live blurs
+   cause full-page repaints. The dark background overlays already provide the
+   same contrast, so the decorative blur is not needed for readability. */
+html {
+  background-color: #050b18;
+}
+
+body {
+  background-attachment: scroll !important;
+}
+
+body > .overlay,
+body::before {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* The leadership view contains many large cards. Live backdrop blur on every
+   card forces the browser to repaint wide page areas while scrolling. */
+.app-frame .sidebar,
+.app-frame .topbar,
+.app-frame .panel {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
