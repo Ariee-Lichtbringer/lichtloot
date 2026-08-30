@@ -46,6 +46,7 @@
   }
   function close(){hideTooltip();if(view?.modal)view.modal.remove();view=null;document.body.style.overflow="";}
   function enhance(){document.querySelectorAll("#publishedTable tr").forEach(row=>{const cell=row.cells?.[1];if(!cell||cell.querySelector(".prio-gear-player"))return;const name=cell.textContent.trim();if(!name||/keine|spieler/i.test(name))return;cell.textContent="";const button=document.createElement("button");button.type="button";button.className="prio-gear-player";button.textContent=name;button.title=`Ausrüstung von ${name} anzeigen`;button.addEventListener("click",()=>open(name));cell.appendChild(button);});}
-  installStyles();new MutationObserver(enhance).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener("keydown",event=>{if(event.key==="Escape")close();});document.readyState==="loading"?document.addEventListener("DOMContentLoaded",enhance):enhance();
+  function initialize(){installStyles();const table=document.getElementById("publishedTable");if(table){enhance();new MutationObserver(enhance).observe(table,{childList:true,subtree:true});}}
+  document.addEventListener("keydown",event=>{if(event.key==="Escape")close();});document.readyState==="loading"?document.addEventListener("DOMContentLoaded",initialize):initialize();
   window.openPrioPlayerGear=open;window.closePrioPlayerGear=close;
 })();
