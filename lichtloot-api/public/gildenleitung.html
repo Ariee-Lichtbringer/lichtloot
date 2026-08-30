@@ -17607,7 +17607,7 @@ function renderPrioPlayerDetails(prio){
     ? `<span class="prio-list-wcl participated">✓ Laut ${source} am Raid teilgenommen</span>`
     : participation==="not_found"
       ? `<span class="prio-list-wcl not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
-      : '<span class="prio-list-wcl no-data">– Noch keine passende Warcraft-Logs-Analyse vorhanden</span>';
+      : '<span class="prio-list-wcl no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
   return `<strong>${name}</strong>${bench}${timestamp}${attendance}`;
 }
 
