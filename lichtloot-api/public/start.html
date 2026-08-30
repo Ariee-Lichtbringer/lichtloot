@@ -6017,14 +6017,20 @@ async function renderDashboardInlineGear(){
   target.innerHTML='<div class="character-overview-empty">Ausrüstung wird geladen …</div>';
   try{
     if(typeof window.apiJsonp!=="function") throw new Error("API nicht verfügbar");
-    const data=await window.apiJsonp({action:"getPublicClassicArmoryGear",playerName:name});
-    const gear=Array.isArray(data?.gear)?data.gear:[];
-    const profile=data?.character||{};
+    const [armoryResult,logsResult]=await Promise.allSettled([
+      window.apiJsonp({action:"getPublicClassicArmoryGear",playerName:name}),
+      window.apiJsonp({action:"getPublicLogAnalysisPlayerProfile",playerName:name})
+    ]);
+    const armory=armoryResult.status==="fulfilled"&&!armoryResult.value?.error?armoryResult.value:null;
+    const logProfile=logsResult.status==="fulfilled"&&!logsResult.value?.error?logsResult.value?.profile:null;
+    const logLatest=logProfile?.latest||logProfile?.history?.at(-1)||{};
+    const gear=Array.isArray(armory?.gear)&&armory.gear.length?armory.gear:(Array.isArray(logLatest.gear)?logLatest.gear:[]);
+    const profile=armory?.character||{className:logProfile?.className||logLatest.className||character.className||"",server:logProfile?.server||logLatest.server||character.server||"",itemLevel:logLatest.itemLevel||"",renderUrl:logLatest.renderUrl||""};
     if(!gear.length){target.innerHTML='<div class="character-overview-empty">Für diesen Charakter ist noch keine Ausrüstung gespeichert.</div>';return;}
     const icon=item=>{const value=String(item?.icon||item?.iconUrl||item?.icon_url||"inv_misc_questionmark");return /^https?:/i.test(value)?value:`https://wow.zamimg.com/images/wow/icons/large/${value.replace(/\.jpg$/i,"")}.jpg`;};
     const average=Number(profile.itemLevel||Math.round(gear.reduce((sum,item)=>sum+Number(item.itemLevel||0),0)/gear.length)||0);
     target.innerHTML=`<div class="character-gear-profile"><img src="${safeAttr(profile.renderUrl||icon(gear[0]))}" alt=""><span><b>${safeHtml(name)}</b><small>${safeHtml(profile.className||character.className||"")} · Ø Itemlevel ${safeHtml(average||"–")}</small></span></div><div class="character-gear-items">${gear.map(item=>`<div class="character-gear-item" title="${safeAttr(item.nameDe||item.localizedName||item.name||"Ausrüstung")}"><img src="${safeAttr(icon(item))}" alt=""><span>${safeHtml(item.nameDe||item.localizedName||item.name||"Ausrüstung")}</span></div>`).join("")}</div>`;
-  }catch(error){target.innerHTML='<div class="character-overview-empty">Ausrüstung konnte derzeit nicht geladen werden.</div>';}
+  }catch(error){target.innerHTML='<div class="character-overview-empty">Ausrüstung konnte derzeit nicht geladen werden. Bitte später erneut versuchen.</div>';}
 }
 
 function openOwnCharacterGear(){
