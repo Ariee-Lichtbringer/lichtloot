@@ -88,13 +88,24 @@
     const button=document.querySelector(".plundermeister-login-btn"),raids=document.getElementById("lootSidebarCurrentRaids");
     if(button&&raids&&!raids.querySelector(".loot-sidebar-raids-loading")&&button.parentElement!==raids){button.classList.add("loot-sidebar-plundermeister");raids.appendChild(button);}
     if(raids&&!document.getElementById("lootGuildSwitchButton")){
+      const switcher=document.createElement("div");
+      switcher.id="lootGuildSwitcher";
+      switcher.className="loot-sidebar-guild-switcher";
       const guildButton=document.createElement("button");
       guildButton.id="lootGuildSwitchButton";
       guildButton.type="button";
       guildButton.className="loot-sidebar-guild-switch";
-      guildButton.textContent="LootGilde wechseln";
+      guildButton.setAttribute("aria-haspopup","listbox");
+      guildButton.setAttribute("aria-expanded","false");
+      guildButton.innerHTML=lootGuildTriggerMarkup();
       guildButton.onclick=openLootGuildSwitchPopup;
-      raids.appendChild(guildButton);
+      const menu=document.createElement("div");
+      menu.id="lootGuildSwitchMenu";
+      menu.className="loot-sidebar-guild-menu hidden";
+      menu.setAttribute("role","listbox");
+      menu.setAttribute("aria-label","LootGilde wechseln");
+      switcher.append(guildButton,menu);
+      raids.appendChild(switcher);
     }
   }
 
@@ -102,11 +113,14 @@
     const key=`lichtlootPlayerPin_${String(slug||"").trim().toLowerCase()}`;
     try{return String(sessionStorage.getItem(key)||localStorage.getItem(key)||"").trim();}catch(error){return "";}
   }
-  function closeLootGuildSwitchPopup(){document.getElementById("lootGuildSwitchBackdrop")?.remove();}
+  function lootGuildName(guild){const slug=String(guild?.slug||"").toLowerCase();return slug==="lichtloot"?"Lichtbringer":String(guild?.name||guild?.lootName||guild?.slug||"LootGilde");}
+  function lootGuildLogo(guild){if(typeof guildLogoUrl==="function")return guildLogoUrl(guild);return String(guild?.logoUrl||"../images/guild-defaults/default-logo.png");}
+  function lootGuildTriggerMarkup(){const guild=typeof currentGuildInfo!=="undefined"?currentGuildInfo:null;return `<img src="${esc(lootGuildLogo(guild))}" alt=""><span><small>Aktive LootGilde · wechseln</small><strong>${esc(lootGuildName(guild||{slug:typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot"}))}</strong></span><i aria-hidden="true">●<b>⌄</b></i>`;}
+  function closeLootGuildSwitchPopup(){const root=document.getElementById("lootGuildSwitcher"),menu=document.getElementById("lootGuildSwitchMenu"),button=document.getElementById("lootGuildSwitchButton");root?.classList.remove("is-open");menu?.classList.add("hidden");button?.setAttribute("aria-expanded","false");}
   async function openSelectedLootGuild(slug){
-    const feedback=document.getElementById("lootGuildSwitchFeedback"),button=document.getElementById("lootGuildSwitchConfirm");
+    const feedback=document.getElementById("lootGuildSwitchFeedback"),button=document.getElementById("lootGuildSwitchButton");
     if(!slug)return;
-    if(button)button.disabled=true;
+    document.querySelectorAll(".loot-sidebar-guild-option").forEach(option=>option.disabled=true);
     if(feedback)feedback.textContent="Aktive Raids werden geladen …";
     try{
       const result=await apiJsonp({action:"getActiveRaids",guild:slug,t:Date.now()});
@@ -123,28 +137,24 @@
       if(isFree){target.searchParams.set("signupOnly","1");target.searchParams.set("raidId",String(selected.row.raidId||selected.row.id||sidebarRaidPin(selected.row)||""));}
       else if(sidebarRaidPin(selected.row))target.searchParams.set("pin",sidebarRaidPin(selected.row));
       window.location.assign(target.href);
-    }catch(error){if(feedback)feedback.textContent=error.message||"LootGilde konnte nicht geöffnet werden.";if(button)button.disabled=false;}
+    }catch(error){if(feedback)feedback.textContent=error.message||"LootGilde konnte nicht geöffnet werden.";document.querySelectorAll(".loot-sidebar-guild-option").forEach(option=>option.disabled=false);if(button)button.disabled=false;}
   }
-  async function openLootGuildSwitchPopup(){
-    closeLootGuildSwitchPopup();
-    const backdrop=document.createElement("div");
-    backdrop.id="lootGuildSwitchBackdrop";
-    backdrop.className="loot-guild-switch-backdrop";
-    backdrop.innerHTML='<section class="loot-guild-switch-modal" role="dialog" aria-modal="true" aria-labelledby="lootGuildSwitchTitle"><button class="loot-guild-switch-close" type="button" aria-label="Schließen">×</button><h2 id="lootGuildSwitchTitle">LootGilde wechseln</h2><p>Es werden nur LootGilden angezeigt, für die in diesem Browser ein SpielerLogin gespeichert ist.</p><select id="lootGuildSwitchSelect"><option value="">Gilden werden geladen …</option></select><button id="lootGuildSwitchConfirm" type="button" disabled>LootGilde öffnen</button><div id="lootGuildSwitchFeedback" class="loot-guild-switch-feedback"></div></section>';
-    document.body.appendChild(backdrop);
-    backdrop.querySelector(".loot-guild-switch-close").onclick=closeLootGuildSwitchPopup;
-    backdrop.onclick=event=>{if(event.target===backdrop)closeLootGuildSwitchPopup();};
-    const select=backdrop.querySelector("#lootGuildSwitchSelect"),confirm=backdrop.querySelector("#lootGuildSwitchConfirm"),feedback=backdrop.querySelector("#lootGuildSwitchFeedback");
-    confirm.onclick=()=>openSelectedLootGuild(select.value);
+  async function openLootGuildSwitchPopup(event){
+    event?.stopPropagation();
+    const root=document.getElementById("lootGuildSwitcher"),menu=document.getElementById("lootGuildSwitchMenu"),button=document.getElementById("lootGuildSwitchButton");
+    if(!root||!menu||!button)return;
+    button.innerHTML=lootGuildTriggerMarkup();
+    const opening=menu.classList.contains("hidden");
+    if(!opening){closeLootGuildSwitchPopup();return;}
+    root.classList.add("is-open");menu.classList.remove("hidden");button.setAttribute("aria-expanded","true");
+    menu.innerHTML='<div class="loot-guild-switch-feedback">Gilden werden geladen …</div>';
     try{
       const result=await apiJsonp({action:"listGuilds",t:Date.now()});
       const current=String(typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot").toLowerCase();
       const guilds=(result?.guilds||[]).filter(guild=>{const slug=String(guild?.slug||"").toLowerCase();return storedLoginForGuild(slug)||(slug===current&&typeof getStoredLichtLootPlayerPin==="function"&&getStoredLichtLootPlayerPin());});
-      select.innerHTML=guilds.length?'<option value="">LootGilde auswählen</option>'+guilds.map(guild=>`<option value="${esc(guild.slug)}"${String(guild.slug).toLowerCase()===current?" selected":""}>${esc(guild.name||guild.lootName||guild.slug)}</option>`).join(""):'<option value="">Keine weiteren LootGilden gefunden</option>';
-      confirm.disabled=!select.value;
-      select.onchange=()=>{confirm.disabled=!select.value;feedback.textContent="";};
-      if(!guilds.length)feedback.textContent="In diesem Browser ist kein SpielerLogin für eine weitere LootGilde gespeichert.";
-    }catch(error){select.innerHTML='<option value="">Gilden konnten nicht geladen werden</option>';feedback.textContent=error.message||"Gilden konnten nicht geladen werden.";}
+      menu.innerHTML=guilds.length?guilds.map(guild=>{const slug=String(guild.slug||""),active=slug.toLowerCase()===current;return `<button class="loot-sidebar-guild-option${active?' is-current':''}" type="button" role="option" aria-selected="${active}" data-guild="${esc(slug)}"><img src="${esc(lootGuildLogo(guild))}" alt=""><span><strong>${esc(lootGuildName(guild))}</strong><small>${active?'Aktuell ausgewählt':'Zu dieser LootGilde wechseln'}</small></span><i aria-hidden="true">${active?'✓':''}</i></button>`;}).join("")+'<div id="lootGuildSwitchFeedback" class="loot-guild-switch-feedback"></div>':'<div class="loot-guild-switch-feedback">In diesem Browser ist kein SpielerLogin für eine LootGilde gespeichert.</div>';
+      menu.querySelectorAll("[data-guild]").forEach(option=>option.onclick=()=>openSelectedLootGuild(option.dataset.guild));
+    }catch(error){menu.innerHTML=`<div class="loot-guild-switch-feedback">${esc(error.message||"Gilden konnten nicht geladen werden.")}</div>`;}
   }
 
   function installProtectedPrioSearch(){
@@ -422,7 +432,7 @@
     const backdrop=document.querySelector(".raid-signup-modal-backdrop"),tools=document.querySelector(".header-tools")||document.querySelector(".header");
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
-  function init(){window.prioDraftDirty=false;document.addEventListener("click",event=>{if(event.target.closest(".mini-btn[data-prio]"))window.prioDraftDirty=true;},true);document.addEventListener("change",event=>{if(["p1","p2","p3"].includes(event.target?.id))window.prioDraftDirty=true;},true);installProtectedPrioSearch();mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
+  function init(){window.prioDraftDirty=false;document.addEventListener("click",event=>{if(!event.target.closest("#lootGuildSwitcher"))closeLootGuildSwitchPopup();if(event.target.closest(".mini-btn[data-prio]"))window.prioDraftDirty=true;},true);document.addEventListener("keydown",event=>{if(event.key==="Escape")closeLootGuildSwitchPopup();});document.addEventListener("change",event=>{if(["p1","p2","p3"].includes(event.target?.id))window.prioDraftDirty=true;},true);installProtectedPrioSearch();mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
   window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();bindPageCharacterSync();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();compactLootReleaseSummary();refreshPageSignupState();autoSelectRaidCharacter();renderActiveCharacterPanel();loadPrioSignupSummary();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 
