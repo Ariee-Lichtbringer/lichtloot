@@ -147,6 +147,12 @@ const trackedPagePaths = new Set([
   "/loot/zg-loot.html", "/loot/gildenleitung.html"
 ]);
 
+const clientTrackedPagePaths = new Set([
+  "/", "/index.html", "/start.html", "/gildenleitung.html", "/raidlead-panel.html",
+  "/andere-raids.html", "/loot/aq20-loot.html", "/loot/aq40-loot.html", "/loot/bwl-loot.html",
+  "/loot/mc-loot.html", "/loot/naxx-loot.html", "/loot/ony-loot.html", "/loot/zg-loot.html"
+]);
+
 function analyticsClientAddress(req) {
   const forwarded = clean(req.headers["x-forwarded-for"]).split(",")[0].trim();
   return forwarded || clean(req.socket?.remoteAddress) || "unknown";
@@ -160,16 +166,36 @@ function analyticsVisitorHash(req, day) {
 }
 
 function shouldTrackPageRequest(req) {
-  if (req.method !== "GET" || !trackedPagePaths.has(req.path)) return false;
+  if (req.method !== "GET" || !trackedPagePaths.has(req.path) || clientTrackedPagePaths.has(req.path)) return false;
   const userAgent = clean(req.headers["user-agent"]);
   if (!userAgent || /bot|crawler|spider|slurp|preview|monitor|uptime|headless|lighthouse/i.test(userAgent)) return false;
   return true;
 }
 
-async function recordPageRequest(req) {
+app.post("/api/page-view", async (req, res) => {
+  try {
+    const requestedPath = clean(req.body?.path).split("?")[0].slice(0, 200);
+    if (!clientTrackedPagePaths.has(requestedPath)) {
+      res.status(400).json({ success: false, error: "Unbekannte Seite." });
+      return;
+    }
+    const userAgent = clean(req.headers["user-agent"]);
+    if (!userAgent || /bot|crawler|spider|slurp|preview|monitor|uptime|headless|lighthouse/i.test(userAgent)) {
+      res.json({ success: true, counted: false });
+      return;
+    }
+    await recordPageRequest(req, requestedPath, clean(req.body?.guild));
+    res.json({ success: true, counted: true });
+  } catch (error) {
+    console.warn("Browser-Seitenaufruf konnte nicht gezählt werden:", error.message || error);
+    res.status(500).json({ success: false, error: "Seitenaufruf konnte nicht gezählt werden." });
+  }
+});
+
+async function recordPageRequest(req, pagePathOverride = "", guildSlugOverride = "") {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
-  const guildSlug = clean(req.query.guild || req.query.guildSlug || defaultGuildSlug).toLowerCase().slice(0, 100) || defaultGuildSlug;
-  const pagePath = req.path.slice(0, 200);
+  const guildSlug = clean(guildSlugOverride || req.query.guild || req.query.guildSlug || defaultGuildSlug).toLowerCase().slice(0, 100) || defaultGuildSlug;
+  const pagePath = clean(pagePathOverride || req.path).slice(0, 200);
   const visitorHash = analyticsVisitorHash(req, day);
   await query(
     `insert into page_analytics_daily (day, guild_slug, page_path, visitor_hash, view_count, first_seen_at, last_seen_at)
@@ -2279,7 +2305,37 @@ async function completeGuildSetup({ query: params, body = {} }) {
     eraRules.recruit.enabled = false;
     eraRules.poRelease.applicationsEnabled = false;
   }
-  setupLayout.eraRules = eraRules;
+  const fullEraSetup = ["true", "1", "yes", "ja", "on"].includes(clean(values.fullEraSetup).toLowerCase());
+  if (fullEraSetup) {
+    const enabled = value => ["true", "1", "yes", "ja", "on"].includes(clean(value).toLowerCase());
+    eraRules.supportedRaids = ERA_STANDARD_RAIDS.filter(raid => enabled(values[`raid_${raid}`]));
+    if (!eraRules.supportedRaids.length) {
+      const error = new Error("Bitte mindestens einen unterstützten Raid auswählen.");
+      error.statusCode = 400;
+      throw error;
+    }
+    eraRules.priorityLevels = ["p1", "p2", "p3"].map(key => ({
+      key,
+      label: clean(values[`priority_${key}_label`]).slice(0, 20) || key.toUpperCase(),
+      enabled: enabled(values[`priority_${key}_enabled`])
+    }));
+    if (!eraRules.priorityLevels.some(level => level.enabled)) {
+      const error = new Error("Bitte mindestens eine Prioritätsstufe aktivieren.");
+      error.statusCode = 400;
+      throw error;
+    }
+    eraRules.recruit.enabled = enabled(values.recruitEnabled);
+    eraRules.recruit.raids = ERA_STANDARD_RAIDS.filter(raid => enabled(values[`recruit_raid_${raid}`]));
+    eraRules.recruit.allowedPriorities = ["p1", "p2", "p3", "p0plus"].filter(key => enabled(values[`recruit_priority_${key}`]));
+    eraRules.recruit.minAttendance = Number(values.recruitMinAttendance);
+    eraRules.recruit.countBenchAsAttendance = enabled(values.recruitCountBench);
+    eraRules.p0Plus.raidTransferPoints = Number(values.raidTransferPoints);
+    eraRules.p0Plus.benchPoints = Number(values.benchPoints);
+    eraRules.poRelease.attendanceWindow = Number(values.attendanceWindow);
+    eraRules.poRelease.lowAttendanceWarning = Number(values.lowAttendanceWarning);
+    eraRules.poRelease.applicationsEnabled = enabled(values.poReleaseApplications);
+  }
+  setupLayout.eraRules = guildEraRulesFromLayout({ eraRules }, created.guild.slug);
   if (warcraftLogsGuildId) setupLayout.warcraftLogsGuildId = warcraftLogsGuildId;
   const saved = await updateGuildConfig({
     query: { guild: created.guild.slug },
@@ -2301,7 +2357,8 @@ async function completeGuildSetup({ query: params, body = {} }) {
         status: discordGuildId ? "bot_connection_required" : "discord_required",
         setupComplete: true,
         discordConnected: false,
-        channelsSynced: false
+        channelsSynced: false,
+        layoutConfigured: true
       })
     ]
   );
@@ -2316,10 +2373,11 @@ async function completeGuildSetup({ query: params, body = {} }) {
          background_url = $5,
          primary_color = $6,
          accent_color = $7,
+         discord_guild_id = nullif($8, ''),
          updated_at = now()
      where id = $1
      returning *`,
-    [application.id, created.guild.slug, guildPin, logoUrl, backgroundUrl, primaryColor, accentColor]
+    [application.id, created.guild.slug, guildPin, logoUrl, backgroundUrl, primaryColor, accentColor, discordGuildId]
   );
 
   const readiness = await evaluateGuildReadiness(created.guild.slug);
