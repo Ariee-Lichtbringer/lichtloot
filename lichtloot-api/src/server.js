@@ -2245,28 +2245,44 @@ async function completeGuildSetup({ query: params, body = {} }) {
   const lootName = clean(values.lootName) || application.loot_name || guildName;
   const server = clean(values.server) || application.server;
   const guildPin = normalizePin(values.guildPin) || application.desired_guild_pin;
+  if (!guildPin || guildPin.length < 6) {
+    const error = new Error("Bitte einen Leitungscode mit mindestens 6 Zeichen festlegen.");
+    error.statusCode = 400;
+    throw error;
+  }
   const discordGuildId = clean(values.discordGuildId || values.discord_guild_id || application.discord_guild_id);
+  const warcraftLogsGuildId = clean(values.warcraftLogsGuildId || values.wclGuildId).replace(/\D/g, "");
+  const setupProfile = ["standard", "casual", "progress"].includes(clean(values.setupProfile).toLowerCase())
+    ? clean(values.setupProfile).toLowerCase()
+    : "standard";
   const logoUrl = clean(values.logoUrl);
   const backgroundUrl = clean(values.backgroundUrl);
   const primaryColor = clean(values.primaryColor) || "#facc15";
   const accentColor = clean(values.accentColor) || "#1d4ed8";
 
   const created = await createGuild({ query: { guildName, lootName, server, guildPin } });
+  const setupLayout = defaultGuildLayoutForSlug(created.guild.slug);
+  const eraRules = defaultEraRulesForSlug(created.guild.slug);
+  if (setupProfile === "casual") {
+    eraRules.priorityLevels = eraRules.priorityLevels.map(level => ({ ...level, enabled: level.key !== "p3" }));
+    eraRules.recruit.enabled = false;
+    eraRules.poRelease.applicationsEnabled = false;
+  } else if (setupProfile === "progress") {
+    eraRules.recruit.enabled = true;
+    eraRules.recruit.raids = ["bwl", "aq40", "naxx"];
+    eraRules.recruit.allowedPriorities = ["p2", "p3"];
+    eraRules.poRelease.applicationsEnabled = true;
+  } else {
+    eraRules.recruit.enabled = false;
+    eraRules.poRelease.applicationsEnabled = false;
+  }
+  setupLayout.eraRules = eraRules;
+  if (warcraftLogsGuildId) setupLayout.warcraftLogsGuildId = warcraftLogsGuildId;
   const saved = await updateGuildConfig({
     query: { guild: created.guild.slug },
-    body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor },
+    body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor, discordGuildId, layout: setupLayout },
     trustedSetup: true
   });
-
-  if (discordGuildId) {
-    await query(
-      `update guilds
-       set discord_guild_id = $2,
-           updated_at = now()
-       where slug = $1`,
-      [created.guild.slug, discordGuildId]
-    );
-  }
 
   await query(
     `insert into guild_settings (guild_id, layout_json)
