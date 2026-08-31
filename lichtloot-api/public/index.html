@@ -2865,6 +2865,8 @@ async function openRandomRaidleadFromStart(){
     const target=new URL("raidlead-panel.html", window.location.href);
     target.searchParams.set("guild", currentActiveGuildSlug());
     target.searchParams.set("leadPin", result.leadPin || pin);
+    target.searchParams.set("random", "1");
+    target.searchParams.set("mode", "random");
     window.location.href=target.href;
   }catch(error){
     console.error(error);
