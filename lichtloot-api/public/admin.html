@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>LichtLoot – Plattform-Administration</title>
+  <style>
+    :root{--gold:#facc15;--blue:#60a5fa;--bg:#020617;--panel:#0f172a;--line:#334155;--text:#e5edf8;--muted:#94a3b8;--good:#86efac;--bad:#fecaca}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#10223f,var(--bg) 58%);color:var(--text);font-family:Inter,system-ui,sans-serif}main{width:min(1280px,calc(100vw - 28px));margin:auto;padding:34px 0 70px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:22px}h1{margin:0;color:var(--gold)}p{color:var(--muted)}.panel{border:1px solid rgba(250,204,21,.25);border-radius:14px;background:rgba(15,23,42,.92);padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.35)}.login{display:grid;grid-template-columns:minmax(220px,420px) auto;gap:10px;align-items:end}label{display:grid;gap:6px;color:var(--gold);font-weight:900}input,button{border:1px solid var(--line);border-radius:8px;background:#07111f;color:var(--text);padding:11px 13px;font:inherit}button{cursor:pointer;font-weight:900}button:hover{border-color:var(--blue)}button.primary{border-color:#a17d12;background:linear-gradient(135deg,#5f4b14,#172554)}button.good{border-color:#166534;color:var(--good)}button.danger{border-color:#991b1b;color:var(--bad)}button:disabled{opacity:.55;cursor:wait}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:18px 0}.status{padding:11px 13px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}.status.good{border-color:#166534;color:var(--good)}.status.bad{border-color:#991b1b;color:var(--bad)}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:11px 10px;border-bottom:1px solid #273449;text-align:left;vertical-align:top}th{color:var(--gold);font-size:12px;text-transform:uppercase}td small{display:block;color:var(--muted);margin-top:3px}.pill{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:900}.pill.pending{color:#fde68a}.pill.approved,.pill.completed{color:var(--good)}.pill.rejected{color:var(--bad)}.actions{display:flex;gap:6px;flex-wrap:wrap}code{display:block;max-width:360px;white-space:normal;word-break:break-all;color:#bfdbfe}a{color:#93c5fd}@media(max-width:680px){header{align-items:flex-start;flex-direction:column}.login{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main>
+  <header><div><h1>LichtLoot Plattform-Administration</h1><p>Gildenanträge und Freischaltlinks – unabhängig von allen Gildenbereichen.</p></div><a href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldeseite öffnen ↗</a></header>
+  <section class="panel">
+    <div class="login"><label>Plattform-Mastercode<input id="platformCode" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loadApplications()"></label><button class="primary" type="button" onclick="loadApplications()">Anmelden und laden</button></div>
+    <div class="toolbar"><button type="button" onclick="loadApplications()">Neu laden</button><span id="count"></span></div>
+    <div id="status" class="status">Plattform-Mastercode eingeben.</div>
+    <div id="content" class="table-wrap"></div>
+  </section>
+</main>
+<script>
+const API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
+let applications=[];
+const code=()=>document.getElementById("platformCode").value.trim();
+const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+function setStatus(message,type=""){const box=document.getElementById("status");box.textContent=message;box.className="status"+(type?" "+type:"");}
+async function api(action,body=null){const options=body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,masterCode:code(),...body})}:{cache:"no-store"};const url=body?API_URL:API_URL+"?"+new URLSearchParams({action,masterCode:code(),baseUrl:location.origin,t:Date.now()});const response=await fetch(url,options),result=await response.json().catch(()=>({}));if(!response.ok||!result.success)throw new Error(result.error||`HTTP ${response.status}`);return result;}
+function statusLabel(value){return {pending:"offen",approved:"freigegeben",completed:"eingerichtet",rejected:"abgelehnt"}[value]||value||"offen";}
+function render(){document.getElementById("count").textContent=`${applications.filter(entry=>entry.status==="pending").length} offen · ${applications.length} gesamt`;document.getElementById("content").innerHTML=applications.length?`<table><thead><tr><th>Status</th><th>Gilde</th><th>Kontakt</th><th>Freischaltlink</th><th>Aktionen</th></tr></thead><tbody>${applications.map(entry=>`<tr><td><span class="pill ${esc(entry.status)}">${esc(statusLabel(entry.status))}</span></td><td><strong>${esc(entry.guildName||"-")}</strong><small>${esc(entry.lootName||"-")} · ${esc(entry.server||"-")}</small><small>Gewünschter PIN: ${esc(entry.desiredGuildPin||"-")}</small></td><td><strong>${esc(entry.contactName||"-")}</strong><small>${esc(entry.contactDiscord||"-")}</small><small>${esc(entry.contactEmail||"-")}</small></td><td>${entry.setupUrl?`<code>${esc(entry.setupUrl)}</code>`:"Noch nicht freigegeben"}${entry.approvalEmailError?`<small style="color:#fecaca">E-Mail: ${esc(entry.approvalEmailError)}</small>`:""}</td><td><div class="actions">${entry.status==="pending"?`<button class="good" onclick="approve('${esc(entry.id)}',this)">Freigeben</button>`:""}${entry.setupUrl?`<button onclick="copyLink('${esc(entry.id)}')">Link kopieren</button>`:""}${entry.setupUrl&&entry.contactEmail?`<button onclick="sendMail('${esc(entry.id)}',this)">E-Mail senden</button>`:""}${!['rejected','completed'].includes(entry.status)?`<button class="danger" onclick="rejectApplication('${esc(entry.id)}',this)">Ablehnen</button>`:""}</div></td></tr>`).join("")}</tbody></table>`:'<p>Keine Gildenanträge vorhanden.</p>';}
+async function loadApplications(){if(!code()){setStatus("Plattform-Mastercode fehlt.","bad");return;}setStatus("Gildenanträge werden geladen …");try{const result=await api("guildGetApplications");applications=result.applications||[];render();setStatus("Plattform-Administration geladen.","good");}catch(error){applications=[];render();setStatus(error.message||"Anmeldung fehlgeschlagen.","bad");}}
+async function approve(id,button){button.disabled=true;button.textContent="Freigabe …";try{await api("guildApproveApplication",{id,baseUrl:location.origin});await loadApplications();setStatus("Gilde freigegeben. Einrichtungslink ist bereit; E-Mail läuft im Hintergrund.","good");}catch(error){button.disabled=false;button.textContent="Freigeben";setStatus(error.message,"bad");}}
+async function rejectApplication(id,button){if(!confirm("Diesen Gildenantrag ablehnen?"))return;button.disabled=true;try{await api("guildRejectApplication",{id});await loadApplications();setStatus("Antrag abgelehnt.","good");}catch(error){button.disabled=false;setStatus(error.message,"bad");}}
+async function sendMail(id,button){button.disabled=true;button.textContent="Versand …";try{await api("guildSendApplicationEmail",{id,baseUrl:location.origin});await loadApplications();setStatus("Freischalt-E-Mail gesendet.","good");}catch(error){button.disabled=false;button.textContent="E-Mail senden";setStatus(error.message,"bad");}}
+async function copyLink(id){const entry=applications.find(item=>item.id===id);if(!entry?.setupUrl)return;try{await navigator.clipboard.writeText(entry.setupUrl);setStatus("Freischaltlink kopiert.","good");}catch{prompt("Freischaltlink kopieren:",entry.setupUrl);}}
+</script>
+</body>
+</html>
