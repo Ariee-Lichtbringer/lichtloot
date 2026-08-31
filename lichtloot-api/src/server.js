@@ -21314,11 +21314,13 @@ async function ensureRandomRaidSchema() {
        server text not null default '',
        class_name text not null default '',
        spec_name text not null default '',
+       participant_hash text not null default '',
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now(),
        unique (raid_id, name, server)
      )`
   );
+  await randomQuery(`alter table random_characters add column if not exists participant_hash text not null default ''`);
   await randomQuery(
     `create table if not exists random_prios (
        id uuid primary key,
@@ -25363,19 +25365,23 @@ async function saveRandomPrio({ guildId, params, raidlead = false }) {
   if (raidlead && clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error = new Error("Falsche Random LeadPIN."); error.statusCode = 403; throw error; }
   const player = clean(params.player || params.char || params.spieler), server = clean(params.server);
   let sourceCharacter = null;
+  const participantToken = clean(params.randomParticipantToken || params.participantToken || params.playerPin);
+  const participantHash = participantToken ? createHmac("sha256", analyticsHashSecret).update(`random-participant|${participantToken}`).digest("hex") : "";
   if (!raidlead) {
-    const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
-    sourceCharacter = await findCharacterForPin(guildId, pin, player, server);
-    if (!sourceCharacter) { const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerLogin."); error.statusCode = 403; throw error; }
+    if (participantToken.length < 24) { const error = new Error("Das Random-Raid-Teilnehmerprofil fehlt. Bitte die Lootseite erneut öffnen."); error.statusCode = 403; throw error; }
   }
-  if (!player || !clean(params.p1)) { const error = new Error("Charakter und P1 sind erforderlich."); error.statusCode = 400; throw error; }
+  if (!player || !server || (!raidlead && !clean(params.specName || params.className || params.spec)) || !clean(params.p1)) { const error = new Error("Charaktername, Server, Skillung und P1 sind erforderlich."); error.statusCode = 400; throw error; }
   const client = await randomPool.connect();
   try {
     await client.query("begin");
+    const existingCharacter = await client.query(`select id,participant_hash from random_characters where raid_id=$1 and lower(name)=lower($2) and lower(server)=lower($3) limit 1`, [raid.id, player, server]);
+    if (!raidlead && existingCharacter.rows[0]?.participant_hash && existingCharacter.rows[0].participant_hash !== participantHash) {
+      const error = new Error("Dieser Charakter wurde für diesen Random-Raid bereits von einem anderen Browser eingetragen."); error.statusCode = 409; throw error;
+    }
     const characterResult = await client.query(
-      `insert into random_characters (id,raid_id,name,server,class_name,spec_name) values ($1,$2,$3,$4,$5,$6)
-       on conflict (raid_id,name,server) do update set class_name=excluded.class_name,spec_name=excluded.spec_name,updated_at=now() returning *`,
-      [randomUUID(), raid.id, player, server, clean(params.className || sourceCharacter?.class_name), clean(params.specName || params.spec)]
+      `insert into random_characters (id,raid_id,name,server,class_name,spec_name,participant_hash) values ($1,$2,$3,$4,$5,$6,$7)
+       on conflict (raid_id,name,server) do update set class_name=excluded.class_name,spec_name=excluded.spec_name,participant_hash=case when random_characters.participant_hash='' then excluded.participant_hash else random_characters.participant_hash end,updated_at=now() returning *`,
+      [randomUUID(), raid.id, player, server, clean(params.className || sourceCharacter?.class_name), clean(params.specName || params.spec), raidlead ? "" : participantHash]
     );
     const character = characterResult.rows[0];
     const p0Plus = ["ja","true","1"].includes(clean(params.p0Plus).toLowerCase());
@@ -25416,8 +25422,10 @@ async function deleteRandomPrio(guildId, params = {}) {
   if (clean(params.leadPin)) {
     if (clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error=new Error("Falsche Random LeadPIN.");error.statusCode=403;throw error; }
   } else {
-    const character = await findCharacterForPin(guildId, params.characterPin || params.masterCharacterPin || params.pin || params.playerPin, player, clean(params.server));
-    if (!character) { const error=new Error("Dieser Charakter gehört nicht zu diesem SpielerLogin.");error.statusCode=403;throw error; }
+    const token=clean(params.randomParticipantToken || params.participantToken || params.characterPin || params.playerPin);
+    const hash=token ? createHmac("sha256",analyticsHashSecret).update(`random-participant|${token}`).digest("hex") : "";
+    const owned=await randomQuery(`select 1 from random_characters where raid_id=$1 and lower(name)=lower($2) and lower(server)=lower($3) and participant_hash=$4`,[raid.id,player,clean(params.server),hash]);
+    if (!owned.rows[0]) { const error=new Error("Dieser Random-Raid-Charakter gehört zu einem anderen Browserprofil.");error.statusCode=403;throw error; }
   }
   const result = await randomQuery(`delete from random_characters where raid_id=$1 and lower(name)=lower($2) returning id`, [raid.id, player]);
   return { success:true, deleted:result.rowCount, randomRaid:true };
