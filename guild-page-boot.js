@@ -30,8 +30,9 @@
 (function () {
   const guild = new URLSearchParams(window.location.search).get("guild") || "lichtloot";
   const payload = JSON.stringify({ path: window.location.pathname || "/", guild });
+  const analyticsUrl = "https://lichtloot-production.up.railway.app/api/page-view";
   const send = function () {
-    fetch("/api/page-view", {
+    fetch(analyticsUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: payload,
