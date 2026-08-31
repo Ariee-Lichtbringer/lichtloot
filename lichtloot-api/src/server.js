@@ -11851,7 +11851,8 @@ async function savePoPostEntry({ guildId, query: params }) {
 
   const releaseRaid = normalizePoReleaseRaid(raidKey);
   const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-  const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, itemGameId, itemName);
+  await requireGuildPoPlusItem(guildId, itemGameId, itemName, raidKey);
+  const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, itemGameId, itemName, raidKey);
   if (itemRequiresRelease && releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
       guildId,
@@ -12837,7 +12838,9 @@ async function savePrio({ guildId, query: params }) {
     // darf keine Pool-Abfrage samt ALTER TABLE gestartet werden: Sie würde auf
     // die von dieser Transaktion gehaltene guild_settings-Sperre warten.
     const poReleaseSettings = poReleaseDisplaySettingsFromLayout(guildLayout);
-    if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0PlusSelected && releaseRaid) {
+    // Eine P0-Auswahl ist ebenfalls eine freigabepflichtige Prioritaet. Die
+    // Pruefung darf nicht nur greifen, wenn das Formular sie als P0+ sendet.
+    if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0Selected && releaseRaid) {
       const releaseResult = await client.query(
         `select 1
          from character_po_releases
@@ -12848,7 +12851,7 @@ async function savePrio({ guildId, query: params }) {
         [guildId, character.id, releaseRaid]
       );
       if (!releaseResult.rows[0]) {
-        const error = new Error("Du hast keine P0+-Berechtigung für diesen Raid.");
+        const error = new Error("Du hast keine P0-Freigabe für diesen Raid.");
         error.statusCode = 403;
         throw error;
       }
@@ -12883,7 +12886,12 @@ async function savePrio({ guildId, query: params }) {
     const p2 = await upsertItem(client, raidType, (!enabledPriorities.has("p2") || (recruitRestricted && !recruitAllowedPriorities.has("p2"))) ? "" : (p0Selected ? p0ItemName : params.p2), (!enabledPriorities.has("p2") || (recruitRestricted && !recruitAllowedPriorities.has("p2"))) ? "" : (p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID)));
     const p3 = await upsertItem(client, raidType, (!enabledPriorities.has("p3") || (recruitRestricted && !recruitAllowedPriorities.has("p3"))) ? "" : (p0Selected ? p0ItemName : params.p3), (!enabledPriorities.has("p3") || (recruitRestricted && !recruitAllowedPriorities.has("p3"))) ? "" : (p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID)));
     if (p0Selected) {
-      await requireGuildPoItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName);
+      await requireGuildPoItem(
+        guildId,
+        p1?.id || p0ItemId,
+        p1?.name || p0ItemName,
+        savedRaidForSignupCheck.raid_type || raidType
+      );
     }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
     await removeDuplicatePriosForPlayerLogin(client, raidResult.rows[0].id, character);
@@ -13303,7 +13311,8 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   const itemRequiresRelease = await guildPoItemRequiresRelease(
     guildId,
     params.itemId || params.itemGameId || params.p1ItemId,
-    itemName
+    itemName,
+    raidType
   );
   if (itemRequiresRelease && releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
@@ -13341,7 +13350,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
-    await requireGuildPoItem(guildId, item.id, item.name);
+    await requireGuildPoPlusItem(guildId, item.id, item.name, raidType);
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
 
@@ -24172,13 +24181,6 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensureGuildPoItemsSchema();
   await ensureUnlinkedP0PlusSchema();
-  const configuredPoItemsResult = await query(
-    `select count(*)::int as count
-     from guild_po_items
-     where guild_id = $1 and enabled = true`,
-    [guildId]
-  );
-  const restrictToConfiguredPoItems = Number(configuredPoItemsResult.rows[0]?.count || 0) > 0;
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender PO+-Raid gefunden.");
@@ -24206,14 +24208,18 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      left join p0plus_points pp on pp.guild_id = $2 and pp.item_id = i.id
      where (lower(i.raid_type) = any($1)
         or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1))
-     ${restrictToConfiguredPoItems
-       ? "and exists (select 1 from guild_po_items gpi where gpi.guild_id = $2 and gpi.item_id = i.id and lower(gpi.raid_type) = any($3) and gpi.enabled = true)"
-       : ""}
+     and exists (
+       select 1
+       from guild_po_items gpi
+       where gpi.guild_id = $2
+         and gpi.item_id = i.id
+         and lower(gpi.raid_type) = any($3)
+         and gpi.enabled = true
+         and gpi.po_plus_enabled = true
+     )
      group by i.id
      order by i.name asc`,
-    restrictToConfiguredPoItems
-      ? [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId, poItemSettingsRaidTypes(raid.raid_type)]
-      : [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId]
+    [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId, poItemSettingsRaidTypes(raid.raid_type)]
   );
 
   const signupResult = raid.p0_only
@@ -24639,12 +24645,15 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       throw error;
     }
 
-    await requireGuildPoItem(guildId, item.id, item.name);
+    await requireGuildPoPlusItem(guildId, item.id, item.name, raid.raid_type);
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
-    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name);
-    if (itemRequiresRelease && releaseRaid) {
+    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name, raid.raid_type);
+    // Die Raid-Freigabe gilt fuer jede P0-Eintragung. po_plus_enabled steuert
+    // lediglich, ob der Eintrag als P0+ behandelt wird; es darf nicht die
+    // grundsaetzliche P0-Berechtigung des Charakters umgehen.
+    if (releaseRaid) {
       const releaseResult = await client.query(
         `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
         [guildId, character.id, releaseRaid]
@@ -24958,7 +24967,12 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
       await client.query("rollback");
       return { success: true, skipped: true, reason: "item_missing" };
     }
-    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name);
+    const itemRequiresRelease = await guildPoItemRequiresRelease(
+      guildId,
+      item.id,
+      item.name,
+      linkedRaid.raid_type
+    );
     await removeDuplicatePriosForCharacterName(client, linkedRaid.id, character);
     await removeDuplicatePriosForPlayerLogin(client, linkedRaid.id, character);
     const comment = JSON.stringify({
@@ -29403,38 +29417,79 @@ async function setGuildPoItemsBulk({ guild, query: params = {} }) {
   return {success:true,updated:result.rowCount,enabled,setting,raid:requestedRaidType};
 }
 
-async function requireGuildPoItem(guildId, itemId, itemName = "") {
+async function requireGuildPoItem(guildId, itemId, itemName = "", raidType = "") {
   await ensureGuildPoItemsSchema();
-  const configured = await query(`select 1 from guild_po_items where guild_id = $1 limit 1`, [guildId]);
-  if (!configured.rows.length) return { bypassed: true };
+  const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
+  if (!settingsRaidTypes.length) {
+    const error = new Error("Der Raidtyp des P0-Items konnte nicht bestimmt werden.");
+    error.statusCode = 400;
+    throw error;
+  }
   const result = await query(
     `select i.id, i.name
      from items i
-     join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id and gpi.enabled = true
-     where i.id::text = $2 or ($3 <> '' and lower(i.name) = lower($3))
+     join guild_po_items gpi
+       on gpi.guild_id = $1
+      and gpi.item_id = i.id
+      and gpi.enabled = true
+      and lower(gpi.raid_type) = any($4)
+     where i.id::text = $2 or i.item_id = $2 or ($3 <> '' and lower(i.name) = lower($3))
      limit 1`,
-    [guildId, clean(itemId), clean(itemName)]
+    [guildId, clean(itemId), clean(itemName), settingsRaidTypes]
   );
   if (!result.rows[0]) {
-    const error = new Error("Dieses Item ist von der Gildenleitung nicht als PO-Item freigegeben.");
+    const error = new Error("Dieses Item ist für diesen Raid von der Gildenleitung nicht als P0-Item aktiviert.");
     error.statusCode = 403;
     throw error;
   }
   return result.rows[0];
 }
 
-async function guildPoItemRequiresRelease(guildId, itemId, itemName = "") {
+async function requireGuildPoPlusItem(guildId, itemId, itemName = "", raidType = "") {
   await ensureGuildPoItemsSchema();
+  const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
+  if (!settingsRaidTypes.length) {
+    const error = new Error("Der Raidtyp des P0+-Items konnte nicht bestimmt werden.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select i.id, i.name
+     from items i
+     join guild_po_items gpi
+       on gpi.guild_id = $1
+      and gpi.item_id = i.id
+      and gpi.enabled = true
+      and gpi.po_plus_enabled = true
+      and lower(gpi.raid_type) = any($4)
+     where i.id::text = $2 or i.item_id = $2 or ($3 <> '' and lower(i.name) = lower($3))
+     limit 1`,
+    [guildId, clean(itemId), clean(itemName), settingsRaidTypes]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Dieses Item ist für diesen Raid von der Gildenleitung nicht als P0+-Item aktiviert.");
+    error.statusCode = 403;
+    throw error;
+  }
+  return result.rows[0];
+}
+
+async function guildPoItemRequiresRelease(guildId, itemId, itemName = "", raidType = "") {
+  await ensureGuildPoItemsSchema();
+  const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
   const result = await query(
     `select coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
      from items i
-     left join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id
+     left join guild_po_items gpi
+       on gpi.guild_id = $1
+      and gpi.item_id = i.id
+      and lower(gpi.raid_type) = any($4)
      where i.id::text = $2
         or i.item_id = $2
         or ($3 <> '' and lower(i.name) = lower($3))
      order by case when i.id::text = $2 or i.item_id = $2 then 0 else 1 end
      limit 1`,
-    [guildId, clean(itemId), clean(itemName)]
+    [guildId, clean(itemId), clean(itemName), settingsRaidTypes]
   );
   return result.rows[0] ? Boolean(result.rows[0].po_plus_enabled) : true;
 }
