@@ -2,7 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import nodemailer from "nodemailer";
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
@@ -2024,7 +2024,7 @@ async function submitGuildApplication({ query: params, body = {} }) {
 }
 
 async function getGuildApplications({ query: params }) {
-  requireMasterCode(params.masterCode);
+  requirePlatformMasterCode(params.masterCode);
   await ensureGuildApplicationSchema();
   const result = await query(
     `select *
@@ -2040,7 +2040,7 @@ async function getGuildApplications({ query: params }) {
 }
 
 async function approveGuildApplication({ query: params, body = {} }) {
-  requireMasterCode(params.masterCode || body.masterCode);
+  requirePlatformMasterCode(params.masterCode || body.masterCode);
   await ensureGuildApplicationSchema();
   const values = { ...params, ...body };
   const id = clean(values.id);
@@ -2180,7 +2180,7 @@ async function sendGuildApprovalEmail(application) {
 }
 
 async function resendGuildApprovalEmail({ query: params, body = {} }) {
-  requireMasterCode(params.masterCode || body.masterCode);
+  requirePlatformMasterCode(params.masterCode || body.masterCode);
   await ensureGuildApplicationSchema();
   const values = { ...params, ...body };
   const id = clean(values.id);
@@ -2209,7 +2209,7 @@ async function resendGuildApprovalEmail({ query: params, body = {} }) {
 }
 
 async function rejectGuildApplication({ query: params, body = {} }) {
-  requireMasterCode(params.masterCode || body.masterCode);
+  requirePlatformMasterCode(params.masterCode || body.masterCode);
   await ensureGuildApplicationSchema();
   const id = clean(params.id || body.id);
   if (!id) {
@@ -3222,6 +3222,16 @@ function requireMasterCode(value) {
   const code = clean(value);
   if (code !== masterCode && !Array.from(masterCodeOverrides.values()).includes(code) && !Array.from(worldbuffAccessCodeOverrides.values()).includes(code)) {
     const error = new Error("Falscher Master-Code.");
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+function requirePlatformMasterCode(value) {
+  const supplied = Buffer.from(clean(value));
+  const expected = Buffer.from(clean(masterCode));
+  if (!supplied.length || supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+    const error = new Error("Falscher Plattform-Mastercode.");
     error.statusCode = 403;
     throw error;
   }
@@ -29344,11 +29354,13 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildGetApplications") {
+      enforceSecurityRateLimit(req, "platform-admin", 30, 15 * 60 * 1000);
       const applications = await getGuildApplications({ query: req.query });
       return res.json(applications);
     }
 
     if (action === "guildApproveApplication") {
+      enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
       const approved = await approveGuildApplication({ query: req.query });
       return res.json(approved);
     }
@@ -30411,6 +30423,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildApproveApplication") {
+      enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
       const approved = await approveGuildApplication({ query: req.query, body: req.body });
       return res.json(approved);
     }
