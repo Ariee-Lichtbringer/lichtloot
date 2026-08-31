@@ -2871,6 +2871,26 @@ html,body{max-width:100%;overflow-x:hidden}
 @media(max-width:980px){.character-overview-grid,.account-private-row{grid-template-columns:1fr}.header-leadership-link{min-height:52px}}
 @media(max-width:1180px){.start-header{align-items:flex-start!important}.start-header-actions{flex-wrap:wrap!important;justify-content:flex-end}.global-guild-menu{position:fixed;top:90px;right:16px}.header-back-raids{min-height:52px}.global-guild-trigger{min-height:52px}}
 @media(max-width:720px){.start-header-actions{width:100%;justify-content:stretch}.header-back-raids,.header-leadership-link,.global-guild-switcher,.global-guild-trigger{width:100%}.header-leadership-link{justify-content:center}.global-guild-menu{top:76px;left:14px;right:14px;width:auto}.account-private-pin{grid-template-columns:auto minmax(0,1fr)}.account-private-pin button{grid-column:1 / -1;width:100%}.character-gear-items{grid-template-columns:1fr}}
+.nachtloot-news-button{min-height:52px;padding:11px 16px;border:1px solid rgba(168,85,247,.62);border-radius:8px;background:linear-gradient(135deg,rgba(88,28,135,.72),rgba(17,24,39,.88));color:#f5d0fe;font-weight:950;cursor:pointer;box-shadow:0 10px 28px rgba(88,28,135,.2)}
+.nachtloot-news-button:hover{border-color:#c084fc;background:linear-gradient(135deg,rgba(126,34,206,.78),rgba(30,41,59,.92))}
+.nachtloot-news-backdrop{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:24px;background:rgba(1,4,12,.78);backdrop-filter:blur(8px)}
+.nachtloot-news-backdrop.hidden{display:none}
+.nachtloot-news-modal{width:min(720px,calc(100vw - 32px));max-height:min(82vh,820px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;border:1px solid rgba(192,132,252,.48);border-radius:14px;background:linear-gradient(155deg,#130d0b 0%,#0b0c14 62%,#12071c 100%);box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 50px rgba(126,34,206,.12);color:#f8fafc}
+.nachtloot-news-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:28px 32px 24px;border-bottom:1px solid rgba(217,119,6,.3)}
+.nachtloot-news-eyebrow{margin-bottom:8px;color:#c026d3;font-size:13px;font-weight:900;letter-spacing:.24em;text-transform:uppercase}
+.nachtloot-news-head h2{margin:0;font-size:27px;line-height:1.15;color:#fff7ed}
+.nachtloot-news-close{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border:0;background:transparent;color:#d6a853;font-size:32px;line-height:1;cursor:pointer}
+.nachtloot-news-list{overflow:auto;padding:8px 32px;scrollbar-color:#71543a transparent}
+.nachtloot-news-entry{padding:25px 0;border-bottom:1px solid rgba(217,119,6,.26)}
+.nachtloot-news-entry:last-child{border-bottom:0}
+.nachtloot-news-date{margin-bottom:10px;color:#ae8547;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;letter-spacing:.16em}
+.nachtloot-news-entry h3{margin:0 0 10px;color:#fff7ed;font-size:22px;line-height:1.25}
+.nachtloot-news-entry p{margin:0;color:#d6a853;font-size:17px;line-height:1.58}
+.nachtloot-news-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 32px;border-top:1px solid rgba(217,119,6,.28);background:rgba(9,7,9,.72)}
+.nachtloot-news-foot span{color:#c026d3;font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+.nachtloot-news-done{min-height:38px;padding:8px 16px;border:1px solid rgba(192,132,252,.55);border-radius:7px;background:rgba(88,28,135,.5);color:#faf5ff;font-weight:900;cursor:pointer}
+body.nachtloot-news-open{overflow:hidden}
+@media(max-width:720px){.nachtloot-news-button{width:100%}.nachtloot-news-backdrop{padding:12px}.nachtloot-news-modal{width:100%;max-height:88vh}.nachtloot-news-head,.nachtloot-news-list,.nachtloot-news-foot{padding-left:20px;padding-right:20px}.nachtloot-news-head h2{font-size:23px}.nachtloot-news-entry h3{font-size:19px}.nachtloot-news-entry p{font-size:15px}}
 </style>
 </head>
 
@@ -9925,6 +9945,71 @@ async function submitMobileLootLogin(event){
   }
 }
 
+const NACHTLOOT_NEWS_VERSION="2026-08-31-gear-planner";
+const NACHTLOOT_NEWS_ENTRIES=[
+  {
+    date:"2026-08-31",
+    title:"Ausrüstungsplaner mit Blizzard Armory",
+    text:"Plane dein Wunsch-Gear direkt mit deinem aktuellen Charakter. Tausche Gegenstände aus, vergleiche die Werte und übernimm passende Items direkt in deine P1-, P2- oder P3-Prioliste."
+  },
+  {
+    date:"2026-08-31",
+    title:"Talentbäume, Setboni und Verzauberungen",
+    text:"Der Planer zeigt jetzt die vollständigen Talentbäume mit Icons und berücksichtigt Verzauberungen sowie bekannte Setboni bei der Berechnung deiner Werte."
+  },
+  {
+    date:"2026-08-30",
+    title:"Aktuelle Charakteransicht aus der Armory",
+    text:"Deine Ausrüstung, Charakterwerte und die drehbare Charakteransicht werden aus der Blizzard Armory geladen. Item-Tooltips zeigen die vollständigen Gegenstandsinformationen beim Darüberfahren."
+  }
+];
+
+function nachtlootNewsStorageKey(){
+  return "lichtloot:nachtloot:news:lastSeen";
+}
+
+function closeNachtlootNews(){
+  const backdrop=document.getElementById("nachtlootNewsBackdrop");
+  if(backdrop) backdrop.classList.add("hidden");
+  document.body.classList.remove("nachtloot-news-open");
+  try{ localStorage.setItem(nachtlootNewsStorageKey(),NACHTLOOT_NEWS_VERSION); }catch(error){}
+}
+
+function openNachtlootNews(){
+  const backdrop=document.getElementById("nachtlootNewsBackdrop");
+  if(!backdrop) return;
+  backdrop.classList.remove("hidden");
+  document.body.classList.add("nachtloot-news-open");
+  backdrop.querySelector(".nachtloot-news-close")?.focus();
+}
+
+function installNachtlootNews(){
+  if(CURRENT_GUILD_SLUG!=="nachtloot" || document.getElementById("nachtlootNewsBackdrop")) return;
+  const entries=NACHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p></article>`).join("");
+  const backdrop=document.createElement("div");
+  backdrop.id="nachtlootNewsBackdrop";
+  backdrop.className="nachtloot-news-backdrop hidden";
+  backdrop.setAttribute("role","presentation");
+  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-modal="true" aria-labelledby="nachtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">Neu</div><h2 id="nachtlootNewsTitle">Neu seit deinem letzten Besuch</h2></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Alle Änderungen</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeNachtlootNews);
+  backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeNachtlootNews);
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop) closeNachtlootNews();});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape" && !backdrop.classList.contains("hidden")) closeNachtlootNews();});
+  const actions=document.querySelector(".start-header-actions");
+  if(actions){
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="nachtloot-news-button";
+    button.textContent="✦ Neuigkeiten";
+    button.addEventListener("click",openNachtlootNews);
+    actions.prepend(button);
+  }
+  let lastSeen="";
+  try{ lastSeen=localStorage.getItem(nachtlootNewsStorageKey())||""; }catch(error){}
+  if(lastSeen!==NACHTLOOT_NEWS_VERSION) window.setTimeout(openNachtlootNews,350);
+}
+
 document.addEventListener("DOMContentLoaded",async ()=>{
   try{
     const explicitSwitch=normalizeCurrentGuildSlug(sessionStorage.getItem("lichtlootExplicitGuildSwitch") || "");
@@ -9934,6 +10019,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   applyGuildBrand();
   applyStartPageLayout();
   await showRaidMemberNoticeIfNeeded();
+  installNachtlootNews();
   placeSidebarDrawers();
   refreshRaidCreateAccess();
   initMeinLichtLootAutoLogin();
