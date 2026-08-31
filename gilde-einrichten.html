@@ -34,6 +34,11 @@
     .check.done{color:#86efac}
     .check i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.14);font-style:normal}
     .check.done i{background:rgba(34,197,94,.16)}
+    fieldset{grid-column:1/-1;margin:4px 0 0;padding:18px;border:1px solid rgba(96,165,250,.25);border-radius:10px;background:rgba(2,6,23,.28)}
+    legend{padding:0 8px;color:var(--gold);font-weight:950;text-transform:uppercase}
+    .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px}
+    label.choice{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid rgba(148,163,184,.22);border-radius:8px;color:var(--text);text-transform:none}
+    label.choice input[type="checkbox"]{width:18px;height:18px;flex:0 0 auto}
     @media(max-width:720px){.grid{grid-template-columns:1fr}.brand{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
@@ -48,6 +53,7 @@
   </div>
 
   <form class="panel" id="guildSetupForm">
+    <input type="hidden" name="fullEraSetup" value="true">
     <div class="grid">
       <label>Gildenname
         <input name="guildName" required>
@@ -86,6 +92,16 @@
       <label>Akzentfarbe
         <input name="accentColor" type="color" value="#1d4ed8">
       </label>
+      <fieldset><legend>Unterstützte Raids</legend><div class="choices">
+        <label class="choice"><input type="checkbox" name="raid_mc" checked> Molten Core</label><label class="choice"><input type="checkbox" name="raid_bwl" checked> Blackwing Lair</label><label class="choice"><input type="checkbox" name="raid_ony" checked> Onyxia</label><label class="choice"><input type="checkbox" name="raid_zg" checked> Zul'Gurub</label><label class="choice"><input type="checkbox" name="raid_aq20" checked> Ahn'Qiraj 20</label><label class="choice"><input type="checkbox" name="raid_aq40" checked> Ahn'Qiraj 40</label><label class="choice"><input type="checkbox" name="raid_naxx" checked> Naxxramas</label>
+      </div></fieldset>
+      <fieldset><legend>Prioritätsstufen</legend><div class="grid">
+        <label><span><input type="checkbox" name="priority_p1_enabled" checked style="width:auto"> Stufe aktiv</span><input name="priority_p1_label" value="P1" maxlength="20"></label>
+        <label><span><input type="checkbox" name="priority_p2_enabled" checked style="width:auto"> Stufe aktiv</span><input name="priority_p2_label" value="P2" maxlength="20"></label>
+        <label><span><input type="checkbox" name="priority_p3_enabled" checked style="width:auto"> Stufe aktiv</span><input name="priority_p3_label" value="P3" maxlength="20"></label>
+      </div></fieldset>
+      <fieldset><legend>Rekruten und Freigaben</legend><div class="choices"><label class="choice"><input type="checkbox" name="recruitEnabled"> Rekrutenregeln aktivieren</label><label class="choice"><input type="checkbox" name="recruitCountBench" checked> Bench als Teilnahme zählen</label><label class="choice"><input type="checkbox" name="poReleaseApplications"> Freigabeanträge aktivieren</label></div><p>Betroffene Rekruten-Raids</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_raid_bwl" checked> BWL</label><label class="choice"><input type="checkbox" name="recruit_raid_aq40" checked> AQ40</label><label class="choice"><input type="checkbox" name="recruit_raid_naxx" checked> Naxx</label></div><p>Für Rekruten erlaubte Prios</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_priority_p1"> P1</label><label class="choice"><input type="checkbox" name="recruit_priority_p2" checked> P2</label><label class="choice"><input type="checkbox" name="recruit_priority_p3" checked> P3</label><label class="choice"><input type="checkbox" name="recruit_priority_p0plus"> P0+</label></div><div class="grid" style="margin-top:12px"><label>Mindestteilnahmen<input name="recruitMinAttendance" type="number" min="0" max="50" value="3"></label><label>Attendance-Zeitraum<input name="attendanceWindow" type="number" min="1" max="50" value="16"></label><label>Warnschwelle<input name="lowAttendanceWarning" type="number" min="0" max="50" value="6"></label></div></fieldset>
+      <fieldset><legend>P0+-Punkte</legend><div class="grid"><label>Punkte je Raidübertragung<input name="raidTransferPoints" type="number" min="0" max="100" step="0.5" value="1"></label><label>Bench-Punkte<input name="benchPoints" type="number" min="0" max="100" step="0.5" value="0.5"></label></div></fieldset>
     </div>
     <div class="actions">
       <button type="submit">Gilde einrichten</button>
@@ -138,6 +154,12 @@ function safeHtml(value){
     "'":"&#39;"
   }[char]));
 }
+function discordInviteUrl(clientId,permissions,discordGuildId){
+  const params=new URLSearchParams({client_id:clientId,permissions,scope:"bot applications.commands"});
+  const guildId=String(discordGuildId||"").replace(/\D/g,"");
+  if(guildId){params.set("guild_id",guildId);params.set("disable_guild_select","true");}
+  return "https://discord.com/oauth2/authorize?"+params.toString();
+}
 function renderResultLinks(result){
   const guild = result.guild || {};
   const app = result.application || {};
@@ -146,14 +168,14 @@ function renderResultLinks(result){
   const leadershipUrl = result.leadershipUrl || buildGuildUrl("gildenleitung.html", slug);
   const guildName = guild.name || app.guildName || form.elements.guildName?.value || "Neue Gilde";
   const guildPin = result.guildPin || guild.guildPin || app.guildPin || app.desiredGuildPin || form.elements.guildPin?.value || "";
+  const ready=Boolean(result.readiness?.ready);
+  const discordGuildId=app.discordGuildId||form.elements.discordGuildId?.value||"";
   resultLinks.innerHTML = `
     <strong>${safeHtml(guildName)}</strong>
     ${slug ? `<span>Bereich: ${safeHtml(slug)}</span>` : ""}
     ${guildPin ? `<span>GildenPIN: ${safeHtml(guildPin)}</span>` : ""}
     ${renderReadiness(result.readiness)}
-    <a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a>
-    <a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>
-    <a class="linkbtn" href="${safeHtml(leadershipUrl + (leadershipUrl.includes("?") ? "&" : "?") + "setup=1")}">Era-Regeln vervollständigen</a>
+    ${ready?`<a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a><a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>`:`<div class="readiness"><strong>Discord-Bots verbinden</strong><span>Beide Bots einladen, anschließend etwas warten und die Bereitschaft erneut prüfen.</span><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1510677346787659777","388160",discordGuildId))}">Lichtbuff-Bot einladen</a><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1527793332346945537","2147560448",discordGuildId))}">P0-Anmelder-Bot einladen</a></div>`}
     <button type="button" id="refreshReadiness">Bereitschaft erneut prüfen</button>
   `;
   document.getElementById("refreshReadiness")?.addEventListener("click", loadSetup);
@@ -190,6 +212,8 @@ async function loadSetup(){
     setValue("accentColor", app.accentColor);
     setStatus(app.status === "completed" ? "Diese Gilde wurde bereits eingerichtet." : "Freischaltlink gültig. Einrichtung kann abgeschlossen werden.", "good");
     if(app.status === "completed"){
+      form.querySelector(".grid").hidden=true;
+      form.querySelector(".actions").hidden=true;
       resultLinks.hidden = false;
       renderResultLinks(result);
     }
@@ -215,6 +239,17 @@ form.addEventListener("submit", async event => {
   }catch(error){
     setStatus(error.message || "Gilde konnte nicht eingerichtet werden.", "bad");
   }
+});
+form.elements.setupProfile?.addEventListener("change",event=>{
+  const profile=event.target.value;
+  form.elements.priority_p1_enabled.checked=true;
+  form.elements.priority_p2_enabled.checked=true;
+  form.elements.priority_p3_enabled.checked=profile!=="casual";
+  const progress=profile==="progress";
+  form.elements.recruitEnabled.checked=progress;
+  form.elements.poReleaseApplications.checked=progress;
+  ["bwl","aq40","naxx"].forEach(raid=>{form.elements[`recruit_raid_${raid}`].checked=progress;});
+  ["p1","p2","p3","p0plus"].forEach(key=>{form.elements[`recruit_priority_${key}`].checked=progress&&["p2","p3"].includes(key);});
 });
 loadSetup();
 </script>

@@ -5351,6 +5351,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openP0PlusPointsUpdate()" aria-label="P0+ Punkte aktualisieren" title="P0+ Punkte aktualisieren"><span class="side-icon">⭐</span><span class="side-label">P0+ Punkte aktualisieren</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <div class="side-section-label">Verwaltung</div>
+          <button class="side-link master-only" type="button" onclick="openTrafficStatsPanel()" aria-label="Aufrufstatistik" title="Aufrufstatistik"><span class="side-icon">↗</span><span class="side-label">Aufrufstatistik</span></button>
           <button class="side-link master-only" type="button" onclick="openSystemErrorPanel()" aria-label="Fehlerzentrale" title="Fehlerzentrale"><span class="side-icon">⚠</span><span class="side-label">Fehlerzentrale</span><span id="systemErrorCount" class="side-count">0</span></button>
           <button class="side-link master-only" type="button" onclick="openRaidArchivePanel()" aria-label="Raid-Archiv" title="Raid-Archiv"><span class="side-icon">🗄</span><span class="side-label">Raid-Archiv</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
@@ -5433,10 +5434,10 @@ body.worldbuff-only .master-only{display:none!important}
   <div class="dashboard-grid">
     <div class="dashboard-column">
       <section id="discordNotificationPanel" class="dashboard-card discord-settings-panel hidden"></section>
-      <section id="trafficStatsPanel" class="dashboard-card">
+      <section id="trafficStatsPanel" class="dashboard-card hidden">
         <div class="dashboard-card-head">
           <div><h2>↗ LichtLoot-Aufrufe</h2><div class="muted" id="trafficStatsScope">Datensparsame Statistik · Bots werden ausgeschlossen</div></div>
-          <button type="button" onclick="loadTrafficStats()">Aktualisieren</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onclick="loadTrafficStats()">Aktualisieren</button><button type="button" onclick="closeTrafficStatsPanel()">Schließen</button></div>
         </div>
         <div id="trafficStatsContent" class="muted">Nach dem Freischalten werden die Aufrufe geladen.</div>
       </section>
@@ -7498,7 +7499,6 @@ async function loadOverview(options){
     handleRaidHelperDeepLink();
     handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
-    loadTrafficStats();
     loadRaidHelperDiscordChannels();
     // Das Panel kann bereits vor der Freischaltung geöffnet worden sein. In
     // diesem Fall wurde der Rollenabruf wegen des noch leeren Master-Codes
@@ -9320,6 +9320,19 @@ async function loadTrafficStats(){
     root.className="status bad";
     root.textContent=error.message||"Aufrufstatistik konnte nicht geladen werden.";
   }
+}
+
+function openTrafficStatsPanel(){
+  const panel=document.getElementById("trafficStatsPanel");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+  loadTrafficStats();
+}
+
+function closeTrafficStatsPanel(){
+  document.getElementById("trafficStatsPanel")?.classList.add("hidden");
+  document.getElementById("dashboardTop")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function renderPlayerMiniList(){
