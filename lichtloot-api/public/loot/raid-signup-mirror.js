@@ -432,7 +432,29 @@
     const backdrop=document.querySelector(".raid-signup-modal-backdrop"),tools=document.querySelector(".header-tools")||document.querySelector(".header");
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
-  function normalizeArmoryPlannerItem(item){const tooltip=String(item?.tooltip||item?.statsText||"").replace(/\r?\n/g,"|");return{...item,id:item?.itemId||item?.id||"",itemId:item?.itemId||item?.id||"",slotName:item?.slot||item?.slotName||"",icon:item?.iconUrl||item?.icon||"",quality:String(item?.quality||"").toLowerCase(),tooltipText:tooltip,stats:Array.isArray(item?.stats)?item.stats:tooltip.split("|").map(line=>line.trim()).filter(Boolean),permanentEnchantName:item?.enchant||item?.enchantName||"",source:"Blizzard Armory"};}
+  function plannerEnchantCalculationLines(value){
+    const text=String(value||"").replace(/Verzauberung\s*#?/gi,"").replace(/Verzaubert:\s*/gi,"");
+    const lines=[];
+    const add=(key,amount)=>{const number=Number(String(amount||"").replace(",","."));if(!number)return;if(key==="healing")lines.push(`Anlegen: Heilung um ${number}`);else if(key==="defense")lines.push(`Anlegen: Verteidigung um ${number}`);else if(key==="attackPower")lines.push(`Anlegen: Angriffskraft um ${number}`);else if(key==="mp5")lines.push(`Anlegen: Stellt ${number} Mana alle 5 Sek. wieder her`);else lines.push(`+${number} ${key}`);};
+    const rules=[
+      ["healing",/(?:Heilzauber|Heilung)\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["defense",/Verteidigung\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["attackPower",/Angriffskraft\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["mp5",/(?:MP5|Mana(?:regeneration)?(?:\s+alle\s+5\s+Sek(?:unden)?)?)\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["Ausdauer",/Ausdauer\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["Intelligenz",/Intelligenz\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["Willenskraft",/Willenskraft\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["Stärke",/(?:Stärke|Staerke|Strength)\s*\+\s*(\d+(?:[,.]\d+)?)/gi],
+      ["Beweglichkeit",/(?:Beweglichkeit|Agility)\s*\+\s*(\d+(?:[,.]\d+)?)/gi]
+    ];
+    rules.forEach(([key,pattern])=>{for(const match of text.matchAll(pattern))add(key,match[1]);});
+    for(const match of text.matchAll(/(\d+(?:[,.]\d+)?)\s*Mana\s+alle\s+5\s+Sek/gi))add("mp5",match[1]);
+    for(const match of text.matchAll(/Alle\s+(?:Werte|Stats)\s*\+\s*(\d+(?:[,.]\d+)?)/gi)){
+      ["Ausdauer","Intelligenz","Willenskraft","Stärke","Beweglichkeit"].forEach(key=>add(key,match[1]));
+    }
+    return lines;
+  }
+  function normalizeArmoryPlannerItem(item){const tooltip=String(item?.tooltip||item?.statsText||"").replace(/\r?\n/g,"|"),enchant=item?.enchant||item?.enchantName||"",baseStats=Array.isArray(item?.stats)?item.stats:tooltip.split("|").map(line=>line.trim()).filter(Boolean);return{...item,id:item?.itemId||item?.id||"",itemId:item?.itemId||item?.id||"",slotName:item?.slot||item?.slotName||"",icon:item?.iconUrl||item?.icon||"",quality:String(item?.quality||"").toLowerCase(),tooltipText:tooltip,stats:[...baseStats,...plannerEnchantCalculationLines(enchant)],permanentEnchantName:enchant,source:"Blizzard Armory"};}
   function gearPlanKey(player,server){return`lichtlootGearPlanner_${String(typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot").toLowerCase()}_${norm(player)}_${norm(server)}`;}
   function saveArmoryGearPlan(){const player=String(document.getElementById("playerName")?.value||"").trim(),server=String(document.getElementById("playerServer")?.value||"").trim();if(!player||!server||typeof currentGearPlannerState==="undefined")return;const replacements=Object.fromEntries(Object.entries(currentGearPlannerState.replacements||{}).map(([slot,item])=>[slot,{itemId:item?.itemId||item?.id||"",raidKey:item?.raidKey||""}]));localStorage.setItem(gearPlanKey(player,server),JSON.stringify({replacements,savedAt:new Date().toISOString()}));const status=document.getElementById("gearPlannerSaveStatus");if(status)status.textContent="Plan gespeichert.";}
   function resetArmoryGearPlan(){const player=String(document.getElementById("playerName")?.value||"").trim(),server=String(document.getElementById("playerServer")?.value||"").trim();if(player&&server)localStorage.removeItem(gearPlanKey(player,server));if(typeof currentGearPlannerState!=="undefined"){currentGearPlannerState.replacements={};currentGearPlannerState.pickerSlot="";if(typeof renderGearPlannerEquipment==="function")renderGearPlannerEquipment();}const status=document.getElementById("gearPlannerSaveStatus");if(status)status.textContent="Plan zurückgesetzt.";}
