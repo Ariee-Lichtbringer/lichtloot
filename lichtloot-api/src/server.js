@@ -4448,6 +4448,44 @@ function classicArmoryRequestParams(value){
 }
 async function classicArmoryPost(endpoint,params){const response=await fetch(`https://classic-armory.org/api/v1/character${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`ClassicArmory antwortet mit HTTP ${response.status}.`);return response.json();}
 const publicClassicArmoryGearCache=new Map();
+const wowheadClassicTalentCache={expiresAt:0,treesByClass:new Map()};
+const classicTalentTreeGroups={
+  mage:[[81,"Arkan"],[41,"Feuer"],[61,"Frost"]],warrior:[[161,"Waffen"],[164,"Furor"],[163,"Schutz"]],rogue:[[182,"Meucheln"],[181,"Kampf"],[183,"Täuschung"]],
+  priest:[[201,"Disziplin"],[202,"Heilig"],[203,"Schatten"]],shaman:[[261,"Elementar"],[263,"Verstärkung"],[262,"Wiederherstellung"]],druid:[[283,"Gleichgewicht"],[281,"Wilder Kampf"],[282,"Wiederherstellung"]],
+  warlock:[[302,"Gebrechen"],[303,"Dämonologie"],[301,"Zerstörung"]],hunter:[[361,"Tierherrschaft"],[363,"Treffsicherheit"],[362,"Überleben"]],paladin:[[382,"Heilig"],[383,"Schutz"],[381,"Vergeltung"]]
+};
+function extractEmbeddedJsonObjects(source,marker){
+  const objects=[];let cursor=0;
+  while((cursor=source.indexOf(marker,cursor))>=0){
+    const start=source.indexOf("{",cursor+marker.length);if(start<0)break;
+    let depth=0,inString=false,escaped=false,end=-1;
+    for(let index=start;index<source.length;index+=1){const char=source[index];if(inString){if(escaped)escaped=false;else if(char==="\\")escaped=true;else if(char==='"')inString=false;continue;}if(char==='"'){inString=true;continue;}if(char==="{")depth+=1;else if(char==="}"&&--depth===0){end=index+1;break;}}
+    if(end<0)break;try{objects.push(JSON.parse(source.slice(start,end)));}catch(error){}cursor=end;
+  }
+  return objects;
+}
+async function getWowheadClassicTalentCatalog(className){
+  const classKey=armoryClassKey(className),group=classicTalentTreeGroups[classKey];if(!group)return[];
+  if(wowheadClassicTalentCache.expiresAt>Date.now()&&wowheadClassicTalentCache.treesByClass.has(classKey))return wowheadClassicTalentCache.treesByClass.get(classKey);
+  const response=await fetch("https://nether.wowhead.com/classic/de/data/talents-classic?dv=17",{headers:{accept:"application/javascript,text/javascript,*/*", "user-agent":"LichtLoot/1.0 Talentplaner"},signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw new Error(`Wowhead-Talentdaten antworten mit HTTP ${response.status}.`);
+  const source=await response.text(),pageData=extractEmbeddedJsonObjects(source,'WH.setPageData("wow.talentCalcClassic.classic.data"')[0]||{},spellData={};
+  extractEmbeddedJsonObjects(source,"WH.Gatherer.addData(6, 4,").forEach(block=>Object.assign(spellData,block));
+  const treesByClass=new Map();
+  Object.entries(classicTalentTreeGroups).forEach(([key,trees])=>{
+    const catalog=trees.map(([treeId,label])=>({
+      id:treeId,
+      name:label,
+      talents:Object.values(pageData?.talents?.[String(treeId)]||{}).map(talent=>{
+        const ranks=Array.isArray(talent.ranks)?talent.ranks:[],spell=spellData[String(ranks[0]||"")]||{};
+        return{id:Number(talent.id||0),row:Number(talent.row||0),col:Number(talent.col||0),icon:String(talent.icon||spell.icon||"inv_misc_questionmark"),maxRank:ranks.length,name:clean(spell.name_dede||`Talent ${talent.id}`),description:clean(String(spell.description_dede||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ")),requires:(talent.requires||[]).map(Number).filter(Boolean)};
+      })
+    }));
+    treesByClass.set(key,catalog);
+  });
+  wowheadClassicTalentCache.treesByClass=treesByClass;wowheadClassicTalentCache.expiresAt=Date.now()+24*60*60*1000;
+  return treesByClass.get(classKey)||[];
+}
 const classicArmorySlotLabels={HEAD:"Kopf",NECK:"Hals",SHOULDERS:"Schultern",BACK:"Rücken",CHEST:"Brust",SHIRT:"Hemd",TABARD:"Wappenrock",WRIST:"Handgelenke",HANDS:"Hände",WAIST:"Taille",LEGS:"Beine",FEET:"Füße",FINGER_1:"Ring 1",FINGER_2:"Ring 2",TRINKET_1:"Schmuck 1",TRINKET_2:"Schmuck 2",MAIN_HAND:"Waffenhand",OFF_HAND:"Schildhand",RANGED:"Distanz"};
 function officialBlizzardItemTooltip(item){
   const lines=[];
@@ -4484,7 +4522,8 @@ async function fetchOfficialBlizzardArmoryProfile({region="eu",realm,name}){
   const gear=Object.values(character.gear||{}).filter(Boolean).map(normalizeOfficialBlizzardGearItem);
   if(!gear.length)throw new Error("Blizzard Armory hat für diesen Charakter noch keine Ausrüstung gespeichert.");
   const stats=Object.fromEntries((character?.stats?.overview||[]).filter(Boolean).map(stat=>[clean(stat.enum),stat?.value?.value??stat?.details?.effective??""]));
-  return{success:true,source:"blizzard-armory",armoryUrl:url,updatedAt:clean(character?.lastUpdatedTimestamp?.iso8601),character:{name:clean(character.name||name),server:clean(character?.realm?.name||realm),className:clean(character?.class?.name||character?.class?.slug),level:Number(character.level||0)||"",race:clean(character?.race?.name),faction:clean(character?.faction?.name),gender:clean(character?.gender?.name),itemLevel:Number(character.averageItemLevel||stats.ITEMLEVEL||0)||"",renderUrl:clean(character?.render?.foreground?.url||character?.renderRaw?.url),avatarUrl:clean(character?.avatar?.url),specs:(character?.specs||[]).map(spec=>({name:clean(spec.name),points:Number(spec.spentPoints||0),active:Boolean(spec.active)})),stats,pvp:{honorableKills:Number(character?.pvp?.honorableKills?.value||0),rank:Number(character?.pvp?.rank?.value||0)}},gear};
+  let talentCatalog=[];try{talentCatalog=await getWowheadClassicTalentCatalog(character?.class?.name||character?.class?.slug);}catch(error){console.warn("Vollständige Wowhead-Talentbäume konnten nicht geladen werden:",error.message||error);}
+  return{success:true,source:"blizzard-armory",armoryUrl:url,updatedAt:clean(character?.lastUpdatedTimestamp?.iso8601),character:{name:clean(character.name||name),server:clean(character?.realm?.name||realm),className:clean(character?.class?.name||character?.class?.slug),level:Number(character.level||0)||"",race:clean(character?.race?.name),faction:clean(character?.faction?.name),gender:clean(character?.gender?.name),itemLevel:Number(character.averageItemLevel||stats.ITEMLEVEL||0)||"",renderUrl:clean(character?.render?.foreground?.url||character?.renderRaw?.url),avatarUrl:clean(character?.avatar?.url),specs:(character?.specs||[]).map(spec=>({name:clean(spec.name),points:Number(spec.spentPoints||0),active:Boolean(spec.active),talents:(spec?.talents||[]).map(talent=>({id:Number(talent?.id||0)||"",name:clean(talent?.name),rank:Number(talent?.rank||0)||0,description:clean(talent?.description),iconUrl:clean(talent?.icon?.url),cast:clean(talent?.cast),cost:clean(talent?.cost),cooldown:clean(talent?.cooldown),range:clean(talent?.range)}))})),talentCatalog,stats,pvp:{honorableKills:Number(character?.pvp?.honorableKills?.value||0),rank:Number(character?.pvp?.rank?.value||0)}},gear};
 }
 function normalizeClassicArmoryGearItem(item,index){
   const slotType=clean(item?.slot_type||item?.slot?.type||item?.slot?.id).toUpperCase();
@@ -4532,6 +4571,15 @@ async function getPublicClassicArmoryGear({guildId,query:params={}}){
   const value={success:true,source:"classic-armory",updatedAt:clean(character.updated_at||character.last_updated||equipmentData?.updated_at),character:{name:clean(character.name||stored.name),server:clean(character.realm_name||stored.server),className:clean(character.class_name||stored.class_name),itemLevel:Number(character.item_level||0)||""},gear};
   publicClassicArmoryGearCache.set(cacheKey,{value,expiresAt:Date.now()+5*60*1000});
   return value;
+}
+const wowheadClassicItemSearchCache=new Map();
+async function searchWowheadClassicItems(params={}){
+  const term=clean(params.q||params.query||params.search).slice(0,80);if(term.length<2)return{success:true,items:[]};
+  const key=term.toLowerCase(),cached=wowheadClassicItemSearchCache.get(key);if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const url=`https://www.wowhead.com/classic/search/suggestions-template?q=${encodeURIComponent(term)}`,response=await fetch(url,{headers:{accept:"application/json", "user-agent":"LichtLoot/1.0 Itemplaner"},signal:AbortSignal.timeout(10000)});
+  if(!response.ok)throw new Error(`Wowhead-Itemsuche antwortet mit HTTP ${response.status}.`);
+  const payload=await response.json(),items=(payload?.results||[]).filter(row=>Number(row?.type)===3).slice(0,40).map(row=>({itemId:Number(row.id||0),name:clean(row.name),icon:clean(row.icon),quality:Number(row.quality||0),type:clean(row.pinFooterText),slot:clean(params.slot),itemLevel:Number(String(row.pinDescription||"").match(/item level of (\d+)/i)?.[1]||0)||"",stats:[clean(row.pinDescription)].filter(Boolean),tooltipText:clean(row.pinDescription),source:"Wowhead Classic",wowhead:`https://www.wowhead.com/classic/de/item=${Number(row.id||0)}`}));
+  const value={success:true,items};wowheadClassicItemSearchCache.set(key,{value,expiresAt:Date.now()+30*60*1000});return value;
 }
 function armoryNumber(value){return Number(value?.effective??value?.value??value??0)||0;}
 function armoryGearText(equipment){return (equipment||[]).flatMap(item=>[item.name,...(item.spells||[]).map(spell=>spell.description),...(item.enchant_display||[])]).join(" ");}
@@ -29066,6 +29114,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicClassicArmoryGear") {
       const gear = await getPublicClassicArmoryGear({ guildId: guild.id, query: req.query });
       return res.json({ ...gear, guild: guild.slug });
+    }
+
+    if (action === "searchPublicClassicItems") {
+      const result = await searchWowheadClassicItems(req.query);
+      return res.json({ ...result, guild: guild.slug });
     }
 
     if (action === "getPublicLogAnalysisWebLegacy") {
