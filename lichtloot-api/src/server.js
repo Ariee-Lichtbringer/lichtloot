@@ -2358,7 +2358,7 @@ async function completeGuildSetup({ query: params, body = {} }) {
         setupComplete: true,
         discordConnected: false,
         channelsSynced: false,
-        layoutConfigured: true
+        layoutConfigured: false
       })
     ]
   );
