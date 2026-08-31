@@ -24343,10 +24343,18 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      where guild_id = $1
        and archived_at is null
        and coalesce(config_only, false) = false
+       -- raid_pin und post_key sind nur Fallbacks fuer historische Zeilen ohne
+       -- raid_id. Ein wiederverwendeter PIN darf keinen Eintrag eines anderen
+       -- Raids (einschliesslich seiner alten Freigabe) in diesen Post ziehen.
        and (
          raid_id = any($2::text[])
-         or raid_pin = any($3::text[])
-         or post_key = any($2::text[])
+         or (
+           coalesce(raid_id, '') = ''
+           and (
+             raid_pin = any($3::text[])
+             or post_key = any($2::text[])
+           )
+         )
        )
      order by updated_at asc, created_at asc`,
     [guildId, raidIdentityValues, raidPinValues]
