@@ -2887,6 +2887,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .nachtloot-news-date{margin-bottom:7px;color:#67e8f9;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px;letter-spacing:.12em}
 .nachtloot-news-entry h3{margin:0 0 7px;color:#f0fdfa;font-size:15px;line-height:1.3}
 .nachtloot-news-entry p{margin:0;color:#a5f3fc;font-size:12px;line-height:1.5}
+.nachtloot-news-link{display:inline-flex;align-items:center;gap:7px;margin-top:11px;padding:7px 10px;border:1px solid rgba(45,212,191,.42);border-radius:8px;background:rgba(13,148,136,.16);color:#5eead4;font-size:11px;font-weight:950;text-decoration:none;cursor:pointer}.nachtloot-news-link:hover,.nachtloot-news-link:focus-visible{border-color:#2dd4bf;background:rgba(13,148,136,.3);color:#ccfbf1;outline:none}.nachtloot-news-link span{font-size:14px}
 .nachtloot-news-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-top:1px solid rgba(45,212,191,.22);background:rgba(2,8,18,.78)}
 .nachtloot-news-foot span{color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
 .nachtloot-news-done{min-height:34px;padding:7px 14px;border:1px solid rgba(45,212,191,.55);border-radius:8px;background:rgba(13,148,136,.28);color:#ccfbf1;font-weight:900;cursor:pointer}
@@ -9950,17 +9951,20 @@ const NACHTLOOT_NEWS_ENTRIES=[
   {
     date:"2026-08-31",
     title:"Ausrüstungsplaner mit Blizzard Armory",
-    text:"Plane dein Wunsch-Gear direkt mit deinem aktuellen Charakter. Tausche Gegenstände aus, vergleiche die Werte und übernimm passende Items direkt in deine P1-, P2- oder P3-Prioliste."
+    text:"Plane dein Wunsch-Gear direkt mit deinem aktuellen Charakter. Tausche Gegenstände aus, vergleiche die Werte und übernimm passende Items direkt in deine P1-, P2- oder P3-Prioliste.",
+    linkLabel:"Ausrüstungsplaner öffnen"
   },
   {
     date:"2026-08-31",
     title:"Talentbäume, Setboni und Verzauberungen",
-    text:"Der Planer zeigt jetzt die vollständigen Talentbäume mit Icons und berücksichtigt Verzauberungen sowie bekannte Setboni bei der Berechnung deiner Werte."
+    text:"Der Planer zeigt jetzt die vollständigen Talentbäume mit Icons und berücksichtigt Verzauberungen sowie bekannte Setboni bei der Berechnung deiner Werte.",
+    linkLabel:"Talentbäume im Planer ansehen"
   },
   {
     date:"2026-08-30",
     title:"Aktuelle Charakteransicht aus der Armory",
-    text:"Deine Ausrüstung, Charakterwerte und die drehbare Charakteransicht werden aus der Blizzard Armory geladen. Item-Tooltips zeigen die vollständigen Gegenstandsinformationen beim Darüberfahren."
+    text:"Deine Ausrüstung, Charakterwerte und die drehbare Charakteransicht werden aus der Blizzard Armory geladen. Item-Tooltips zeigen die vollständigen Gegenstandsinformationen beim Darüberfahren.",
+    linkLabel:"Charakteransicht öffnen"
   }
 ];
 
@@ -9981,9 +9985,19 @@ function openNachtlootNews(){
   backdrop.querySelector(".nachtloot-news-close")?.focus();
 }
 
+function openNachtlootNewsFeature(){
+  if(!window.dashboardNextRaid){
+    alert("Der nächste Raid wird noch geladen. Bitte gleich erneut versuchen.");
+    return;
+  }
+  try{ sessionStorage.setItem("lichtloot:openGearPlanner","1"); }catch(error){}
+  closeNachtlootNews();
+  openNextRaidLoot();
+}
+
 function installNachtlootNews(){
   if(CURRENT_GUILD_SLUG!=="nachtloot" || document.getElementById("nachtlootNewsBackdrop")) return;
-  const entries=NACHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p></article>`).join("");
+  const entries=NACHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature>${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
   const backdrop=document.createElement("div");
   backdrop.id="nachtlootNewsBackdrop";
   backdrop.className="nachtloot-news-backdrop hidden";
@@ -9992,6 +10006,7 @@ function installNachtlootNews(){
   document.body.appendChild(backdrop);
   backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeNachtlootNews);
   backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeNachtlootNews);
+  backdrop.querySelectorAll("[data-news-feature]").forEach(link=>link.addEventListener("click",openNachtlootNewsFeature));
   document.addEventListener("keydown",event=>{if(event.key==="Escape" && !backdrop.classList.contains("hidden")) closeNachtlootNews();});
   const actions=document.querySelector(".start-header-actions");
   if(actions){
