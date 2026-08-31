@@ -1504,6 +1504,9 @@ body.show-mylichtloot .account-creation-panel{display:none}
 .portal-bottom-grid{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .random-raid-panel{min-height:190px;padding:28px!important;border-radius:20px!important;display:flex;align-items:center;background:linear-gradient(135deg,rgba(7,27,50,.97),rgba(5,16,31,.91))!important;border-color:rgba(250,204,21,.42)!important}
 .random-panel-head{width:100%;grid-template-columns:1fr!important;gap:18px!important}.random-raid-panel h2{font-family:Georgia,serif;font-size:28px!important}.random-raid-panel p{font-size:15px!important;max-width:560px}.random-panel-actions{justify-content:flex-start!important}.random-panel-actions .big-btn{min-width:190px!important}
+.guild-signup-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.guild-signup-title img{width:190px;max-width:48vw;max-height:62px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.guild-signup-title span{white-space:nowrap}
 .site-footer{width:100%;margin:0;padding:22px;text-align:center;border-top:1px solid rgba(250,204,21,.28);background:rgba(2,9,19,.9)}
 @media(max-width:1000px){.header{grid-template-columns:auto 1fr}.portal-nav{display:none}.portal-profile{justify-self:end}.start-shell{grid-template-columns:1fr}.welcome-panel,.player-login-card,.account-creation-panel,.portal-bottom-grid{grid-column:1}.player-login-card{grid-row:auto}.account-creation-panel{grid-template-columns:1fr;padding:0}.account-art{min-height:260px}.account-art::after{background:linear-gradient(0deg,rgba(6,21,40,.98),transparent 55%)}.account-copy{padding:0 28px 30px}.portal-bottom-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.header{padding:0 14px;gap:10px}.header .logo-banner{width:140px}.portal-profile{min-width:0}.portal-profile>span:nth-child(2){display:none}.start-shell{width:min(100% - 24px,1420px)}.welcome-panel{padding:25px}.welcome-panel h1{font-size:36px}.account-creation-panel{padding:24px}.account-benefits{grid-template-columns:1fr}.account-benefit{border-right:0}.account-actions,.random-panel-actions{display:grid}.account-primary,.random-panel-actions .big-btn{width:100%;min-width:0!important}.portal-bottom-grid{gap:12px}}
@@ -1514,7 +1517,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 <body>
 <div class="overlay">
   <div class="header">
-    <img src="images/lichtloot-logo.png" alt="LichtLoot" class="logo-banner">
+    <img src="images/guildloot-logo-concept.png" alt="GuildLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
       <a href="javascript:void(0)" onclick="document.getElementById('guildSignupPanel')?.scrollIntoView({behavior:'smooth'})">Hilfe</a>
     </nav>
@@ -1986,8 +1989,8 @@ body.show-mylichtloot .account-creation-panel{display:none}
     <section class="random-raid-panel" id="guildSignupPanel">
       <div class="random-panel-head">
         <div>
-          <h2>LichtLoot Gilde werden</h2>
-          <p>Für Gilden, die LichtLoot mit eigener Startseite, SpielerLogins und Raidverwaltung nutzen möchten.</p>
+          <h2 class="guild-signup-title"><img src="images/guildloot-logo-concept.png" alt="GuildLoot"><span>Gilde werden</span></h2>
+          <p>Für Gilden, die GuildLoot mit eigener Startseite, SpielerLogins und Raidverwaltung nutzen möchten.</p>
         </div>
         <div class="random-panel-actions">
           <button class="big-btn subtle" type="button" onclick="window.location.href='gilde-anmelden.html'">Gilde anmelden</button>
@@ -2415,7 +2418,7 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo="images/lichtloot-logo.png";
+  const logo="images/guildloot-logo-concept.png";
   const background=guild?.backgroundUrl || "";
   if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
   if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
