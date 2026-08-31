@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LichtLoot - Gilde anmelden</title>
+  <link rel="stylesheet" href="/scroll-performance.css">
+  <title>GuildLoot – Gilde anmelden</title>
   <style>
     :root{--gold:#facc15;--blue:#60a5fa;--green:#4ade80;--panel:rgba(15,23,42,.88);--line:rgba(250,204,21,.22);--text:#e5edf8;--muted:#aebbd0}
     *{box-sizing:border-box}
@@ -11,7 +12,7 @@
     body:before{content:"";position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(2px)}
     main{position:relative;z-index:1;width:min(1180px,calc(100vw - 32px));margin:0 auto;padding:42px 0 70px}
     .brand{display:flex;align-items:center;gap:18px}
-    .brand img{width:82px;height:82px;object-fit:contain;border-radius:20px;background:rgba(250,204,21,.08);border:1px solid var(--line);padding:8px}
+    .brand img{width:190px;height:auto;max-height:82px;object-fit:contain}
     h1{margin:0;color:var(--gold);font-size:clamp(38px,5vw,64px);line-height:.95}
     h2{margin:0;color:#f8fafc;font-size:clamp(24px,3vw,34px)}
     p{color:var(--muted);font-weight:750;line-height:1.55}
@@ -66,13 +67,13 @@
     <div class="hero-copy">
       <span class="eyebrow">Eigenes Lootsystem für deine Gilde</span>
       <div class="brand">
-        <img src="images/guild-defaults/default-logo.png" alt="LichtLoot">
-        <div><h1>Deine Gilde.<br>Dein LichtLoot.</h1></div>
+        <img src="images/guildloot-logo-concept.png" alt="GuildLoot">
+        <div><h1>Deine Gilde.<br>Dein GuildLoot.</h1></div>
       </div>
       <p>Plant Raids, veröffentlicht Discord-Anmelder und verwaltet Prios, P0-Anmeldungen und Spieler zentral – mit eigenem Gildenbereich, eigenen Channels und eurem eigenen Design.</p>
       <div class="hero-actions">
         <a class="linkbtn" href="#guildApplicationForm">Freischaltung beantragen</a>
-        <a class="linkbtn" href="start.html?guild=lichtloot">LichtLoot ansehen</a>
+        <a class="linkbtn" href="start.html?guild=lichtloot">GuildLoot ansehen</a>
       </div>
     </div>
     <div class="hero-example">
@@ -87,7 +88,7 @@
   </section>
 
   <section class="section">
-    <div class="section-head"><h2>Was ihr mit LichtLoot verwalten könnt</h2><p>Jede Gilde erhält einen technisch getrennten Bereich. Gildenleitung, Spieler und Bots arbeiten immer mit der richtigen Gilde.</p></div>
+    <div class="section-head"><h2>Was ihr mit GuildLoot verwalten könnt</h2><p>Jede Gilde erhält einen technisch getrennten Bereich. Gildenleitung, Spieler und Bots arbeiten immer mit der richtigen Gilde.</p></div>
     <div class="features">
       <article class="feature"><span class="feature-icon">⚔️</span><strong>Raids &amp; Termine</strong><p>Raids planen, Vorlagen verwenden, Teilnehmer verwalten, archivieren und wiederherstellen.</p></article>
       <article class="feature"><span class="feature-icon">💬</span><strong>Discord-Anmelder</strong><p>Raid- und P0-Anmelder gezielt in getrennte Channels posten und bestehende Beiträge aktualisieren.</p></article>
@@ -99,18 +100,18 @@
   </section>
 
   <section class="section">
-    <div class="section-head"><h2>LichtLoot in der Praxis</h2><p>Ein Blick in die echte Oberfläche. Klickt auf ein Bild, um die Ansicht in voller Größe zu öffnen.</p></div>
+    <div class="section-head"><h2>GuildLoot in der Praxis</h2><p>Ein Blick in die echte Oberfläche. Klickt auf ein Bild, um die Ansicht in voller Größe zu öffnen.</p></div>
     <div class="screens">
       <a class="screen" href="images/guild-registration/startseite.png" target="_blank" rel="noopener">
-        <span class="screen-image"><img src="images/guild-registration/startseite.png" alt="LichtLoot Startseite mit Raidübersicht" loading="lazy"></span>
+        <span class="screen-image"><img src="images/guild-registration/startseite.png" alt="GuildLoot Startseite mit Raidübersicht" loading="lazy"></span>
         <span class="screen-copy"><strong>Startseite &amp; Raidübersicht <span>Vergrößern ↗</span></strong><p>Kommende Raids, Priofenster, Bufftermine und der persönliche Spielerbereich auf einen Blick.</p></span>
       </a>
       <a class="screen" href="images/guild-registration/prioseite-bwl.png" target="_blank" rel="noopener">
-        <span class="screen-image"><img src="images/guild-registration/prioseite-bwl.png" alt="LichtLoot Prioseite für Blackwing Lair" loading="lazy"></span>
+        <span class="screen-image"><img src="images/guild-registration/prioseite-bwl.png" alt="GuildLoot Prioseite für Blackwing Lair" loading="lazy"></span>
         <span class="screen-copy"><strong>Prioseiten für jeden Raid <span>Vergrößern ↗</span></strong><p>Charakter auswählen, PrioID verwenden und Wunschitems raidbezogen verwalten.</p></span>
       </a>
       <a class="screen" href="images/guild-registration/gildenleitung.png" target="_blank" rel="noopener">
-        <span class="screen-image"><img src="images/guild-registration/gildenleitung.png" alt="LichtLoot Gildenleitungsseite mit Raidverwaltung" loading="lazy"></span>
+        <span class="screen-image"><img src="images/guild-registration/gildenleitung.png" alt="GuildLoot Gildenleitungsseite mit Raidverwaltung" loading="lazy"></span>
         <span class="screen-copy"><strong>Zentrale Gildenleitung <span>Vergrößern ↗</span></strong><p>Raids, SpielerLogins, Discord-Posts, P0, Vorlagen, Layout und Sicherungen zentral bearbeiten.</p></span>
       </a>
     </div>
@@ -133,7 +134,7 @@
         <input name="guildName" autocomplete="organization" required placeholder="z.B. Lichtbringer">
       </label>
       <label>Lootsystem-Name
-        <input name="lootName" placeholder="z.B. LichtLoot">
+        <input name="lootName" placeholder="z. B. GuildLoot">
         <span class="field-help">Der sichtbare Name eures Lootbereichs, z.B. PanemLoot.</span>
       </label>
       <label>Server
@@ -163,7 +164,7 @@
     </div>
     <div class="actions">
       <button type="submit">Anfrage senden</button>
-      <a class="linkbtn" href="start.html?guild=lichtloot">Zurück zu LichtLoot</a>
+      <a class="linkbtn" href="start.html?guild=lichtloot">Zurück zu GuildLoot</a>
     </div>
     <div id="status" class="status">Bereit.</div>
   </form>
