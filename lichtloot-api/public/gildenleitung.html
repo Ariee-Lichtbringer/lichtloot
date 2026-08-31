@@ -6756,6 +6756,7 @@ async function fetchCurrentGuildInfo(){
     const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
     const data = await response.json();
     currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    if(currentGuildInfo?.layout?.raidAnnouncementChannelId) RAID_HELPER_CHANNEL_ID=String(currentGuildInfo.layout.raidAnnouncementChannelId);
     return currentGuildInfo;
   }catch(error){
     console.warn("Gildenbranding konnte nicht geladen werden.", error);
@@ -8599,6 +8600,11 @@ function renderLootLayoutPanel(){
           <p>Lege hier die Zielchannels für Hordenbuffs, Worldbuffs und Sicherungen dieser Gilde fest.</p>
           <div class="layout-form-grid">
             <div class="field">
+              <label>Raidanmelder-Channel</label>
+              <select id="layoutRaidAnnouncementChannelId">${layoutChannelSelectOptions(layout.raidAnnouncementChannelId || "")}</select>
+              <span class="muted">Standardchannel für neue Raid- und Discord-Anmelder.</span>
+            </div>
+            <div class="field">
               <label>Hordenbuff-Channel</label>
               <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>
               <span class="muted">Hier wird die Hordenbuff-/Rend-Anmeldung veröffentlicht.</span>
@@ -8833,6 +8839,7 @@ async function saveLootLayoutPanel(){
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
     logSourceChannelId: layoutFieldValue("layoutLogSourceChannelId"),
     logAnalysisChannelId: layoutFieldValue("layoutLogAnalysisChannelId"),
+    raidAnnouncementChannelId: layoutFieldValue("layoutRaidAnnouncementChannelId"),
     warcraftLogsGuildId: layoutFieldValue("layoutWarcraftLogsGuildId").replace(/\D/g,"")
   };
   const payload = {
@@ -10225,7 +10232,7 @@ function buildRaidDirectLink(raid){
   return raidId ? withGuildUrl("index.html") + `&raidId=${raidId}` : withGuildUrl("index.html");
 }
 
-const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
+let RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
