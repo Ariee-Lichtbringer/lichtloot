@@ -4573,9 +4573,37 @@ async function getPublicClassicArmoryGear({guildId,query:params={}}){
   return value;
 }
 const wowheadClassicItemSearchCache=new Map();
+const classicWowheadSlotIds={Kopf:"1",Hals:"2",Schultern:"3",Hemd:"4",Brust:"5",Taille:"6",Beine:"7","Füße":"8",Handgelenke:"9","Hände":"10","Ring 1":"11","Ring 2":"11","Schmuck 1":"12","Schmuck 2":"12",Rücken:"16",Waffenhand:"13:17:21",Schildhand:"14:22:23",Distanz:"15:25:26:28",Wappenrock:"19"};
+const classicWowheadClassIds={warrior:1,paladin:2,hunter:3,rogue:4,priest:5,shaman:7,mage:8,warlock:9,druid:11};
+const classicWowheadQualityNames={0:"poor",1:"common",2:"uncommon",3:"rare",4:"epic",5:"legendary"};
+function wowheadClassicItemSource(row){
+  const names=(row?.sourcemore||[]).map(source=>clean(source?.n)).filter(Boolean);
+  if(names.length)return names.slice(0,2).join(" · ");
+  const sourceNames={1:"Herstellung",2:"Beute",3:"PvP",4:"Quest",5:"Händler",6:"Lehrer",7:"Entdeckung",10:"Event",16:"Weltbeute"};
+  return (row?.source||[]).map(value=>sourceNames[Number(value)]).filter(Boolean).join(" · ")||"WoW Classic";
+}
 async function searchWowheadClassicItems(params={}){
-  const term=clean(params.q||params.query||params.search).slice(0,80);if(term.length<2)return{success:true,items:[]};
-  const key=term.toLowerCase(),cached=wowheadClassicItemSearchCache.get(key);if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const term=clean(params.q||params.query||params.search).slice(0,80),slot=clean(params.slot),slotIds=classicWowheadSlotIds[slot],classKey=armoryClassKey(params.className||params.class),classId=classicWowheadClassIds[classKey]||0;
+  if(slotIds){
+    const key=`slot:${slotIds}:class:${classId||"all"}`,cached=wowheadClassicItemSearchCache.get(key);if(cached&&cached.expiresAt>Date.now())return cached.value;
+    const path=`slot:${slotIds}${classId?`/class:${classId}`:""}`,url=`https://www.wowhead.com/classic/de/items/${path}`;
+    const response=await fetch(url,{headers:{accept:"text/html,application/xhtml+xml", "accept-language":"de-DE,de;q=0.9", "user-agent":"LichtLoot/1.0 Itemplaner"},signal:AbortSignal.timeout(20000)});
+    if(!response.ok)throw new Error(`Wowhead-Itemdatenbank antwortet mit HTTP ${response.status}.`);
+    const source=await response.text(),marker="var listviewitems = ",start=source.indexOf(marker);
+    if(start<0)throw new Error("Die Wowhead-Itemliste konnte nicht gelesen werden.");
+    const jsonStart=start+marker.length,jsonEnd=source.indexOf(";",jsonStart);
+    if(jsonEnd<0)throw new Error("Die Wowhead-Itemliste ist unvollständig.");
+    const listSource=source.slice(jsonStart,jsonEnd).replace(/([{,])\s*([A-Za-z_$][\w$]*)\s*:/g,'$1"$2":'),rows=JSON.parse(listSource),metadata={};
+    extractEmbeddedJsonObjects(source,"WH.Gatherer.addData(3, 4,").forEach(block=>Object.assign(metadata,block));
+    const items=rows.filter(row=>!Number(row?.seasonId||0)).map(row=>{const itemId=Number(row?.id||0),details=metadata[String(itemId)]||{},equip=details?.jsonequip||{},icon=clean(details?.icon),stats=[];
+      if(row?.armor)stats.push(`${row.armor} Rüstung`);
+      [["str","Stärke"],["agi","Beweglichkeit"],["sta","Ausdauer"],["int","Intelligenz"],["spi","Willenskraft"]].forEach(([key,label])=>{if(equip[key])stats.push(`+${equip[key]} ${label}`);});
+      return{itemId,name:clean(row?.name||details?.name_dede||`Item ${itemId}`),icon:icon||"inv_misc_questionmark",quality:classicWowheadQualityNames[Number(row?.quality)]||"common",type:wowheadClassicItemSource(row),slot,slotType:slot,itemLevel:Number(row?.level||0)||"",requiredLevel:Number(row?.reqlevel||0)||"",stats,tooltipText:stats.join(" | "),source:"Wowhead Classic",wowhead:`https://www.wowhead.com/classic/de/item=${itemId}`};
+    }).filter(item=>item.itemId&&item.name);
+    const value={success:true,items,total:items.length,slot};wowheadClassicItemSearchCache.set(key,{value,expiresAt:Date.now()+24*60*60*1000});return value;
+  }
+  if(term.length<2)return{success:true,items:[]};
+  const key=`search:${term.toLowerCase()}`,cached=wowheadClassicItemSearchCache.get(key);if(cached&&cached.expiresAt>Date.now())return cached.value;
   const url=`https://www.wowhead.com/classic/search/suggestions-template?q=${encodeURIComponent(term)}`,response=await fetch(url,{headers:{accept:"application/json", "user-agent":"LichtLoot/1.0 Itemplaner"},signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw new Error(`Wowhead-Itemsuche antwortet mit HTTP ${response.status}.`);
   const payload=await response.json(),items=(payload?.results||[]).filter(row=>Number(row?.type)===3).slice(0,40).map(row=>({itemId:Number(row.id||0),name:clean(row.name),icon:clean(row.icon),quality:Number(row.quality||0),type:clean(row.pinFooterText),slot:clean(params.slot),itemLevel:Number(String(row.pinDescription||"").match(/item level of (\d+)/i)?.[1]||0)||"",stats:[clean(row.pinDescription)].filter(Boolean),tooltipText:clean(row.pinDescription),source:"Wowhead Classic",wowhead:`https://www.wowhead.com/classic/de/item=${Number(row.id||0)}`}));
@@ -4584,7 +4612,7 @@ async function searchWowheadClassicItems(params={}){
 function armoryNumber(value){return Number(value?.effective??value?.value??value??0)||0;}
 function armoryGearText(equipment){return (equipment||[]).flatMap(item=>[item.name,...(item.spells||[]).map(spell=>spell.description),...(item.enchant_display||[])]).join(" ");}
 function armoryPercentFromGear(text,pattern){let total=0;for(const match of text.matchAll(pattern))total+=Number(match[1]||0);return total;}
-function armoryClassKey(value){const key=clean(value).toLowerCase();return({magier:"mage",mage:"mage",hexer:"warlock",hexenmeister:"warlock",warlock:"warlock",schurke:"rogue",rogue:"rogue",krieger:"warrior",warrior:"warrior",jäger:"hunter",jager:"hunter",hunter:"hunter",paladin:"paladin",priester:"priest",priest:"priest",druide:"druid",druid:"druid"})[key]||key;}
+function armoryClassKey(value){const key=clean(value).toLowerCase();return({magier:"mage",magierin:"mage",mage:"mage",hexer:"warlock",hexerin:"warlock",hexenmeister:"warlock",hexenmeisterin:"warlock",warlock:"warlock",schurke:"rogue",schurkin:"rogue",rogue:"rogue",krieger:"warrior",kriegerin:"warrior",warrior:"warrior",jäger:"hunter",jägerin:"hunter",jager:"hunter",jagerin:"hunter",hunter:"hunter",paladin:"paladin",paladina:"paladin",priester:"priest",priesterin:"priest",priest:"priest",druide:"druid",druidin:"druid",druid:"druid",schamane:"shaman",schamanin:"shaman",shaman:"shaman"})[key]||key;}
 function nachtlootP0Thresholds(raid,className,specialization){
   const cls=armoryClassKey(className),spec=clean(specialization).toLowerCase(),healer=/heil|holy|diszi|resto|wiederher/.test(spec),tank=/tank|schutz/.test(spec),feral=/feral|wildheit/.test(spec);
   const table={
