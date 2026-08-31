@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/scroll-performance.css">
-<title>LichtLoot</title>
+<title>GuildLoot</title>
 <style>
 :root{
   --gold:#facc15;
@@ -1527,12 +1527,12 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <span class="portal-profile-arrow">⌄</span>
     </button>
   </div>
-  <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für LichtLoot beantragen.</div>
+  <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für GuildLoot beantragen.</div>
 
   <section id="guildGate" class="guild-gate hidden">
     <div class="guild-gate-head">
       <div>
-        <h1>Gilde bei LichtLoot registrieren</h1>
+        <h1>Gilde bei GuildLoot registrieren</h1>
         <p>Beantragt ein eigenes, vollständig von anderen Gilden getrenntes Lootsystem.</p>
       </div>
     </div>
@@ -1543,7 +1543,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
         <p>Nach der Prüfung erhält die Gildenleitung einen persönlichen Einrichtungslink.</p>
         <div class="guild-config-actions">
           <a class="guild-config-link" href="gilde-anmelden.html">Freischaltung beantragen <span>›</span></a>
-          <a class="guild-config-link" href="index.html?guild=lichtloot">LichtLoot Login öffnen <span>›</span></a>
+          <a class="guild-config-link" href="index.html?guild=lichtloot">GuildLoot Login öffnen <span>›</span></a>
           <a class="guild-config-link" href="index.html?guild=lichtloot&open=createLogin">SpielerLogin erstellen <span>›</span></a>
         </div>
         <div id="guildGateStatus" class="guild-status">Bereits eingerichtete Gilden werden hier angezeigt.</div>
@@ -1636,8 +1636,8 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
   <main class="start-shell">
     <section class="welcome-panel">
-      <h1 id="brandWelcomeTitle">Willkommen auf LichtLoot</h1>
-      <p id="brandWelcomeText">LichtLoot ist unser zentrales Prio- und Punktesystem. Über deinen SpielerLogin greifst du auf deine Charaktere, deine Prios und deine P0/P0+ Punkte zu.</p>
+      <h1 id="brandWelcomeTitle">Willkommen auf GuildLoot</h1>
+      <p id="brandWelcomeText">GuildLoot ist unser zentrales Prio- und Punktesystem. Über deinen SpielerLogin greifst du auf deine Charaktere, deine Prios und deine P0/P0+ Punkte zu.</p>
     </section>
 
     <section class="main-login-layout">
@@ -1692,11 +1692,11 @@ body.show-mylichtloot .account-creation-panel{display:none}
       </div>
 
       <div class="mylichtloot-card" id="actionPanel">
-        <h2 id="actionPanelTitle">Mein LichtLoot</h2>
+        <h2 id="actionPanelTitle">Mein GuildLoot</h2>
         <p id="actionPanelHint">Wähle links aus, was du machen möchtest.</p>
         <div id="myPriosBox" class="myprios-box">
   <div class="myprios-head">
-    <h2 id="brandMyLootTitle">Mein LichtLoot</h2>
+    <h2 id="brandMyLootTitle">Mein GuildLoot</h2>
     <button class="myprios-close" onclick="toggleMyPrios()">✕</button>
   </div>
 
@@ -1743,7 +1743,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
     <div class="clean-form" id="createLoginForm">
       <div class="account-step" data-step="1">
-        <div class="account-step-title">Deinen Charakter auswählen<small>Damit LichtLoot weiß, wer du im Spiel bist.</small></div>
+        <div class="account-step-title">Deinen Charakter auswählen<small>Damit GuildLoot weiß, wer du im Spiel bist.</small></div>
       <div class="full">
         <label>Deine Gilde *</label>
         <select id="pinGuildName" onchange="selectGuildForLogin(this.value)">
@@ -1950,7 +1950,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
       </div>
       <div class="account-copy">
         <h2>Spieleraccount erstellen</h2>
-        <p>Erstelle deinen Spieleraccount und verwalte deine Charaktere, Prios und Punkte zentral in LichtLoot.</p>
+        <p>Erstelle deinen Spieleraccount und verwalte deine Charaktere, Prios und Punkte zentral in GuildLoot.</p>
         <div class="account-benefits">
           <div class="account-benefit"><span>♟</span><div><strong>Charaktere</strong><small>verwalten</small></div></div>
           <div class="account-benefit"><span>▤</span><div><strong>Prios</strong><small>eintragen</small></div></div>
@@ -1964,7 +1964,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     </section>
 
     <section class="steps-panel compact-help">
-      <h2 id="brandHowTitle">So funktioniert LichtLoot</h2>
+      <h2 id="brandHowTitle">So funktioniert GuildLoot</h2>
       <div class="steps-list steps-list-3">
         <div class="step-card">SpielerLogin erstellen oder einloggen.</div>
         <div class="step-card">Raid öffnen und dort den PrioPin eingeben.</div>
@@ -1977,7 +1977,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <div class="random-panel-head">
         <div>
           <h2>Random Raid</h2>
-          <p>Für Pugs und spontane Gruppen. Normale Spieler starten oben über LichtLoot.</p>
+          <p>Für Pugs und spontane Gruppen. Normale Spieler starten oben über GuildLoot.</p>
         </div>
         <div class="random-panel-actions">
           <button class="big-btn subtle" type="button" onclick="openRandomRaidModal('open')">Random-Raid öffnen</button>
@@ -2070,7 +2070,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
   <footer class="site-footer">
     <a href="impressum.html">Impressum</a> |
     <a href="datenschutz.html">Datenschutz</a>
-    <div id="brandCopyright">&copy; 2026 LichtLoot. Alle Rechte vorbehalten.</div>
+    <div id="brandCopyright">&copy; 2026 GuildLoot. Alle Rechte vorbehalten.</div>
   </footer>
 </div>
 
@@ -2241,7 +2241,7 @@ function titleFromSlug(slug){
 
 function lootTitleFromGuild(guild){
   const slug=String(guild?.slug || "").trim();
-  if(slug === "lichtloot") return "LichtLoot";
+  if(slug === "lichtloot") return "GuildLoot";
   return titleFromSlug(slug || guild?.name || "Lootsystem");
 }
 
@@ -4838,7 +4838,7 @@ function setActionPanel(title,hint,tab){
   document.body.classList.add('show-mylichtloot');
   const titleEl=document.getElementById('actionPanelTitle');
   const hintEl=document.getElementById('actionPanelHint');
-  if(titleEl) titleEl.textContent=title || 'Mein LichtLoot';
+  if(titleEl) titleEl.textContent=title || 'Mein GuildLoot';
   if(hintEl) hintEl.textContent=hint || '';
   showLichtLootTab(tab || 'prios');
   const panel=document.getElementById('actionPanel');
@@ -4882,7 +4882,7 @@ function logoutPlayerLogin(){
   const welcomeHero=document.getElementById('brandWelcomeTitle');
   if(profileName) profileName.textContent='SpielerLogin';
   if(profileStatus){profileStatus.textContent='Jetzt einloggen';profileStatus.style.color='#cbd5e1';}
-  if(welcomeHero) welcomeHero.textContent='Willkommen auf LichtLoot';
+  if(welcomeHero) welcomeHero.textContent='Willkommen auf GuildLoot';
 }
 function classColorClass(className){
   return 'class-' + String(className || '').trim().toLowerCase().replace('ä','ae').replace('ö','oe').replace('ü','ue').replace('ß','ss');
