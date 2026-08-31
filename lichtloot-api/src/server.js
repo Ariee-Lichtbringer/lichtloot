@@ -5629,12 +5629,20 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
     const wclGuildId=eraConfig.warcraftLogsGuildId;
     if(!wclGuildId)throw new Error("Für diese Gilde ist noch keine Warcraft-Logs-Gilden-ID konfiguriert.");
     const attendanceRaids=Object.keys(WCL_PO_ATTENDANCE_ZONES).filter(raid=>eraConfig.rules.supportedRaids.includes(raid));
-    const attendancePromise=Promise.all(attendanceRaids.map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow)]));
-    let attendanceTimer;
-    const attendance=Object.fromEntries(await Promise.race([
-      attendancePromise,
-      new Promise((_,reject)=>{attendanceTimer=setTimeout(()=>reject(new Error("Warcraft-Logs-Anwesenheit Zeitüberschreitung")),8000);})
-    ]).finally(()=>clearTimeout(attendanceTimer)));
+    const attendanceEntries=await Promise.all(attendanceRaids.map(async raid=>{
+      try {
+        let raidTimer;
+        const stats=await Promise.race([
+          getWclPoAttendance(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow),
+          new Promise((_,reject)=>{raidTimer=setTimeout(()=>reject(new Error("Zeitüberschreitung nach 20 Sekunden")),20000);})
+        ]).finally(()=>clearTimeout(raidTimer));
+        return [raid,stats];
+      } catch(error) {
+        console.warn(`Warcraft-Logs-Attendance ${raid.toUpperCase()} konnte nicht geladen werden:`,error.message||error);
+        return [raid,null];
+      }
+    }));
+    const attendance=Object.fromEntries(attendanceEntries.filter(([,stats])=>stats));
     characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+(eraConfig.rules.recruit.countBenchAsAttendance?Number(player.bench||0):0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
   } catch(error) { console.warn("Warcraft-Logs-Attendance konnte nicht geladen werden:",error.message||error); characters.forEach(entry=>{entry.attendance16={};}); }
   else characters.forEach(entry=>{entry.attendance16={};});
