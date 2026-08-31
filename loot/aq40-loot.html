@@ -3837,6 +3837,8 @@ function buildSavePrioUrl(savePin, oldPin){
     "&p3="+encodeURIComponent(p3)+
     "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
 
+  if(new URLSearchParams(window.location.search).get("random") === "1") url += "&random=1";
+
   if(oldPin && oldPin !== savePin){
     url +=
       "&oldCharacterPin="+encodeURIComponent(oldPin)+
@@ -4155,7 +4157,8 @@ async function loadPublishedPrios(){
     const result = await apiJsonp({
       action:"getPublishedPrios",
       raid:RAID_NAME,
-      playerPin:pin
+      playerPin:pin,
+      random:new URLSearchParams(window.location.search).get("random") === "1" ? "1" : ""
     });
 
     if(result.error){
@@ -8106,6 +8109,7 @@ async function deleteOwnPrio(payload){
 
   const baseParams=
     '&guild='+encodeURIComponent(typeof currentGuildSlug === "function" ? currentGuildSlug() : "lichtloot")+
+    (new URLSearchParams(window.location.search).get("random") === "1" ? '&random=1' : '')+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
