@@ -1063,9 +1063,18 @@ body.guild-locked .compact-auth{
 }
 
 body.guild-locked .unlock{
-  grid-template-columns:1fr;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:auto auto auto;
   gap:14px;
 }
+
+body.guild-locked .unlock>.field:nth-child(1){grid-column:1;grid-row:1}
+body.guild-locked .unlock>.btn:nth-child(2){grid-column:1;grid-row:2}
+body.guild-locked .unlock>.field:nth-child(3){grid-column:2;grid-row:1}
+body.guild-locked .unlock>.btn:nth-child(4){grid-column:2;grid-row:2}
+body.guild-locked .unlock>.dashboard-quick-action-p0{grid-column:1;grid-row:3}
+body.guild-locked .unlock>.dashboard-quick-action-raid{grid-column:2;grid-row:3}
+body.guild-locked .unlock>#pendingLoginCard{grid-column:1 / -1;grid-row:4}
 
 body.guild-locked .login-summary-card{
   display:none;
@@ -1080,6 +1089,13 @@ body.guild-locked .auth-panel input{
 body.guild-locked .auth-panel .btn{
   min-height:54px;
   font-size:16px;
+}
+
+@media(max-width:650px){
+  body.guild-locked .auth-panel{padding:22px 18px}
+  body.guild-locked .auth-panel::before{font-size:25px}
+  body.guild-locked .unlock{grid-template-columns:1fr;grid-template-rows:auto}
+  body.guild-locked .unlock>*{grid-column:1!important;grid-row:auto!important}
 }
 
 .field label{
