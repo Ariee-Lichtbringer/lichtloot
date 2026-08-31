@@ -4154,7 +4154,8 @@ async function loadPublishedPrios(){
       raid:RAID_NAME,
       raidPin:pin,
       playerPin:pin,
-      random:new URLSearchParams(window.location.search).get("random") === "1" ? "1" : ""
+      random:new URLSearchParams(window.location.search).get("random") === "1" ? "1" : "",
+      randomParticipantToken:typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : ""
     });
 
     if(result.error){
@@ -10351,6 +10352,7 @@ function getCurrentPlayerServerForPrioMatch(){
 }
 
 function isOwnPublishedPrio(prio){
+  if(new URLSearchParams(window.location.search).get("random") === "1") return prio?.ownedByBrowser === true;
   const player=getCurrentPlayerNameForPrioMatch();
   const server=getCurrentPlayerServerForPrioMatch();
   const rowPlayer=normalizeOwnPrioText(prio && (prio.Spieler || prio.player || prio.Player));
@@ -10430,6 +10432,7 @@ function prioActionCellHtml(prio,index,ownRow){
   return `
     <div class="prio-action-cell">
       ${reportHtml}
+      ${new URLSearchParams(window.location.search).get("random") === "1" ? `<button class="delete-prio-btn" title="Prio bearbeiten" onclick='editRandomPrio(${safeAttr(JSON.stringify(prio))})'>✏️</button>` : ""}
       <button class="delete-prio-btn" title="Prio löschen" onclick='deleteOwnPrio(${deletePayload})'>🗑</button>
     </div>
   `;
@@ -10823,7 +10826,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 </script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260805-1700"></script>
-<script src="raid-signup-mirror.js?v=20260831-1926"></script>
+<script src="raid-signup-mirror.js?v=20260831-1934"></script>
 <script src="../pin-visibility.js"></script>
 <script src="p0-selection-fix.js?v=20260818-1415"></script>
 <script src="player-gear-popup.js?v=20260830-1750"></script>
