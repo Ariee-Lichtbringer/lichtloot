@@ -2886,6 +2886,103 @@ function displayRaidName(value) {
   return names[key] || clean(value) || "Raid";
 }
 
+const ERA_STANDARD_RAIDS = ["mc", "bwl", "ony", "zg", "aq20", "aq40", "naxx"];
+const LEGACY_WCL_GUILD_IDS = { lichtloot: 755306, lichtbringer: 755306, nachtloot: 703333 };
+
+function defaultEraRulesForSlug(slug) {
+  const normalizedSlug = clean(slug).toLowerCase();
+  const nachtloot = normalizedSlug === "nachtloot";
+  return {
+    supportedRaids: [...ERA_STANDARD_RAIDS],
+    priorityLevels: [
+      { key: "p1", label: "P1", enabled: true },
+      { key: "p2", label: "P2", enabled: true },
+      { key: "p3", label: "P3", enabled: true }
+    ],
+    recruit: {
+      enabled: nachtloot,
+      raids: ["bwl", "aq40", "naxx"],
+      allowedPriorities: ["p2", "p3"],
+      minAttendance: 3,
+      countBenchAsAttendance: true
+    },
+    p0Plus: {
+      raidTransferPoints: 1,
+      benchPoints: 0.5
+    },
+    poRelease: {
+      applicationsEnabled: nachtloot,
+      attendanceWindow: 16,
+      lowAttendanceWarning: 6
+    }
+  };
+}
+
+function guildEraRulesFromLayout(layout, slug = "") {
+  const defaults = defaultEraRulesForSlug(slug);
+  const incoming = layout?.eraRules && typeof layout.eraRules === "object" && !Array.isArray(layout.eraRules)
+    ? layout.eraRules
+    : {};
+  const priorityInput = Array.isArray(incoming.priorityLevels) ? incoming.priorityLevels : defaults.priorityLevels;
+  const priorityLevels = ["p1", "p2", "p3"].map((key, index) => {
+    const configured = priorityInput.find(entry => clean(entry?.key).toLowerCase() === key) || priorityInput[index] || {};
+    return {
+      key,
+      label: clean(configured.label).slice(0, 20) || defaults.priorityLevels[index].label,
+      enabled: configured.enabled !== false
+    };
+  });
+  const supportedRaids = Array.from(new Set(
+    (Array.isArray(incoming.supportedRaids) ? incoming.supportedRaids : defaults.supportedRaids)
+      .map(normalizeRaidType)
+      .filter(Boolean)
+  ));
+  const recruitInput = incoming.recruit && typeof incoming.recruit === "object" ? incoming.recruit : {};
+  const p0PlusInput = incoming.p0Plus && typeof incoming.p0Plus === "object" ? incoming.p0Plus : {};
+  const poReleaseInput = incoming.poRelease && typeof incoming.poRelease === "object" ? incoming.poRelease : {};
+  const numberInRange = (value, fallback, min, max) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
+  };
+  return {
+    supportedRaids: supportedRaids.length ? supportedRaids : [...defaults.supportedRaids],
+    priorityLevels,
+    recruit: {
+      enabled: recruitInput.enabled ?? defaults.recruit.enabled,
+      raids: Array.from(new Set((Array.isArray(recruitInput.raids) ? recruitInput.raids : defaults.recruit.raids).map(normalizeRaidType).filter(Boolean))),
+      allowedPriorities: Array.from(new Set((Array.isArray(recruitInput.allowedPriorities) ? recruitInput.allowedPriorities : defaults.recruit.allowedPriorities).map(value => clean(value).toLowerCase()).filter(value => ["p1", "p2", "p3", "p0plus"].includes(value)))),
+      minAttendance: Math.round(numberInRange(recruitInput.minAttendance, defaults.recruit.minAttendance, 0, 50)),
+      countBenchAsAttendance: recruitInput.countBenchAsAttendance ?? defaults.recruit.countBenchAsAttendance
+    },
+    p0Plus: {
+      raidTransferPoints: numberInRange(p0PlusInput.raidTransferPoints, defaults.p0Plus.raidTransferPoints, 0, 100),
+      benchPoints: numberInRange(p0PlusInput.benchPoints, defaults.p0Plus.benchPoints, 0, 100)
+    },
+    poRelease: {
+      applicationsEnabled: poReleaseInput.applicationsEnabled ?? defaults.poRelease.applicationsEnabled,
+      attendanceWindow: Math.round(numberInRange(poReleaseInput.attendanceWindow, defaults.poRelease.attendanceWindow, 1, 50)),
+      lowAttendanceWarning: Math.round(numberInRange(poReleaseInput.lowAttendanceWarning, defaults.poRelease.lowAttendanceWarning, 0, 50))
+    }
+  };
+}
+
+async function getGuildEraConfiguration(guildId) {
+  const result = await query(
+    `select lower(g.slug) as slug, coalesce(gs.layout_json, '{}'::jsonb) as layout_json
+     from guilds g left join guild_settings gs on gs.guild_id = g.id
+     where g.id = $1 limit 1`,
+    [guildId]
+  );
+  const row = result.rows[0] || {};
+  const layout = row.layout_json && typeof row.layout_json === "object" ? row.layout_json : {};
+  return {
+    slug: clean(row.slug).toLowerCase(),
+    layout,
+    rules: guildEraRulesFromLayout(layout, row.slug),
+    warcraftLogsGuildId: Number(layout.warcraftLogsGuildId || LEGACY_WCL_GUILD_IDS[clean(row.slug).toLowerCase()] || 0)
+  };
+}
+
 function lootSourceRaidType(value) {
   const raid = normalizeRaidType(value);
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
@@ -2915,6 +3012,19 @@ async function requireConfiguredSpecialRaidType(guildId, raidType) {
     : Object.keys(layout.raidImages || {}).map(normalizeRaidType);
   if (!configured.includes(normalizedRaid)) {
     const error = new Error("Dieser zusätzliche Raidtyp ist für diese Gilde nicht aktiviert.");
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+async function requireSupportedEraRaidType(guildId, raidType) {
+  const raid = normalizeRaidType(raidType);
+  const knownEraRaids = new Set([...ERA_STANDARD_RAIDS, "zg-mittwoch", "zg-prime", "zg-late"]);
+  if (!knownEraRaids.has(raid)) return;
+  const eraConfig = await getGuildEraConfiguration(guildId);
+  const allowed = new Set([...eraConfig.rules.supportedRaids, ...(eraConfig.layout.specialRaidTypes || []).map(normalizeRaidType)]);
+  if (!allowed.has(raid)) {
+    const error = new Error(`${displayRaidName(raid)} ist in den Era-Regeln dieser Gilde nicht aktiviert.`);
     error.statusCode = 403;
     throw error;
   }
@@ -4474,10 +4584,6 @@ async function authorizePoClassManagement(guildId, params, className) {
   return { master:false, permissions };
 }
 
-function isNachtlootRecruitRaid(value) {
-  return ["bwl", "aq40", "naxx"].includes(normalizePoReleaseRaid(value));
-}
-
 let characterPoReleaseSchemaReadyPromise = null;
 async function ensureCharacterPoReleaseSchema() {
   if (!characterPoReleaseSchemaReadyPromise) {
@@ -4832,6 +4938,12 @@ async function evaluateNachtlootArmory(entry){
 
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
+  const eraConfig = await getGuildEraConfiguration(guildId);
+  if (!eraConfig.rules.poRelease.applicationsEnabled) {
+    const error = new Error("P0- und Rekruten-Freigabeanträge sind für diese Gilde deaktiviert.");
+    error.statusCode = 403;
+    throw error;
+  }
   const pin = normalizePin(params.playerPin || params.pin);
   const character = await findCharacterForPin(guildId, pin, params.character || params.char || params.player, params.server);
   if (!character) { const error = new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode = 403; throw error; }
@@ -4840,8 +4952,8 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   const selectedRaid = normalizePoReleaseRaid(params.raid || params.raidType);
   const raid = selectedRaid;
   if (!raid || raid === "p1p3") { const error = new Error("Bitte den Raid für die Freigabe auswählen."); error.statusCode = 400; throw error; }
-  if (["recruit", "p1p3"].includes(requestType) && !isNachtlootRecruitRaid(raid)) {
-    const error = new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");
+  if (["recruit", "p1p3"].includes(requestType) && (!eraConfig.rules.recruit.enabled || !eraConfig.rules.recruit.raids.includes(raid))) {
+    const error = new Error(`Der Rekrutenstatus ist für ${displayRaidName(raid)} nicht aktiviert.`);
     error.statusCode = 400;
     throw error;
   }
@@ -4906,23 +5018,26 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
     if(!manualOverride){const armoryEvaluation=await evaluateNachtlootArmory({name:request.name,className:request.class_name,requestType:request.request_type,raid:request.raid_type||"",specialization:request.specialization||"",armoryUrl:request.armory_url});if(!armoryEvaluation.success||!armoryEvaluation.passed){const failed=(armoryEvaluation.checks||[]).filter(check=>!check.met).map(check=>check.label).join(", ");const error=new Error(armoryEvaluation.error||`Armory-Voraussetzungen nicht erfüllt${failed?`: ${failed}`:"."}`);error.statusCode=400;throw error;}}
     if (!manualOverride&&(request.request_type === "recruit" || request.request_type === "p1p3")) {
       const raid=normalizePoReleaseRaid(request.raid_type);
-      const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
-      const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
-      const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
-      const stats=await getWclPoAttendance(raid,wclGuildId);
+      const eraConfig=await getGuildEraConfiguration(guildId),wclGuildId=eraConfig.warcraftLogsGuildId;
+      if(!eraConfig.rules.recruit.raids.includes(raid)){const error=new Error(`Der Rekrutenstatus ist für ${raid.toUpperCase()} nicht aktiviert.`);error.statusCode=400;throw error;}
+      if(!wclGuildId){const error=new Error("Warcraft-Logs-Gilden-ID fehlt in den Era-Regeln.");error.statusCode=400;throw error;}
+      const stats=await getWclPoAttendance(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow);
       const player=stats.players[normalizeAttendanceName(request.name)]||{attended:0,bench:0};
-      const attended=Number(player.attended||0)+Number(player.bench||0);
-      if(attended<3){const error=new Error(`Rekrutenstatus kann erst ab 3 Teilnahmen in ${raid.toUpperCase()} aufgehoben werden. Aktuell: ${attended}.`);error.statusCode=400;throw error;}
+      const attended=Number(player.attended||0)+(eraConfig.rules.recruit.countBenchAsAttendance?Number(player.bench||0):0);
+      const required=eraConfig.rules.recruit.minAttendance;
+      if(attended<required){const error=new Error(`Rekrutenstatus kann erst ab ${required} Teilnahmen in ${raid.toUpperCase()} aufgehoben werden. Aktuell: ${attended}.`);error.statusCode=400;throw error;}
     }
     if (request.request_type === "recruit" || request.request_type === "p1p3") {
       const raid=normalizePoReleaseRaid(request.raid_type);
-      if(!isNachtlootRecruitRaid(raid)){const error=new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");error.statusCode=400;throw error;}
+      const eraConfig=await getGuildEraConfiguration(guildId);
+      if(!eraConfig.rules.recruit.raids.includes(raid)){const error=new Error(`Der Rekrutenstatus ist für ${raid.toUpperCase()} nicht aktiviert.`);error.statusCode=400;throw error;}
       await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
     }
     else {
       const raid=normalizePoReleaseRaid(request.raid_type);
       await query(`insert into character_po_releases(guild_id,character_id,raid_type,source,approved_by,approved_at) values($1,$2,$3,'application',$4,now()) on conflict(guild_id,character_id,raid_type) do update set source='application',approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
-      if (isNachtlootRecruitRaid(raid)) {
+      const eraConfig=await getGuildEraConfiguration(guildId);
+      if (eraConfig.rules.recruit.enabled && eraConfig.rules.recruit.raids.includes(raid)) {
         await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
       }
     }
@@ -4980,21 +5095,21 @@ function poReleaseFlagsFromRows(rows) {
   return flags;
 }
 
-const WCL_PO_ATTENDANCE_GUILD_IDS = { lichtloot:755306, lichtbringer:755306, nachtloot:703333 };
 const WCL_PO_ATTENDANCE_ZONES = { mc:2000, bwl:2002, aq40:2005, naxx:2006 };
 const WCL_RAID_PARTICIPATION_ZONES = { mc:2000, ony:2001, bwl:2002, zg:2003, "zg-mittwoch":2003, "zg-prime":2003, "zg-late":2003, aq20:2004, aq40:2005, naxx:2006 };
 const wclPoAttendanceCache = new Map();
 const wclRaidParticipationCache = new Map();
 function normalizeAttendanceName(value) { return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
-async function getWclPoAttendance(raid,wclGuildId) {
+async function getWclPoAttendance(raid,wclGuildId,requestedLimit=16) {
   const zoneId=WCL_PO_ATTENDANCE_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
-  const cacheKey=`${wclGuildId}:${raid}`; const cached=wclPoAttendanceCache.get(cacheKey); if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const limit=Math.min(50,Math.max(1,Math.round(Number(requestedLimit)||16)));
+  const cacheKey=`${wclGuildId}:${raid}:${limit}`; const cached=wclPoAttendanceCache.get(cacheKey); if(cached&&cached.expiresAt>Date.now())return cached.value;
   const token=await getWarcraftLogsAccessToken();
-  const gqlQuery="query($guildID:Int!,$zoneID:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:16,page:1){data{code startTime players{name type presence}}}}}}";
-  const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId});
+  const gqlQuery="query($guildID:Int!,$zoneID:Int!,$limit:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:$limit,page:1){data{code startTime players{name type presence}}}}}}";
+  const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId,limit});
   const raids=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[]; const players={};
   raids.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;if(!players[key])players[key]={attended:0,bench:0};if(Number(player?.presence)===1)players[key].attended+=1;if(Number(player?.presence)===2)players[key].bench+=1;}));
-  const value={total:Math.min(16,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
+  const value={total:Math.min(limit,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
 }
 
 function wclRaidDateInBerlin(value) {
@@ -5103,16 +5218,17 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
     );
   }
   if (includeAttendance) try {
-    const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
-    const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
-    const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
-    const attendancePromise=Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId)]));
+    const eraConfig=await getGuildEraConfiguration(guildId);
+    const wclGuildId=eraConfig.warcraftLogsGuildId;
+    if(!wclGuildId)throw new Error("Für diese Gilde ist noch keine Warcraft-Logs-Gilden-ID konfiguriert.");
+    const attendanceRaids=Object.keys(WCL_PO_ATTENDANCE_ZONES).filter(raid=>eraConfig.rules.supportedRaids.includes(raid));
+    const attendancePromise=Promise.all(attendanceRaids.map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow)]));
     let attendanceTimer;
     const attendance=Object.fromEntries(await Promise.race([
       attendancePromise,
       new Promise((_,reject)=>{attendanceTimer=setTimeout(()=>reject(new Error("Warcraft-Logs-Anwesenheit Zeitüberschreitung")),8000);})
     ]).finally(()=>clearTimeout(attendanceTimer)));
-    characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+Number(player.bench||0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
+    characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+(eraConfig.rules.recruit.countBenchAsAttendance?Number(player.bench||0):0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
   } catch(error) { console.warn("Warcraft-Logs-Attendance konnte nicht geladen werden:",error.message||error); characters.forEach(entry=>{entry.attendance16={};}); }
   else characters.forEach(entry=>{entry.attendance16={};});
   return { success: true, characters, entries: characters, count: characters.length };
@@ -5158,8 +5274,8 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
              updated_at = now()`,
       [guildId, characterId, raid, clean(params.source || "manual"), clean(params.approvedBy || params.reviewer || "Gildenleitung")]
     );
-    const guild=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
-    if(guild.rows[0]?.slug==="nachtloot" && isNachtlootRecruitRaid(raid)) {
+    const eraConfig=await getGuildEraConfiguration(guildId);
+    if(eraConfig.rules.recruit.enabled && eraConfig.rules.recruit.raids.includes(raid)) {
       const reviewer=clean(params.approvedBy || params.reviewer || "Automatisch durch PO-Freigabe");
       await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,characterId,raid,reviewer]);
     }
@@ -5208,10 +5324,9 @@ async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
     error.statusCode = 400;
     throw error;
   }
-  if(!isNachtlootRecruitRaid(raid)) { const error=new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");error.statusCode=400;throw error; }
-  const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
-  if (clean(guildResult.rows[0]?.slug).toLowerCase() !== "nachtloot") {
-    const error = new Error("Der Rekrutenstatus wird nur für Nachtwächter verwaltet.");
+  const eraConfig=await getGuildEraConfiguration(guildId);
+  if(!eraConfig.rules.recruit.enabled || !eraConfig.rules.recruit.raids.includes(raid)) {
+    const error=new Error(`Der Rekrutenstatus ist für ${displayRaidName(raid)} nicht aktiviert.`);
     error.statusCode = 403;
     throw error;
   }
@@ -12253,11 +12368,14 @@ async function savePrio({ guildId, query: params }) {
       ? await findP0OnlyEvent(guildId, { raidId: savedRaidForSignupCheck.external_raid_id })
       : null;
     const layoutResult = await client.query(
-      `select coalesce(layout_json, '{}'::jsonb) as layout_json
-       from guild_settings where guild_id = $1 limit 1`,
+      `select lower(g.slug) as guild_slug, coalesce(gs.layout_json, '{}'::jsonb) as layout_json
+       from guilds g left join guild_settings gs on gs.guild_id = g.id
+       where g.id = $1 limit 1`,
       [guildId]
     );
     const guildLayout = layoutResult.rows[0]?.layout_json || {};
+    const eraRules = guildEraRulesFromLayout(guildLayout, layoutResult.rows[0]?.guild_slug);
+    const enabledPriorities = new Set(eraRules.priorityLevels.filter(level => level.enabled).map(level => level.key));
     const lootPageRaidKey = lootSourceRaidType(savedRaidForSignupCheck.raid_type);
     const raidLayout = guildLayout.lootPageSectionsByRaid?.[lootPageRaidKey] || {};
     // Standardmäßig bleibt die bisherige Pflicht aktiv. Die Gildenleitung kann
@@ -12294,22 +12412,17 @@ async function savePrio({ guildId, query: params }) {
       || sameItemInAllThreePrios
       || ["ja", "true", "1", "p0", "po"].includes(p0Requested);
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
-    let nachtlootRecruitRestricted = false;
-    if (isNachtlootRecruitRaid(releaseRaid)) {
+    let recruitRestricted = false;
+    if (eraRules.recruit.enabled && eraRules.recruit.raids.includes(releaseRaid)) {
       const recruitResult = await client.query(
-        `select lower(g.slug) as guild_slug,
-                exists(select 1 from character_recruit_releases crr where crr.guild_id=$1 and crr.character_id=$2 and crr.raid_type=$3) as recruit_status_lifted
-         from guilds g
-         join characters c on c.id = $2
-         where g.id = $1
-         limit 1`,
+        `select exists(select 1 from character_recruit_releases crr where crr.guild_id=$1 and crr.character_id=$2 and crr.raid_type=$3) as recruit_status_lifted`,
         [guildId, character.id, releaseRaid]
       );
-      nachtlootRecruitRestricted = recruitResult.rows[0]?.guild_slug === "nachtloot"
-        && !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
+      recruitRestricted = !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
     }
-    if (nachtlootRecruitRestricted && p0PlusSelected) {
-      const error = new Error("Als Nachtwächter-Rekrut kannst du kein P0+ und keine P1 setzen. Bitte wähle nur P2 und P3.");
+    const recruitAllowedPriorities = new Set(eraRules.recruit.allowedPriorities);
+    if (recruitRestricted && p0PlusSelected && !recruitAllowedPriorities.has("p0plus")) {
+      const error = new Error("Deine Gilde erlaubt Rekruten noch kein P0+.");
       error.statusCode = 403;
       throw error;
     }
@@ -12333,21 +12446,35 @@ async function savePrio({ guildId, query: params }) {
         throw error;
       }
     }
-    if (nachtlootRecruitRestricted && (!clean(params.p2) || !clean(params.p3))) {
-      const error = new Error("Als Nachtwächter-Rekrut musst du P2 und P3 auswählen. P1 darf leer bleiben.");
-      error.statusCode = 400;
-      throw error;
+    if (recruitRestricted) {
+      for (const key of ["p1", "p2", "p3"]) {
+        const value = clean(params[key]);
+        if (recruitAllowedPriorities.has(key) && !value) {
+          const label = eraRules.priorityLevels.find(level => level.key === key)?.label || key.toUpperCase();
+          const error = new Error(`Als Rekrut musst du ${label} auswählen.`); error.statusCode = 400; throw error;
+        }
+        if (!recruitAllowedPriorities.has(key) && value && !p0Selected) {
+          const label = eraRules.priorityLevels.find(level => level.key === key)?.label || key.toUpperCase();
+          const error = new Error(`${label} ist für Rekruten noch nicht freigegeben.`); error.statusCode = 403; throw error;
+        }
+      }
+    }
+    for (const key of ["p1", "p2", "p3"]) {
+      if (!enabledPriorities.has(key) && clean(params[key]) && !p0Selected) {
+        const label = eraRules.priorityLevels.find(level => level.key === key)?.label || key.toUpperCase();
+        const error = new Error(`${label} ist für diese Gilde deaktiviert.`); error.statusCode = 400; throw error;
+      }
     }
     const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
     const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
     const p1 = await upsertItem(
       client,
       raidType,
-      nachtlootRecruitRestricted ? "" : (p0Selected ? p0ItemName : params.p1),
-      nachtlootRecruitRestricted ? "" : (p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID))
+      (!enabledPriorities.has("p1") || (recruitRestricted && !recruitAllowedPriorities.has("p1"))) ? "" : (p0Selected ? p0ItemName : params.p1),
+      (!enabledPriorities.has("p1") || (recruitRestricted && !recruitAllowedPriorities.has("p1"))) ? "" : (p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID))
     );
-    const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
-    const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
+    const p2 = await upsertItem(client, raidType, (!enabledPriorities.has("p2") || (recruitRestricted && !recruitAllowedPriorities.has("p2"))) ? "" : (p0Selected ? p0ItemName : params.p2), (!enabledPriorities.has("p2") || (recruitRestricted && !recruitAllowedPriorities.has("p2"))) ? "" : (p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID)));
+    const p3 = await upsertItem(client, raidType, (!enabledPriorities.has("p3") || (recruitRestricted && !recruitAllowedPriorities.has("p3"))) ? "" : (p0Selected ? p0ItemName : params.p3), (!enabledPriorities.has("p3") || (recruitRestricted && !recruitAllowedPriorities.has("p3"))) ? "" : (p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID)));
     if (p0Selected) {
       await requireGuildPoItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName);
     }
@@ -13067,11 +13194,11 @@ async function getPlayerPrioHistory(guildId, params) {
   const poReleaseDisplaySettings = await getPoReleaseDisplaySettings(guildId);
   let attendance16 = {};
   try {
-    const guildResult = await query(`select lower(slug) as slug from guilds where id=$1 limit 1`, [guildId]);
-    const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
-    const wclGuildId = WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug] || WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+    const eraConfig = await getGuildEraConfiguration(guildId);
+    const wclGuildId = eraConfig.warcraftLogsGuildId;
+    if (!wclGuildId) throw new Error("Warcraft-Logs-Gilden-ID fehlt.");
     const attendance = Object.fromEntries(await Promise.all(
-      Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid => [raid, await getWclPoAttendance(raid, wclGuildId)])
+      Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid => [raid, await getWclPoAttendance(raid, wclGuildId, eraConfig.rules.poRelease.attendanceWindow)])
     ));
     const characterKey = normalizeAttendanceName(character.name);
     Object.entries(attendance).forEach(([raid, stats]) => {
@@ -20667,6 +20794,7 @@ async function restoreArchivedRaids({ guildId, query: params }) {
 
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  await requireSupportedEraRaidType(guildId, params.raid || params.raidName);
   const created = await createRaidRecord({ guildId, query: params });
   const raidHelperEnabled = !["0", "false", "no", "nein", "off"].includes(
     clean(params.raidHelperEnabled ?? params.raidhelperEnabled ?? "true").toLowerCase()
@@ -20702,6 +20830,7 @@ async function createRaid({ guildId, query: params }) {
 
 async function createP0OnlyEventForGuild({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  await requireSupportedEraRaidType(guildId, params.raid || params.raidName);
   const event = await createP0OnlyEvent({ guildId, params });
   return {
     success: true,
@@ -20729,6 +20858,7 @@ async function createRaidForBot({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
+  await requireSupportedEraRaidType(guildId, raidType);
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin) || randomRaidCode(3);
   return createRaidRecord({
     guildId,
@@ -23165,9 +23295,8 @@ async function getPublishedPrios({ guildId, query: params }) {
   try {
     const raidDate = raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date).slice(0, 10);
     if (raidDate) {
-      const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
-      const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
-      const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+      const eraConfig=await getGuildEraConfiguration(guildId),wclGuildId=eraConfig.warcraftLogsGuildId;
+      if(!wclGuildId)throw new Error("Warcraft-Logs-Gilden-ID fehlt.");
       wclParticipation=await getWclRaidParticipation(raid.raid_type,wclGuildId,raidDate);
     }
   } catch (error) {
@@ -25087,6 +25216,8 @@ async function setPrioBench({ guildId, query: params }) {
   }
 
   const bench = ["ja", "true", "1", "bench"].includes(clean(params.bench).toLowerCase()) ? "ja" : "";
+  const eraConfig = await getGuildEraConfiguration(guildId);
+  const benchPoints = Number(eraConfig.rules.p0Plus.benchPoints || 0);
   const note = `Bench RaidID: ${raidPublicId(raid)}`;
   const client = await pool.connect();
 
@@ -25102,11 +25233,11 @@ async function setPrioBench({ guildId, query: params }) {
         [guildId, prio.character_id, prio.p1_item_id, note]
       );
 
-      if (bench) {
+      if (bench && benchPoints > 0) {
         await client.query(
           `insert into p0plus_points (guild_id, character_id, item_id, points, source, note)
-           values ($1, $2, $3, 0.5, 'Bench', $4)`,
-          [guildId, prio.character_id, prio.p1_item_id, note]
+           values ($1, $2, $3, $4, 'Bench', $5)`,
+          [guildId, prio.character_id, prio.p1_item_id, benchPoints, note]
         );
       }
       const newPoints = await getP0PlusPointTotal(client, guildId, prio.character_id, prio.p1_item_id);
@@ -26379,6 +26510,8 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 }
 
 async function transferP0PlusPoints({ guildId, query: params }) {
+  const eraConfig = await getGuildEraConfiguration(guildId);
+  const raidTransferPoints = Number(eraConfig.rules.p0Plus.raidTransferPoints || 0);
   const requestedRaidType = normalizeRaidType(params.raid);
   const targetRaidType = normalizeRaidType(params.targetRaid || params.targetRaidType || params.raid);
   await requireConfiguredSpecialRaidType(guildId, targetRaidType);
@@ -26593,8 +26726,8 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     for (const row of dedupedCandidates) {
       await client.query(
         `insert into p0plus_points (guild_id, character_id, item_id, points, source, note)
-         values ($1, $2, $3, 1, $4, $5)`,
-        [guildId, row.character_id, row.target_item_id, "Raidlead Transfer", transferNote]
+         values ($1, $2, $3, $4, $5, $6)`,
+        [guildId, row.character_id, row.target_item_id, raidTransferPoints, "Raidlead Transfer", transferNote]
       );
       const newPoints = await getP0PlusPointTotal(client, guildId, row.character_id, row.target_item_id);
       await insertP0PlusAudit(client, {
