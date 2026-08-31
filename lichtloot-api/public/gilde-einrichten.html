@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/scroll-performance.css">
   <title>LichtLoot - Gilde einrichten</title>
   <style>
     :root{--gold:#facc15;--blue:#60a5fa;--panel:rgba(15,23,42,.88);--line:rgba(250,204,21,.24);--text:#e5edf8;--muted:#aebbd0}
@@ -17,8 +18,8 @@
     .panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:0 24px 80px rgba(0,0,0,.35);padding:24px}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     label{display:grid;gap:7px;color:var(--gold);font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.02em}
-    input{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+    input,select{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
     .full{grid-column:1/-1}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
     button,.linkbtn{border:1px solid rgba(250,204,21,.32);border-radius:8px;background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(29,78,216,.20));color:#f8fafc;padding:13px 18px;font-weight:950;text-decoration:none;cursor:pointer}
@@ -57,8 +58,21 @@
       <label>Server
         <input name="server">
       </label>
-      <label>GildenPIN
-        <input name="guildPin" maxlength="12" placeholder="z.B. LBR">
+      <label>Leitungscode
+        <input name="guildPin" type="password" minlength="6" maxlength="32" required autocomplete="new-password" placeholder="Mindestens 6 Zeichen">
+      </label>
+      <label>Discord-Server-ID
+        <input name="discordGuildId" inputmode="numeric" pattern="[0-9]{15,22}" placeholder="Rechtsklick auf den Discord-Server → ID kopieren">
+      </label>
+      <label>Warcraft-Logs-Gilden-ID
+        <input name="warcraftLogsGuildId" inputmode="numeric" pattern="[0-9]*" placeholder="Zahl aus der Warcraft-Logs-Gildenadresse">
+      </label>
+      <label>Era-Grundprofil
+        <select name="setupProfile">
+          <option value="standard">Classic Standard – P1, P2 und P3</option>
+          <option value="casual">Casual – P1 und P2</option>
+          <option value="progress">Progress – mit Rekruten und Attendance</option>
+        </select>
       </label>
       <label>Logo-URL
         <input name="logoUrl" placeholder="https://...">
@@ -139,6 +153,7 @@ function renderResultLinks(result){
     ${renderReadiness(result.readiness)}
     <a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a>
     <a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>
+    <a class="linkbtn" href="${safeHtml(leadershipUrl + (leadershipUrl.includes("?") ? "&" : "?") + "setup=1")}">Era-Regeln vervollständigen</a>
     <button type="button" id="refreshReadiness">Bereitschaft erneut prüfen</button>
   `;
   document.getElementById("refreshReadiness")?.addEventListener("click", loadSetup);
@@ -168,6 +183,7 @@ async function loadSetup(){
     setValue("lootName", app.lootName || app.guildName);
     setValue("server", app.server);
     setValue("guildPin", app.guildPin || app.desiredGuildPin);
+    setValue("discordGuildId", app.discordGuildId);
     setValue("logoUrl", app.logoUrl);
     setValue("backgroundUrl", app.backgroundUrl);
     setValue("primaryColor", app.primaryColor);

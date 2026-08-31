@@ -6921,6 +6921,7 @@ let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
 let pendingMessageContext = null;
 let raidHelperDeepLinkHandled = false;
+let guildSetupWizardDeepLinkHandled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   const masterField = document.getElementById("masterCode");
@@ -7505,6 +7506,11 @@ async function loadOverview(options){
     loadRaidHelperDiscordRoles();
     loadWorldbuffMiniOverview();
     loadGuildApplicationsPanel({ silent:true }).catch(() => {});
+    if(!guildSetupWizardDeepLinkHandled && new URLSearchParams(location.search).get("setup") === "1"){
+      guildSetupWizardDeepLinkHandled = true;
+      openLootLayoutPanel();
+      setTimeout(openGuildSetupWizard,0);
+    }
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
     setGuildLocked(true);
