@@ -280,7 +280,7 @@ body.random-prio .loot-attendance-list,
 body.random-prio .plundermeister-login-btn{display:none!important}
 body.random-prio .player-card-layout{display:none!important}
 .random-character-profile{display:none}
-body.random-prio .random-character-profile{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px;border:1px solid rgba(250,204,21,.32);border-radius:14px;background:rgba(2,6,23,.62)}
+body.random-prio .random-character-profile{display:none!important}
 .random-character-profile h2{grid-column:1/-1;margin:0;color:#facc15;font-size:18px}.random-character-profile label{margin:0}.random-character-profile input{margin-top:6px}
 @media(max-width:720px){body.random-prio .random-character-profile{grid-template-columns:1fr}}
 .random-prio-home{display:none}
@@ -4424,7 +4424,7 @@ if(isRandomPrioLink){
   const overlay=document.querySelector("body > .overlay");
   if(overlay){const home=document.createElement("div");home.className="random-prio-home";home.innerHTML='<img src="../images/guildloot-logo-concept.png" alt="GuildLoot"><a href="../index.html">GuildLoot-Startseite</a>';overlay.prepend(home);}
   const playerCard=document.getElementById("playerCard");
-  if(playerCard){playerCard.insertAdjacentHTML("afterbegin",'<div class="random-character-profile"><h2>Dein Random-Raid-Charakter</h2><label>Charaktername<input id="randomCharacterName" autocomplete="off" placeholder="Charaktername"></label><label>Server<input id="randomCharacterServer" autocomplete="off" placeholder="Server"></label><label>Skillung<input id="randomCharacterSpec" autocomplete="off" placeholder="z. B. Tank, Heiler, Feuer"></label></div>');initializeRandomCharacterProfile();}
+  if(playerCard){playerCard.insertAdjacentHTML("afterbegin",'<div class="random-character-profile"><input id="randomCharacterName"><input id="randomCharacterServer"><input id="randomCharacterClass"><input id="randomCharacterSpec"></div>');initializeRandomCharacterProfile();}
   const randomLeadInput=document.getElementById("raidleadPin");
   if(randomLeadInput) randomLeadInput.placeholder="Random Raidlead PIN";
 }
@@ -4434,10 +4434,9 @@ function getRandomParticipantToken(){let token=decodeURIComponent(randomCookieVa
 function initializeRandomCharacterProfile(){
   getRandomParticipantToken();
   let profile={};try{profile=JSON.parse(decodeURIComponent(randomCookieValue("guildloot_random_profile")||"%7B%7D"));}catch(error){}
-  const name=document.getElementById("randomCharacterName"),server=document.getElementById("randomCharacterServer"),spec=document.getElementById("randomCharacterSpec");
-  if(name)name.value=profile.name||"";if(server)server.value=profile.server||"";if(spec)spec.value=profile.spec||"";
-  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField){let option=Array.from(serverField.options).find(entry=>entry.value===values.server);if(!option&&values.server){option=new Option(values.server,values.server);serverField.add(option);}serverField.value=values.server;}document.getElementById("playerClass").value=values.spec;};
-  const originalSync=sync;const syncWithSpec=()=>{originalSync();const classField=document.getElementById("playerClass"),value=spec?.value.trim()||"";if(classField){let option=Array.from(classField.options).find(entry=>entry.value===value);if(!option&&value){option=new Option(value,value);classField.add(option);}classField.value=value;}};[name,server,spec].forEach(field=>field?.addEventListener("input",syncWithSpec));syncWithSpec();
+  const name=document.getElementById("randomCharacterName"),server=document.getElementById("randomCharacterServer"),playerClass=document.getElementById("randomCharacterClass"),spec=document.getElementById("randomCharacterSpec");
+  if(name)name.value=profile.name||"";if(server)server.value=profile.server||"";if(playerClass)playerClass.value=profile.playerClass||"";if(spec)spec.value=profile.spec||"";
+  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",playerClass:playerClass?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField){let option=Array.from(serverField.options).find(entry=>entry.value===values.server);if(!option&&values.server){option=new Option(values.server,values.server);serverField.add(option);}serverField.value=values.server;}const classField=document.getElementById("playerClass");if(classField){let option=Array.from(classField.options).find(entry=>entry.value===values.playerClass);if(!option&&values.playerClass){option=new Option(values.playerClass,values.playerClass);classField.add(option);}classField.value=values.playerClass;}};[name,server,playerClass,spec].forEach(field=>field?.addEventListener("input",sync));sync();
 }
 
 if(pinFromUrl){
@@ -10824,7 +10823,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 </script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260805-1700"></script>
-<script src="raid-signup-mirror.js?v=20260831-1125"></script>
+<script src="raid-signup-mirror.js?v=20260831-1908"></script>
 <script src="../pin-visibility.js"></script>
 <script src="p0-selection-fix.js?v=20260818-1415"></script>
 <script src="player-gear-popup.js?v=20260830-1750"></script>
