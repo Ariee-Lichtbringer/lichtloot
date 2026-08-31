@@ -9946,8 +9946,8 @@ async function submitMobileLootLogin(event){
   }
 }
 
-const NACHTLOOT_NEWS_VERSION="2026-08-31-gear-planner-compact";
-const NACHTLOOT_NEWS_ENTRIES=[
+const LICHTLOOT_NEWS_VERSION="2026-08-31-gear-planner-all-guilds";
+const LICHTLOOT_NEWS_ENTRIES=[
   {
     date:"2026-08-31",
     title:"Ausrüstungsplaner mit Blizzard Armory",
@@ -9968,58 +9968,58 @@ const NACHTLOOT_NEWS_ENTRIES=[
   }
 ];
 
-function nachtlootNewsStorageKey(){
-  return "lichtloot:nachtloot:news:lastSeen";
+function lichtlootNewsStorageKey(){
+  return `lichtloot:news:${CURRENT_GUILD_SLUG}:lastSeen`;
 }
 
-function closeNachtlootNews(){
-  const backdrop=document.getElementById("nachtlootNewsBackdrop");
+function closeLichtlootNews(){
+  const backdrop=document.getElementById("lichtlootNewsBackdrop");
   if(backdrop) backdrop.classList.add("hidden");
-  try{ localStorage.setItem(nachtlootNewsStorageKey(),NACHTLOOT_NEWS_VERSION); }catch(error){}
+  try{ localStorage.setItem(lichtlootNewsStorageKey(),LICHTLOOT_NEWS_VERSION); }catch(error){}
 }
 
-function openNachtlootNews(){
-  const backdrop=document.getElementById("nachtlootNewsBackdrop");
+function openLichtlootNews(){
+  const backdrop=document.getElementById("lichtlootNewsBackdrop");
   if(!backdrop) return;
   backdrop.classList.remove("hidden");
   backdrop.querySelector(".nachtloot-news-close")?.focus();
 }
 
-function openNachtlootNewsFeature(){
+function openLichtlootNewsFeature(){
   if(!window.dashboardNextRaid){
     alert("Der nächste Raid wird noch geladen. Bitte gleich erneut versuchen.");
     return;
   }
   try{ sessionStorage.setItem("lichtloot:openGearPlanner","1"); }catch(error){}
-  closeNachtlootNews();
+  closeLichtlootNews();
   openNextRaidLoot();
 }
 
-function installNachtlootNews(){
-  if(CURRENT_GUILD_SLUG!=="nachtloot" || document.getElementById("nachtlootNewsBackdrop")) return;
-  const entries=NACHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature>${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
+function installLichtlootNews(){
+  if(document.getElementById("lichtlootNewsBackdrop")) return;
+  const entries=LICHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature>${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
   const backdrop=document.createElement("div");
-  backdrop.id="nachtlootNewsBackdrop";
+  backdrop.id="lichtlootNewsBackdrop";
   backdrop.className="nachtloot-news-backdrop hidden";
   backdrop.setAttribute("role","presentation");
-  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="nachtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">NachtLoot · Update</div><h2 id="nachtlootNewsTitle">Neu bei den Nachtwächtern</h2></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
+  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="lichtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">LichtLoot · Update</div><h2 id="lichtlootNewsTitle">Neu in LichtLoot</h2></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
   document.body.appendChild(backdrop);
-  backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeNachtlootNews);
-  backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeNachtlootNews);
-  backdrop.querySelectorAll("[data-news-feature]").forEach(link=>link.addEventListener("click",openNachtlootNewsFeature));
-  document.addEventListener("keydown",event=>{if(event.key==="Escape" && !backdrop.classList.contains("hidden")) closeNachtlootNews();});
+  backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeLichtlootNews);
+  backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeLichtlootNews);
+  backdrop.querySelectorAll("[data-news-feature]").forEach(link=>link.addEventListener("click",openLichtlootNewsFeature));
+  document.addEventListener("keydown",event=>{if(event.key==="Escape" && !backdrop.classList.contains("hidden")) closeLichtlootNews();});
   const actions=document.querySelector(".start-header-actions");
   if(actions){
     const button=document.createElement("button");
     button.type="button";
     button.className="nachtloot-news-button";
     button.textContent="✦ Neuigkeiten";
-    button.addEventListener("click",openNachtlootNews);
+    button.addEventListener("click",openLichtlootNews);
     actions.prepend(button);
   }
   let lastSeen="";
-  try{ lastSeen=localStorage.getItem(nachtlootNewsStorageKey())||""; }catch(error){}
-  if(lastSeen!==NACHTLOOT_NEWS_VERSION) window.setTimeout(openNachtlootNews,350);
+  try{ lastSeen=localStorage.getItem(lichtlootNewsStorageKey())||""; }catch(error){}
+  if(lastSeen!==LICHTLOOT_NEWS_VERSION) window.setTimeout(openLichtlootNews,350);
 }
 
 document.addEventListener("DOMContentLoaded",async ()=>{
@@ -10031,7 +10031,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   applyGuildBrand();
   applyStartPageLayout();
   await showRaidMemberNoticeIfNeeded();
-  installNachtlootNews();
+  installLichtlootNews();
   placeSidebarDrawers();
   refreshRaidCreateAccess();
   initMeinLichtLootAutoLogin();
