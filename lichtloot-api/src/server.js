@@ -25409,7 +25409,7 @@ async function getRandomPublishedPrios(params = {}) {
     [raid.id]
   );
   const normalized = normalizeRandomRaidRow(raid);
-  return { success: true, ...normalized, open: raid.status !== "geöffnet", prios: result.rows.map((row,index)=>({
+  return { success: true, ...normalized, open: raid.status === "geöffnet", prios: result.rows.map((row,index)=>({
     id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
     P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench)
   })) };
