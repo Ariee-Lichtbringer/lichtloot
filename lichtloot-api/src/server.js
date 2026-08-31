@@ -4576,6 +4576,13 @@ const wowheadClassicItemSearchCache=new Map();
 const classicWowheadSlotIds={Kopf:"1",Hals:"2",Schultern:"3",Hemd:"4",Brust:"5",Taille:"6",Beine:"7","Füße":"8",Handgelenke:"9","Hände":"10","Ring 1":"11","Ring 2":"11","Schmuck 1":"12","Schmuck 2":"12",Rücken:"16",Waffenhand:"13:17:21",Schildhand:"14:22:23",Distanz:"15:25:26:28",Wappenrock:"19"};
 const classicWowheadClassIds={warrior:1,paladin:2,hunter:3,rogue:4,priest:5,shaman:7,mage:8,warlock:9,druid:11};
 const classicWowheadQualityNames={0:"poor",1:"common",2:"uncommon",3:"rare",4:"epic",5:"legendary"};
+const wowheadClassicItemTooltipCache=new Map();
+function wowheadTooltipText(html){return String(html||"").replace(/<!--[^]*?-->/g,"").replace(/<br\s*\/?\s*>/gi,"\n").replace(/<\/?(?:table|tr)\b[^>]*>/gi,"\n").replace(/<\/t[dh]>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&").replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&lt;/gi,"<").replace(/&gt;/gi,">").split(/\n+/).map(line=>clean(line)).filter(Boolean).join("\n");}
+async function getWowheadClassicItemTooltip(itemId){
+  const id=Number(itemId||0);if(!id)throw new Error("Ungültige Item-ID.");const cached=wowheadClassicItemTooltipCache.get(id);if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const response=await fetch(`https://nether.wowhead.com/classic/de/tooltip/item/${id}`,{headers:{accept:"application/json", "accept-language":"de-DE,de;q=0.9", "user-agent":"LichtLoot/1.0 Itemplaner"},signal:AbortSignal.timeout(10000)});if(!response.ok)throw new Error(`Wowhead-Tooltip antwortet mit HTTP ${response.status}.`);
+  const payload=await response.json(),tooltipText=wowheadTooltipText(payload?.tooltip),value={success:true,item:{itemId:id,name:clean(payload?.name||`Item ${id}`),icon:clean(payload?.icon)||"inv_misc_questionmark",quality:classicWowheadQualityNames[Number(payload?.quality)]||"common",tooltipText,stats:tooltipText.split("\n").filter(Boolean),detailsComplete:true,wowhead:`https://www.wowhead.com/classic/de/item=${id}`}};wowheadClassicItemTooltipCache.set(id,{value,expiresAt:Date.now()+24*60*60*1000});return value;
+}
 function wowheadClassicItemSource(row){
   const names=(row?.sourcemore||[]).map(source=>clean(source?.n)).filter(Boolean);
   if(names.length)return names.slice(0,2).join(" · ");
@@ -4583,6 +4590,7 @@ function wowheadClassicItemSource(row){
   return (row?.source||[]).map(value=>sourceNames[Number(value)]).filter(Boolean).join(" · ")||"WoW Classic";
 }
 async function searchWowheadClassicItems(params={}){
+  if(Number(params.itemId||0))return getWowheadClassicItemTooltip(params.itemId);
   const term=clean(params.q||params.query||params.search).slice(0,80),slot=clean(params.slot),slotIds=classicWowheadSlotIds[slot],classKey=armoryClassKey(params.className||params.class),classId=classicWowheadClassIds[classKey]||0;
   if(slotIds){
     const key=`slot:${slotIds}:class:${classId||"all"}`,cached=wowheadClassicItemSearchCache.get(key);if(cached&&cached.expiresAt>Date.now())return cached.value;
@@ -4598,7 +4606,7 @@ async function searchWowheadClassicItems(params={}){
     const items=rows.filter(row=>!Number(row?.seasonId||0)).map(row=>{const itemId=Number(row?.id||0),details=metadata[String(itemId)]||{},equip=details?.jsonequip||{},icon=clean(details?.icon),stats=[];
       if(row?.armor)stats.push(`${row.armor} Rüstung`);
       [["str","Stärke"],["agi","Beweglichkeit"],["sta","Ausdauer"],["int","Intelligenz"],["spi","Willenskraft"]].forEach(([key,label])=>{if(equip[key])stats.push(`+${equip[key]} ${label}`);});
-      return{itemId,name:clean(row?.name||details?.name_dede||`Item ${itemId}`),icon:icon||"inv_misc_questionmark",quality:classicWowheadQualityNames[Number(row?.quality)]||"common",type:wowheadClassicItemSource(row),slot,slotType:slot,itemLevel:Number(row?.level||0)||"",requiredLevel:Number(row?.reqlevel||0)||"",stats,tooltipText:stats.join(" | "),source:"Wowhead Classic",wowhead:`https://www.wowhead.com/classic/de/item=${itemId}`};
+      return{itemId,name:clean(row?.name||details?.name_dede||`Item ${itemId}`),icon:icon||"inv_misc_questionmark",quality:classicWowheadQualityNames[Number(row?.quality)]||"common",type:wowheadClassicItemSource(row),slot,slotType:slot,itemLevel:Number(row?.level||0)||"",requiredLevel:Number(row?.reqlevel||0)||"",stats,tooltipText:stats.join(" | "),needsTooltip:true,source:"Wowhead Classic",wowhead:`https://www.wowhead.com/classic/de/item=${itemId}`};
     }).filter(item=>item.itemId&&item.name);
     const value={success:true,items,total:items.length,slot};wowheadClassicItemSearchCache.set(key,{value,expiresAt:Date.now()+24*60*60*1000});return value;
   }
