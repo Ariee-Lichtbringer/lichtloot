@@ -2,7 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import nodemailer from "nodemailer";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
@@ -13,6 +13,7 @@ const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const lichtstatsApiToken = process.env.LICHTSTATS_API_TOKEN || "";
+const analyticsHashSecret = process.env.ANALYTICS_HASH_SECRET || masterCode;
 const p0PlusTransferExportChannelId = "1529393614247952434";
 const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
@@ -136,6 +137,63 @@ app.use("/api/apps-script", (req, res, next) => {
   next();
 });
 
+const trackedPagePaths = new Set([
+  "/", "/index.html", "/start.html", "/gilde.html", "/gilde-anmelden.html", "/gilde-einrichten.html",
+  "/gildenleitung.html", "/raid-analyse.html", "/raidaufstellung.html", "/raidlead-panel.html",
+  "/raidregeln.html", "/spieler-anleitung.html", "/web-auswertung.html", "/sicherung", "/sicherung.html",
+  "/andere-raids.html", "/datenschutz.html", "/impressum.html", "/notfall", "/notfall/",
+  "/notfall/index.html", "/notfall/meister.html", "/loot/aq20-loot.html", "/loot/aq40-loot.html",
+  "/loot/bwl-loot.html", "/loot/mc-loot.html", "/loot/naxx-loot.html", "/loot/ony-loot.html",
+  "/loot/zg-loot.html", "/loot/gildenleitung.html"
+]);
+
+function analyticsClientAddress(req) {
+  const forwarded = clean(req.headers["x-forwarded-for"]).split(",")[0].trim();
+  return forwarded || clean(req.socket?.remoteAddress) || "unknown";
+}
+
+function analyticsVisitorHash(req, day) {
+  const userAgent = clean(req.headers["user-agent"]).slice(0, 500);
+  return createHmac("sha256", analyticsHashSecret)
+    .update(`${day}|${analyticsClientAddress(req)}|${userAgent}`)
+    .digest("hex");
+}
+
+function shouldTrackPageRequest(req) {
+  if (req.method !== "GET" || !trackedPagePaths.has(req.path)) return false;
+  const userAgent = clean(req.headers["user-agent"]);
+  if (!userAgent || /bot|crawler|spider|slurp|preview|monitor|uptime|headless|lighthouse/i.test(userAgent)) return false;
+  return true;
+}
+
+async function recordPageRequest(req) {
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
+  const guildSlug = clean(req.query.guild || req.query.guildSlug || defaultGuildSlug).toLowerCase().slice(0, 100) || defaultGuildSlug;
+  const pagePath = req.path.slice(0, 200);
+  const visitorHash = analyticsVisitorHash(req, day);
+  await query(
+    `insert into page_analytics_daily (day, guild_slug, page_path, visitor_hash, view_count, first_seen_at, last_seen_at)
+     values ($1::date, $2, $3, $4, 1, now(), now())
+     on conflict (day, guild_slug, page_path, visitor_hash) do update
+       set view_count = page_analytics_daily.view_count + 1,
+           last_seen_at = now()`,
+    [day, guildSlug, pagePath, visitorHash]
+  );
+}
+
+app.use((req, res, next) => {
+  if (!shouldTrackPageRequest(req)) {
+    next();
+    return;
+  }
+  res.once("finish", () => {
+    if (res.statusCode >= 200 && res.statusCode < 400) {
+      void recordPageRequest(req).catch(error => console.warn("Seitenaufruf konnte nicht gezählt werden:", error.message || error));
+    }
+  });
+  next();
+});
+
 app.use("/downloads", express.static("public/downloads"));
 app.use(express.static("public", {
   setHeaders(res, filePath) {
@@ -146,6 +204,10 @@ app.use(express.static("public", {
     }
   }
 }));
+
+await ensurePageAnalyticsSchema().catch(error => {
+  console.warn("Seitenaufruf-Statistik konnte nicht vorbereitet werden:", error.message || error);
+});
 
 await ensureGuildApplicationSchema().catch(error => {
   console.warn("Gilden-Anfragen-Schema konnte nicht vorbereitet werden:", error.message || error);
@@ -2953,6 +3015,78 @@ function requireMasterOrQueueToken(params = {}) {
   const error = new Error("Nicht erlaubt.");
   error.statusCode = 403;
   throw error;
+}
+
+async function ensurePageAnalyticsSchema() {
+  await query(
+    `create table if not exists page_analytics_daily (
+       day date not null,
+       guild_slug text not null,
+       page_path text not null,
+       visitor_hash text not null,
+       view_count integer not null default 1,
+       first_seen_at timestamptz not null default now(),
+       last_seen_at timestamptz not null default now(),
+       primary key (day, guild_slug, page_path, visitor_hash)
+     )`
+  );
+  await query(`create index if not exists idx_page_analytics_daily_guild_day on page_analytics_daily(guild_slug, day desc)`);
+  await query(`delete from page_analytics_daily where day < timezone('Europe/Berlin', now())::date - 90`);
+}
+
+async function getTrafficStats({ guild, params }) {
+  requireMasterCodeForGuild(guild, params.masterCode, "guildGetTrafficStats", params);
+  const allGuilds = clean(params.masterCode) === clean(masterCode);
+  const values = allGuilds ? [] : [clean(guild.slug).toLowerCase()];
+  const guildFilter = allGuilds ? "true" : "guild_slug = $1";
+  const totals = await query(
+    `select
+       coalesce(sum(view_count) filter (where day = local_today), 0)::int as today_views,
+       count(distinct visitor_hash) filter (where day = local_today)::int as today_visitors,
+       coalesce(sum(view_count) filter (where day >= local_today - 6), 0)::int as week_views,
+       count(distinct (day::text || ':' || visitor_hash)) filter (where day >= local_today - 6)::int as week_visitor_days,
+       coalesce(sum(view_count) filter (where day >= local_today - 29), 0)::int as month_views,
+       count(distinct (day::text || ':' || visitor_hash)) filter (where day >= local_today - 29)::int as month_visitor_days
+     from page_analytics_daily
+     cross join (select timezone('Europe/Berlin', now())::date as local_today) clock
+     where ${guildFilter}`,
+    values
+  );
+  const daily = await query(
+    `with clock as (
+       select timezone('Europe/Berlin', now())::date as local_today
+     ), days as (
+       select generate_series(local_today - 29, local_today, interval '1 day')::date as day from clock
+     ), traffic as (
+       select day, sum(view_count)::int as views, count(distinct visitor_hash)::int as visitors
+       from page_analytics_daily
+       where ${guildFilter} and day >= (select local_today - 29 from clock)
+       group by day
+     )
+     select to_char(days.day, 'YYYY-MM-DD') as day,
+            coalesce(traffic.views, 0)::int as views,
+            coalesce(traffic.visitors, 0)::int as visitors
+     from days left join traffic using (day)
+     order by days.day`,
+    values
+  );
+  const pages = await query(
+    `select page_path as path, sum(view_count)::int as views
+     from page_analytics_daily
+     where ${guildFilter} and day >= timezone('Europe/Berlin', now())::date - 29
+     group by page_path
+     order by views desc, page_path
+     limit 10`,
+    values
+  );
+  return {
+    success: true,
+    scope: allGuilds ? "all" : "guild",
+    retentionDays: 90,
+    totals: totals.rows[0] || {},
+    daily: daily.rows,
+    pages: pages.rows
+  };
 }
 
 async function ensureP0OnlySchema() {
@@ -29170,6 +29304,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetIssueReports") {
       const reports = await getIssueReports({ guildId: guild.id, query: req.query });
       return res.json({ ...reports, guild: guild.slug });
+    }
+
+    if (action === "guildGetTrafficStats") {
+      const stats = await getTrafficStats({ guild, params: req.query });
+      return res.json({ ...stats, guild: guild.slug });
     }
 
     if (action === "guildGetSystemErrors") {
