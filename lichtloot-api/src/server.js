@@ -25378,11 +25378,23 @@ async function saveRandomPrio({ guildId, params, raidlead = false }) {
     if (!raidlead && existingCharacter.rows[0]?.participant_hash && existingCharacter.rows[0].participant_hash !== participantHash) {
       const error = new Error("Dieser Charakter wurde für diesen Random-Raid bereits von einem anderen Browser eingetragen."); error.statusCode = 409; throw error;
     }
-    const characterResult = await client.query(
-      `insert into random_characters (id,raid_id,name,server,class_name,spec_name,participant_hash) values ($1,$2,$3,$4,$5,$6,$7)
-       on conflict (raid_id,name,server) do update set class_name=excluded.class_name,spec_name=excluded.spec_name,participant_hash=case when random_characters.participant_hash='' then excluded.participant_hash else random_characters.participant_hash end,updated_at=now() returning *`,
-      [randomUUID(), raid.id, player, server, clean(params.className || sourceCharacter?.class_name), clean(params.specName || params.spec), raidlead ? "" : participantHash]
-    );
+    let characterResult;
+    const ownedCharacter = !raidlead && participantHash
+      ? await client.query(`select * from random_characters where raid_id=$1 and participant_hash=$2 order by updated_at desc limit 1`, [raid.id, participantHash])
+      : { rows: [] };
+    if (ownedCharacter.rows[0]) {
+      await client.query(`delete from random_characters where raid_id=$1 and participant_hash=$2 and id<>$3`, [raid.id, participantHash, ownedCharacter.rows[0].id]);
+      characterResult = await client.query(
+        `update random_characters set name=$2,server=$3,class_name=$4,spec_name=$5,updated_at=now() where id=$1 returning *`,
+        [ownedCharacter.rows[0].id, player, server, clean(params.className), clean(params.specName || params.spec)]
+      );
+    } else {
+      characterResult = await client.query(
+        `insert into random_characters (id,raid_id,name,server,class_name,spec_name,participant_hash) values ($1,$2,$3,$4,$5,$6,$7)
+         on conflict (raid_id,name,server) do update set class_name=excluded.class_name,spec_name=excluded.spec_name,participant_hash=case when random_characters.participant_hash='' then excluded.participant_hash else random_characters.participant_hash end,updated_at=now() returning *`,
+        [randomUUID(), raid.id, player, server, clean(params.className || sourceCharacter?.class_name), clean(params.specName || params.spec), raidlead ? "" : participantHash]
+      );
+    }
     const character = characterResult.rows[0];
     const p0Plus = ["ja","true","1"].includes(clean(params.p0Plus).toLowerCase());
     await client.query(
@@ -25404,14 +25416,16 @@ async function saveRandomPrio({ guildId, params, raidlead = false }) {
 async function getRandomPublishedPrios(params = {}) {
   const raid = await findRandomRaid(params, clean(params.leadPin) ? "lead" : "prio");
   if (!raid) return { success: false, error: "Random-Raid nicht gefunden." };
+  const participantToken=clean(params.randomParticipantToken || params.participantToken);
+  const participantHash=participantToken ? createHmac("sha256",analyticsHashSecret).update(`random-participant|${participantToken}`).digest("hex") : "";
   const result = await randomQuery(
-    `select p.*,c.name as player,c.server,c.class_name from random_prios p join random_characters c on c.id=p.character_id where p.raid_id=$1 order by lower(c.name)`,
+    `select p.*,c.name as player,c.server,c.class_name,c.spec_name,c.participant_hash from random_prios p join random_characters c on c.id=p.character_id where p.raid_id=$1 order by lower(c.name)`,
     [raid.id]
   );
   const normalized = normalizeRandomRaidRow(raid);
   return { success: true, ...normalized, open: raid.status === "geöffnet", prios: result.rows.map((row,index)=>({
     id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
-    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench)
+    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench),specName:row.spec_name||"",ownedByBrowser:Boolean(participantHash&&row.participant_hash===participantHash)
   })) };
 }
 
@@ -25427,7 +25441,8 @@ async function deleteRandomPrio(guildId, params = {}) {
     const owned=await randomQuery(`select 1 from random_characters where raid_id=$1 and lower(name)=lower($2) and lower(server)=lower($3) and participant_hash=$4`,[raid.id,player,clean(params.server),hash]);
     if (!owned.rows[0]) { const error=new Error("Dieser Random-Raid-Charakter gehört zu einem anderen Browserprofil.");error.statusCode=403;throw error; }
   }
-  const result = await randomQuery(`delete from random_characters where raid_id=$1 and lower(name)=lower($2) returning id`, [raid.id, player]);
+  const server=clean(params.server);
+  const result = await randomQuery(`delete from random_characters where raid_id=$1 and lower(name)=lower($2) and ($3='' or lower(server)=lower($3)) returning id`, [raid.id, player, server]);
   return { success:true, deleted:result.rowCount, randomRaid:true };
 }
 
