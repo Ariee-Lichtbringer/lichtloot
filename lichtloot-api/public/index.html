@@ -5221,6 +5221,7 @@ document.addEventListener('DOMContentLoaded',async function(){
   }
   const openMode=new URLSearchParams(window.location.search).get('open');
   if(openMode === 'createLogin' && typeof showCreateLogin === 'function') showCreateLogin();
+  if(openMode === 'randomCreate') openRandomRaidModal('create');
   document.addEventListener('click',event=>{
     if(!event.target.closest('.dashboard-guild-picker')) closeDashboardGuildMenu();
   });
