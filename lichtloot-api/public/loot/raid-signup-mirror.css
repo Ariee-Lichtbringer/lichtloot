@@ -97,3 +97,14 @@ body:not(.raid-signup-only-page) .header-actions .btn{min-width:170px!important;
   body:not(.raid-signup-only-page) .raid-signup-page-grid label:first-child{grid-column:1/-1!important}
   body:not(.raid-signup-only-page) .raid-signup-page-grid>button{grid-column:1/-1!important}
 }
+
+/* Wowhead-artige Paperdoll: Ausrüstung links/rechts, Charakter fest in der Mitte. */
+.gear-planner-card{width:min(1480px,calc(100vw - 36px))!important}
+.gear-planner-paperdoll>.gear-planner-doll{
+  grid-column:auto!important;
+  grid-row:auto!important;
+  align-self:stretch;
+}
+@media(max-width:900px){
+  .gear-planner-paperdoll>.gear-planner-doll{grid-row:1!important}
+}
