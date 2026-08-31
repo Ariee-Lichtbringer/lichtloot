@@ -179,27 +179,23 @@ function renderResultLinks(result){
     <button type="button" id="refreshReadiness">Bereitschaft erneut prüfen</button>
   `;
   document.getElementById("refreshReadiness")?.addEventListener("click", loadSetup);
-  if(!ready)setTimeout(()=>loadDiscordChannelSetup(slug,guildPin),0);
+  if(!ready)setTimeout(()=>loadDiscordChannelSetup(slug),0);
 }
-async function loadDiscordChannelSetup(slug,masterCode){
+async function loadDiscordChannelSetup(slug){
   const box=document.getElementById("discordChannelSetup");
-  if(!box||!slug||!masterCode)return;
+  if(!box||!slug||!token)return;
   try{
-    const [channelResponse,guildResponse]=await Promise.all([
-      fetch(API_URL+"?"+new URLSearchParams({action:"guildGetDiscordBotChannels",guild:slug,masterCode,t:Date.now()}),{cache:"no-store"}),
-      fetch(API_URL+"?action=listGuilds&t="+Date.now(),{cache:"no-store"})
-    ]);
-    const channelResult=await channelResponse.json(),guildResult=await guildResponse.json();
+    const channelResponse=await fetch(API_URL+"?"+new URLSearchParams({action:"getGuildSetupChannels",token,t:Date.now()}),{cache:"no-store"});
+    const channelResult=await channelResponse.json();
     if(!channelResult.success)throw new Error(channelResult.error||"Bot-Channels sind noch nicht verfügbar.");
     const channels=Array.isArray(channelResult.channels)?channelResult.channels:[];
-    const guild=(guildResult.guilds||[]).find(entry=>String(entry.slug||"").toLowerCase()===slug.toLowerCase())||{};
-    const layout=guild.layout&&typeof guild.layout==="object"?guild.layout:{};
-    if(!channels.length){box.innerHTML='<strong>Discord-Channels</strong><span>Die Bots haben noch keine beschreibbaren Channels synchronisiert. Prüfe die Bot-Rechte und versuche es anschließend erneut.</span><button type="button" data-reload>Channels erneut laden</button>';box.querySelector("[data-reload]").onclick=()=>loadDiscordChannelSetup(slug,masterCode);return;}
+    const layout=channelResult.layout&&typeof channelResult.layout==="object"?channelResult.layout:{};
+    if(!channels.length){box.innerHTML='<strong>Discord-Channels</strong><span>Die Bots haben noch keine beschreibbaren Channels synchronisiert. Prüfe die Bot-Rechte und versuche es anschließend erneut.</span><button type="button" data-reload>Channels erneut laden</button>';box.querySelector("[data-reload]").onclick=()=>loadDiscordChannelSetup(slug);return;}
     const options=selected=>'<option value="">Bitte auswählen …</option>'+channels.map(channel=>{const id=String(channel.channelId||channel.id||""),name=String(channel.channelName||channel.name||id),category=String(channel.categoryName||"");return `<option value="${safeHtml(id)}" ${id===String(selected||"")?"selected":""}>${safeHtml((category?category+" / ":"")+"#"+name)}</option>`}).join("");
     const fields=[["raidAnnouncementChannelId","Raidanmelder-Channel"],["worldbuffChannelId","Worldbuff-Channel"],["hordenbuffChannelId","Hordenbuff-Channel"],["worldbuffBackupChannelId","Worldbuff-Backup"],["p0PlusBackupChannelId","P0+-Backup"],["logSourceChannelId","Warcraft-Logs Quelle"],["logAnalysisChannelId","Loganalyse Ziel"]];
     box.innerHTML=`<strong>Discord-Channels zuordnen</strong><span>Diese Auswahl wird als Standard für die neue Gilde gespeichert.</span><div class="grid">${fields.map(([key,label])=>`<label>${label}<select data-channel-key="${key}">${options(layout[key])}</select></label>`).join("")}</div><button type="button" data-save-channels>Channel-Zuordnung speichern</button><span data-channel-status></span>`;
-    box.querySelector("[data-save-channels]").onclick=async()=>{const button=box.querySelector("[data-save-channels]"),status=box.querySelector("[data-channel-status]");const nextLayout={...layout};box.querySelectorAll("[data-channel-key]").forEach(select=>nextLayout[select.dataset.channelKey]=select.value);if(!nextLayout.raidAnnouncementChannelId||!nextLayout.worldbuffChannelId){status.textContent="Bitte mindestens Raidanmelder- und Worldbuff-Channel auswählen.";return;}button.disabled=true;status.textContent="Channel werden gespeichert …";try{const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateGuildConfig",guild:slug,masterCode,guildName:guild.name||"",server:guild.server||"",logoUrl:guild.logoUrl||"",backgroundUrl:guild.backgroundUrl||"",primaryColor:guild.primaryColor||"#facc15",accentColor:guild.accentColor||"#1d4ed8",discordGuildId:guild.discordGuildId||"",layout:nextLayout})});const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||"Channel konnten nicht gespeichert werden.");status.textContent="Channel gespeichert. Bereitschaft wird geprüft …";await loadSetup();}catch(error){button.disabled=false;status.textContent=error.message||"Channel konnten nicht gespeichert werden.";}};
-  }catch(error){box.innerHTML=`<strong>Discord-Channels</strong><span>${safeHtml(error.message||"Channel konnten noch nicht geladen werden.")}</span><button type="button" data-reload>Erneut versuchen</button>`;box.querySelector("[data-reload]").onclick=()=>loadDiscordChannelSetup(slug,masterCode);}
+    box.querySelector("[data-save-channels]").onclick=async()=>{const button=box.querySelector("[data-save-channels]"),status=box.querySelector("[data-channel-status]"),selected={};box.querySelectorAll("[data-channel-key]").forEach(select=>selected[select.dataset.channelKey]=select.value);if(!selected.raidAnnouncementChannelId||!selected.worldbuffChannelId){status.textContent="Bitte mindestens Raidanmelder- und Worldbuff-Channel auswählen.";return;}button.disabled=true;status.textContent="Channel werden gespeichert …";try{const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"saveGuildSetupChannels",token,channels:selected})});const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||"Channel konnten nicht gespeichert werden.");status.textContent="Channel gespeichert. Bereitschaft wird geprüft …";await loadSetup();}catch(error){button.disabled=false;status.textContent=error.message||"Channel konnten nicht gespeichert werden.";}};
+  }catch(error){box.innerHTML=`<strong>Discord-Channels</strong><span>${safeHtml(error.message||"Channel konnten noch nicht geladen werden.")}</span><button type="button" data-reload>Erneut versuchen</button>`;box.querySelector("[data-reload]").onclick=()=>loadDiscordChannelSetup(slug);}
 }
 function renderReadiness(readiness){
   if(!readiness) return "";
