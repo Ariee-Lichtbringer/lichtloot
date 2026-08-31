@@ -272,6 +272,26 @@ body.random-prio .tooltip-p0{
   display:none!important;
 }
 
+body.random-prio{
+  background:linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.93)),url('../images/guildloot-index-background-v2.png') center top/cover fixed!important;
+}
+body.random-prio>.overlay{padding-left:22px!important}
+body.random-prio .loot-side-shell,
+body.random-prio .header-actions,
+body.random-prio #selectedCharacterPoReleases,
+body.random-prio .loot-attendance-title,
+body.random-prio .loot-attendance-list,
+body.random-prio .plundermeister-login-btn{display:none!important}
+body.random-prio .player-card-layout{display:none!important}
+.random-character-profile{display:none}
+body.random-prio .random-character-profile{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px;border:1px solid rgba(250,204,21,.32);border-radius:14px;background:rgba(2,6,23,.62)}
+.random-character-profile h2{grid-column:1/-1;margin:0;color:#facc15;font-size:18px}.random-character-profile label{margin:0}.random-character-profile input{margin-top:6px}
+@media(max-width:720px){body.random-prio .random-character-profile{grid-template-columns:1fr}}
+.random-prio-home{display:none}
+body.random-prio .random-prio-home{width:min(1600px,100%);margin:0 auto 18px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.random-prio-home img{width:min(230px,48vw);max-height:92px;object-fit:contain}
+.random-prio-home a{padding:11px 15px;border:1px solid rgba(250,204,21,.45);border-radius:12px;background:rgba(2,6,23,.78);color:#fff;text-decoration:none;font-weight:900}
+
 .raid-create-box{
   position:fixed;
   top:132px;
@@ -3732,6 +3752,8 @@ function buildSavePrioUrl(savePin, oldPin){
     "&player="+encodeURIComponent(player)+
     "&server="+encodeURIComponent(server)+
     "&className="+encodeURIComponent(playerClass)+
+    "&specName="+encodeURIComponent(document.getElementById("randomCharacterSpec")?.value || "")+
+    "&randomParticipantToken="+encodeURIComponent(typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : "")+
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
@@ -3828,10 +3850,12 @@ async function savePrio(){
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await Promise.race([
-      ensurePlayerPinForSave(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
-    ]);
+    const pinInfo = new URLSearchParams(window.location.search).get("random") === "1"
+      ? {success:true,pin:getRandomParticipantToken(),generated:false}
+      : await Promise.race([
+        ensurePlayerPinForSave(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
+      ]);
     if(!pinInfo.success){
       throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
@@ -4308,8 +4332,24 @@ const isRandomPrioLink=params.get("random")==="1";
 
 if(isRandomPrioLink){
   document.body.classList.add("random-prio");
+  document.title=document.title.replace(/Lichtloot|LichtLoot/g,"GuildLoot Random Raid");
+  const overlay=document.querySelector("body > .overlay");
+  if(overlay){const home=document.createElement("div");home.className="random-prio-home";home.innerHTML='<img src="../images/guildloot-logo-concept.png" alt="GuildLoot"><a href="../index.html">GuildLoot-Startseite</a>';overlay.prepend(home);}
+  const playerCard=document.getElementById("playerCard");
+  if(playerCard){playerCard.insertAdjacentHTML("afterbegin",'<div class="random-character-profile"><h2>Dein Random-Raid-Charakter</h2><label>Charaktername<input id="randomCharacterName" autocomplete="off" placeholder="Charaktername"></label><label>Server<input id="randomCharacterServer" autocomplete="off" placeholder="Server"></label><label>Skillung<input id="randomCharacterSpec" autocomplete="off" placeholder="z. B. Tank, Heiler, Feuer"></label></div>');initializeRandomCharacterProfile();}
   const randomLeadInput=document.getElementById("raidleadPin");
   if(randomLeadInput) randomLeadInput.placeholder="Random Raidlead PIN";
+}
+
+function randomCookieValue(name){const prefix=name+"=";return document.cookie.split(";").map(value=>value.trim()).find(value=>value.startsWith(prefix))?.slice(prefix.length)||"";}
+function getRandomParticipantToken(){let token=decodeURIComponent(randomCookieValue("guildloot_random_token")||"");if(!token){const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);token=Array.from(bytes,value=>value.toString(16).padStart(2,"0")).join("");document.cookie="guildloot_random_token="+encodeURIComponent(token)+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";}return token;}
+function initializeRandomCharacterProfile(){
+  getRandomParticipantToken();
+  let profile={};try{profile=JSON.parse(decodeURIComponent(randomCookieValue("guildloot_random_profile")||"%7B%7D"));}catch(error){}
+  const name=document.getElementById("randomCharacterName"),server=document.getElementById("randomCharacterServer"),spec=document.getElementById("randomCharacterSpec");
+  if(name)name.value=profile.name||"";if(server)server.value=profile.server||"";if(spec)spec.value=profile.spec||"";
+  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField){let option=Array.from(serverField.options).find(entry=>entry.value===values.server);if(!option&&values.server){option=new Option(values.server,values.server);serverField.add(option);}serverField.value=values.server;}document.getElementById("playerClass").value=values.spec;};
+  const originalSync=sync;const syncWithSpec=()=>{originalSync();const classField=document.getElementById("playerClass"),value=spec?.value.trim()||"";if(classField){let option=Array.from(classField.options).find(entry=>entry.value===value);if(!option&&value){option=new Option(value,value);classField.add(option);}classField.value=value;}};[name,server,spec].forEach(field=>field?.addEventListener("input",syncWithSpec));syncWithSpec();
 }
 
 if(pinFromUrl){
@@ -7539,6 +7579,7 @@ async function deleteOwnPrio(payload){
   const baseParams=
     '&guild='+encodeURIComponent(typeof currentGuildSlug === "function" ? currentGuildSlug() : "lichtloot")+
     (new URLSearchParams(window.location.search).get("random") === "1" ? '&random=1' : '')+
+    '&randomParticipantToken='+encodeURIComponent(typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : "")+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
