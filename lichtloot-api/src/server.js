@@ -7364,6 +7364,49 @@ async function queueRaidMissingPrioReminder({ guildId, query: params }) {
   return { ...queued, queued: true, missingCharacters };
 }
 
+async function enqueueRaidMissingPrioReminderRefresh(guildId, raid, characterName) {
+  const raidId = raidPublicId(raid);
+  const previous = await query(
+    `select payload
+     from bot_update_queue
+     where guild_id = $1
+       and type = 'raid_missing_prio_reminder'
+       and payload->>'raidId' = $2
+       and coalesce(payload->>'messageId', '') <> ''
+     order by created_at desc
+     limit 1`,
+    [guildId, raidId]
+  );
+  const payload = previous.rows[0]?.payload;
+  if (!payload) return { success: true, skipped: true, reason: "missing_prio_reminder_not_posted" };
+
+  const trackedCharacters = Array.from(new Map(
+    [...(payload.trackedCharacters || payload.missingCharacters || [])]
+      .map(clean)
+      .filter(Boolean)
+      .map(name => [name.toLocaleLowerCase('de-DE'), name])
+  ).values());
+  const completedCharacters = Array.from(new Map(
+    [...(payload.completedCharacters || []), characterName]
+      .map(clean)
+      .filter(name => trackedCharacters.some(tracked => tracked.toLocaleLowerCase('de-DE') === name.toLocaleLowerCase('de-DE')))
+      .map(name => [name.toLocaleLowerCase('de-DE'), name])
+  ).values());
+  if (!completedCharacters.length) {
+    return { success: true, skipped: true, reason: "saved_character_not_in_reminder" };
+  }
+  return enqueueBotUpdate({
+    guildId,
+    type: 'raid_missing_prio_reminder',
+    payload: {
+      ...payload,
+      source: 'prio_saved_refresh',
+      trackedCharacters,
+      completedCharacters
+    }
+  });
+}
+
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued(guildId);
@@ -11756,11 +11799,17 @@ async function resolveBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const rowNumber = clean(params.rowNumber);
   if (!isUuid(rowNumber)) return { success: true };
+  const messageId = clean(params.messageId);
   await query(
     `update bot_update_queue
-     set status = 'done', resolved_at = now()
+     set status = 'done',
+         resolved_at = now(),
+         payload = case
+           when $3 = '' then payload
+           else payload || jsonb_build_object('messageId', $3::text)
+         end
      where guild_id = $1 and id = $2`,
-    [guildId, rowNumber]
+    [guildId, rowNumber, messageId]
   );
   return { success: true };
 }
@@ -12201,6 +12250,11 @@ async function savePrio({ guildId, query: params }) {
         })
       : [];
     await client.query("commit");
+    const missingPrioReminderRefresh = await enqueueRaidMissingPrioReminderRefresh(
+      guildId,
+      savedRaid,
+      character.name
+    ).catch(error => ({ success: false, error: error.message || String(error) }));
     const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, savedRaid, "lichtloot_prio_saved")
       .catch(error => ({ success: false, error: error.message || String(error) }));
     // Ein Speichern auf der LichtLoot-Seite darf nicht gleichzeitig einen
@@ -12244,7 +12298,8 @@ async function savePrio({ guildId, query: params }) {
       p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
       p0PostRefresh,
       poPostRefresh,
-      raidAnnouncementRefresh
+      raidAnnouncementRefresh,
+      missingPrioReminderRefresh
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
