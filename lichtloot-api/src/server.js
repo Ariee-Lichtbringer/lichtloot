@@ -2024,23 +2024,23 @@ async function approveGuildApplication({ query: params, body = {} }) {
     throw error;
   }
   const application = normalizeGuildApplicationRow(result.rows[0], values);
-  const email = await sendGuildApprovalEmail(application);
-  await query(
-    `update guild_applications
-     set approval_email_sent_at = case when $2 then now() else approval_email_sent_at end,
-         approval_email_error = $3,
-         updated_at = now()
-     where id = $1`,
-    [id, email.sent, email.sent ? "" : clean(email.error)]
-  );
+  // Die Freigabe und der Einrichtungslink dürfen nicht von SMTP abhängen.
+  // Gmail kann bei Netzwerkproblemen lange warten; der Versand läuft deshalb
+  // nach der erfolgreichen Datenbankänderung im Hintergrund weiter.
+  void sendGuildApprovalEmail(application).then(async email => {
+    await query(
+      `update guild_applications
+       set approval_email_sent_at = case when $2 then now() else approval_email_sent_at end,
+           approval_email_error = $3,
+           updated_at = now()
+       where id = $1`,
+      [id, email.sent, email.sent ? "" : clean(email.error)]
+    );
+  }).catch(error => console.warn("Freischalt-E-Mail konnte nicht verarbeitet werden:", error.message || error));
   return {
     success: true,
-    application: {
-      ...application,
-      approvalEmailSentAt: email.sent ? new Date().toISOString() : application.approvalEmailSentAt,
-      approvalEmailError: email.sent ? "" : clean(email.error)
-    },
-    email
+    application,
+    email: { pending: true, sent: false }
   };
 }
 
@@ -2111,6 +2111,9 @@ async function sendGuildApprovalEmail(application) {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       auth: {
         user: gmailUser,
         pass: gmailAppPassword
