@@ -10000,7 +10000,10 @@ function openLichtlootNews(){
 function openLichtlootNewsFeature(action){
   if(action==="random-create"){
     closeLichtlootNews();
-    openRandomRaidModal("create");
+    const target=new URL("index.html",window.location.href);
+    if(CURRENT_GUILD_SLUG) target.searchParams.set("guild",CURRENT_GUILD_SLUG);
+    target.searchParams.set("open","randomCreate");
+    window.location.href=target.href;
     return;
   }
   if(!window.dashboardNextRaid){
