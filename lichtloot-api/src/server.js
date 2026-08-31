@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
 const app = express();
+app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
@@ -18,8 +19,27 @@ const p0PlusTransferExportChannelId = "1529393614247952434";
 const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
+const securityRateLimits = new Map();
 const worldbuffAccessCodeOverrides = new Map();
 const lootMasterAccessCodeOverrides = new Map();
+
+function enforceSecurityRateLimit(req, bucket, maximum, windowMs) {
+  const address = clean(req.ip || req.socket?.remoteAddress || "unknown");
+  const key = `${bucket}:${address}`;
+  const now = Date.now();
+  const current = securityRateLimits.get(key);
+  const entry = !current || current.resetAt <= now ? { count: 0, resetAt: now + windowMs } : current;
+  entry.count += 1;
+  securityRateLimits.set(key, entry);
+  if (entry.count > maximum) {
+    const error = new Error("Zu viele Versuche. Bitte später erneut versuchen.");
+    error.statusCode = 429;
+    throw error;
+  }
+  if (securityRateLimits.size > 5000) {
+    for (const [storedKey, stored] of securityRateLimits) if (stored.resetAt <= now) securityRateLimits.delete(storedKey);
+  }
+}
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -2237,10 +2257,62 @@ async function getGuildSetup({ query: params }) {
     throw error;
   }
   const application = normalizeGuildApplicationRow(result.rows[0], params);
+  if (application.status === "completed") {
+    application.guildPin = "";
+    application.desiredGuildPin = "";
+  }
   const readiness = application.guildSlug
     ? await evaluateGuildReadiness(application.guildSlug)
     : null;
   return { success: true, application, readiness };
+}
+
+async function requireCompletedGuildSetupToken(token) {
+  await ensureGuildApplicationSchema();
+  const result = await query(
+    `select * from guild_applications
+     where setup_token = $1 and status = 'completed'
+       and guild_slug is not null and guild_slug <> ''
+       and (setup_token_expires_at is null or setup_token_expires_at > now())
+     limit 1`,
+    [clean(token)]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Einrichtungslink ist ungültig oder abgelaufen.");
+    error.statusCode = 403;
+    throw error;
+  }
+  return result.rows[0];
+}
+
+async function getGuildSetupChannels({ query: params = {} }) {
+  const application = await requireCompletedGuildSetupToken(params.token);
+  const guild = await requireGuild(resolveGuildSlug(application.guild_slug));
+  await ensureDiscordChannelSchema();
+  const [channelsResult, settingsResult] = await Promise.all([
+    query(`select * from discord_bot_channels where guild_id=$1 and can_send=true order by coalesce(category_name,''),coalesce(position,999999),lower(channel_name)`, [guild.id]),
+    query(`select coalesce(layout_json,'{}'::jsonb) as layout_json from guild_settings where guild_id=$1 limit 1`, [guild.id])
+  ]);
+  return { success:true, guildSlug:guild.slug, channels:channelsResult.rows.map(normalizeDiscordChannelRow), layout:settingsResult.rows[0]?.layout_json||{} };
+}
+
+async function saveGuildSetupChannels({ query: params = {}, body = {} }) {
+  const values={...params,...body};
+  const application=await requireCompletedGuildSetupToken(values.token);
+  const guild=await requireGuild(resolveGuildSlug(application.guild_slug));
+  const allowedKeys=["raidAnnouncementChannelId","worldbuffChannelId","hordenbuffChannelId","worldbuffBackupChannelId","p0PlusBackupChannelId","logSourceChannelId","logAnalysisChannelId"];
+  const incoming=values.channels&&typeof values.channels==="object"&&!Array.isArray(values.channels)?values.channels:{};
+  const channelIds=allowedKeys.map(key=>clean(incoming[key])).filter(Boolean);
+  if(!clean(incoming.raidAnnouncementChannelId)||!clean(incoming.worldbuffChannelId)){const error=new Error("Raidanmelder- und Worldbuff-Channel sind Pflichtfelder.");error.statusCode=400;throw error;}
+  const validResult=await query(`select channel_id from discord_bot_channels where guild_id=$1 and can_send=true and channel_id=any($2::text[])`,[guild.id,channelIds]);
+  const validIds=new Set(validResult.rows.map(row=>clean(row.channel_id)));
+  if(channelIds.some(id=>!validIds.has(id))){const error=new Error("Mindestens ein Channel gehört nicht zu dieser Gilde oder ist für den Bot nicht beschreibbar.");error.statusCode=403;throw error;}
+  const settings=await query(`select coalesce(layout_json,'{}'::jsonb) as layout_json from guild_settings where guild_id=$1 limit 1`,[guild.id]);
+  const layout=settings.rows[0]?.layout_json||{};
+  allowedKeys.forEach(key=>{layout[key]=clean(incoming[key]);});
+  layout.onboarding={...(layout.onboarding||{}),status:"ready",setupComplete:true,discordConnected:true,channelsSynced:true,layoutConfigured:true};
+  await query(`update guild_settings set layout_json=$2::jsonb,updated_at=now() where guild_id=$1`,[guild.id,JSON.stringify(layout)]);
+  return {success:true,readiness:await evaluateGuildReadiness(guild.slug)};
 }
 
 async function completeGuildSetup({ query: params, body = {} }) {
@@ -29266,6 +29338,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "submitGuildApplication") {
+      enforceSecurityRateLimit(req, "guild-application", 10, 60 * 60 * 1000);
       const saved = await submitGuildApplication({ query: req.query });
       return res.json(saved);
     }
@@ -29291,11 +29364,19 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getGuildSetup") {
+      enforceSecurityRateLimit(req, "guild-setup-read", 120, 15 * 60 * 1000);
       const setup = await getGuildSetup({ query: req.query });
       return res.json(setup);
     }
 
+    if (action === "getGuildSetupChannels") {
+      enforceSecurityRateLimit(req, "guild-setup-channels", 120, 15 * 60 * 1000);
+      const channels = await getGuildSetupChannels({ query: req.query });
+      return res.json(channels);
+    }
+
     if (action === "completeGuildSetup") {
+      enforceSecurityRateLimit(req, "guild-setup-complete", 10, 60 * 60 * 1000);
       const completed = await completeGuildSetup({ query: req.query });
       return res.json(completed);
     }
@@ -30324,6 +30405,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "submitGuildApplication") {
+      enforceSecurityRateLimit(req, "guild-application", 10, 60 * 60 * 1000);
       const saved = await submitGuildApplication({ query: req.query, body: req.body });
       return res.json(saved);
     }
@@ -30344,8 +30426,15 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "completeGuildSetup") {
+      enforceSecurityRateLimit(req, "guild-setup-complete", 10, 60 * 60 * 1000);
       const completed = await completeGuildSetup({ query: req.query, body: req.body });
       return res.json(completed);
+    }
+
+    if (action === "saveGuildSetupChannels") {
+      enforceSecurityRateLimit(req, "guild-setup-channel-save", 30, 60 * 60 * 1000);
+      const saved = await saveGuildSetupChannels({ query: req.query, body: req.body });
+      return res.json(saved);
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
