@@ -2247,7 +2247,25 @@ async function getPlatformAdminOverview({ query: params = {} }) {
      group by g.id order by g.created_at asc,g.name asc`
   );
   const dailyResult=await query(
-    `with days as(select generate_series(timezone('Europe/Berlin',now())::date-29,timezone('Europe/Berlin',now())::date,interval '1 day')::date day),traffic as(select day,sum(view_count)::int views,count(distinct visitor_hash)::int visitors from page_analytics_daily where day>=timezone('Europe/Berlin',now())::date-29 group by day) select to_char(days.day,'YYYY-MM-DD') day,coalesce(traffic.views,0)::int views,coalesce(traffic.visitors,0)::int visitors from days left join traffic using(day) order by days.day`
+    `with clock as (
+       select timezone('Europe/Berlin', now())::date as local_today
+     ), days as (
+       select generate_series(local_today - 29, local_today, interval '1 day')::date as day
+       from clock
+     ), traffic as (
+       select day,
+              sum(view_count)::int as views,
+              count(distinct visitor_hash)::int as visitors
+       from page_analytics_daily
+       where day >= (select local_today - 29 from clock)
+       group by day
+     )
+     select to_char(days.day, 'YYYY-MM-DD') as day,
+            coalesce(traffic.views, 0)::int as views,
+            coalesce(traffic.visitors, 0)::int as visitors
+     from days
+     left join traffic using (day)
+     order by days.day`
   );
   const pagesResult=await query(`select page_path as path,sum(view_count)::int views from page_analytics_daily where day>=timezone('Europe/Berlin',now())::date-29 group by page_path order by views desc limit 10`);
   const guilds=await Promise.all(guildResult.rows.map(async row=>({...row,readiness:await evaluateGuildReadiness(row.slug)})));
