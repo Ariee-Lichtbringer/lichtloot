@@ -540,12 +540,11 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .traffic-metric span{display:block;color:#94a3b8;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}
 .traffic-metric strong{display:block;margin-top:5px;color:#f8fafc;font-size:25px}
 .traffic-metric small{display:block;margin-top:3px;color:#c4b5fd;font-weight:750}
-.traffic-chart{display:flex;height:112px;align-items:flex-end;gap:3px;margin-top:14px;padding:10px 8px 0;border:1px solid rgba(148,163,184,.14);border-radius:8px;background:rgba(2,6,23,.32)}
-.traffic-bar{flex:1;min-width:3px;border-radius:3px 3px 0 0;background:linear-gradient(#facc15,#a16207);opacity:.88}
-.traffic-bar:hover{opacity:1;filter:brightness(1.18)}
+.traffic-chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 2px 8px}.traffic-chart-head strong{color:#f8fafc}.traffic-legend{display:flex;gap:15px;color:#94a3b8;font-size:12px}.traffic-legend span:before{content:"";display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;background:#60a5fa}.traffic-legend span:last-child:before{background:#facc15}
+.traffic-chart{position:relative;min-height:260px;border:1px solid rgba(148,163,184,.16);border-radius:9px;background:linear-gradient(180deg,rgba(30,58,138,.09),rgba(2,6,23,.30));overflow:hidden}.traffic-chart svg{display:block;width:100%;height:auto;min-height:260px}.traffic-chart .traffic-grid{stroke:rgba(148,163,184,.16);stroke-width:1}.traffic-chart .traffic-axis{fill:#94a3b8;font-size:11px}.traffic-chart .traffic-view-line{fill:none;stroke:#60a5fa;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.traffic-chart .traffic-visitor-line{fill:none;stroke:#facc15;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.traffic-chart .traffic-area{fill:url(#guildTrafficArea)}.traffic-chart .traffic-guide{stroke:#64748b;stroke-width:1;stroke-dasharray:4 4}.traffic-chart .traffic-marker{stroke:#0f172a;stroke-width:3}.traffic-tooltip{position:absolute;pointer-events:none;z-index:3;min-width:170px;padding:9px 11px;border:1px solid #475569;border-radius:8px;background:#020617;color:#e5edf8;box-shadow:0 12px 30px #0009;font-size:12px;line-height:1.55;transform:translate(-50%,-110%)}.traffic-tooltip strong{display:block;color:#facc15}
 .traffic-pages{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .traffic-page{padding:5px 8px;border:1px solid rgba(148,163,184,.18);border-radius:999px;color:#cbd5e1;font-size:11px}
-@media(max-width:700px){.traffic-summary{grid-template-columns:1fr}.traffic-chart{gap:2px}}
+@media(max-width:700px){.traffic-summary{grid-template-columns:1fr}.traffic-chart{min-height:225px}.traffic-chart svg{min-height:225px}}
 
 .active-raid-list{
   display:grid;
@@ -9283,6 +9282,35 @@ async function loadDashboardRaidStats(){
   renderDashboardCards();
 }
 
+function renderGuildTrafficChart(rows){
+  const chart=document.getElementById("guildTrafficChart");
+  if(!chart)return;
+  const data=(Array.isArray(rows)?rows:[]).map(row=>({...row,views:Number(row.views||0),visitors:Number(row.visitors||0)}));
+  const width=1100,height=285,left=58,right=18,top=18,bottom=42,plotWidth=width-left-right,plotHeight=height-top-bottom;
+  const maxValue=Math.max(1,...data.flatMap(row=>[row.views,row.visitors]));
+  const step=maxValue<=10?2:maxValue<=50?10:maxValue<=100?20:Math.ceil(maxValue/5/10)*10;
+  const yMax=Math.max(step,Math.ceil(maxValue/step)*step);
+  const x=index=>left+(data.length<=1?plotWidth/2:index/(data.length-1)*plotWidth);
+  const y=value=>top+plotHeight-(value/yMax*plotHeight);
+  const line=key=>data.map((row,index)=>`${index?"L":"M"}${x(index).toFixed(1)},${y(row[key]).toFixed(1)}`).join(" ");
+  const area=data.length?`${line("views")} L${x(data.length-1).toFixed(1)},${top+plotHeight} L${x(0).toFixed(1)},${top+plotHeight} Z`:"";
+  const dateLabel=value=>{const parts=String(value||"").split("-");return parts.length===3?`${parts[2]}.${parts[1]}.`:String(value||"");};
+  const yTicks=Array.from({length:Math.round(yMax/step)+1},(_,index)=>index*step);
+  const xTicks=data.map((_,index)=>index).filter(index=>index%5===0||index===data.length-1);
+  chart.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Seitenaufrufe und Besucher der letzten 30 Tage"><defs><linearGradient id="guildTrafficArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa" stop-opacity=".24"/><stop offset="1" stop-color="#60a5fa" stop-opacity="0"/></linearGradient></defs>${yTicks.map(value=>`<line class="traffic-grid" x1="${left}" y1="${y(value)}" x2="${width-right}" y2="${y(value)}"/><text class="traffic-axis" x="${left-10}" y="${y(value)+4}" text-anchor="end">${value}</text>`).join("")}${xTicks.map(index=>`<text class="traffic-axis" x="${x(index)}" y="${height-14}" text-anchor="middle">${escapeHtml(dateLabel(data[index].day))}</text>`).join("")}<path class="traffic-area" d="${area}"/><path class="traffic-view-line" d="${line("views")}"/><path class="traffic-visitor-line" d="${line("visitors")}"/><line data-traffic-guide class="traffic-guide hidden" y1="${top}" y2="${top+plotHeight}"/><circle data-traffic-view-marker class="traffic-marker hidden" r="6" fill="#60a5fa"/><circle data-traffic-visitor-marker class="traffic-marker hidden" r="5" fill="#facc15"/><rect data-traffic-hit x="${left}" y="${top}" width="${plotWidth}" height="${plotHeight}" fill="transparent"/></svg><div data-traffic-tooltip class="traffic-tooltip hidden"></div>`;
+  const hit=chart.querySelector("[data-traffic-hit]"),guide=chart.querySelector("[data-traffic-guide]"),viewMarker=chart.querySelector("[data-traffic-view-marker]"),visitorMarker=chart.querySelector("[data-traffic-visitor-marker]"),tooltip=chart.querySelector("[data-traffic-tooltip]");
+  const elements=[guide,viewMarker,visitorMarker,tooltip];
+  function hide(){elements.forEach(element=>element.classList.add("hidden"));}
+  function show(event){
+    if(!data.length)return;
+    const box=hit.getBoundingClientRect(),relative=Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)),index=Math.round(relative*(data.length-1)),row=data[index],pointX=x(index),viewY=y(row.views),visitorY=y(row.visitors),screenX=pointX/width*chart.clientWidth,screenY=Math.min(viewY,visitorY)/height*chart.clientHeight;
+    guide.setAttribute("x1",pointX);guide.setAttribute("x2",pointX);viewMarker.setAttribute("cx",pointX);viewMarker.setAttribute("cy",viewY);visitorMarker.setAttribute("cx",pointX);visitorMarker.setAttribute("cy",visitorY);
+    tooltip.style.left=`${Math.max(92,Math.min(chart.clientWidth-92,screenX))}px`;tooltip.style.top=`${Math.max(72,screenY)}px`;tooltip.innerHTML=`<strong>${escapeHtml(dateLabel(row.day))}</strong><span style="color:#93c5fd">●</span> ${row.views.toLocaleString("de-DE")} Aufrufe<br><span style="color:#facc15">●</span> ${row.visitors.toLocaleString("de-DE")} Besucher`;
+    elements.forEach(element=>element.classList.remove("hidden"));
+  }
+  hit.addEventListener("pointermove",show);hit.addEventListener("pointerdown",show);hit.addEventListener("pointerleave",hide);
+}
+
 async function loadTrafficStats(){
   const root=document.getElementById("trafficStatsContent");
   const scope=document.getElementById("trafficStatsScope");
@@ -9297,7 +9325,6 @@ async function loadTrafficStats(){
     const totals=result.totals||{};
     const daily=Array.isArray(result.daily)?result.daily:[];
     const pages=Array.isArray(result.pages)?result.pages:[];
-    const maxViews=Math.max(1,...daily.map(day=>Number(day.views||0)));
     const number=value=>Number(value||0).toLocaleString("de-DE");
     const pageLabel=path=>path==="/"?"Startseite":String(path||"").replace(/^\//,"").replace(/\.html$/i,"")||"Startseite";
     if(scope)scope.textContent=result.scope==="all"?"Gesamtes LichtLoot · Bots werden ausgeschlossen":"Diese Gilde · Bots werden ausgeschlossen";
@@ -9308,8 +9335,10 @@ async function loadTrafficStats(){
         <div class="traffic-metric"><span>Letzte 7 Tage</span><strong>${number(totals.week_views)}</strong><small>${number(totals.week_visitor_days)} Besuchertage</small></div>
         <div class="traffic-metric"><span>Letzte 30 Tage</span><strong>${number(totals.month_views)}</strong><small>${number(totals.month_visitor_days)} Besuchertage</small></div>
       </div>
-      <div class="traffic-chart" aria-label="Aufrufe der letzten 30 Tage">${daily.map(day=>`<div class="traffic-bar" style="height:${Math.max(2,Math.round(Number(day.views||0)*100/maxViews))}%" title="${escapeAttr(day.day)}: ${number(day.views)} Aufrufe · ${number(day.visitors)} Besucher"></div>`).join("")}</div>
+      <div class="traffic-chart-head"><strong>Entwicklung pro Tag</strong><div class="traffic-legend"><span>Seitenaufrufe</span><span>Besucher</span></div></div>
+      <div id="guildTrafficChart" class="traffic-chart"></div>
       <div class="traffic-pages">${pages.map(page=>`<span class="traffic-page">${escapeHtml(pageLabel(page.path))}: <strong>${number(page.views)}</strong></span>`).join("")||'<span class="muted">Die Statistik beginnt mit dem nächsten Seitenaufruf.</span>'}</div>`;
+    renderGuildTrafficChart(daily);
   }catch(error){
     root.className="status bad";
     root.textContent=error.message||"Aufrufstatistik konnte nicht geladen werden.";
