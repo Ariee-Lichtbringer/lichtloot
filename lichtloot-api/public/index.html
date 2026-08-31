@@ -1982,7 +1982,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
         </div>
         <div class="random-panel-actions">
           <button class="big-btn subtle" type="button" onclick="openRandomRaidModal('open')">Random-Raid öffnen</button>
-          <button class="big-btn random-raid-disabled" type="button" disabled title="Voruebergehend deaktiviert, damit aktive Startseiten-Raids nicht ueberschrieben werden.">Random-Raid erstellen</button>
+          <button class="big-btn" type="button" onclick="openRandomRaidModal('create')">Random-Raid erstellen</button>
         </div>
       </div>
     </section>
@@ -2027,7 +2027,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
       </div>
       <div class="random-raid-modal-tabs">
         <button id="randomRaidOpenTab" class="big-btn subtle" type="button" onclick="showRandomRaidModalTab('open')">Raid öffnen</button>
-        <button id="randomRaidCreateTab" class="big-btn subtle random-raid-disabled" type="button" disabled title="Voruebergehend deaktiviert">Raid erstellen</button>
+        <button id="randomRaidCreateTab" class="big-btn subtle" type="button" onclick="showRandomRaidModalTab('create')">Raid erstellen</button>
       </div>
       <div id="randomRaidOpenPane" class="random-open-box">
         <div class="random-open-grid">
@@ -2073,10 +2073,10 @@ body.show-mylichtloot .account-creation-panel{display:none}
             <input id="createRaidTime" type="time" value="20:00">
           </div>
           <div class="random-create-action">
-            <button class="big-btn random-raid-disabled" type="button" disabled title="Voruebergehend deaktiviert">Random-Raid erstellen</button>
+            <button class="big-btn" type="button" onclick="createRaidFromStart()">Random-Raid erstellen</button>
           </div>
         </div>
-        <div id="createRaidResult" class="status random-raid-result"><span class="bad">Random-Raid-Erstellung ist voruebergehend deaktiviert, damit aktive Startseiten-Raids nicht ueberschrieben werden.</span></div>
+        <div id="createRaidResult" class="status random-raid-result">Der Raid wird getrennt von den Gilden-Raids gespeichert.</div>
       </div>
     </div>
   </div>
@@ -2098,7 +2098,7 @@ const LICHTLOOT_API_URL =
 
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const RANDOM_RAID_CREATE_DISABLED = true;
+const RANDOM_RAID_CREATE_DISABLED = false;
 
 function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
@@ -2673,7 +2673,7 @@ async function createRaidFromStart(){
   const guildSlug=currentActiveGuildSlug();
   const lootUrl=new URL(r.lootPage+"?guild="+encodeURIComponent(guildSlug)+"&pin="+encodeURIComponent(playerPin)+"&random=1", window.location.href).href;
   const leadUrl=new URL(
-    "raidlead-panel.html?guild="+encodeURIComponent(guildSlug)+"&leadPin="+encodeURIComponent(leadPin),
+    "raidlead-panel.html?guild="+encodeURIComponent(guildSlug)+"&leadPin="+encodeURIComponent(leadPin)+"&random=1",
     window.location.href
   ).href;
 
