@@ -6615,7 +6615,9 @@ function configuredSpecialRaidKeys(){
     .filter(raid => OPTIONAL_SPECIAL_RAIDS.includes(raid));
 }
 function poSignupTemplateRaidKeys(){
-  return ["mc","bwl","aq40","naxx","zg","aq20","ony"].concat(configuredSpecialRaidKeys());
+  const configured=currentGuildInfo?.layout?.eraRules?.supportedRaids;
+  const standard=Array.isArray(configured)&&configured.length?configured:["mc","bwl","aq40","naxx","zg","aq20","ony"];
+  return [...new Set(standard.concat(configuredSpecialRaidKeys()))];
 }
 function guildFeatureEnabled(key, fallback=false){
   const value = currentGuildInfo?.layout?.features?.[key];
@@ -8617,7 +8619,17 @@ function renderLootLayoutPanel(){
       </details>
 
       <details class="layout-accordion">
-        <summary>4. Raidregeln</summary>
+        <summary>4. Era-Regelprofil</summary>
+        <div class="layout-accordion-content">
+          <section class="layout-info-box gold">
+            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Prioritäten und unterstützte Raids</h4><p>Diese Regeln gelten nur für diese Gilde. Bestehende LichtLoot- und Nachtwächter-Standards bleiben erhalten, bis hier etwas geändert wird.</p></div></div>
+            ${(()=>{const defaults={supportedRaids:["mc","bwl","ony","zg","aq20","aq40","naxx"],priorityLevels:[{key:"p1",label:"P1",enabled:true},{key:"p2",label:"P2",enabled:true},{key:"p3",label:"P3",enabled:true}],recruit:{enabled:CURRENT_GUILD_SLUG==="nachtloot",raids:["bwl","aq40","naxx"],allowedPriorities:["p2","p3"],minAttendance:3,countBenchAsAttendance:true},p0Plus:{raidTransferPoints:1,benchPoints:.5},poRelease:{applicationsEnabled:CURRENT_GUILD_SLUG==="nachtloot",attendanceWindow:16,lowAttendanceWarning:6}},rules={...defaults,...(layout.eraRules||{}),recruit:{...defaults.recruit,...(layout.eraRules?.recruit||{})},p0Plus:{...defaults.p0Plus,...(layout.eraRules?.p0Plus||{})},poRelease:{...defaults.poRelease,...(layout.eraRules?.poRelease||{})}},levels=["p1","p2","p3"].map((key,index)=>rules.priorityLevels?.find(level=>level.key===key)||defaults.priorityLevels[index]),raidNames={mc:"Molten Core",bwl:"Blackwing Lair",ony:"Onyxia",zg:"Zul'Gurub",aq20:"Ahn'Qiraj 20",aq40:"Ahn'Qiraj 40",naxx:"Naxxramas"};return `<h4>Prioritätsstufen</h4><div class="layout-form-grid">${levels.map(level=>`<div class="field"><label><input type="checkbox" data-era-priority-enabled="${level.key}" ${level.enabled!==false?"checked":""}> ${level.key.toUpperCase()} aktiv</label><input data-era-priority-label="${level.key}" maxlength="20" value="${escapeAttr(level.label||level.key.toUpperCase())}" placeholder="${level.key.toUpperCase()}"></div>`).join("")}</div><h4 style="margin-top:16px">Unterstützte Raids</h4><div class="layout-loot-toggle-grid">${Object.entries(raidNames).map(([key,label])=>`<label class="layout-loot-toggle"><input type="checkbox" data-era-supported-raid value="${key}" ${(rules.supportedRaids||defaults.supportedRaids).includes(key)?"checked":""}><span><strong>${label}</strong></span></label>`).join("")}</div><h4 style="margin-top:18px">Rekruten</h4><label class="layout-loot-toggle"><input id="eraRecruitEnabled" type="checkbox" ${rules.recruit.enabled?"checked":""}><span><strong>Rekrutenregeln aktivieren</strong><small>Beschränkt Prioritäten bis zur Freigabe je Raid.</small></span></label><div class="layout-loot-toggle-grid" style="margin-top:10px">${Object.entries(raidNames).filter(([key])=>["mc","bwl","aq40","naxx"].includes(key)).map(([key,label])=>`<label class="layout-loot-toggle"><input type="checkbox" data-era-recruit-raid value="${key}" ${(rules.recruit.raids||[]).includes(key)?"checked":""}><span><strong>${label}</strong></span></label>`).join("")}</div><div class="layout-form-grid" style="margin-top:12px"><div class="field"><label>Mindestteilnahmen</label><input id="eraRecruitMinAttendance" type="number" min="0" max="50" value="${Number(rules.recruit.minAttendance??3)}"></div><div class="field"><label><input id="eraRecruitCountBench" type="checkbox" ${rules.recruit.countBenchAsAttendance!==false?"checked":""}> Bench als Teilnahme zählen</label></div></div><div class="layout-loot-toggle-grid">${levels.map(level=>`<label class="layout-loot-toggle"><input type="checkbox" data-era-recruit-priority value="${level.key}" ${(rules.recruit.allowedPriorities||[]).includes(level.key)?"checked":""}><span><strong>${escapeHtml(level.label||level.key.toUpperCase())} für Rekruten</strong></span></label>`).join("")}<label class="layout-loot-toggle"><input type="checkbox" data-era-recruit-priority value="p0plus" ${(rules.recruit.allowedPriorities||[]).includes("p0plus")?"checked":""}><span><strong>P0+ für Rekruten</strong></span></label></div><h4 style="margin-top:18px">P0+-Punkte und Attendance</h4><div class="layout-form-grid"><div class="field"><label>Punkte je Raidübertragung</label><input id="eraRaidTransferPoints" type="number" min="0" max="100" step="0.5" value="${Number(rules.p0Plus.raidTransferPoints??1)}"></div><div class="field"><label>Bench-Punkte</label><input id="eraBenchPoints" type="number" min="0" max="100" step="0.5" value="${Number(rules.p0Plus.benchPoints??.5)}"></div><div class="field"><label>Attendance-Zeitraum (Raids)</label><input id="eraAttendanceWindow" type="number" min="1" max="50" value="${Number(rules.poRelease.attendanceWindow??16)}"></div><div class="field"><label>Warnung bis einschließlich Teilnahmen</label><input id="eraLowAttendanceWarning" type="number" min="0" max="50" value="${Number(rules.poRelease.lowAttendanceWarning??6)}"></div></div><label class="layout-loot-toggle" style="margin-top:10px"><input id="eraPoReleaseApplications" type="checkbox" ${rules.poRelease.applicationsEnabled?"checked":""}><span><strong>P0-/Rekruten-Freigabeanträge aktivieren</strong><small>Warcraft-Logs-ID und passende Freigaberegeln müssen eingerichtet sein.</small></span></label>`})()}
+          </section>
+        </div>
+      </details>
+
+      <details class="layout-accordion">
+        <summary>5. Raidregeln</summary>
         <div class="layout-accordion-content">
         <section class="layout-info-box blue">
         <div class="layout-box-head">
@@ -8635,7 +8647,7 @@ function renderLootLayoutPanel(){
       </details>
 
       <details class="layout-accordion">
-        <summary>5. Lootseiten</summary>
+        <summary>6. Lootseiten</summary>
         <div class="layout-accordion-content">
           <section class="layout-info-box gold">
             <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Inhalte der Prio- und Lootseiten</h4><p>Mit den Haken legst du für diese Gilde fest, welche Zusatzbereiche auf allen Lootseiten sichtbar sind.</p></div></div>
@@ -8673,7 +8685,7 @@ function renderLootLayoutPanel(){
       </details>
 
       <details class="layout-accordion">
-        <summary>6. Startseite und Gildenleitung</summary>
+        <summary>7. Startseite und Gildenleitung</summary>
         <div class="layout-accordion-content">
           <section class="layout-info-box blue">
             <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Startseite</h4><p>Lege fest, welche Menüpunkte und Zusatzbereiche auf der Startseite sichtbar sind.</p></div></div>
@@ -8757,6 +8769,13 @@ async function saveLootLayoutPanel(){
       ...(existingLayout.features && typeof existingLayout.features === "object" ? existingLayout.features : {}),
       recruitStatusLift:Boolean(document.getElementById("layoutFeatureRecruitStatusLift")?.checked),
       raidRecords:Boolean(document.getElementById("layoutFeatureRaidRecords")?.checked)
+    },
+    eraRules:{
+      supportedRaids:[...document.querySelectorAll("[data-era-supported-raid]:checked")].map(input=>input.value),
+      priorityLevels:["p1","p2","p3"].map(key=>({key,label:String(document.querySelector(`[data-era-priority-label="${key}"]`)?.value||key.toUpperCase()).trim().slice(0,20)||key.toUpperCase(),enabled:Boolean(document.querySelector(`[data-era-priority-enabled="${key}"]`)?.checked)})),
+      recruit:{enabled:Boolean(document.getElementById("eraRecruitEnabled")?.checked),raids:[...document.querySelectorAll("[data-era-recruit-raid]:checked")].map(input=>input.value),allowedPriorities:[...document.querySelectorAll("[data-era-recruit-priority]:checked")].map(input=>input.value),minAttendance:Number(document.getElementById("eraRecruitMinAttendance")?.value||0),countBenchAsAttendance:Boolean(document.getElementById("eraRecruitCountBench")?.checked)},
+      p0Plus:{raidTransferPoints:Number(document.getElementById("eraRaidTransferPoints")?.value||0),benchPoints:Number(document.getElementById("eraBenchPoints")?.value||0)},
+      poRelease:{applicationsEnabled:Boolean(document.getElementById("eraPoReleaseApplications")?.checked),attendanceWindow:Number(document.getElementById("eraAttendanceWindow")?.value||16),lowAttendanceWarning:Number(document.getElementById("eraLowAttendanceWarning")?.value||0)}
     },
     lootPageSections:{worldbuffs:Boolean(document.getElementById("layoutLootWorldbuffs")?.checked),worldbuffAgreement:Boolean(document.getElementById("layoutLootWorldbuffAgreement")?.checked),raidSignup:Boolean(document.getElementById("layoutLootRaidSignup")?.checked),poReleases:Boolean(document.getElementById("layoutLootPoReleases")?.checked),miniRaids:Boolean(document.getElementById("layoutLootMiniRaids")?.checked),gearPlanner:Boolean(document.getElementById("layoutLootGearPlanner")?.checked)},
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
@@ -18622,7 +18641,8 @@ function poReleaseMatchesAttendanceFilter(entry){
   if(poReleaseAttendanceFilter === "zero"){
     return attendanceEntries.length > 0 && attendanceEntries.every(([,attendance])=>Number(attendance?.attended||0)===0);
   }
-  return attendanceEntries.some(([raid,attendance])=>Boolean(entry?.releases?.[raid]) && Number(attendance?.attended||0)<=6);
+  const warning=Number(currentGuildInfo?.layout?.eraRules?.poRelease?.lowAttendanceWarning??6);
+  return attendanceEntries.some(([raid,attendance])=>Boolean(entry?.releases?.[raid]) && Number(attendance?.attended||0)<=warning);
 }
 
 async function togglePoReleaseColumn(raid, visible){
@@ -18639,7 +18659,8 @@ async function togglePoReleaseColumn(raid, visible){
 function poReleaseCheckHtml(entry, raid, index){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
   const attendance = entry?.attendance16?.[raid];
-  const lowAttendance = Boolean(attendance && Number(attendance.total) > 0 && Number(attendance.attended) <= 6);
+  const warning=Number(currentGuildInfo?.layout?.eraRules?.poRelease?.lowAttendanceWarning??6);
+  const lowAttendance = Boolean(attendance && Number(attendance.total) > 0 && Number(attendance.attended) <= warning);
   const attended=Number(attendance?.attended||0);
   const attendanceColor=attended<=3?"#f87171":attended<=7?"#fbbf24":"#4ade80";
   const attendanceHtml = attendance && Number(attendance.total) > 0
@@ -18652,7 +18673,9 @@ function poReleaseCheckHtml(entry, raid, index){
 }
 
 function recruitStatusLiftHtml(entry,index){
-  const raids=[["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
+  const raidLabels={mc:"MC",bwl:"BWL",aq40:"AQ40",naxx:"NAXX"};
+  const configured=currentGuildInfo?.layout?.eraRules?.recruit?.raids;
+  const raids=(Array.isArray(configured)&&configured.length?configured:["bwl","aq40","naxx"]).filter(raid=>raidLabels[raid]).map(raid=>[raid,raidLabels[raid]]);
   const releases=entry?.recruitReleases||{};
   return `<div style="display:flex;gap:5px;flex-wrap:wrap">${raids.map(([raid,label])=>{
     const lifted=Boolean(releases[raid]);
