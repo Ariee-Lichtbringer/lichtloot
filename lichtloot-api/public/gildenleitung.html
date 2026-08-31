@@ -5355,7 +5355,6 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openSystemErrorPanel()" aria-label="Fehlerzentrale" title="Fehlerzentrale"><span class="side-icon">⚠</span><span class="side-label">Fehlerzentrale</span><span id="systemErrorCount" class="side-count">0</span></button>
           <button class="side-link master-only" type="button" onclick="openRaidArchivePanel()" aria-label="Raid-Archiv" title="Raid-Archiv"><span class="side-icon">🗄</span><span class="side-label">Raid-Archiv</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
-          <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
         </div>
       </div>
@@ -6251,17 +6250,6 @@ body.worldbuff-only .master-only{display:none!important}
     <summary>Fehlerzentrale</summary>
     <div class="issue-panel-body">
       <div id="systemErrorPanelContent" class="create-result">Technische Fehler werden nach Eingabe des Master-Codes geladen.</div>
-    </div>
-  </details>
-
-  <details id="guildApplicationsPanel" class="panel issue-panel" ontoggle="if(this.open) loadGuildApplicationsPanel()">
-    <summary>Gilden freischalten</summary>
-    <div class="issue-panel-body">
-      <div class="issue-toolbar">
-        <a class="small-btn primary" href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldemaske öffnen</a>
-        <button class="small-btn ghost" type="button" onclick="loadGuildApplicationsPanel()">Neu laden</button>
-      </div>
-      <div id="guildApplicationsPanelContent" class="create-result">Gilden-Anfragen laden.</div>
     </div>
   </details>
 
@@ -7506,7 +7494,6 @@ async function loadOverview(options){
     // übersprungen. Nach erfolgreichem Login deshalb immer erneut befüllen.
     loadRaidHelperDiscordRoles();
     loadWorldbuffMiniOverview();
-    loadGuildApplicationsPanel({ silent:true }).catch(() => {});
     if(!guildSetupWizardDeepLinkHandled && new URLSearchParams(location.search).get("setup") === "1"){
       guildSetupWizardDeepLinkHandled = true;
       openLootLayoutPanel();
