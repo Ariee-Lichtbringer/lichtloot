@@ -1751,7 +1751,7 @@ function isActiveP0Value(value){
 }
 
 function isActiveP0Entry(entry){
-  return isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+  return Boolean(entry && entry.p0Selected) || isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
 }
 
 function isActiveP0PlusEntry(entry){
@@ -1765,6 +1765,7 @@ function p0Label(){
 
 function prioLabelText(){
   if(isP1OnlyRaid()) return "P1";
+  if(RANDOM_RAIDLEAD_MODE) return "P1/P2/P3/P0";
   if(isPlainP0Raid()) return "P1/P2/P3/P0";
   return "P1/P2/P3/P0+";
 }
@@ -1819,7 +1820,7 @@ async function loadRaidByPin(){
       sessionStorage.setItem(raidleadStorageKey("prioPin"), pin);
 
       await loadItemVisualData();
-      await loadP0PlusPoints();
+      if(!RANDOM_RAIDLEAD_MODE) await loadP0PlusPoints();
       await loadRaidPrioCheck();
 
       document.getElementById("controlStatus").innerHTML =
@@ -1939,16 +1940,18 @@ async function loadPriosFromSheet(leadPin){
     currentPrios = (result.prios || []).map(p => ({
       prioId: p.id || p.prioId || p.prio_id || "",
       rowNumber: Number(p.rowNumber || p.RowNumber || p.zeile || p.Zeile || 0),
-      player: p.Spieler || "",
-      server: p.Server || "",
-      class: p.Klasse || "",
-      p1: p.P1 || "",
+      player: p.Spieler || p.player || p.char || "",
+      server: p.Server || p.server || "",
+      class: p.Klasse || p.className || p.class || "",
+      p1: p.P1 || p.p1 || "",
       p1ItemId: p.P1ItemId || p.p1ItemId || p.p1_item_id || "",
-      p2: p.P2 || "",
+      p2: p.P2 || p.p2 || "",
       p2ItemId: p.P2ItemId || p.p2ItemId || p.p2_item_id || "",
-      p3: p.P3 || "",
+      p3: p.P3 || p.p3 || "",
       p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
+      p0Selected: Boolean(p.p0Selected || p.P0Selected || p.PoSelected),
+      p0Item: p.P0 || p.p0 || "",
       worldbuffRulesAccepted: Boolean(p.WorldbuffRulesAccepted || p.worldbuffRulesAccepted),
       prioCreatedAt: p.PrioCreatedAt || p.prioCreatedAt || p.createdAt || p.created_at || "",
       prioUpdatedAt: p.PrioUpdatedAt || p.prioUpdatedAt || p.updatedAt || p.updated_at || "",
@@ -2182,7 +2185,7 @@ function renderRaidStatCards(){
   const signupCount = getDcSignupCount();
   const prioCount = localPrioPlayerCount();
   const signupText = signupCount === null ? `${prioCount}` : `${prioCount} / ${signupCount}`;
-  const transferCard = isAllowedP0Raid() ? `
+  const transferCard = !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? `
       <div class="raid-stat-card">
         <div class="raid-stat-head"><span class="raid-stat-icon">★</span><span>P0+ Transfer</span></div>
         <strong>${getTransferableP0Count()}</strong>
@@ -2228,13 +2231,13 @@ function renderRaidView(){
   updateRaidNavigation();
 
   const transferButton =
-    isAllowedP0Raid()
+    !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()
       ? currentReleased
         ? `<button class="btn action-transfer" onclick="transferP0PlusPoints()"><span class="star">★</span>P0+ übertragen</button>`
         : `<button class="btn action-transfer" disabled style="opacity:.45;cursor:not-allowed"><span class="star">★</span>P0+ übertragen</button>`
       : "";
   const openStatusText = currentReleased
-    ? isAllowedP0Raid()
+    ? !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()
       ? "Die Prioliste ist geöffnet. Mit „P0+ übertragen“ erhalten alle gesetzten P0+ Einträge +1 Punkt."
       : hasP0Control()
         ? "Die Prioliste ist geöffnet. P0 kann geprüft werden."
@@ -2538,7 +2541,7 @@ function renderRaidRowsOnly(){
 function renderPrioTableHead(){
   const prioHeaders = isP1OnlyRaid()
     ? "<th>P1</th>"
-    : `<th>P1</th><th>P2</th><th>P3</th><th>${safe(isAllowedP0Raid() ? "P0+ Punkte" : "P0")}</th>`;
+    : `<th>P1</th><th>P2</th><th>P3</th><th>${safe(!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? "P0+ Punkte" : "P0")}</th>`;
 
   return `
     <thead>
@@ -2827,7 +2830,7 @@ function renderP0PlusPoints(itemName,isActiveP0Plus,playerName){
 
 function renderPlainP0Cell(entry,currentReleased,isP0Plus){
   if(!isP0Plus) return currentReleased ? '<span class="empty">-</span>' : '<span class="cross">✗</span>';
-  return currentReleased ? renderItem(entry.p1) : '<span class="check">✓</span>';
+  return currentReleased ? renderItem(entry.p0Item || entry.p1) : '<span class="check">✓</span>';
 }
 
 function bossTokenNoticeConfig(){
@@ -2920,7 +2923,7 @@ function renderRows(){
           <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
+          <td>${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -2946,7 +2949,7 @@ function renderRows(){
         <td>${renderItem(entry.p1)}</td>
         <td>${renderItem(entry.p2)}</td>
         <td>${renderItem(entry.p3)}</td>
-        <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
+        <td>${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
     `;
