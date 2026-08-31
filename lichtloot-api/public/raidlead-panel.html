@@ -1046,6 +1046,16 @@ body.random-raidlead .internal-nav-link{
   display:none!important;
 }
 
+body.random-raidlead{
+  background:
+    linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.92)),
+    url('./images/guildloot-index-background-v2.png') center top/cover fixed;
+}
+
+body.random-raidlead .overlay{padding-left:clamp(18px,4vw,56px);padding-right:clamp(18px,4vw,56px)}
+body.random-raidlead .random-home-link{display:inline-block!important}
+.random-home-link{display:none!important}
+
 .topbar{
   border:0;
   border-radius:0;
@@ -1400,6 +1410,7 @@ body.random-raidlead .internal-nav-link{
       </div>
       <div class="nav" aria-label="Navigation">
         <button class="btn ghost internal-nav-link" type="button" onclick="window.location.href=guildUrl('start.html')">Startseite</button>
+        <button class="btn ghost random-home-link" type="button" onclick="window.location.href='index.html'">GuildLoot-Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
           <img src="images/content.png" alt="">
@@ -1439,6 +1450,8 @@ body.random-raidlead .internal-nav-link{
 <script>
 const RAID_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
+const RANDOM_RAIDLEAD_MODE = new URLSearchParams(window.location.search).get("random") === "1";
+const randomRaidleadQuery = () => RANDOM_RAIDLEAD_MODE ? "&random=1" : "";
 
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
@@ -1516,6 +1529,17 @@ function applyGuildThemeColor(cssName,rgbName,value){
   if(rgb) document.documentElement.style.setProperty(rgbName,rgb);
 }
 async function applyGuildBranding(){
+  if(RANDOM_RAIDLEAD_MODE){
+    document.title="GuildLoot – Random-Raidlead";
+    document.querySelectorAll(".logo-banner-mini,.brand-logo,.top-profile img").forEach(el=>{el.src="images/guildloot-logo-concept.png";el.alt="GuildLoot";});
+    const profile=document.querySelector(".top-profile div");
+    if(profile) profile.innerHTML="<strong>GuildLoot</strong><span>Random-Raidlead</span>";
+    const brandTitle=document.querySelector(".brand h1");
+    if(brandTitle) brandTitle.textContent="Random-Raidlead";
+    const brandText=document.querySelector(".brand p");
+    if(brandText) brandText.textContent="Unabhängigen Random-Raid laden und Prios verwalten.";
+    return;
+  }
   const guild=await fetchCurrentGuildInfo();
   const lootName=lootTitleFromGuild(guild);
   const guildName=displayGuildName(guild);
@@ -1531,6 +1555,7 @@ async function applyGuildBranding(){
 }
 if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
+  if(RANDOM_RAIDLEAD_MODE && /^(?:index|start)\.html/.test(path)) return "index.html";
   const slug=currentGuildSlug();
   if(slug === "lichtloot") return path;
   const hashIndex=path.indexOf("#");
@@ -1844,7 +1869,7 @@ async function tryLoadRaidByPin(pin, raidKey){
 async function loadPriosFromSheet(leadPin){
   const url =
     RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPublishedPrios" +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPublishedPrios" + randomRaidleadQuery() +
     "&raid=" + encodeURIComponent(raids[currentRaidKey].short) +
     "&leadPin=" + encodeURIComponent(leadPin) +
     "&t=" + Date.now();
@@ -3047,7 +3072,7 @@ async function sendRaidStatus(status){
 
   const url =
     RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=setRaidStatus" +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=setRaidStatus" + randomRaidleadQuery() +
     "&raidId=" + encodeURIComponent(raidId) +
     "&leadPin=" + encodeURIComponent(leadPin) +
     "&status=" + encodeURIComponent(status) +
@@ -3180,7 +3205,7 @@ async function saveRaidleadPrioForPlayer(){
 
   const url =
     RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSavePrio" +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSavePrio" + randomRaidleadQuery() +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || currentRaidKey || "") +
@@ -3231,7 +3256,7 @@ async function deleteSinglePrio(player,server,prioId){
 
   const url =
     RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=deletePrio" +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=deletePrio" + randomRaidleadQuery() +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&prioId=" + encodeURIComponent(prioId || "") +
@@ -3265,7 +3290,7 @@ async function setPrioBench(rowNumber, bench, player, server){
 
   const url =
     RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSetPrioBench" +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSetPrioBench" + randomRaidleadQuery() +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&rowNumber=" + encodeURIComponent(rowNumber || "") +

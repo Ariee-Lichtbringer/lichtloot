@@ -1368,8 +1368,9 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-result-meta{display:flex;gap:10px;flex-wrap:wrap;color:#dbeafe;font-weight:800}
 .random-result-meta strong{color:#facc15}
 .random-pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.random-pin-card{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.random-pin-card{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
 .random-pin-card label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+.discord-copy-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#5865f2;border-color:#8792ff;white-space:nowrap}.discord-copy-btn:hover{background:#4752c4;border-color:#a5adff}.discord-copy-btn svg{width:20px;height:20px;fill:currentColor}
 .random-open-box{margin:0;padding:0;border:0}
 .random-open-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
 .random-open-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(2,6,23,.50);padding:16px}
@@ -2099,6 +2100,7 @@ const LICHTLOOT_API_URL =
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const RANDOM_RAID_CREATE_DISABLED = false;
+let lastCreatedRandomRaidShare = null;
 
 function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
@@ -2709,6 +2711,8 @@ async function createRaidFromStart(){
       return;
     }
 
+    lastCreatedRandomRaidShare={raidName:r.name,groupName:raidGuild,raidDate,raidTime,playerPin,leadPin,lootUrl,leadUrl};
+
     resultBox.innerHTML=`
       <div class="random-result-compact">
         <span class="ok">✓ Raid wurde erstellt.</span>
@@ -2724,14 +2728,16 @@ async function createRaidFromStart(){
               <label>PrioPIN</label>
               <div class="pin-output" id="newPlayerPin">${playerPin}</div>
             </div>
-            <button class="copy-btn" onclick="copyText('newPlayerPin')">Kopieren</button>
+            <button class="copy-btn" type="button" onclick="copyText('newPlayerPin')">Kopieren</button>
+            <button class="copy-btn discord-copy-btn" type="button" onclick="copyRandomRaidDiscordMessage('player')" title="Discord-Nachricht für Mitspieler kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.03a15.1 15.1 0 0 0-5.87 0L8.56 4A16.5 16.5 0 0 0 4.5 5.35C1.93 9.16 1.24 12.88 1.6 16.54a16.7 16.7 0 0 0 4.98 2.5l1.2-1.66a10.6 10.6 0 0 1-1.88-.9l.46-.36c3.63 1.69 7.57 1.69 11.16 0l.47.36c-.6.35-1.23.65-1.89.9l1.2 1.66a16.6 16.6 0 0 0 4.98-2.5c.43-4.24-.73-7.92-2.78-11.2ZM8.52 14.33c-1.09 0-1.98-1-1.98-2.22 0-1.23.87-2.23 1.98-2.23s2 1.01 1.98 2.23c0 1.22-.88 2.22-1.98 2.22Zm6.96 0c-1.09 0-1.98-1-1.98-2.22 0-1.23.87-2.23 1.98-2.23s2 1.01 1.98 2.23c0 1.22-.87 2.22-1.98 2.22Z"/></svg><span>DC</span></button>
           </div>
           <div class="random-pin-card">
             <div>
               <label>LeadPIN</label>
               <div class="pin-output" id="newLeadPin">${leadPin}</div>
             </div>
-            <button class="copy-btn" onclick="copyText('newLeadPin')">Kopieren</button>
+            <button class="copy-btn" type="button" onclick="copyText('newLeadPin')">Kopieren</button>
+            <button class="copy-btn discord-copy-btn" type="button" onclick="copyRandomRaidDiscordMessage('lead')" title="Private Discord-Nachricht für die Raidleitung kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.03a15.1 15.1 0 0 0-5.87 0L8.56 4A16.5 16.5 0 0 0 4.5 5.35C1.93 9.16 1.24 12.88 1.6 16.54a16.7 16.7 0 0 0 4.98 2.5l1.2-1.66a10.6 10.6 0 0 1-1.88-.9l.46-.36c3.63 1.69 7.57 1.69 11.16 0l.47.36c-.6.35-1.23.65-1.89.9l1.2 1.66a16.6 16.6 0 0 0 4.98-2.5c.43-4.24-.73-7.92-2.78-11.2ZM8.52 14.33c-1.09 0-1.98-1-1.98-2.22 0-1.23.87-2.23 1.98-2.23s2 1.01 1.98 2.23c0 1.22-.88 2.22-1.98 2.22Zm6.96 0c-1.09 0-1.98-1-1.98-2.22 0-1.23.87-2.23 1.98-2.23s2 1.01 1.98 2.23c0 1.22-.87 2.22-1.98 2.22Z"/></svg><span>DC</span></button>
           </div>
         </div>
         <span class="warn">PrioPIN an Mitspieler geben. LeadPIN bleibt bei der Raidleitung.</span>
@@ -2873,6 +2879,38 @@ function randomLeadEnter(event){
 function copyText(id){
   const text=document.getElementById(id).textContent.trim();
   navigator.clipboard.writeText(text);
+}
+
+async function copyRandomRaidDiscordMessage(kind){
+  const data=lastCreatedRandomRaidShare;
+  if(!data) return;
+  const date=formatRaidDateForDisplay(data.raidDate);
+  const playerMessage=[
+    `**GuildLoot Random Raid: ${data.raidName}**`,
+    `Gruppe: **${data.groupName}**`,
+    `Termin: **${date} um ${data.raidTime} Uhr**`,
+    `PrioPIN: **${data.playerPin}**`,
+    `Prios eintragen: ${data.lootUrl}`
+  ].join("\n");
+  const leadMessage=[
+    `**GuildLoot Random-Raidleitung: ${data.raidName}**`,
+    `Gruppe: **${data.groupName}**`,
+    `Termin: **${date} um ${data.raidTime} Uhr**`,
+    `LeadPIN: **${data.leadPin}**`,
+    `Raid verwalten: ${data.leadUrl}`,
+    `⚠️ Diese Nachricht und den LeadPIN nur an die Raidleitung weitergeben.`
+  ].join("\n");
+  const message=kind === "lead" ? leadMessage : playerMessage;
+  try{
+    await navigator.clipboard.writeText(message);
+    const box=document.getElementById("createRaidResult");
+    const notice=box?.querySelector(".random-share-notice") || document.createElement("div");
+    notice.className="random-share-notice ok";
+    notice.textContent=kind === "lead" ? "Discord-Nachricht für die Raidleitung kopiert." : "Discord-Nachricht für Mitspieler kopiert.";
+    if(box && !notice.parentNode) box.appendChild(notice);
+  }catch(error){
+    window.prompt("Discord-Nachricht kopieren:",message);
+  }
 }
 
 function togglePlayerPin(){
