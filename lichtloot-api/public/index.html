@@ -1508,6 +1508,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 .guild-signup-title img{width:190px;max-width:48vw;max-height:62px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 .guild-signup-title span{white-space:nowrap}
 .site-footer{width:100%;margin:0;padding:22px;text-align:center;border-top:1px solid rgba(250,204,21,.28);background:rgba(2,9,19,.9)}
+.support-modal{position:fixed;inset:0;z-index:13000;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.84);backdrop-filter:blur(5px)}.support-modal.hidden{display:none}.support-dialog{width:min(680px,100%);max-height:92vh;overflow:auto;padding:24px;border:1px solid rgba(250,204,21,.42);border-radius:16px;background:linear-gradient(145deg,#0b1729,#050c18);box-shadow:0 28px 90px #000;color:#f8fafc}.support-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.support-head h2{margin:0;color:#facc15;font-size:28px}.support-head p{margin:6px 0 0;color:#aebbd0}.support-close{width:38px;height:38px;border:1px solid #334155;border-radius:9px;background:#07111f;color:#f8fafc;font-size:24px;cursor:pointer}.support-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.support-grid label{display:grid;gap:6px;color:#e5edf8;font-weight:850}.support-grid label.full{grid-column:1/-1}.support-grid input,.support-grid select,.support-grid textarea{width:100%;border:1px solid #334155;border-radius:9px;background:#07111f;color:#f8fafc;padding:11px 12px;font:inherit}.support-grid textarea{min-height:145px;resize:vertical}.support-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:17px}.support-send{border-color:#a17d12!important;background:linear-gradient(90deg,#d9a812,#facc15)!important;color:#111827!important}.support-status{margin-top:14px;padding:11px 12px;border:1px solid #334155;border-radius:9px;color:#aebbd0}.support-status.good{border-color:#166534;color:#86efac}.support-status.bad{border-color:#991b1b;color:#fecaca}@media(max-width:650px){.support-grid{grid-template-columns:1fr}.support-grid label.full{grid-column:auto}.support-actions{display:grid}.support-actions button{width:100%}}
 @media(max-width:1000px){.header{grid-template-columns:auto 1fr}.portal-nav{display:none}.portal-profile{justify-self:end}.start-shell{grid-template-columns:1fr}.welcome-panel,.player-login-card,.account-creation-panel,.portal-bottom-grid{grid-column:1}.player-login-card{grid-row:auto}.account-creation-panel{grid-template-columns:1fr;padding:0}.account-art{min-height:260px}.account-art::after{background:linear-gradient(0deg,rgba(6,21,40,.98),transparent 55%)}.account-copy{padding:0 28px 30px}.portal-bottom-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.header{padding:0 14px;gap:10px}.header .logo-banner{width:140px}.portal-profile{min-width:0}.portal-profile>span:nth-child(2){display:none}.start-shell{width:min(100% - 24px,1420px)}.welcome-panel{padding:25px}.welcome-panel h1{font-size:36px}.account-creation-panel{padding:24px}.account-benefits{grid-template-columns:1fr}.account-benefit{border-right:0}.account-actions,.random-panel-actions{display:grid}.account-primary,.random-panel-actions .big-btn{width:100%;min-width:0!important}.portal-bottom-grid{gap:12px}}
 </style>
@@ -1519,7 +1520,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
   <div class="header">
     <img src="images/guildloot-logo-concept.png" alt="GuildLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
-      <a href="javascript:void(0)" onclick="document.getElementById('guildSignupPanel')?.scrollIntoView({behavior:'smooth'})">Hilfe</a>
+      <a href="javascript:void(0)" onclick="openSupportForm()">Support</a>
     </nav>
     <button class="portal-profile" type="button" onclick="document.getElementById('loginCard')?.scrollIntoView({behavior:'smooth',block:'center'})">
       <span class="portal-avatar">👤</span>
@@ -1999,6 +2000,20 @@ body.show-mylichtloot .account-creation-panel{display:none}
     </section>
     </div>
   </main>
+
+  <div id="supportModal" class="support-modal hidden" onclick="closeSupportFormOnBackdrop(event)">
+    <section class="support-dialog" role="dialog" aria-modal="true" aria-labelledby="supportTitle">
+      <header class="support-head"><div><h2 id="supportTitle">GuildLoot Support</h2><p>Beschreibe dein Anliegen. Die Nachricht landet direkt in der Plattform-Administration.</p></div><button class="support-close" type="button" aria-label="Support schließen" onclick="closeSupportForm()">×</button></header>
+      <form id="supportForm" onsubmit="submitSupportForm(event)"><div class="support-grid">
+        <label>Name<input name="contactName" maxlength="120" required autocomplete="name"></label>
+        <label>Kategorie<select name="category"><option value="question">Allgemeine Frage</option><option value="account">SpielerLogin oder Account</option><option value="guild">Gilde und Einrichtung</option><option value="raid">Raid oder Prioliste</option><option value="technical">Technisches Problem</option><option value="feedback">Idee oder Feedback</option></select></label>
+        <label>E-Mail-Adresse<input name="contactEmail" type="email" maxlength="240" autocomplete="email" placeholder="name@beispiel.de"></label>
+        <label>Discord-Name<input name="contactDiscord" maxlength="120" placeholder="name oder @name"></label>
+        <label class="full">Betreff<input name="subject" maxlength="180" required placeholder="Worum geht es?"></label>
+        <label class="full">Nachricht<textarea name="message" minlength="10" maxlength="6000" required placeholder="Bitte beschreibe möglichst genau, wobei du Hilfe brauchst."></textarea></label>
+      </div><div class="support-actions"><button type="button" onclick="closeSupportForm()">Abbrechen</button><button id="supportSubmit" class="support-send" type="submit">Nachricht senden</button></div><div id="supportStatus" class="support-status">Bitte E-Mail-Adresse oder Discord-Namen angeben, damit wir antworten können.</div></form>
+    </section>
+  </div>
 
   <div id="raidCreateBox" class="hidden"></div>
   <div id="randomRaidModal" class="random-raid-modal hidden" onclick="closeRandomRaidModalOnBackdrop(event)">
@@ -4830,6 +4845,33 @@ function renderP0PlusOverview(entries){
 
 </script>
 <script>
+function openSupportForm(){
+  const modal=document.getElementById('supportModal');
+  if(!modal)return;
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  modal.querySelector('input[name="contactName"]')?.focus();
+}
+function closeSupportForm(){
+  document.getElementById('supportModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+}
+function closeSupportFormOnBackdrop(event){if(event.target?.id==='supportModal')closeSupportForm();}
+async function submitSupportForm(event){
+  event.preventDefault();
+  const form=document.getElementById('supportForm'),status=document.getElementById('supportStatus'),button=document.getElementById('supportSubmit');
+  if(!form||!status||!button)return;
+  const values=Object.fromEntries(new FormData(form).entries());
+  if(!String(values.contactEmail||'').trim()&&!String(values.contactDiscord||'').trim()){status.className='support-status bad';status.textContent='Bitte E-Mail-Adresse oder Discord-Namen angeben.';return;}
+  button.disabled=true;button.textContent='Wird gesendet …';status.className='support-status';status.textContent='Supportanfrage wird übermittelt …';
+  try{
+    const response=await fetch(LICHTLOOT_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submitSupportTicket',guild:currentActiveGuildSlug(),pageUrl:location.href,...values})});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||!result.success)throw new Error(result.error||'Supportanfrage konnte nicht gesendet werden.');
+    form.reset();status.className='support-status good';status.textContent='✓ Nachricht gesendet. Sie ist jetzt in der GuildLoot-Administration sichtbar.';button.textContent='Gesendet';
+  }catch(error){button.disabled=false;button.textContent='Nachricht senden';status.className='support-status bad';status.textContent=error.message||'Supportanfrage konnte nicht gesendet werden.';}
+}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.getElementById('supportModal')?.classList.contains('hidden'))closeSupportForm();});
 function getSavedPlayerLogin(){
   const key=playerLoginStorageKey();
   return localStorage.getItem(key) || sessionStorage.getItem(key) || '';
