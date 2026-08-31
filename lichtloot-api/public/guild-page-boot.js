@@ -26,6 +26,26 @@
   window.setTimeout(finish, 6000);
 })();
 
+/* Seitenaufrufe auch dann erfassen, wenn das HTML aus dem Browser-Cache kommt. */
+(function () {
+  const guild = new URLSearchParams(window.location.search).get("guild") || "lichtloot";
+  const payload = JSON.stringify({ path: window.location.pathname || "/", guild });
+  const send = function () {
+    fetch("/api/page-view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      cache: "no-store",
+      keepalive: true
+    }).catch(function () {});
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", send, { once: true });
+  } else {
+    send();
+  }
+})();
+
 /* Einheitliche Systemhinweise und technische Fehlererfassung. */
 (function(){
   const STORAGE_KEY="lichtloot_pending_system_errors_v1",wrapped=new WeakSet(),recent=new Map();
