@@ -53,6 +53,7 @@ const p0ReleaseCsvUrl =
   process.env.P0_RELEASE_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1ejape-5N42TDUIsglYZV1uPupQxYMiUK6JE1QiPJKbE/export?format=csv&gid=0";
 const warcraftLogsTokenCache = new Map();
+const warcraftLogsTokenRequests = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
 const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-cooldown-class-owners-v23";
@@ -878,28 +879,42 @@ async function getWarcraftLogsAccessToken() {
   const cached = warcraftLogsTokenCache.get(baseUrl);
   if (cached && cached.expiresAt > Date.now() + 30_000) return cached.token;
 
-  const response = await fetch(`${baseUrl}/oauth/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({ grant_type: "client_credentials" })
-  });
-  const text = await response.text();
+  // Nach einem Deployment starten MC, BWL, AQ40 und Naxx gleichzeitig. Ohne
+  // gemeinsame Anfrage wuerden alle vier Aufrufe parallel einen OAuth-Token
+  // holen und koennten direkt ins Warcraft-Logs-Rate-Limit laufen.
+  const pending = warcraftLogsTokenRequests.get(baseUrl);
+  if (pending) return pending;
 
-  if (!response.ok) {
-    throw new Error(`Token konnte nicht geholt werden (${response.status}): ${text}`);
+  const request = (async()=>{
+    const response = await fetch(`${baseUrl}/oauth/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({ grant_type: "client_credentials" })
+    });
+    const text = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`Token konnte nicht geholt werden (${response.status}): ${text}`);
+    }
+
+    const data = JSON.parse(text);
+    if (!data.access_token) throw new Error("Warcraft Logs lieferte keinen Access Token.");
+
+    warcraftLogsTokenCache.set(baseUrl, {
+      token: data.access_token,
+      expiresAt: Date.now() + Math.max(60, Number(data.expires_in || 3600) - 120) * 1000
+    });
+    return data.access_token;
+  })();
+  warcraftLogsTokenRequests.set(baseUrl,request);
+  try {
+    return await request;
+  } finally {
+    warcraftLogsTokenRequests.delete(baseUrl);
   }
-
-  const data = JSON.parse(text);
-  if (!data.access_token) throw new Error("Warcraft Logs lieferte keinen Access Token.");
-
-  warcraftLogsTokenCache.set(baseUrl, {
-    token: data.access_token,
-    expiresAt: Date.now() + Math.max(60, Number(data.expires_in || 3600) - 120) * 1000
-  });
-  return data.access_token;
 }
 
 async function warcraftLogsGraphql(token, gqlQuery, variables = {}) {
@@ -1675,6 +1690,15 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
   }
   if (!layoutJson || typeof layoutJson !== "object" || Array.isArray(layoutJson)) {
     layoutJson = {};
+  }
+  if (Object.prototype.hasOwnProperty.call(layoutJson,"warcraftLogsGuildId")) {
+    const wclGuildId=Number(clean(layoutJson.warcraftLogsGuildId).replace(/\D/g,""));
+    if (!Number.isInteger(wclGuildId) || wclGuildId < 1 || wclGuildId > 2147483647) {
+      const error = new Error("Die Warcraft-Logs-Gilden-ID ist ungültig. Bitte nicht die Discord-Server-ID eintragen.");
+      error.statusCode = 400;
+      throw error;
+    }
+    layoutJson.warcraftLogsGuildId=String(wclGuildId);
   }
 
   const client = await pool.connect();
@@ -3273,6 +3297,11 @@ function displayRaidName(value) {
 const ERA_STANDARD_RAIDS = ["mc", "bwl", "ony", "zg", "aq20", "aq40", "naxx"];
 const LEGACY_WCL_GUILD_IDS = { lichtloot: 755306, lichtbringer: 755306, nachtloot: 703333 };
 
+function validWarcraftLogsGuildId(value) {
+  const parsed=Number(clean(value).replace(/\D/g,""));
+  return Number.isInteger(parsed) && parsed > 0 && parsed <= 2147483647 ? parsed : 0;
+}
+
 function defaultEraRulesForSlug(slug) {
   const normalizedSlug = clean(slug).toLowerCase();
   const nachtloot = normalizedSlug === "nachtloot";
@@ -3359,11 +3388,13 @@ async function getGuildEraConfiguration(guildId) {
   );
   const row = result.rows[0] || {};
   const layout = row.layout_json && typeof row.layout_json === "object" ? row.layout_json : {};
+  const slug=clean(row.slug).toLowerCase();
+  const configuredWclGuildId=validWarcraftLogsGuildId(layout.warcraftLogsGuildId);
   return {
-    slug: clean(row.slug).toLowerCase(),
+    slug,
     layout,
     rules: guildEraRulesFromLayout(layout, row.slug),
-    warcraftLogsGuildId: Number(layout.warcraftLogsGuildId || LEGACY_WCL_GUILD_IDS[clean(row.slug).toLowerCase()] || 0)
+    warcraftLogsGuildId: configuredWclGuildId || LEGACY_WCL_GUILD_IDS[slug] || 0
   };
 }
 
