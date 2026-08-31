@@ -535,6 +535,18 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   cursor:pointer;
 }
 
+.traffic-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.traffic-metric{padding:13px;border:1px solid rgba(148,163,184,.18);border-radius:8px;background:rgba(2,6,23,.42)}
+.traffic-metric span{display:block;color:#94a3b8;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.05em}
+.traffic-metric strong{display:block;margin-top:5px;color:#f8fafc;font-size:25px}
+.traffic-metric small{display:block;margin-top:3px;color:#c4b5fd;font-weight:750}
+.traffic-chart{display:flex;height:112px;align-items:flex-end;gap:3px;margin-top:14px;padding:10px 8px 0;border:1px solid rgba(148,163,184,.14);border-radius:8px;background:rgba(2,6,23,.32)}
+.traffic-bar{flex:1;min-width:3px;border-radius:3px 3px 0 0;background:linear-gradient(#facc15,#a16207);opacity:.88}
+.traffic-bar:hover{opacity:1;filter:brightness(1.18)}
+.traffic-pages{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.traffic-page{padding:5px 8px;border:1px solid rgba(148,163,184,.18);border-radius:999px;color:#cbd5e1;font-size:11px}
+@media(max-width:700px){.traffic-summary{grid-template-columns:1fr}.traffic-chart{gap:2px}}
+
 .active-raid-list{
   display:grid;
   gap:14px;
@@ -5421,6 +5433,13 @@ body.worldbuff-only .master-only{display:none!important}
   <div class="dashboard-grid">
     <div class="dashboard-column">
       <section id="discordNotificationPanel" class="dashboard-card discord-settings-panel hidden"></section>
+      <section id="trafficStatsPanel" class="dashboard-card">
+        <div class="dashboard-card-head">
+          <div><h2>↗ LichtLoot-Aufrufe</h2><div class="muted" id="trafficStatsScope">Datensparsame Statistik · Bots werden ausgeschlossen</div></div>
+          <button type="button" onclick="loadTrafficStats()">Aktualisieren</button>
+        </div>
+        <div id="trafficStatsContent" class="muted">Nach dem Freischalten werden die Aufrufe geladen.</div>
+      </section>
       <section id="raidDashboardSection" class="dashboard-card">
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
@@ -7476,6 +7495,7 @@ async function loadOverview(options){
     handleRaidHelperDeepLink();
     handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
+    loadTrafficStats();
     loadRaidHelperDiscordChannels();
     // Das Panel kann bereits vor der Freischaltung geöffnet worden sein. In
     // diesem Fall wurde der Rollenabruf wegen des noch leeren Master-Codes
@@ -9206,6 +9226,39 @@ async function loadDashboardRaidStats(){
   });
 
   renderDashboardCards();
+}
+
+async function loadTrafficStats(){
+  const root=document.getElementById("trafficStatsContent");
+  const scope=document.getElementById("trafficStatsScope");
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(!root)return;
+  if(!masterCode){root.className="status bad";root.textContent="Bitte zuerst den Master-Code eingeben.";return;}
+  root.className="muted";
+  root.textContent="Aufrufstatistik wird geladen …";
+  try{
+    const result=await railwayApi({action:"guildGetTrafficStats",masterCode});
+    if(!result.success)throw new Error(result.error||"Aufrufstatistik konnte nicht geladen werden.");
+    const totals=result.totals||{};
+    const daily=Array.isArray(result.daily)?result.daily:[];
+    const pages=Array.isArray(result.pages)?result.pages:[];
+    const maxViews=Math.max(1,...daily.map(day=>Number(day.views||0)));
+    const number=value=>Number(value||0).toLocaleString("de-DE");
+    const pageLabel=path=>path==="/"?"Startseite":String(path||"").replace(/^\//,"").replace(/\.html$/i,"")||"Startseite";
+    if(scope)scope.textContent=result.scope==="all"?"Gesamtes LichtLoot · Bots werden ausgeschlossen":"Diese Gilde · Bots werden ausgeschlossen";
+    root.className="";
+    root.innerHTML=`
+      <div class="traffic-summary">
+        <div class="traffic-metric"><span>Heute</span><strong>${number(totals.today_views)}</strong><small>${number(totals.today_visitors)} Besucher</small></div>
+        <div class="traffic-metric"><span>Letzte 7 Tage</span><strong>${number(totals.week_views)}</strong><small>${number(totals.week_visitor_days)} Besuchertage</small></div>
+        <div class="traffic-metric"><span>Letzte 30 Tage</span><strong>${number(totals.month_views)}</strong><small>${number(totals.month_visitor_days)} Besuchertage</small></div>
+      </div>
+      <div class="traffic-chart" aria-label="Aufrufe der letzten 30 Tage">${daily.map(day=>`<div class="traffic-bar" style="height:${Math.max(2,Math.round(Number(day.views||0)*100/maxViews))}%" title="${escapeAttr(day.day)}: ${number(day.views)} Aufrufe · ${number(day.visitors)} Besucher"></div>`).join("")}</div>
+      <div class="traffic-pages">${pages.map(page=>`<span class="traffic-page">${escapeHtml(pageLabel(page.path))}: <strong>${number(page.views)}</strong></span>`).join("")||'<span class="muted">Die Statistik beginnt mit dem nächsten Seitenaufruf.</span>'}</div>`;
+  }catch(error){
+    root.className="status bad";
+    root.textContent=error.message||"Aufrufstatistik konnte nicht geladen werden.";
+  }
 }
 
 function renderPlayerMiniList(){
