@@ -1759,6 +1759,7 @@ function isActiveP0PlusEntry(entry){
 }
 
 function p0Label(){
+  if(RANDOM_RAIDLEAD_MODE) return "P0";
   return isAllowedP0Raid() ? "P0+" : "P0";
 }
 
