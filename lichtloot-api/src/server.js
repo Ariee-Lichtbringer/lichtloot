@@ -2272,6 +2272,109 @@ async function getPlatformAdminOverview({ query: params = {} }) {
   return {success:true,guilds,daily:dailyResult.rows,pages:pagesResult.rows,retentionDays:90};
 }
 
+async function ensureSupportTicketSchema() {
+  await query(
+    `create table if not exists platform_support_tickets (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid references guilds(id) on delete set null,
+       guild_slug text not null default '',
+       guild_name text not null default '',
+       contact_name text not null,
+       contact_email text not null default '',
+       contact_discord text not null default '',
+       category text not null default 'question',
+       subject text not null,
+       message text not null,
+       page_url text not null default '',
+       status text not null default 'new',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       resolved_at timestamptz
+     )`
+  );
+  await query(`create index if not exists idx_platform_support_tickets_status_created on platform_support_tickets(status, created_at desc)`);
+}
+
+function normalizeSupportTicketRow(row) {
+  return {
+    id: row.id,
+    guildSlug: row.guild_slug || "",
+    guildName: row.guild_name || "",
+    contactName: row.contact_name || "",
+    contactEmail: row.contact_email || "",
+    contactDiscord: row.contact_discord || "",
+    category: row.category || "question",
+    subject: row.subject || "",
+    message: row.message || "",
+    pageUrl: row.page_url || "",
+    status: row.status || "new",
+    createdAt: row.created_at ? row.created_at.toISOString() : "",
+    updatedAt: row.updated_at ? row.updated_at.toISOString() : "",
+    resolvedAt: row.resolved_at ? row.resolved_at.toISOString() : ""
+  };
+}
+
+async function submitSupportTicket({ query: params = {}, body = {} }) {
+  await ensureSupportTicketSchema();
+  const values = { ...params, ...body };
+  const guild = await requireGuild(resolveGuildSlug(values.guild || values.guildSlug || defaultGuildSlug));
+  const contactName = clean(values.contactName).slice(0, 120);
+  const contactEmail = clean(values.contactEmail).toLowerCase().slice(0, 240);
+  const contactDiscord = clean(values.contactDiscord).slice(0, 120);
+  const category = clean(values.category).toLowerCase().slice(0, 40) || "question";
+  const subject = clean(values.subject).slice(0, 180);
+  const message = clean(values.message).slice(0, 6000);
+  if (!contactName || !subject || message.length < 10) {
+    const error = new Error("Bitte Name, Betreff und eine ausführliche Nachricht angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!contactEmail && !contactDiscord) {
+    const error = new Error("Bitte E-Mail-Adresse oder Discord-Namen als Kontakt angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    const error = new Error("Bitte eine gültige E-Mail-Adresse angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `insert into platform_support_tickets
+       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url)
+     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     returning *`,
+    [guild.id, guild.slug, guild.name, contactName, contactEmail, contactDiscord, category, subject, message, clean(values.pageUrl).slice(0, 500)]
+  );
+  return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
+}
+
+async function getPlatformSupportTickets({ query: params = {} }) {
+  requirePlatformMasterCode(params.masterCode);
+  await ensureSupportTicketSchema();
+  const result = await query(`select * from platform_support_tickets order by case when status='new' then 0 else 1 end, created_at desc limit 250`);
+  return { success: true, tickets: result.rows.map(normalizeSupportTicketRow) };
+}
+
+async function updatePlatformSupportTicket({ query: params = {}, body = {} }) {
+  requirePlatformMasterCode(params.masterCode || body.masterCode);
+  await ensureSupportTicketSchema();
+  const values = { ...params, ...body }, id = clean(values.id), status = clean(values.status).toLowerCase();
+  if (!isUuid(id) || !["new", "resolved"].includes(status)) {
+    const error = new Error("Ungültige Supportanfrage oder Statusangabe.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `update platform_support_tickets
+     set status=$2,resolved_at=case when $2='resolved' then now() else null end,updated_at=now()
+     where id=$1 returning *`,
+    [id,status]
+  );
+  if (!result.rows[0]) { const error = new Error("Supportanfrage wurde nicht gefunden."); error.statusCode = 404; throw error; }
+  return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
+}
+
 async function platformResetGuildCode({ query: params = {}, body = {} }) {
   requirePlatformMasterCode(params.masterCode||body.masterCode);
   const values={...params,...body},slug=clean(values.slug).toLowerCase(),newCode=normalizePin(values.newCode);
@@ -29450,6 +29553,12 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(overview);
     }
 
+    if (action === "platformGetSupportTickets") {
+      enforceSecurityRateLimit(req, "platform-admin", 30, 15 * 60 * 1000);
+      const tickets = await getPlatformSupportTickets({ query: req.query });
+      return res.json(tickets);
+    }
+
     if (action === "guildApproveApplication") {
       enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
       const approved = await approveGuildApplication({ query: req.query });
@@ -30513,6 +30622,12 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(saved);
     }
 
+    if (action === "submitSupportTicket") {
+      enforceSecurityRateLimit(req, "support-ticket", 8, 60 * 60 * 1000);
+      const ticket = await submitSupportTicket({ query: req.query, body: req.body });
+      return res.json(ticket);
+    }
+
     if (action === "guildApproveApplication") {
       enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
       const approved = await approveGuildApplication({ query: req.query, body: req.body });
@@ -30539,6 +30654,12 @@ app.post("/api/apps-script", async (req, res, next) => {
       enforceSecurityRateLimit(req, "platform-admin-sensitive", 10, 60 * 60 * 1000);
       const deleted = await platformDeleteGuild({ query: req.query, body: req.body });
       return res.json(deleted);
+    }
+
+    if (action === "platformUpdateSupportTicket") {
+      enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
+      const ticket = await updatePlatformSupportTicket({ query: req.query, body: req.body });
+      return res.json(ticket);
     }
 
     if (action === "completeGuildSetup") {
