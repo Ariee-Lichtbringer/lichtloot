@@ -2234,6 +2234,73 @@ async function rejectGuildApplication({ query: params, body = {} }) {
   return { success: true, application: normalizeGuildApplicationRow(result.rows[0], params) };
 }
 
+async function getPlatformAdminOverview({ query: params = {} }) {
+  requirePlatformMasterCode(params.masterCode);
+  await ensurePageAnalyticsSchema();
+  const guildResult=await query(
+    `select g.id,g.slug,g.name,g.server,g.created_at,g.discord_guild_id,
+            (select count(*)::int from players p where p.guild_id=g.id) as players,
+            (select count(*)::int from raids r where r.guild_id=g.id) as raids,
+            coalesce(sum(a.view_count) filter(where a.day>=timezone('Europe/Berlin',now())::date-29),0)::int as views_30,
+            count(distinct a.visitor_hash) filter(where a.day>=timezone('Europe/Berlin',now())::date-29)::int as visitors_30
+     from guilds g left join page_analytics_daily a on a.guild_slug=lower(g.slug)
+     group by g.id order by g.created_at asc,g.name asc`
+  );
+  const dailyResult=await query(
+    `with days as(select generate_series(timezone('Europe/Berlin',now())::date-29,timezone('Europe/Berlin',now())::date,interval '1 day')::date day),traffic as(select day,sum(view_count)::int views,count(distinct visitor_hash)::int visitors from page_analytics_daily where day>=timezone('Europe/Berlin',now())::date-29 group by day) select to_char(days.day,'YYYY-MM-DD') day,coalesce(traffic.views,0)::int views,coalesce(traffic.visitors,0)::int visitors from days left join traffic using(day) order by days.day`
+  );
+  const pagesResult=await query(`select page_path as path,sum(view_count)::int views from page_analytics_daily where day>=timezone('Europe/Berlin',now())::date-29 group by page_path order by views desc limit 10`);
+  const guilds=await Promise.all(guildResult.rows.map(async row=>({...row,readiness:await evaluateGuildReadiness(row.slug)})));
+  return {success:true,guilds,daily:dailyResult.rows,pages:pagesResult.rows,retentionDays:90};
+}
+
+async function platformResetGuildCode({ query: params = {}, body = {} }) {
+  requirePlatformMasterCode(params.masterCode||body.masterCode);
+  const values={...params,...body},slug=clean(values.slug).toLowerCase(),newCode=normalizePin(values.newCode);
+  if(!slug||clean(values.confirmation).toLowerCase()!==slug){const error=new Error("Der bestätigte Gilden-Slug stimmt nicht überein.");error.statusCode=400;throw error;}
+  if(newCode.length<10){const error=new Error("Der neue Leitungscode muss mindestens 10 Zeichen haben.");error.statusCode=400;throw error;}
+  const guild=await requireGuild(resolveGuildSlug(slug));
+  const duplicate=await query(
+    `select 1
+       from guilds g
+       left join guild_master_codes c on c.guild_id=g.id
+      where g.id<>$1 and (g.guild_pin=$2 or c.master_code=$2)
+      limit 1`,
+    [guild.id,newCode]
+  );
+  if(duplicate.rows[0]){const error=new Error("Dieser Leitungscode wird bereits von einer anderen Gilde verwendet.");error.statusCode=409;throw error;}
+  const client=await pool.connect();
+  try{await client.query("begin");await saveGuildMasterCodeValue(client,guild.id,newCode);await client.query(`update guilds set guild_pin=$2,updated_at=now() where id=$1`,[guild.id,newCode]);await client.query("commit");}catch(error){await client.query("rollback").catch(()=>{});throw error;}finally{client.release();}
+  return {success:true,slug:guild.slug,message:"Leitungscode wurde zurückgesetzt. Der vorherige Code ist ungültig."};
+}
+
+async function platformDeleteGuild({ query: params = {}, body = {} }) {
+  requirePlatformMasterCode(params.masterCode||body.masterCode);
+  const values={...params,...body},slug=clean(values.slug).toLowerCase();
+  if(!slug||clean(values.confirmation).toLowerCase()!==slug||clean(values.phrase)!=="GILDE ENDGÜLTIG LÖSCHEN"){const error=new Error("Löschbestätigung ist nicht vollständig.");error.statusCode=400;throw error;}
+  if(slug===clean(defaultGuildSlug).toLowerCase()||slug==="lichtloot"){const error=new Error("Die produktive LichtLoot-Kerngilde ist gegen Löschen geschützt.");error.statusCode=403;throw error;}
+  const guild=await requireGuild(resolveGuildSlug(slug));
+  if(clean(guild.slug).toLowerCase()===clean(defaultGuildSlug).toLowerCase()||clean(guild.slug).toLowerCase()==="lichtloot"){const error=new Error("Die produktive LichtLoot-Kerngilde ist gegen Löschen geschützt.");error.statusCode=403;throw error;}
+  const client=await pool.connect();
+  try{
+    await client.query("begin");
+    await client.query(`delete from page_analytics_daily where guild_slug=$1`,[slug]);
+    await client.query(`delete from guild_applications where lower(coalesce(guild_slug,''))=$1`,[slug]);
+    const deleted=await client.query(`delete from guilds where id=$1 returning id,slug,name`,[guild.id]);
+    if(!deleted.rows[0])throw new Error("Gilde wurde nicht gefunden.");
+    const leftovers=await client.query(`select c.table_name from information_schema.columns c join information_schema.tables t on t.table_schema=c.table_schema and t.table_name=c.table_name where c.table_schema='public' and c.column_name='guild_id' and c.table_name not in('guilds') and t.table_type='BASE TABLE'`);
+    for(const row of leftovers.rows){const table=clean(row.table_name);if(!/^[a-z_][a-z0-9_]*$/.test(table))continue;await client.query(`delete from "${table}" where guild_id=$1`,[guild.id]);}
+    await client.query("commit");
+  }catch(error){await client.query("rollback").catch(()=>{});throw error;}finally{client.release();}
+  const cleanupWarnings=[];
+  if(p0Pool){
+    try{await ensureP0OnlySchema();await p0Query(`delete from p0_only_events where guild_id=$1`,[guild.id]);}
+    catch(error){cleanupWarnings.push(`P0-Datenbank: ${clean(error?.message)||"Bereinigung fehlgeschlagen"}`);}
+  }
+  masterCodeOverrides.delete(String(guild.id));worldbuffAccessCodeOverrides.delete(String(guild.id));lootMasterAccessCodeOverrides.delete(String(guild.id));
+  return {success:true,slug:guild.slug,name:guild.name,recoverable:false,cleanupWarnings};
+}
+
 async function getGuildSetup({ query: params }) {
   await ensureGuildApplicationSchema();
   const token = clean(params.token);
@@ -29359,6 +29426,12 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(applications);
     }
 
+    if (action === "platformGetOverview") {
+      enforceSecurityRateLimit(req, "platform-admin", 30, 15 * 60 * 1000);
+      const overview = await getPlatformAdminOverview({ query: req.query });
+      return res.json(overview);
+    }
+
     if (action === "guildApproveApplication") {
       enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
       const approved = await approveGuildApplication({ query: req.query });
@@ -30436,6 +30509,18 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildRejectApplication") {
       const rejected = await rejectGuildApplication({ query: req.query, body: req.body });
       return res.json(rejected);
+    }
+
+    if (action === "platformResetGuildCode") {
+      enforceSecurityRateLimit(req, "platform-admin-sensitive", 20, 15 * 60 * 1000);
+      const reset = await platformResetGuildCode({ query: req.query, body: req.body });
+      return res.json(reset);
+    }
+
+    if (action === "platformDeleteGuild") {
+      enforceSecurityRateLimit(req, "platform-admin-sensitive", 10, 60 * 60 * 1000);
+      const deleted = await platformDeleteGuild({ query: req.query, body: req.body });
+      return res.json(deleted);
     }
 
     if (action === "completeGuildSetup") {
