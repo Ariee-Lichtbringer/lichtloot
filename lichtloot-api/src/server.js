@@ -212,6 +212,34 @@ app.post("/api/page-view", async (req, res) => {
   }
 });
 
+app.post("/api/ad-event", async (req, res) => {
+  try {
+    const campaignId = clean(req.body?.campaignId);
+    const eventType = clean(req.body?.eventType).toLowerCase();
+    const placement = clean(req.body?.placement).slice(0, 100);
+    const pagePath = clean(req.body?.path).split("?")[0].slice(0, 200);
+    if (!/^[0-9a-f-]{36}$/i.test(campaignId) || !["impression", "viewable", "click"].includes(eventType) || !placement || !trackedPagePaths.has(pagePath)) {
+      return res.status(400).json({ success: false, error: "Ungültiges Werbeereignis." });
+    }
+    const userAgent = clean(req.headers["user-agent"]);
+    if (!userAgent || /bot|crawler|spider|slurp|preview|monitor|uptime|headless|lighthouse/i.test(userAgent)) return res.json({ success: true, counted: false });
+    const campaign = await query(`select id from advertising_campaigns where id=$1 and status='active' and starts_on<=current_date and ends_on>=current_date`, [campaignId]);
+    if (!campaign.rows[0]) return res.status(404).json({ success: false, error: "Aktive Kampagne nicht gefunden." });
+    const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
+    const visitorHash = analyticsVisitorHash(req, day);
+    const column = { impression: "impressions", viewable: "viewable_impressions", click: "clicks" }[eventType];
+    await query(
+      `insert into advertising_events_daily (day,campaign_id,placement,page_path,visitor_hash,${column}) values ($1,$2,$3,$4,$5,1)
+       on conflict (day,campaign_id,placement,page_path,visitor_hash) do update set ${column}=advertising_events_daily.${column}+1,last_seen_at=now()`,
+      [day, campaignId, placement, pagePath, visitorHash]
+    );
+    res.json({ success: true, counted: true });
+  } catch (error) {
+    console.warn("Werbeereignis konnte nicht gezählt werden:", error.message || error);
+    res.status(500).json({ success: false, error: "Werbeereignis konnte nicht gezählt werden." });
+  }
+});
+
 async function recordPageRequest(req, pagePathOverride = "", guildSlugOverride = "") {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(new Date());
   const guildSlug = clean(guildSlugOverride || req.query.guild || req.query.guildSlug || defaultGuildSlug).toLowerCase().slice(0, 100) || defaultGuildSlug;
@@ -2268,8 +2296,27 @@ async function getPlatformAdminOverview({ query: params = {} }) {
      order by days.day`
   );
   const pagesResult=await query(`select page_path as path,sum(view_count)::int views from page_analytics_daily where day>=timezone('Europe/Berlin',now())::date-29 group by page_path order by views desc limit 10`);
+  const campaignsResult=await query(
+    `select c.id,c.name,c.advertiser,c.placement,c.starts_on,c.ends_on,c.status,
+            coalesce(sum(e.impressions),0)::int impressions,coalesce(sum(e.viewable_impressions),0)::int viewable_impressions,
+            coalesce(sum(e.clicks),0)::int clicks,count(distinct (e.day::text||':'||e.visitor_hash))::int visitor_days
+     from advertising_campaigns c left join advertising_events_daily e on e.campaign_id=c.id
+     group by c.id order by c.starts_on desc,c.created_at desc`
+  );
   const guilds=await Promise.all(guildResult.rows.map(async row=>({...row,readiness:await evaluateGuildReadiness(row.slug)})));
-  return {success:true,guilds,daily:dailyResult.rows,pages:pagesResult.rows,retentionDays:90};
+  return {success:true,guilds,daily:dailyResult.rows,pages:pagesResult.rows,campaigns:campaignsResult.rows,retentionDays:365};
+}
+
+async function saveAdvertisingCampaign({ query: params = {}, body = {} }) {
+  const values = { ...params, ...body };
+  requirePlatformMasterCode(values.masterCode);
+  const name = clean(values.name).slice(0, 120), advertiser = clean(values.advertiser).slice(0, 120);
+  const placement = clean(values.placement).slice(0, 100), startsOn = clean(values.startsOn), endsOn = clean(values.endsOn);
+  if (!name || !advertiser || !placement || !/^\d{4}-\d{2}-\d{2}$/.test(startsOn) || !/^\d{4}-\d{2}-\d{2}$/.test(endsOn) || endsOn < startsOn) {
+    const error = new Error("Name, Werbepartner, Werbeplatz und ein gültiger Zeitraum sind erforderlich."); error.statusCode = 400; throw error;
+  }
+  const result = await query(`insert into advertising_campaigns (name,advertiser,placement,starts_on,ends_on,status) values ($1,$2,$3,$4,$5,'active') returning *`, [name, advertiser, placement, startsOn, endsOn]);
+  return { success: true, campaign: result.rows[0] };
 }
 
 async function ensureSupportTicketSchema() {
@@ -3488,7 +3535,20 @@ async function ensurePageAnalyticsSchema() {
      )`
   );
   await query(`create index if not exists idx_page_analytics_daily_guild_day on page_analytics_daily(guild_slug, day desc)`);
-  await query(`delete from page_analytics_daily where day < timezone('Europe/Berlin', now())::date - 90`);
+  await query(`create table if not exists advertising_campaigns (
+    id uuid primary key default gen_random_uuid(), name text not null, advertiser text not null, placement text not null,
+    starts_on date not null, ends_on date not null, status text not null default 'active', created_at timestamptz not null default now(),
+    check (status in ('active','paused','completed')), check (ends_on >= starts_on)
+  )`);
+  await query(`create table if not exists advertising_events_daily (
+    day date not null, campaign_id uuid not null references advertising_campaigns(id) on delete cascade, placement text not null,
+    page_path text not null, visitor_hash text not null, impressions integer not null default 0, viewable_impressions integer not null default 0,
+    clicks integer not null default 0, first_seen_at timestamptz not null default now(), last_seen_at timestamptz not null default now(),
+    primary key (day,campaign_id,placement,page_path,visitor_hash)
+  )`);
+  await query(`create index if not exists idx_advertising_events_campaign_day on advertising_events_daily(campaign_id,day desc)`);
+  await query(`delete from page_analytics_daily where day < timezone('Europe/Berlin', now())::date - 365`);
+  await query(`delete from advertising_events_daily where day < timezone('Europe/Berlin', now())::date - 365`);
 }
 
 async function getTrafficStats({ guild, params }) {
@@ -3539,7 +3599,7 @@ async function getTrafficStats({ guild, params }) {
   return {
     success: true,
     scope: allGuilds ? "all" : "guild",
-    retentionDays: 90,
+    retentionDays: 365,
     totals: totals.rows[0] || {},
     daily: daily.rows,
     pages: pages.rows
@@ -25279,6 +25339,106 @@ function normalizeRandomRaidRow(row) {
   };
 }
 
+function isRandomRaidRequest(params = {}) {
+  return ["1", "true", "yes", "ja"].includes(clean(params.random).toLowerCase());
+}
+
+async function findRandomRaid(params = {}, pinKind = "either") {
+  await ensureRandomRaidSchema();
+  const raidId = clean(params.raidId || params.RaidID);
+  const prioPin = clean(params.raidPin || params.prioPin || params.playerPin || params.pin);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  const clauses = [], values = [];
+  if (raidId) { values.push(raidId); clauses.push(`(external_raid_id=$${values.length} or id::text=$${values.length})`); }
+  if (pinKind !== "lead" && prioPin) { values.push(prioPin); clauses.push(`lower(prio_pin)=lower($${values.length})`); }
+  if (pinKind !== "prio" && leadPin) { values.push(leadPin); clauses.push(`lower(lead_pin)=lower($${values.length})`); }
+  if (!clauses.length) return null;
+  const result = await randomQuery(`select * from random_raids where archived_at is null and (${clauses.join(" or ")}) order by raid_date desc,created_at desc limit 1`, values);
+  return result.rows[0] || null;
+}
+
+async function saveRandomPrio({ guildId, params, raidlead = false }) {
+  const raid = await findRandomRaid(params, raidlead ? "lead" : "prio");
+  if (!raid) { const error = new Error("Random-Raid oder PIN wurde nicht gefunden."); error.statusCode = 404; throw error; }
+  if (raidlead && clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error = new Error("Falsche Random LeadPIN."); error.statusCode = 403; throw error; }
+  const player = clean(params.player || params.char || params.spieler), server = clean(params.server);
+  let sourceCharacter = null;
+  if (!raidlead) {
+    const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
+    sourceCharacter = await findCharacterForPin(guildId, pin, player, server);
+    if (!sourceCharacter) { const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerLogin."); error.statusCode = 403; throw error; }
+  }
+  if (!player || !clean(params.p1)) { const error = new Error("Charakter und P1 sind erforderlich."); error.statusCode = 400; throw error; }
+  const client = await randomPool.connect();
+  try {
+    await client.query("begin");
+    const characterResult = await client.query(
+      `insert into random_characters (id,raid_id,name,server,class_name,spec_name) values ($1,$2,$3,$4,$5,$6)
+       on conflict (raid_id,name,server) do update set class_name=excluded.class_name,spec_name=excluded.spec_name,updated_at=now() returning *`,
+      [randomUUID(), raid.id, player, server, clean(params.className || sourceCharacter?.class_name), clean(params.specName || params.spec)]
+    );
+    const character = characterResult.rows[0];
+    const p0Plus = ["ja","true","1"].includes(clean(params.p0Plus).toLowerCase());
+    await client.query(
+      `insert into random_prios (id,raid_id,character_id,p1_item_id,p1_item_name,p2_item_id,p2_item_name,p3_item_id,p3_item_name,p0_selected,p0_plus,p0_item_id,p0_item_name)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12)
+       on conflict (raid_id,character_id) do update set p1_item_id=excluded.p1_item_id,p1_item_name=excluded.p1_item_name,p2_item_id=excluded.p2_item_id,p2_item_name=excluded.p2_item_name,p3_item_id=excluded.p3_item_id,p3_item_name=excluded.p3_item_name,p0_selected=excluded.p0_selected,p0_plus=excluded.p0_plus,p0_item_id=excluded.p0_item_id,p0_item_name=excluded.p0_item_name,updated_at=now()`,
+      [randomUUID(), raid.id, character.id, clean(params.p1ItemId), clean(params.p1), clean(params.p2ItemId), clean(params.p2), clean(params.p3ItemId), clean(params.p3), p0Plus, clean(params.p0ItemId || params.p1ItemId), clean(params.p0Item || params.p1)]
+    );
+    await client.query(
+      `insert into random_signups (id,raid_id,character_id,role_name,status) values ($1,$2,$3,$4,$5)
+       on conflict (raid_id,character_id) do update set role_name=excluded.role_name,status=excluded.status,updated_at=now()`,
+      [randomUUID(), raid.id, character.id, clean(params.role || params.signupRole || params.spec), clean(params.signupStatus) || "angemeldet"]
+    );
+    await client.query("commit");
+    return { success: true, randomRaid: true, raidId: raid.external_raid_id, player };
+  } catch (error) { await client.query("rollback"); throw error; } finally { client.release(); }
+}
+
+async function getRandomPublishedPrios(params = {}) {
+  const raid = await findRandomRaid(params, clean(params.leadPin) ? "lead" : "prio");
+  if (!raid) return { success: false, error: "Random-Raid nicht gefunden." };
+  const result = await randomQuery(
+    `select p.*,c.name as player,c.server,c.class_name from random_prios p join random_characters c on c.id=p.character_id where p.raid_id=$1 order by lower(c.name)`,
+    [raid.id]
+  );
+  const normalized = normalizeRandomRaidRow(raid);
+  return { success: true, ...normalized, open: raid.status !== "geöffnet", prios: result.rows.map((row,index)=>({
+    id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
+    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",p0Plus:Boolean(row.p0_plus),bench:Boolean(row.bench)
+  })) };
+}
+
+async function deleteRandomPrio(guildId, params = {}) {
+  const raid = await findRandomRaid(params, clean(params.leadPin) ? "lead" : "prio");
+  if (!raid) { const error = new Error("Random-Raid nicht gefunden."); error.statusCode=404; throw error; }
+  const player = clean(params.player || params.char || params.spieler);
+  if (clean(params.leadPin)) {
+    if (clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error=new Error("Falsche Random LeadPIN.");error.statusCode=403;throw error; }
+  } else {
+    const character = await findCharacterForPin(guildId, params.characterPin || params.masterCharacterPin || params.pin || params.playerPin, player, clean(params.server));
+    if (!character) { const error=new Error("Dieser Charakter gehört nicht zu diesem SpielerLogin.");error.statusCode=403;throw error; }
+  }
+  const result = await randomQuery(`delete from random_characters where raid_id=$1 and lower(name)=lower($2) returning id`, [raid.id, player]);
+  return { success:true, deleted:result.rowCount, randomRaid:true };
+}
+
+async function setRandomRaidStatus(params = {}) {
+  const raid = await findRandomRaid(params, "lead");
+  if (!raid || clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error=new Error("Falsche Random LeadPIN.");error.statusCode=403;throw error; }
+  const status=normalizeStatus(params.status || params.raidStatus);
+  const result=await randomQuery(`update random_raids set status=$2,published=$2 in ('geöffnet','veröffentlicht','published'),updated_at=now() where id=$1 returning *`,[raid.id,status]);
+  return {success:true,...normalizeRandomRaidRow(result.rows[0])};
+}
+
+async function setRandomPrioBench(params = {}) {
+  const raid=await findRandomRaid(params,"lead");
+  if(!raid || clean(params.leadPin).toLowerCase()!==clean(raid.lead_pin).toLowerCase()){const error=new Error("Falsche Random LeadPIN.");error.statusCode=403;throw error;}
+  const player=clean(params.player||params.char),bench=["1","true","ja","yes"].includes(clean(params.bench).toLowerCase());
+  const result=await randomQuery(`update random_prios p set bench=$3,updated_at=now() from random_characters c where p.character_id=c.id and p.raid_id=$1 and lower(c.name)=lower($2) returning p.id`,[raid.id,player,bench]);
+  return {success:true,updated:result.rowCount,bench,randomRaid:true};
+}
+
 async function validateRandomLeadPin(params = {}) {
   await ensureRandomRaidSchema();
   const leadPin = clean(params.leadPin || params.raidleadPin);
@@ -30111,6 +30271,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "createRandomRaid") {
+      enforceSecurityRateLimit(req, "random-raid-create", 10, 60 * 60 * 1000);
       const writeGuild = await requireGuild(requireExplicitGuildSlug(req.query.guild));
       const created = await createRandomRaid({ guildId: writeGuild.id, query: req.query });
       return res.json({ ...created, guild: writeGuild.slug });
@@ -30178,7 +30339,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getPublishedPrios") {
-      const prios = await getPublishedPrios({ guildId: guild.id, query: req.query });
+      const prios = isRandomRaidRequest(req.query)
+        ? await getRandomPublishedPrios(req.query)
+        : await getPublishedPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...prios, guild: guild.slug });
     }
 
@@ -30312,12 +30475,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "savePrio") {
-      const saved = await savePrio({ guildId: guild.id, query: req.query });
+      const saved = isRandomRaidRequest(req.query)
+        ? await saveRandomPrio({ guildId: guild.id, params: req.query })
+        : await savePrio({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildSavePrio" || action === "raidleadSavePrio") {
-      const saved = await savePrioAsRaidlead({ guildId: guild.id, query: req.query });
+      const saved = isRandomRaidRequest(req.query)
+        ? await saveRandomPrio({ guildId: guild.id, params: req.query, raidlead: true })
+        : await savePrioAsRaidlead({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -30332,17 +30499,23 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "deletePrio" || action === "deletePlayerPrio") {
-      const deleted = await deletePrio({ guildId: guild.id, query: req.query });
+      const deleted = isRandomRaidRequest(req.query)
+        ? await deleteRandomPrio(guild.id, req.query)
+        : await deletePrio({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildDeletePrio" || action === "deleteGuildPrio") {
-      const deleted = await deleteGuildPrio({ guildId: guild.id, query: req.query });
+      const deleted = isRandomRaidRequest(req.query)
+        ? await deleteRandomPrio(guild.id, req.query)
+        : await deleteGuildPrio({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildSetRaidStatus" || action === "setRaidStatus") {
-      const saved = await setRaidStatus({ guildId: guild.id, query: req.query });
+      const saved = isRandomRaidRequest(req.query)
+        ? await setRandomRaidStatus(req.query)
+        : await setRaidStatus({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -30352,7 +30525,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildSetPrioBench") {
-      const saved = await setPrioBench({ guildId: guild.id, query: req.query });
+      const saved = isRandomRaidRequest(req.query)
+        ? await setRandomPrioBench(req.query)
+        : await setPrioBench({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -30662,6 +30837,12 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(ticket);
     }
 
+    if (action === "platformSaveAdvertisingCampaign") {
+      enforceSecurityRateLimit(req, "platform-admin-write", 60, 15 * 60 * 1000);
+      const campaign = await saveAdvertisingCampaign({ query: req.query, body: req.body });
+      return res.json(campaign);
+    }
+
     if (action === "completeGuildSetup") {
       enforceSecurityRateLimit(req, "guild-setup-complete", 10, 60 * 60 * 1000);
       const completed = await completeGuildSetup({ query: req.query, body: req.body });
@@ -30843,6 +31024,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "createRandomRaid") {
+      enforceSecurityRateLimit(req, "random-raid-create", 10, 60 * 60 * 1000);
       const created = await createRandomRaid({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
     }
