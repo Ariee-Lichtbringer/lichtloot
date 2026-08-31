@@ -1997,7 +1997,7 @@ function openRaidStartAction(action){
 <div class="loot-save-area">
   <button class="btn" onclick="savePrio()">Prios speichern</button>
 </div>
-<div class="loot-hint">Hinweis für Nachtwächter-Rekruten: P1 darf leer bleiben; bitte P2 und P3 vollständig auswählen.</div>
+<div class="loot-hint" hidden>Rekrutenregeln werden geladen …</div>
 
 
 <div id="lootList" class="loot-list">
@@ -2032,9 +2032,9 @@ function openRaidStartAction(action){
 <th>#</th>
 <th>Spieler</th>
 <th>Klasse</th>
-<th>P1</th>
-<th>P2</th>
-<th>P3</th>
+<th data-era-priority-key="p1">P1</th>
+<th data-era-priority-key="p2">P2</th>
+<th data-era-priority-key="p3">P3</th>
 <th>P0 gewählt</th>
 <th>Melden</th>
 </tr>
@@ -2200,7 +2200,6 @@ function guildLogoUrl(guild){
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
 async function fetchCurrentGuildInfo(){
   const slug=currentGuildSlug();
-  if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
   try{
     const response=await fetch(RAID_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
     const data=await response.json();
@@ -2251,6 +2250,7 @@ async function applyGuildBranding(){
     if(logo) el.src=logo;
     el.alt=lootName + " - " + guildName;
   });
+  applyEraPriorityUi();
 }
 if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
@@ -2274,6 +2274,44 @@ async function loadGuildPoItems(){
   try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
+
+function eraPriorityLevels(){
+  const configured=currentGuildInfo?.layout?.eraRules?.priorityLevels;
+  return ["p1","p2","p3"].map((key,index)=>{
+    const entry=Array.isArray(configured)?configured.find(level=>String(level?.key||"").toLowerCase()===key):null;
+    return {key,label:String(entry?.label||key.toUpperCase()).trim()||key.toUpperCase(),enabled:index<PRIO_COUNT&&entry?.enabled!==false};
+  });
+}
+function eraPriorityLevel(key){return eraPriorityLevels().find(level=>level.key===key)||{key,label:String(key||"").toUpperCase(),enabled:false};}
+function eraRequiredPriorityKeys(){
+  let keys=eraPriorityLevels().filter(level=>level.enabled).map(level=>level.key);
+  const recruit=currentGuildInfo?.layout?.eraRules?.recruit;
+  if(recruit?.enabled&&Array.isArray(recruit.raids)&&recruit.raids.includes(RAID_NAME)&&Array.isArray(recruit.allowedPriorities)){
+    keys=keys.filter(key=>recruit.allowedPriorities.includes(key));
+  }
+  return keys;
+}
+function applyEraPriorityUi(root=document){
+  root.querySelectorAll(".prio-buttons [data-prio='p1'],.prio-buttons [data-prio='p2'],.prio-buttons [data-prio='p3']").forEach(button=>{
+    const level=eraPriorityLevel(button.dataset.prio);
+    button.hidden=!level.enabled;
+    button.textContent=level.label;
+  });
+  document.querySelectorAll("[data-era-priority-key]").forEach(element=>{
+    const level=eraPriorityLevel(element.dataset.eraPriorityKey);
+    element.textContent=level.label;
+  });
+  const hint=document.querySelector(".loot-hint");
+  const recruit=currentGuildInfo?.layout?.eraRules?.recruit;
+  if(hint){
+    if(recruit?.enabled&&Array.isArray(recruit.raids)&&recruit.raids.includes(RAID_NAME)){
+      const labels=eraRequiredPriorityKeys().map(key=>eraPriorityLevel(key).label);
+      hint.textContent=labels.length?`Hinweis für Rekruten: Bitte ${labels.join(" und ")} vollständig auswählen.`:"Hinweis für Rekruten: Für diesen Raid ist keine normale Prioritätsstufe erforderlich.";
+      hint.hidden=false;
+    }else hint.hidden=true;
+  }
+}
+
 
 
 let p0PlusData = {};
@@ -3139,6 +3177,7 @@ function renderLootList(){
       createdAt:""
     }));
     buttons.innerHTML = prioButtonParts.join("");
+    applyEraPriorityUi(buttons);
     if(poPlusLocked)buttons.querySelectorAll("button[data-prio]").forEach(button=>button.disabled=true);
 
     row.appendChild(name);
@@ -3742,8 +3781,9 @@ async function savePrio(){
     return;
   }
 
-  const nachtlootP1MayStayEmpty=currentGuildSlug()==="nachtloot" && !p1 && Boolean(p2) && Boolean(p3);
-  if(!player||!server||!playerClass||(!p1 && !nachtlootP1MayStayEmpty) || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
+  const selectedPriorities={p1,p2,p3};
+  const missingRequiredPriority=eraRequiredPriorityKeys().some(key=>!selectedPriorities[key]);
+  if(!player||!server||!playerClass||missingRequiredPriority){
     status.innerHTML=`<span class="bad">Bitte Charakter und benötigte Prios vollständig ausfüllen.</span>`;
     return;
   }
