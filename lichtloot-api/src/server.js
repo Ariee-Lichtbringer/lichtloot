@@ -25389,7 +25389,7 @@ async function saveRandomPrio({ guildId, params, raidlead = false }) {
       `insert into random_prios (id,raid_id,character_id,p1_item_id,p1_item_name,p2_item_id,p2_item_name,p3_item_id,p3_item_name,p0_selected,p0_plus,p0_item_id,p0_item_name)
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11,$12)
        on conflict (raid_id,character_id) do update set p1_item_id=excluded.p1_item_id,p1_item_name=excluded.p1_item_name,p2_item_id=excluded.p2_item_id,p2_item_name=excluded.p2_item_name,p3_item_id=excluded.p3_item_id,p3_item_name=excluded.p3_item_name,p0_selected=excluded.p0_selected,p0_plus=excluded.p0_plus,p0_item_id=excluded.p0_item_id,p0_item_name=excluded.p0_item_name,updated_at=now()`,
-      [randomUUID(), raid.id, character.id, clean(params.p1ItemId), clean(params.p1), clean(params.p2ItemId), clean(params.p2), clean(params.p3ItemId), clean(params.p3), p0Plus, clean(params.p0ItemId || params.p1ItemId), clean(params.p0Item || params.p1)]
+      [randomUUID(), raid.id, character.id, p0Plus ? "" : clean(params.p1ItemId), p0Plus ? "" : clean(params.p1), p0Plus ? "" : clean(params.p2ItemId), p0Plus ? "" : clean(params.p2), p0Plus ? "" : clean(params.p3ItemId), p0Plus ? "" : clean(params.p3), p0Plus, clean(params.p0ItemId || params.p1ItemId), clean(params.p0Item || params.p1)]
     );
     await client.query(
       `insert into random_signups (id,raid_id,character_id,role_name,status) values ($1,$2,$3,$4,$5)
@@ -25411,7 +25411,7 @@ async function getRandomPublishedPrios(params = {}) {
   const normalized = normalizeRandomRaidRow(raid);
   return { success: true, ...normalized, open: raid.status !== "geöffnet", prios: result.rows.map((row,index)=>({
     id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
-    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",p0Plus:Boolean(row.p0_plus),bench:Boolean(row.bench)
+    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench)
   })) };
 }
 
