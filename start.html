@@ -2891,6 +2891,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .nachtloot-news-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-top:1px solid rgba(45,212,191,.22);background:rgba(2,8,18,.78)}
 .nachtloot-news-foot span{color:#5eead4;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
 .nachtloot-news-done{min-height:34px;padding:7px 14px;border:1px solid rgba(45,212,191,.55);border-radius:8px;background:rgba(13,148,136,.28);color:#ccfbf1;font-weight:900;cursor:pointer}
+.nachtloot-news-modal{border-color:rgba(250,204,21,.52);background:linear-gradient(155deg,rgba(7,16,34,.99),rgba(2,8,22,.99));box-shadow:0 24px 70px rgba(0,0,0,.72),0 0 44px rgba(37,99,235,.16)}
+.nachtloot-news-head{align-items:center;border-bottom-color:rgba(250,204,21,.24);background:linear-gradient(100deg,rgba(30,64,175,.3),rgba(250,204,21,.07))}.nachtloot-news-brand{display:flex;align-items:center;gap:10px}.nachtloot-news-brand img{width:132px;max-height:42px;object-fit:contain;object-position:left center}.nachtloot-news-eyebrow,.nachtloot-news-date,.nachtloot-news-foot span{color:#facc15}.nachtloot-news-head h2,.nachtloot-news-entry h3{color:#fff}.nachtloot-news-entry{border-color:rgba(59,130,246,.3);background:linear-gradient(145deg,rgba(10,24,52,.88),rgba(5,13,29,.9))}.nachtloot-news-entry:before{background:linear-gradient(#facc15,#2563eb)}.nachtloot-news-entry p{color:#bfdbfe}.nachtloot-news-link,.nachtloot-news-done{border-color:rgba(250,204,21,.5);background:linear-gradient(135deg,rgba(180,135,15,.35),rgba(30,64,175,.48));color:#fff}.nachtloot-news-link:hover,.nachtloot-news-link:focus-visible,.nachtloot-news-done:hover{border-color:#facc15;background:linear-gradient(135deg,rgba(202,156,18,.52),rgba(37,99,235,.62))}.nachtloot-news-close{border-color:rgba(250,204,21,.35);color:#facc15}.nachtloot-news-list{scrollbar-color:#ca8a04 transparent}.nachtloot-news-foot{border-top-color:rgba(250,204,21,.24);background:rgba(3,9,24,.92)}
 @media(max-width:720px){.nachtloot-news-button{width:100%}.nachtloot-news-backdrop{padding:0 10px 10px}.nachtloot-news-modal{width:100%;max-height:64vh}.nachtloot-news-head h2{font-size:18px}}
 </style>
 </head>
@@ -9946,30 +9948,40 @@ async function submitMobileLootLogin(event){
   }
 }
 
-const LICHTLOOT_NEWS_VERSION="2026-08-31-gear-planner-all-guilds";
+const LICHTLOOT_NEWS_VERSION="2026-08-31-guildloot-random-priolists";
 const LICHTLOOT_NEWS_ENTRIES=[
+  {
+    date:"2026-08-31",
+    title:"Random-Raids und unabhängige Priolisten",
+    text:"Erstelle jetzt spontane Random-Raids unabhängig von einer Lootgilde. GuildLoot erzeugt eine PrioPIN für die Teilnehmer und eine eigene LeadPIN für die Raidleitung. Charakter, Klasse und Skillung werden separat verwaltet; eigene Prios können später bearbeitet oder gelöscht werden.",
+    linkLabel:"Random-Prioliste erstellen",
+    action:"random-create"
+  },
   {
     date:"2026-08-31",
     title:"Ausrüstungsplaner mit Blizzard Armory",
     text:"Plane dein Wunsch-Gear direkt mit deinem aktuellen Charakter. Tausche Gegenstände aus, vergleiche die Werte und übernimm passende Items direkt in deine P1-, P2- oder P3-Prioliste.",
-    linkLabel:"Ausrüstungsplaner öffnen"
+    linkLabel:"Ausrüstungsplaner öffnen",
+    action:"gear-planner"
   },
   {
     date:"2026-08-31",
     title:"Talentbäume, Setboni und Verzauberungen",
     text:"Der Planer zeigt jetzt die vollständigen Talentbäume mit Icons und berücksichtigt Verzauberungen sowie bekannte Setboni bei der Berechnung deiner Werte.",
-    linkLabel:"Talentbäume im Planer ansehen"
+    linkLabel:"Talentbäume im Planer ansehen",
+    action:"gear-planner"
   },
   {
     date:"2026-08-30",
     title:"Aktuelle Charakteransicht aus der Armory",
     text:"Deine Ausrüstung, Charakterwerte und die drehbare Charakteransicht werden aus der Blizzard Armory geladen. Item-Tooltips zeigen die vollständigen Gegenstandsinformationen beim Darüberfahren.",
-    linkLabel:"Charakteransicht öffnen"
+    linkLabel:"Charakteransicht öffnen",
+    action:"gear-planner"
   }
 ];
 
 function lichtlootNewsStorageKey(){
-  return `lichtloot:news:${CURRENT_GUILD_SLUG}:lastSeen`;
+  return `guildloot:news:lastSeen`;
 }
 
 function closeLichtlootNews(){
@@ -9985,7 +9997,12 @@ function openLichtlootNews(){
   backdrop.querySelector(".nachtloot-news-close")?.focus();
 }
 
-function openLichtlootNewsFeature(){
+function openLichtlootNewsFeature(action){
+  if(action==="random-create"){
+    closeLichtlootNews();
+    openRandomRaidModal("create");
+    return;
+  }
   if(!window.dashboardNextRaid){
     alert("Der nächste Raid wird noch geladen. Bitte gleich erneut versuchen.");
     return;
@@ -9997,23 +10014,23 @@ function openLichtlootNewsFeature(){
 
 function installLichtlootNews(){
   if(document.getElementById("lichtlootNewsBackdrop")) return;
-  const entries=LICHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature>${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
+  const entries=LICHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature="${safeAttr(entry.action||"")}">${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
   const backdrop=document.createElement("div");
   backdrop.id="lichtlootNewsBackdrop";
   backdrop.className="nachtloot-news-backdrop hidden";
   backdrop.setAttribute("role","presentation");
-  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="lichtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">LichtLoot · Update</div><h2 id="lichtlootNewsTitle">Neu in LichtLoot</h2></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
+  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="lichtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">GuildLoot · Update</div><div class="nachtloot-news-brand"><h2 id="lichtlootNewsTitle">Neu in</h2><img src="images/guildloot-logo-concept.png" alt="GuildLoot"></div></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
   document.body.appendChild(backdrop);
   backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeLichtlootNews);
   backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeLichtlootNews);
-  backdrop.querySelectorAll("[data-news-feature]").forEach(link=>link.addEventListener("click",openLichtlootNewsFeature));
+  backdrop.querySelectorAll("[data-news-feature]").forEach(link=>link.addEventListener("click",()=>openLichtlootNewsFeature(link.dataset.newsFeature)));
   document.addEventListener("keydown",event=>{if(event.key==="Escape" && !backdrop.classList.contains("hidden")) closeLichtlootNews();});
   const actions=document.querySelector(".start-header-actions");
   if(actions){
     const button=document.createElement("button");
     button.type="button";
     button.className="nachtloot-news-button";
-    button.textContent="✦ Neuigkeiten";
+    button.textContent="✦ GuildLoot-Neuigkeiten";
     button.addEventListener("click",openLichtlootNews);
     actions.prepend(button);
   }
