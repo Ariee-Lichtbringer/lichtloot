@@ -21409,6 +21409,7 @@ async function ensureRandomRaidSchema() {
 
 async function createRandomRaid({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
+  const creatorLogin = clean(params.creatorPlayerLogin || params.spielerLogin || params.loginPin);
   const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late", "aq20", "ony"]);
   if (!allowedRaids.has(raidType)) {
     const error = new Error("Dieser Raidtyp kann nicht erstellt werden.");
@@ -21424,10 +21425,11 @@ async function createRandomRaid({ guildId, query: params }) {
     throw error;
   }
 
-  // Random-Raids enden ab hier ausschließlich in RANDOM_DATABASE_URL. Die
-  // nachfolgende alte Gildenlogik bleibt vorerst als Migrationsreferenz im
-  // Quelltext, wird durch diese Rückgabe aber nicht mehr ausgeführt.
-  {
+  // Der öffentliche Random-Raid-Dialog besitzt keinen Spielerlogin und speichert
+  // weiterhin ausschließlich in RANDOM_DATABASE_URL. Der Schnell-Raid-Dialog
+  // der Startseite sendet dagegen den verifizierbaren Spielerlogin mit und muss
+  // die darunterliegende Gilden-/Discord-Verarbeitung erreichen.
+  if (!creatorLogin) {
     await ensureRandomRaidSchema();
     const randomRaidDate = parseDateValue(params.raidDate || params.datum || params.date);
     const randomRaidTime = clean(params.raidTime || params.uhrzeit || params.time) || null;
@@ -21483,7 +21485,6 @@ async function createRandomRaid({ guildId, query: params }) {
   }
 
   const creator = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller);
-  const creatorLogin = clean(params.creatorPlayerLogin || params.spielerLogin || params.loginPin);
   if (!creator && !creatorLogin) {
     const error = new Error("Spielerlogin fehlt. Bitte erst mit deinem Spielerlogin einloggen.");
     error.statusCode = 400;
