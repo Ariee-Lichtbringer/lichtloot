@@ -22250,10 +22250,10 @@ async function findRaid(guildId, params) {
     }
   } else if (leadPin) {
     values.push(leadPin);
-    identityClauses.push(`lead_pin = $${values.length}`);
+    identityClauses.push(`upper(trim(coalesce(lead_pin, ''))) = upper(trim($${values.length}))`);
   } else if (prioPin) {
     values.push(prioPin);
-    identityClauses.push(`raid_pin = $${values.length}`);
+    identityClauses.push(`upper(trim(coalesce(raid_pin, ''))) = upper(trim($${values.length}))`);
   }
 
   if (!identityClauses.length && raidType) {
@@ -22282,7 +22282,7 @@ async function findRaid(guildId, params) {
       `select *
        from raids
        where guild_id = $1
-         and raid_pin = $2
+         and upper(trim(coalesce(raid_pin, ''))) = upper(trim($2))
          and deleted_at is null
        order by raid_date desc, created_at desc
        limit 1`,
@@ -23956,6 +23956,7 @@ async function findP0OnlyEvent(guildId, params) {
   const raidDate = clean(params.raidDate || params.date || params.datum) ? parseDateValue(params.raidDate || params.date || params.datum) : "";
   const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
   const playerPin = clean(params.playerPin || params.prioPin || params.raidPin || params.pin);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
   const values = [guildId];
   let where = "";
   if (publicId && publicId.toUpperCase().startsWith("P0-")) {
@@ -23971,6 +23972,9 @@ async function findP0OnlyEvent(guildId, params) {
       values.push(raidTime);
       where += ` and coalesce(raid_time,'') = $${values.length}`;
     }
+  } else if (leadPin) {
+    values.push(leadPin);
+    where = `and upper(lead_pin) = upper($${values.length})`;
   } else if (playerPin) {
     values.push(playerPin);
     where = `and upper(player_pin) = upper($${values.length})`;
