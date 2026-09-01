@@ -30026,11 +30026,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       // P0-Anmelder" erscheinen, sonst zeigt die Leitung zwei Karten und die
       // Auswahl markiert wegen der identischen ID beide zugleich.
       const regularRaidIds = new Set(
-        raids.map(raid => clean(raid.raidId || raid.RaidID || raid.id)).filter(Boolean)
+        raids.flatMap(raid => [raid.raidId, raid.RaidID, raid.externalRaidId, raid.id].map(clean)).filter(Boolean)
       );
-      p0OnlyRaids = p0OnlyRaids.filter(raid =>
-        !regularRaidIds.has(clean(raid.raidId || raid.RaidID || raid.id))
-      );
+      p0OnlyRaids = p0OnlyRaids.filter(raid => {
+        const linkedRaidId = clean(raid.linkedRaidId || raid.linked_raid_id);
+        if (linkedRaidId && !regularRaidIds.has(linkedRaidId)) return false;
+        return ![raid.raidId, raid.RaidID, raid.externalRaidId, raid.id]
+          .map(clean)
+          .filter(Boolean)
+          .some(raidId => regularRaidIds.has(raidId));
+      });
       const activeRaids = [...raids, ...p0OnlyRaids].sort((left, right) => {
         const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
         const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
