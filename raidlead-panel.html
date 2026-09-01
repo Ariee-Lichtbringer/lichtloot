@@ -1663,6 +1663,7 @@ function raidPinEnter(event){
 function checkLogin(){
   const params = new URLSearchParams(window.location.search);
   const urlLeadPin = (params.get("leadPin") || params.get("raidleadPin") || "").trim();
+  const urlRaidId = (params.get("raidId") || params.get("RaidID") || "").trim();
   const urlMode = String(params.get("mode") || params.get("view") || "").toLowerCase();
   const isRandomRaidleadLink = params.get("random") === "1" || urlMode === "random";
   if(urlLeadPin){
@@ -1670,6 +1671,9 @@ function checkLogin(){
     sessionStorage.setItem(raidleadStorageKey("active"),"true");
     sessionStorage.setItem(raidleadStorageKey("role"),"master");
     sessionStorage.setItem(raidleadStorageKey("prioPin"),urlLeadPin);
+  }
+  if(urlRaidId){
+    sessionStorage.setItem(raidleadStorageKey("raidId"),urlRaidId);
   }
 
   const isLoggedIn = sessionStorage.getItem(raidleadStorageKey("active"));
@@ -1869,6 +1873,12 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
     leadPin,
     t: String(Date.now())
   });
+  const requestedRaidId = (
+    new URLSearchParams(window.location.search).get("raidId") ||
+    sessionStorage.getItem(raidleadStorageKey("raidId")) ||
+    ""
+  ).trim();
+  if(requestedRaidId) params.set("raidId", requestedRaidId);
   if(RANDOM_RAIDLEAD_MODE) params.set("random", "1");
   if(raidKey && raids[raidKey]) params.set("raid", raids[raidKey].short);
   const url = RAID_API_URL + "?" + params.toString();
@@ -1887,6 +1897,9 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
     if(returnedRaidKey && raids[returnedRaidKey]) currentRaidKey = returnedRaidKey;
 
     currentRaidData.raidId = result.raidId || currentRaidData.raidId;
+    if(currentRaidData.raidId){
+      sessionStorage.setItem(raidleadStorageKey("raidId"), currentRaidData.raidId);
+    }
 
     currentRaidData.playerPin =
       result.playerPin ||
