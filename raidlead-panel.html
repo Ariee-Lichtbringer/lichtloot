@@ -1800,9 +1800,6 @@ async function loadRaidByPin(){
   document.getElementById("controlStatus").innerHTML =
     `<span class="warn">Raid wird geladen …</span>`;
 
-  const role = sessionStorage.getItem(raidleadStorageKey("role")) || "master";
-  const possibleRaids = Object.keys(raids).filter(key => canAccessRaid(role,key));
-
   currentRaidKey = null;
   currentRaidData = null;
   currentPrios = [];
@@ -1813,23 +1810,20 @@ async function loadRaidByPin(){
   itemVisualMap = {};
   updateRaidBackground();
 
-  for(const raidKey of possibleRaids){
-    const found = await tryLoadRaidByPin(pin, raidKey);
+  const found = await tryLoadRaidByPin(pin, "");
+  if(found){
+    sessionStorage.setItem(raidleadStorageKey("prioPin"), pin);
 
-    if(found){
-      sessionStorage.setItem(raidleadStorageKey("prioPin"), pin);
+    await loadItemVisualData();
+    if(!RANDOM_RAIDLEAD_MODE) await loadP0PlusPoints();
+    await loadRaidPrioCheck();
 
-      await loadItemVisualData();
-      if(!RANDOM_RAIDLEAD_MODE) await loadP0PlusPoints();
-      await loadRaidPrioCheck();
+    document.getElementById("controlStatus").innerHTML =
+      `<span class="ok">Raid geladen.</span>`;
 
-      document.getElementById("controlStatus").innerHTML =
-        `<span class="ok">Raid geladen.</span>`;
-
-      updateRaidBackground();
-      renderRaidView();
-      return;
-    }
+    updateRaidBackground();
+    renderRaidView();
+    return;
   }
 
   document.getElementById("raidView").classList.add("hidden");
@@ -1838,11 +1832,11 @@ async function loadRaidByPin(){
 }
 
 async function tryLoadRaidByPin(pin, raidKey){
-  currentRaidKey = raidKey;
+  currentRaidKey = raidKey && raids[raidKey] ? raidKey : "mc";
 
   currentRaidData = {
-    raid: raidKey,
-    raidName: raids[raidKey].name,
+    raid: currentRaidKey,
+    raidName: raids[currentRaidKey].name,
     raidId: "",
     playerPin: "",
     leadPin: pin,
@@ -1851,7 +1845,7 @@ async function tryLoadRaidByPin(pin, raidKey){
     status: ""
   };
 
-  await loadPriosFromSheet(pin);
+  await loadPriosFromRailway(pin, raidKey);
 
   const realRaidKey = raidKeyFromRaidId(currentRaidData.raidId);
 
@@ -1868,13 +1862,16 @@ async function tryLoadRaidByPin(pin, raidKey){
   return false;
 }
 
-async function loadPriosFromSheet(leadPin){
-  const url =
-    RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPublishedPrios" + randomRaidleadQuery() +
-    "&raid=" + encodeURIComponent(raids[currentRaidKey].short) +
-    "&leadPin=" + encodeURIComponent(leadPin) +
-    "&t=" + Date.now();
+async function loadPriosFromRailway(leadPin, raidKey = ""){
+  const params = new URLSearchParams({
+    guild: currentGuildSlug(),
+    action: "getPublishedPrios",
+    leadPin,
+    t: String(Date.now())
+  });
+  if(RANDOM_RAIDLEAD_MODE) params.set("random", "1");
+  if(raidKey && raids[raidKey]) params.set("raid", raids[raidKey].short);
+  const url = RAID_API_URL + "?" + params.toString();
 
   try{
     const response = await fetch(url);
@@ -1885,6 +1882,9 @@ async function loadPriosFromSheet(leadPin){
       currentReleased = false;
       return;
     }
+
+    const returnedRaidKey = String(result.raid || result.raidType || "").trim().toLowerCase();
+    if(returnedRaidKey && raids[returnedRaidKey]) currentRaidKey = returnedRaidKey;
 
     currentRaidData.raidId = result.raidId || currentRaidData.raidId;
 
@@ -2101,7 +2101,7 @@ async function sendMissingPrioDiscordReminder(){
     if(!response.ok||result.success===false)throw new Error(result.error||"Discord-Erinnerung konnte nicht gesendet werden.");
     if(!result.queued){
       alert(result.message||"Es fehlen keine Prioeinträge mehr.");
-      await loadPriosFromSheet(currentRaidData?.leadPin||"");
+      await loadPriosFromRailway(currentRaidData?.leadPin||"", currentRaidKey);
       await loadRaidPrioCheck();
       renderRaidView();
       return;
@@ -2972,7 +2972,7 @@ async function reloadCurrentRaid(){
 
   document.getElementById("controlStatus").innerHTML = `<span class="warn">Raid wird aktualisiert …</span>`;
 
-  await loadPriosFromSheet(pin);
+  await loadPriosFromRailway(pin, currentRaidKey);
   await loadItemVisualData();
   await loadP0PlusPoints();
   await loadRaidPrioCheck();
