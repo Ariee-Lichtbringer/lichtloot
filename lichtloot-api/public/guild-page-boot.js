@@ -50,6 +50,7 @@
 /* Einheitliche Systemhinweise und technische Fehlererfassung. */
 (function(){
   const STORAGE_KEY="lichtloot_pending_system_errors_v1",wrapped=new WeakSet(),recent=new Map();
+  const API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
   const PUBLIC_TEXT="Speichern ist momentan nicht möglich. LichtLoot ist vorübergehend nicht erreichbar oder wird aktualisiert. Bitte versuche es in einigen Minuten erneut.";
   const clean=value=>String(value??"").slice(0,12000);
   const guild=()=>new URLSearchParams(location.search).get("guild")||"lichtloot";
@@ -61,7 +62,7 @@
   }
   function queued(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch{return[]}}
   function saveQueue(rows){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(rows.slice(-30)))}catch{}}
-  async function send(payload){const response=await fetch("/api/apps-script",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reportIssue",guild:guild(),type:"Systemfehler",category:"system_error",source:payload.actionName||"Website",...payload})});if(!response.ok)throw new Error(`HTTP ${response.status}`);const result=await response.json();if(result?.success===false)throw new Error(result.error||"Fehler konnte nicht gemeldet werden.");return result;}
+  async function send(payload){const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reportIssue",guild:guild(),type:"Systemfehler",category:"system_error",source:payload.actionName||"Website",...payload})});if(!response.ok)throw new Error(`HTTP ${response.status}`);const result=await response.json();if(result?.success===false)throw new Error(result.error||"Fehler konnte nicht gemeldet werden.");return result;}
   async function flush(){const rows=queued();if(!rows.length)return;const remaining=[];for(const row of rows){try{await send(row)}catch{remaining.push(row)}}saveQueue(remaining);}
   function report(error,context={},show=true){const message=clean(error?.message||error||"Unbekannter Fehler"),key=`${context.actionName||""}|${message}`;if(Date.now()-(recent.get(key)||0)<5000)return context.referenceId||reference();recent.set(key,Date.now());const id=context.referenceId||reference(),base=pageContext(),payload={...base,...context,referenceId:id,originalDate:new Date().toISOString(),note:message,technicalDetails:clean(error?.stack||message),httpStatus:clean(context.httpStatus||error?.status||"")};if(show)banner(id);send(payload).catch(()=>{const rows=queued();if(!rows.some(row=>row.referenceId===id)){rows.push(payload);saveQueue(rows);}});return id;}
   function isWrite(params){const action=clean(params?.action);return /^(save|create|update|delete|set|send|queue|publish|approve|reject|transfer|clear|move|cancel|claim|import|reset|merge|guild(save|create|update|delete|set|send|queue|approve|reject|transfer|clear|move|cancel|claim|import|reset|merge))/i.test(action)&&action!=="reportIssue";}
