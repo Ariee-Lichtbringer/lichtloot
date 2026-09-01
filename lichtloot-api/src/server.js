@@ -4531,6 +4531,7 @@ function normalizeRaidRow(row) {
     raidId: raidPublicId(row),
     RaidID: raidPublicId(row),
     p0Only: Boolean(row.p0_only),
+    linkedRaidId: row.linked_raid_id || row.linkedRaidId || "",
     raid: row.raid_type,
     raidName: row.name || displayRaidName(row.raid_type),
     raidDate,
@@ -30029,9 +30030,46 @@ app.get("/api/apps-script", async (req, res, next) => {
       const regularRaidIds = new Set(
         raids.flatMap(raid => [raid.raidId, raid.RaidID, raid.externalRaidId, raid.id].map(clean)).filter(Boolean)
       );
+      const archivedRegularResult = p0OnlyRaids.length
+        ? await query(
+            `with clock as (
+               select timezone('Europe/Berlin', now())::date as local_today
+             )
+             select id, external_raid_id, raid_type, raid_date, raid_time, raid_pin
+             from raids
+             cross join clock
+             where guild_id = $1
+               and raid_date >= clock.local_today - ($2::int * interval '1 day')
+               and (
+                 deleted_at is not null
+                 or lower(trim(coalesce(status, ''))) in (
+                   'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
+                   'abgesagt', 'cancelled', 'canceled'
+                 )
+               )`,
+            [guild.id, historyDays]
+          )
+        : { rows: [] };
+      const archivedRegularIds = new Set(
+        archivedRegularResult.rows
+          .flatMap(raid => [raid.id, raid.external_raid_id].map(clean))
+          .filter(Boolean)
+      );
+      const raidSignature = raid => [
+        normalizeRaidType(raid.raid || raid.raid_type),
+        raid.raid_date instanceof Date
+          ? raid.raid_date.toISOString().slice(0, 10)
+          : clean(raid.raidDate || raid.raid_date).slice(0, 10),
+        clean(raid.raidTime || raid.raid_time).slice(0, 5),
+        clean(raid.playerPin || raid.prioPin || raid.raid_pin).toUpperCase()
+      ].join("|");
+      const archivedRegularSignatures = new Set(
+        archivedRegularResult.rows.map(raidSignature)
+      );
       p0OnlyRaids = p0OnlyRaids.filter(raid => {
         const linkedRaidId = clean(raid.linkedRaidId || raid.linked_raid_id);
-        if (linkedRaidId && !regularRaidIds.has(linkedRaidId)) return false;
+        if (linkedRaidId && archivedRegularIds.has(linkedRaidId)) return false;
+        if (archivedRegularSignatures.has(raidSignature(raid))) return false;
         return ![raid.raidId, raid.RaidID, raid.externalRaidId, raid.id]
           .map(clean)
           .filter(Boolean)
