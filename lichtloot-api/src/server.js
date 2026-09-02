@@ -24940,19 +24940,33 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
        returning id`,
       [guildId, raid.id, character.id, discordUserId]
     );
-    if (!deleted.rowCount) {
+    // Der Discord-Post zeigt neben p0_discord_signups auch P0-Auswahlen aus
+    // der LichtLoot-Priodatenbank. Solche (z. B. über die Lootseite
+    // angelegten) Einträge müssen über denselben Button löschbar sein. Die
+    // zuvor geprüfte Account-Verknüpfung stellt sicher, dass nur ein eigener
+    // Charakter entfernt werden kann.
+    const deletedPrios = await client.query(
+      `delete from prios
+       where raid_id = $1 and character_id = $2
+         and (
+           comment::text ~ '"p0Selected"[[:space:]]*:[[:space:]]*"ja"'
+           or comment::text ~ '"p0Plus"[[:space:]]*:[[:space:]]*"ja"'
+         )
+       returning id`,
+      [raid.id, character.id]
+    );
+    if (!deleted.rowCount && !deletedPrios.rowCount) {
       const error = new Error("Für dich wurde bei diesem Raid keine passende P0-Anmeldung gefunden.");
       error.statusCode = 404;
       throw error;
     }
-    await client.query(
-      `delete from prios
-       where raid_id = $1 and character_id = $2
-         and comment::text like '%"source":"discord-p0"%'`,
-      [raid.id, character.id]
-    );
     await client.query("commit");
-    return { success: true, deleted: deleted.rowCount, raid: normalizeRaidRow(raid) };
+    return {
+      success: true,
+      deleted: deleted.rowCount,
+      deletedPrios: deletedPrios.rowCount,
+      raid: normalizeRaidRow(raid)
+    };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
