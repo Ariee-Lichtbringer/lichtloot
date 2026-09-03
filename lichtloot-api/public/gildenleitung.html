@@ -4741,7 +4741,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .prio-list-entry-time{display:block;margin-top:4px;color:#fb923c;font-size:11px;font-weight:850;white-space:nowrap}
 .prio-list-wcl{display:block;margin-top:3px;font-size:10px;font-weight:900}.prio-list-wcl.participated{color:#4ade80}.prio-list-wcl.not-found{color:#f87171}.prio-list-wcl.no-data{color:#94a3b8}.prio-list-wcl a{color:inherit;text-decoration:underline;text-underline-offset:2px}
-.prio-list-player-hover{position:relative;display:inline-block;cursor:help;outline:none}.prio-list-player-hover>strong{text-decoration:underline;text-decoration-style:dotted;text-decoration-color:#64748b;text-underline-offset:3px}.prio-list-player-card{position:absolute;z-index:80;display:none;left:0;top:calc(100% + 8px);width:max-content;max-width:min(360px,80vw);padding:10px 12px;border:1px solid #475569;border-radius:9px;background:#07111f;color:#e5e7eb;text-align:left;box-shadow:0 16px 42px rgba(0,0,0,.72)}.prio-list-player-card:before{content:"";position:absolute;left:18px;top:-6px;width:10px;height:10px;border-left:1px solid #475569;border-top:1px solid #475569;background:#07111f;transform:rotate(45deg)}.prio-list-player-hover:hover .prio-list-player-card,.prio-list-player-hover:focus .prio-list-player-card,.prio-list-player-hover:focus-within .prio-list-player-card{display:block}
+.prio-list-player-hover{position:relative;display:inline-block;cursor:help;outline:none}.prio-list-player-hover>strong{text-decoration:underline;text-decoration-style:dotted;text-decoration-color:#64748b;text-underline-offset:3px}.prio-list-player-hover>strong.attendance-participated{color:#4ade80}.prio-list-player-hover>strong.attendance-not-found{color:#f87171}.prio-list-player-hover>strong.attendance-no-data{color:#fff}.prio-list-player-card{position:absolute;z-index:80;display:none;left:0;top:calc(100% + 8px);width:max-content;max-width:min(360px,80vw);padding:10px 12px;border:1px solid #475569;border-radius:9px;background:#07111f;color:#e5e7eb;text-align:left;box-shadow:0 16px 42px rgba(0,0,0,.72)}.prio-list-player-card:before{content:"";position:absolute;left:18px;top:-6px;width:10px;height:10px;border-left:1px solid #475569;border-top:1px solid #475569;background:#07111f;transform:rotate(45deg)}.prio-list-player-hover:hover .prio-list-player-card,.prio-list-player-hover:focus .prio-list-player-card,.prio-list-player-hover:focus-within .prio-list-player-card{display:block}
 
 .epic{color:#c084fc}
 .rare{color:var(--blue)}
@@ -17784,7 +17784,8 @@ function renderPrioPlayerDetails(prio){
       : '<span class="prio-list-wcl no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
   const settings=currentGuildInfo?.layout?.prioListDisplay||{},directTimestamp=settings.prioEntryUnderName===true,directAttendance=settings.attendanceUnderName===true;
   const hoverContent=`${directTimestamp?"":timestamp||'<span class="prio-list-entry-time">Kein Eintragszeitpunkt gespeichert</span>'}${directAttendance?"":attendance}`;
-  return `<span class="prio-list-player-hover" tabindex="0"><strong>${name}</strong>${hoverContent?`<span class="prio-list-player-card">${hoverContent}</span>`:""}</span>${bench}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
+  const attendanceClass=participation==="participated"?"attendance-participated":participation==="not_found"?"attendance-not-found":"attendance-no-data";
+  return `<span class="prio-list-player-hover" tabindex="0"><strong class="${attendanceClass}">${name}</strong>${hoverContent?`<span class="prio-list-player-card">${hoverContent}</span>`:""}</span>${bench}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
 }
 
 function renderPrioModalContent(result, raid, forceListOpen = false){
