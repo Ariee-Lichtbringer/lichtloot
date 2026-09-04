@@ -7592,6 +7592,7 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
       return { success: false, skipped: true, reason: "raid_announcement_missing_raid_id", type, payload: payload || {} };
     }
     const fromSchedule = clean(payload?.source) === "raid_helper_schedule";
+    const scheduledRaidDate = clean(payload?.raidDate || payload?.date).slice(0, 10);
     const existing = await query(
       `select id, status, payload
        from bot_update_queue
@@ -7599,12 +7600,16 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
          and type = $2
          and payload->>'raidId' = $3
          and (
-           status in ('open', 'processing')
-           or ($4::boolean and status = 'done')
+           (not $4::boolean and status in ('open', 'processing'))
+           or (
+             $4::boolean
+             and status in ('open', 'processing', 'done')
+             and payload->>'raidDate' = $5
+           )
          )
        order by created_at desc
        limit 1`,
-      [guildId, type, raidId, fromSchedule]
+      [guildId, type, raidId, fromSchedule, scheduledRaidDate]
     );
     if (existing.rows[0]) {
       // Ein manueller Klick auf "Vorhandenen Post aktualisieren" ist ein
