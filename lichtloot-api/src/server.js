@@ -8629,8 +8629,15 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
     const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
     const storedNextRaidDateIso = scheduleDateIso(schedule.next_raid_date);
+    const storedNextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date);
+    let postingLeadDays = 0;
+    if (storedNextRaidDateIso && storedNextPostDateIso) {
+      postingLeadDays = Math.max(0, Math.round(
+        (localDateOnly(storedNextRaidDateIso) - localDateOnly(storedNextPostDateIso)) / 86400000
+      ));
+    }
     const nextPostDateIso = storedNextRaidDateIso && storedNextRaidDateIso !== nextDateIso
-      ? nextDateIso
+      ? formatDateIso(addDays(nextDate, -postingLeadDays))
       : scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
     const postDue = schedulePostIsDue({
       postDate: nextPostDateIso,
@@ -8710,15 +8717,18 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
       discordChannelId: created.discordChannelId || schedule.discord_channel_id || ""
     };
 
+    const intervalDays = Math.max(1, Number(schedule.interval_weeks) || 1) * 7;
+    const followingRaidDateIso = formatDateIso(addDays(nextDate, intervalDays));
+    const followingPostDateIso = formatDateIso(addDays(localDateOnly(nextPostDateIso), intervalDays));
     await query(
       `update raid_helper_schedules
        set next_raid_date = $2,
-           next_post_date = $2,
-           last_raid_date = case when $3::boolean then $4::date else last_raid_date end,
+           next_post_date = $3,
+           last_raid_date = $4::date,
            last_raid_id = $5,
            updated_at = now()
        where guild_id = $1 and id = $6`,
-      [guildId, nextDateIso, dateChanged, existingDateIso || null, created.id || created.raidId || null, schedule.id]
+      [guildId, followingRaidDateIso, followingPostDateIso, nextDateIso, created.id || created.raidId || null, schedule.id]
     );
 
     const shouldQueuePost = clean(schedule.discord_channel_id) && (force || dateChanged || !existingRaid?.discord_message_id);
