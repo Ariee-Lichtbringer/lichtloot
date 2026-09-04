@@ -5610,14 +5610,15 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
           </details>
           <details id="raidHelperWeeklyDetails" class="raid-helper-card raid-helper-create-accordion accent-orange hidden" data-wizard-panel="3">
-              <summary class="raid-helper-card-head"><span class="raid-helper-card-icon">↻</span><div><h3>Wochenautomatik einrichten</h3><p>Ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</p></div></summary>
+              <summary class="raid-helper-card-head"><span class="raid-helper-card-icon">↻</span><div><h3>Wochenautomatik einrichten</h3><p>Erstellungszeitpunkt und späteren Raid-Zieltermin getrennt festlegen.</p></div></summary>
               <div class="raid-helper-accordion-content">
                 <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt und postet wöchentlich den Raid sowie – falls aktiviert – den passenden P0-Anmelder.</small></span></label>
                 <div id="raidHelperWeeklyOptions" class="hidden" style="margin-top:12px">
                   <div class="raid-helper-row">
-                    <div class="field"><label for="raidHelperWeeklyFirstDate">Erster automatischer Termin</label><input id="raidHelperWeeklyFirstDate" type="date" onchange="syncRaidHelperWeeklyWeekdayFromDate()"></div>
+                    <div class="field"><label for="raidHelperWeeklyFirstDate">Erster Raid-Zieltermin</label><input id="raidHelperWeeklyFirstDate" type="date" onchange="syncRaidHelperWeeklyWeekdayFromDate()"></div>
                     <div class="field"><label for="raidHelperWeeklyWeekday">Wochentag</label><select id="raidHelperWeeklyWeekday" onchange="syncRaidHelperWeeklyDateFromWeekday()"><option value="1">Montag</option><option value="2">Dienstag</option><option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option><option value="6">Samstag</option><option value="7">Sonntag</option></select></div>
                     <div class="field"><label for="raidHelperWeeklyInterval">Rhythmus</label><select id="raidHelperWeeklyInterval"><option value="1">jede Woche</option><option value="2">alle 2 Wochen</option><option value="3">alle 3 Wochen</option><option value="4">alle 4 Wochen</option></select></div>
+                    <div class="field"><label for="raidHelperWeeklyPostDate">Anmelder erstellen am</label><input id="raidHelperWeeklyPostDate" type="date"></div>
                     <div class="field"><label for="raidHelperWeeklyPostTime">Erstellungs-/Posting-Uhrzeit</label><input id="raidHelperWeeklyPostTime" type="time" value="09:00"></div>
                   </div>
                   <div class="raid-helper-row" style="margin-top:10px">
@@ -7918,6 +7919,12 @@ function openNewRaidHelperForm(){
   if(weekly)weekly.checked=false;
   const weeklyInterval=document.getElementById("raidHelperWeeklyInterval");
   if(weeklyInterval)weeklyInterval.value="1";
+  const weeklyFirstDate=document.getElementById("raidHelperWeeklyFirstDate");
+  if(weeklyFirstDate)weeklyFirstDate.value="";
+  const weeklyPostDate=document.getElementById("raidHelperWeeklyPostDate");
+  if(weeklyPostDate)weeklyPostDate.value="";
+  const weeklyPostTime=document.getElementById("raidHelperWeeklyPostTime");
+  if(weeklyPostTime)weeklyPostTime.value="09:00";
   document.getElementById("raidHelperWeeklyDetails")?.removeAttribute("open");
   toggleRaidHelperWeeklyOptions();
   setRaidHelperLinks({});
@@ -11739,7 +11746,7 @@ async function saveRaidHelperScheduleFromCreate(){
       postTime:raidHelperValue("raidHelperWeeklyPostTime") || "09:00",
       intervalWeeks:raidHelperValue("raidHelperWeeklyInterval") || "1",
       nextRaidDate,
-      nextPostDate:nextRaidDate,
+      nextPostDate:raidHelperValue("raidHelperWeeklyPostDate") || nextRaidDate,
       signupDeadline:raidHelperValue("raidHelperSignupDeadline"),
       discordChannelId:channelId,
       maxPlayers:raidHelperValue("raidHelperMax"),
@@ -12870,6 +12877,7 @@ function editRaidHelperSchedule(scheduleId){
   setValue("raidHelperWeeklyFirstDate", schedule.nextRaidDate || nextIsoDateForWeekday(schedule.weekday || 3));
   setValue("raidHelperWeeklyWeekday", schedule.weekday || 3);
   setValue("raidHelperWeeklyInterval", schedule.intervalWeeks || 1);
+  setValue("raidHelperWeeklyPostDate", schedule.nextPostDate || schedule.nextRaidDate || nextIsoDateForWeekday(schedule.weekday || 3));
   setValue("raidHelperWeeklyPostTime", schedule.postTime || "09:00");
   setValue("raidHelperWeeklyChannel", schedule.discordChannelId || RAID_HELPER_CHANNEL_ID);
   const weekly=document.getElementById("raidHelperWeeklyEnabled");
@@ -12905,6 +12913,8 @@ function openNewRaidHelperScheduleInCreateForm(){
   if(weekly) weekly.checked=true;
   const firstDate=document.getElementById("raidHelperWeeklyFirstDate");
   if(firstDate) firstDate.value=nextIsoDateForWeekday(3);
+  const postDate=document.getElementById("raidHelperWeeklyPostDate");
+  if(postDate&&!postDate.value)postDate.value=firstDate?.value||nextIsoDateForWeekday(3);
   toggleRaidHelperWeeklyOptions();
   document.getElementById("raidHelperWeeklyDetails")?.setAttribute("open","");
   setStatus("Raid eintragen und unter Discord die Wochenautomatik festlegen.", "good");
@@ -13199,8 +13209,8 @@ function renderRaidHelperScheduleRules(){
         <div class="raid-helper-current-card-body">
           <div class="raid-helper-current-card-head"><h4>${escapeHtml(raidName)}</h4></div>
           <div class="raid-helper-current-card-meta">
-            <span>▣ ${escapeHtml(formatRaidDate(schedule.nextRaidDate))}</span>
-            <span>◷ ${escapeHtml(schedule.raidTime || "-")}</span>
+            <span title="Der Anmelder wird zu diesem Zeitpunkt erstellt">Erstellung: ${escapeHtml(formatRaidDate(schedule.nextPostDate || schedule.nextRaidDate))} · ${escapeHtml(schedule.postTime || "-")}</span>
+            <span title="Termin, der im Anmelder angezeigt wird">Raid: ${escapeHtml(formatRaidDate(schedule.nextRaidDate))} · ${escapeHtml(schedule.raidTime || "-")}</span>
           </div>
           <div class="raid-helper-current-card-status"><span class="status-badge open">↻ Automatischer Rhythmus</span></div>
           <div class="raid-helper-current-card-counts">
@@ -16437,6 +16447,8 @@ function toggleRaidHelperWeeklyOptions(){
   if(enabled){
     const date=document.getElementById("raidHelperWeeklyFirstDate");
     if(date && !date.value)date.value=addDaysToIsoDate(raidHelperValue("raidHelperDate"),7) || addDaysToIsoDate(new Date().toISOString().slice(0,10),7);
+    const postDate=document.getElementById("raidHelperWeeklyPostDate");
+    if(postDate&&!postDate.value)postDate.value=date?.value||"";
     syncRaidHelperWeeklyWeekdayFromDate();
     renderRaidHelperWeeklyChannelSelect();
   }
@@ -16834,7 +16846,7 @@ async function createRaidHelperSignup(){
         postTime:raidHelperValue("raidHelperWeeklyPostTime") || "09:00",
         intervalWeeks:raidHelperValue("raidHelperWeeklyInterval") || "1",
         nextRaidDate,
-        nextPostDate:nextRaidDate,
+        nextPostDate:raidHelperValue("raidHelperWeeklyPostDate") || nextRaidDate,
         signupDeadline:"",
         discordChannelId:weeklyChannelId,
         maxPlayers:raidHelperValue("raidHelperMax"),
