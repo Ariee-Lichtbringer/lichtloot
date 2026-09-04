@@ -10438,6 +10438,7 @@ function applyRaidHelperQuickTemplate(identifier){
   const oldRaid=oldRaidId?findRaidByAnyId(oldRaidId):null;
   const template=oldRaid?{
     raid:getRaidKey(oldRaid),title:oldRaid.raidName||oldRaid.raid||"Raid",
+    raidDate:oldRaid.raidDate||oldRaid.date||"",raidTime:oldRaid.raidTime||oldRaid.time||"",
     description:oldRaid.description||oldRaid.beschreibung||"",maxPlayers:oldRaid.maxPlayers,
     tankSlots:oldRaid.tankSlots,healSlots:oldRaid.healSlots,ddSlots:oldRaid.ddSlots,
     discordChannelId:oldRaid.discordChannelId,raidImageUrl:oldRaid.raidImageUrl||oldRaid.imageUrl
@@ -13461,6 +13462,8 @@ async function saveRaidHelperTemplateFromCreate(){
 
 function raidHelperTemplateSettingsFromCreate(){
   return {
+    raidDate:raidHelperValue("raidHelperDate"),
+    raidTime:raidHelperValue("raidHelperTime"),
     links:raidHelperLinksFromFields(),
     linkUrl:raidHelperLinkPayload().linkUrl,
     linkText:raidHelperLinkPayload().linkText,
@@ -13542,6 +13545,8 @@ function applyRaidHelperTemplateObject(template){
   if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
   setRaidHelperLinks(template);
   const settings=template.settings&&typeof template.settings==="object"?{...template.settings,...template}:template;
+  if(settings.raidDate||settings.date) setValue("raidHelperDate",String(settings.raidDate||settings.date).slice(0,10));
+  if(settings.raidTime||settings.time) setValue("raidHelperTime",String(settings.raidTime||settings.time).slice(0,5));
   setValue("raidHelperLootMaster",settings.lootMaster||"");
   setValue("raidHelperAnnouncementMessage",settings.announcementMessage||"");
   const signupOnly=document.getElementById("raidHelperSignupOnly");
@@ -16827,7 +16832,7 @@ async function createRaidHelperSignup(){
         weekday,
         raidTime,
         postTime:raidHelperValue("raidHelperWeeklyPostTime") || "09:00",
-        intervalWeeks:"1",
+        intervalWeeks:raidHelperValue("raidHelperWeeklyInterval") || "1",
         nextRaidDate,
         nextPostDate:nextRaidDate,
         signupDeadline:"",
@@ -16849,6 +16854,11 @@ async function createRaidHelperSignup(){
 
     if(status){
       if(queued.success && poQueued.success && weeklyQueued.success){
+        if(document.getElementById("raidHelperWeeklyEnabled")?.checked){
+          const savedScheduleId=String(weeklyQueued.schedule?.id||weeklyQueued.schedule?.scheduleId||"");
+          const savedScheduleKey=String(weeklyQueued.schedule?.key||weeklyQueued.schedule?.scheduleKey||"");
+          if(!savedScheduleId&&!savedScheduleKey)throw new Error("Der Rhythmus wurde vom Server nicht bestätigt.");
+        }
         const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
         const weeklyText = document.getElementById("raidHelperWeeklyEnabled")?.checked ? " Der wöchentliche automatische Neuaufbau ist gespeichert." : "";
         const accessText = signupOnlyRaid
