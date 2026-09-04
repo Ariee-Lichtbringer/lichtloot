@@ -13209,7 +13209,7 @@ function renderRaidHelperScheduleRules(){
         <div class="raid-helper-current-card-body">
           <div class="raid-helper-current-card-head"><h4>${escapeHtml(raidName)}</h4></div>
           <div class="raid-helper-current-card-meta">
-            <span title="Der Anmelder wird zu diesem Zeitpunkt erstellt">Erstellung: ${escapeHtml(formatRaidDate(schedule.nextPostDate || schedule.nextRaidDate))} · ${escapeHtml(schedule.postTime || "-")}</span>
+            <span title="Der Anmelder wird zu diesem Zeitpunkt automatisch erstellt und gepostet"><strong>Nächster Post:</strong> ${escapeHtml(formatRaidDate(schedule.nextPostDate || schedule.nextRaidDate))} · ${escapeHtml(schedule.postTime || "-")} Uhr</span>
             <span title="Termin, der im Anmelder angezeigt wird">Raid: ${escapeHtml(formatRaidDate(schedule.nextRaidDate))} · ${escapeHtml(schedule.raidTime || "-")}</span>
           </div>
           <div class="raid-helper-current-card-status"><span class="status-badge open">↻ Automatischer Rhythmus</span></div>
