@@ -8926,9 +8926,13 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
   const savedSchedule = normalizeRaidHelperScheduleRow(result.rows[0]);
   const firstRun = !result.rows[0].last_raid_id;
   const deferFirstRun = ["1", "true", "yes", "ja"].includes(clean(params.deferFirstRun).toLowerCase());
+  // Das Speichern oder Bearbeiten einer Rhythmus-Regel darf einen künftigen
+  // Anmelder niemals vorzeitig erstellen. Auch beim allerersten Lauf gilt
+  // deshalb das hinterlegte Posting-Datum samt Uhrzeit. Ein bewusstes
+  // Sofort-Ausführen erfolgt ausschließlich über die separate Force-Aktion.
   const processed = deferFirstRun && firstRun ? [] : await processRaidHelperSchedules({
     guildId,
-    force: firstRun,
+    force: false,
     scheduleId: result.rows[0].id
   });
   return {
