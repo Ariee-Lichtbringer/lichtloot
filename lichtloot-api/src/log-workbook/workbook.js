@@ -36,9 +36,9 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
     const cells=[];for(let c=start;c<=end;c++){const cell=s.getCell(row,c),v=cell.value;const n=typeof v==='number'?v:v&&typeof v==='object'&&typeof v.result==='number'?v.result:null;if(n!==null&&Number.isFinite(n))cells.push([cell,n]);}
     if(!cells.length)return;const maximum=Math.max(...cells.map(([,n])=>n));
     for(const[cell,n]of cells){const ratio=maximum>0?Math.max(0,Math.min(1,n/maximum)):1;
-      const stops=ratio<=.5?[[248,215,218],[255,239,179],ratio*2]:[[255,239,179],[183,225,205],(ratio-.5)*2];
+      const stops=ratio<=.5?[[180,35,45],[154,103,0],ratio*2]:[[154,103,0],[24,120,65],(ratio-.5)*2];
       const color=stops[0].map((v,i)=>Math.round(v+(stops[1][i]-v)*stops[2]).toString(16).padStart(2,'0')).join('').toUpperCase();
-      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}};cell.font={...cell.font,color:{argb:NAVY},bold:n===maximum};
+      cell.font={...cell.font,color:{argb:color},bold:n===maximum};
     }
   }
   function styleMatrix(s,rows,count){

@@ -84,8 +84,8 @@ assert.equal(healingMatrix.getCell('B9').value,'Heilende Berührung (Rang 1-4)')
 assert.equal(healingMatrix.getCell('D9').value,100);
 assert.equal(healingMatrix.getCell('D9').numFmt,'#,##0" (50 % OH)"');
 assert.equal(healingMatrix.getCell('E9').numFmt,'#,##0" (20 % OH)"');
-assert.equal(healingMatrix.getCell('D9').fill.fgColor.argb,'B7E1CD');
-assert.notEqual(healingMatrix.getCell('E9').fill.fgColor.argb,'B7E1CD');
+assert.equal(healingMatrix.getCell('D9').font.color.argb,'187841');
+assert.notEqual(healingMatrix.getCell('E9').font.color.argb,'187841');
 assert.equal(healingMatrix.getCell('F9').value,null);
 assert.equal(matrixBook.getWorksheet('Heiler - Druide').getCell('D10').value,20);
 assert.equal(matrixBook.getWorksheet('Heiler - Druide').getCell('D10').numFmt,'#,##0" (25 % OH)"');

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-export const EXPORT_VERSION = '2';
+export const EXPORT_VERSION = '3';
 export const CLASSES = {
   Druid:['Druide','FF7D0A','classicon_druid'],Hunter:['Jäger','ABD473','classicon_hunter'],Mage:['Magier','69CCF0','classicon_mage'],
   Paladin:['Paladin','F58CBA','classicon_paladin'],Priest:['Priester','FFFFFF','classicon_priest'],Rogue:['Schurke','FFF569','classicon_rogue'],

@@ -55,7 +55,7 @@ function installCellIcons_(spreadsheet){
     const rows=groups[key].sort(function(a,b){return a.r-b.r;});
     let start=0;
     while(start<rows.length){let end=start+1;while(end<rows.length&&rows[end].r===rows[end-1].r+1)end++;
-      tab.getRange(rows[start].r,column,end-start,1).setFormulas(rows.slice(start,end).map(function(row){return ['=IMAGE("'+row.url+'",4,23,23)'];}));start=end;
+      tab.getRange(rows[start].r,column,end-start,1).setFormulas(rows.slice(start,end).map(function(row){return ['=IMAGE("'+row.url+'";4;23;23)'];}));start=end;
     }
   });
   spreadsheet.getSheets().forEach(function(tab){tab.getImages().forEach(function(image){const a=image.getAnchorCell();if(a.getRow()!==1||a.getColumn()!==1)image.remove();});});
