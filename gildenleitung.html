@@ -5296,7 +5296,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .p0-item-received .item-icon{border-color:#f5c451!important}
 .p0-received-button:disabled{opacity:1!important;background:#166534!important;border:1px solid #4ade80!important;color:#dcfce7!important;cursor:default}
 
-.p0-received-legend{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(245,196,81,.35);border-radius:9px;background:rgba(245,196,81,.06);color:#cbd5e1;font-size:13px;line-height:1.5}.p0-received-legend span{color:#f5c451;font-weight:700}
+
+
+.raid-clear-date{display:grid;gap:4px;font-size:17px;font-weight:900;color:#e2e8f0}.raid-clear-date strong{color:#67e8f9;font-size:15px}.raid-overview-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.raid-summary-popup{position:fixed;z-index:100100;box-sizing:border-box;width:min(460px,calc(100vw - 24px));max-height:min(420px,calc(100dvh - 24px));overflow:auto;background:#0b1425;border:1px solid #64748b;border-radius:10px;padding:14px;color:#e2e8f0;box-shadow:0 16px 40px #0009;font-size:13px}.raid-summary-popup h4{margin:0 0 10px;color:#f5c451}.raid-summary-popup p{border-bottom:1px solid #334155;padding-bottom:8px}.raid-summary-popup small{color:#94a3b8}
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -6525,7 +6527,7 @@ body.worldbuff-only .master-only{display:none!important}
   </div>
 </div>
   </div>
-<aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
+
 </main>
 </div>
 
@@ -9527,6 +9529,31 @@ function fillClassFilter(){
   if(classes.includes(current)) select.value = current;
 }
 
+function renderRaidClearDate(raid){
+  const date=parseWorldbuffDate(String(raid.raidDate||'').slice(0,10));
+  return `<div class="raid-clear-date"><strong>${escapeHtml(date?date.toLocaleDateString('de-DE',{weekday:'long'}):'Termin')}</strong><span>${escapeHtml(formatRaidDate(raid.raidDate))}</span><span>${escapeHtml(raid.raidTime||'–')} Uhr</span></div>`;
+}
+function renderRaidOverviewStats(raid){
+  const id=escapeAttr(raid.raidId||raid.id),transfers=raid.p0TransferEntries||[],received=raid.p0ReceivedEntries||[];
+  const points=transfers.reduce((sum,row)=>sum+Number(row.points||0),0);
+  const count=Number(raid.signupCounts?.signed??raid.signupCount??0);
+  const button=(kind,text)=>`<button class="small-btn ghost" type="button" onmouseenter="showRaidSummary(event,'${id}','${kind}')" onmouseleave="hideRaidSummarySoon()" onfocus="showRaidSummary(event,'${id}','${kind}')" onblur="hideRaidSummarySoon()" onclick="showRaidSummary(event,'${id}','${kind}')">${text}</button>`;
+  return `<div class="raid-overview-stats">${button('signups',`👥 ${count} angemeldet`)}${button('transfers',`P0+ ${points.toLocaleString('de-DE')} Punkte übertragen`)}${button('received',`🎁 ${received.length} Items erhalten`)}</div>`;
+}
+let raidSummaryHideTimer;
+function hideRaidSummarySoon(){clearTimeout(raidSummaryHideTimer);raidSummaryHideTimer=setTimeout(()=>document.getElementById('raidSummaryPopup')?.remove(),180);}
+function showRaidSummary(event,id,kind){
+  clearTimeout(raidSummaryHideTimer);document.getElementById('raidSummaryPopup')?.remove();
+  const raid=(guildData.raids||[]).find(row=>String(row.raidId||row.id)===String(id));if(!raid)return;
+  const popup=document.createElement('div');popup.id='raidSummaryPopup';popup.className='raid-summary-popup';popup.setAttribute('role','tooltip');
+  const entries=kind==='received'?(raid.p0ReceivedEntries||[]):(raid.p0TransferEntries||[]);
+  const labels={transfers:'Übertragene P0+-Punkte',received:'Erhaltene P0+-Items',signups:'Anmeldestatus'};
+  const counts=raid.signupCounts||{};
+  popup.innerHTML=`<h4>${labels[kind]}</h4>`+(kind==='signups'?`<p>${Number(counts.signed??raid.signupCount??0)} angemeldet · ${Number(counts.bench||0)} Bank · ${Number(counts.late||0)} spät · ${Number(counts.tentative||0)} vorläufig · ${Number(counts.absent||0)} abwesend</p>`:entries.map(row=>`<p><strong>${escapeHtml(row.player||'–')}</strong> <small>${escapeHtml(row.server||'')}</small><br>${escapeHtml(row.item||'–')}<br>${kind==='received'?'Gelöscht: ':'Übertragen: '}${Number(row.points||0).toLocaleString('de-DE')} P0+</p>`).join('')||'<p>Keine protokollierten Einträge vorhanden.</p>');
+  popup.onmouseenter=()=>clearTimeout(raidSummaryHideTimer);popup.onmouseleave=hideRaidSummarySoon;document.body.appendChild(popup);
+  const anchor=event.currentTarget.getBoundingClientRect(),box=popup.getBoundingClientRect();popup.style.left=Math.max(12,Math.min(anchor.left,innerWidth-box.width-12))+'px';popup.style.top=Math.max(12,Math.min(anchor.bottom+8,innerHeight-box.height-12))+'px';
+}
+
 function renderRaids(){
   const tbody = document.getElementById("raidRows");
   renderRaidListFilters();
@@ -9545,7 +9572,7 @@ function renderRaids(){
       raid.status,
       raid.guild
     ].join(" "));
-    const isArchived = ["archiviert","archive","gelöscht","geloescht"].includes(status) || Boolean(raid.deletedAt);
+    const isArchived = ["archiviert","archive","gelöscht","geloescht"].includes(status) || Boolean(raid.deletedAt) || hasP0PlusTransfer(raid);
     const filterMatches =
       !isArchived && (filter ? status === filter : true);
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
@@ -9589,16 +9616,14 @@ function renderRaids(){
             </div>
           </div>
         </td>
-        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
-        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td>${renderRaidClearDate(raid)}</td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span>${renderRaidOverviewStats(raid)}</td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
         <td>${renderP0TransferState(raid)}</td>
         <td>${statusBadge(status)}</td>
         <td>
           <div class="actions">
-            <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
             <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
-            <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
             <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM</button>
@@ -9651,7 +9676,7 @@ function renderRaidArchive(){
     const isDeleted = ["gelöscht","geloescht","deleted"].includes(status) || Boolean(raid.deletedAt);
     const raidDate=String(raid.raidDate||raid.date||"").slice(0,10);
     const isFinishedPastRaid=/^\d{4}-\d{2}-\d{2}$/.test(raidDate) && raidDate<todayIsoDate();
-    const isArchived = ["archiviert","archive","archived"].includes(status) || (!isDeleted && isFinishedPastRaid);
+    const isArchived = ["archiviert","archive","archived"].includes(status) || (!isDeleted && (isFinishedPastRaid || hasP0PlusTransfer(raid)));
     if(!isArchived && !isDeleted) return;
     if(raidArchiveRaidFilter!=="all" && raidArchiveFilterKey(raid)!==raidArchiveRaidFilter) return;
     const haystack = normalize([
@@ -9673,8 +9698,8 @@ function renderRaidArchive(){
     return raids.map(raid => `
       <tr>
         <td><strong>${escapeHtml(raid.raidName || raid.raid || "Raid")}</strong><div class="muted">${escapeHtml(raid.raidId || raid.id || "")}</div></td>
-        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
-        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td>${renderRaidClearDate(raid)}</td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span>${renderRaidOverviewStats(raid)}</td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
         <td>${statusBadge(deletedGroup ? "gelöscht" : "archiviert")}</td>
         <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
@@ -17907,7 +17932,6 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
         </tbody>
       </table>
     </div>
-    <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
   `;
 }
 
