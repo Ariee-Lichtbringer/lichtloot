@@ -13711,12 +13711,7 @@ async function getPlayerPrioHistory(guildId, params) {
     throw error;
   }
 
-  const historyParams = [guildId, character.name];
-  let historyServerClause = "";
-  if (clean(character.server)) {
-    historyParams.push(character.server);
-    historyServerClause = `and lower(c.server) = lower($${historyParams.length})`;
-  }
+  const historyParams = [guildId, character.player_id];
 
   const result = await query(
     `select
@@ -13743,19 +13738,13 @@ async function getPlayerPrioHistory(guildId, params) {
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id
      where p.guild_id = $1
-       and lower(c.name) = lower($2)
-       ${historyServerClause}
+       and c.player_id = $2
      order by r.raid_date desc, pr.updated_at desc
      limit 100`,
     historyParams
   );
 
-  const pointsParams = [guildId, character.name];
-  let pointsServerClause = "";
-  if (clean(character.server)) {
-    pointsParams.push(character.server);
-    pointsServerClause = `and lower(c.server) = lower($${pointsParams.length})`;
-  }
+  const pointsParams = [guildId, character.player_id];
   const pointsResult = await query(
     `select
        coalesce(i.raid_type, 'Raid') as raid,
@@ -13770,8 +13759,7 @@ async function getPlayerPrioHistory(guildId, params) {
      join players p on p.id = c.player_id and p.guild_id = $1
      left join items i on i.id = pp.item_id
      where pp.guild_id = $1
-       and lower(c.name) = lower($2)
-       ${pointsServerClause}
+       and c.player_id = $2
      group by
        coalesce(i.raid_type, 'Raid'),
        coalesce(i.name, pp.note, 'P0/P0+'),
@@ -14150,6 +14138,100 @@ async function deletePrio({ guildId, query: params }) {
     }
   }
   return { success: true, deleted: result.rowCount, poPostRefreshes, raidAnnouncementRefreshes: refreshes };
+}
+
+async function queueDueMissingPrioReminders() {
+  await ensureRaidSchema();
+  const dueRaids = await query(
+    `select r.* from raids r
+     where r.deleted_at is null
+       and coalesce(r.prio_enabled, true) = true
+       and coalesce(r.discord_channel_id, '') <> ''
+       and lower(coalesce(r.status, '')) not in ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+       and r.raid_date is not null
+       and coalesce(r.raid_time, '') ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+       and r.raid_date + r.raid_time::time
+           between timezone('Europe/Berlin', now()) + interval '29 minutes'
+               and timezone('Europe/Berlin', now()) + interval '31 minutes'`
+  );
+
+  let queued = 0;
+  for (const raid of dueRaids.rows || []) {
+    const reminderKey = `missing-prio:${raid.id}:${scheduleDateIso(raid.raid_date)}:${clean(raid.raid_time).slice(0, 5)}`;
+    const existing = await query(
+      `select id from bot_update_queue
+       where guild_id=$1 and type='raid_missing_prio_reminder'
+         and payload->>'reminderKey'=$2 limit 1`,
+      [raid.guild_id, reminderKey]
+    );
+    if (existing.rowCount) continue;
+
+    const related = await query(
+      `select id from raids
+       where guild_id=$1 and lower(raid_type)=any($2) and raid_date=$3`,
+      [raid.guild_id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    );
+    const prioRaidIds = [...new Set([raid.id, ...related.rows.map(row => row.id)].filter(Boolean))];
+    const internal = await query(
+      `select distinct on (p.id) p.id as player_id, c.name as player_name
+       from raid_signups rs
+       join characters c on c.id=rs.character_id
+       join players p on p.id=c.player_id and p.guild_id=$1
+       where rs.raid_id=$2
+         and lower(coalesce(rs.status,'signed')) not in ('absent','abgemeldet','abwesend','nein')
+       order by p.id, rs.created_at asc`,
+      [raid.guild_id, raid.id]
+    );
+    const external = await query(
+      `select distinct on (lower(player_name)) player_name
+       from raid_external_signups
+       where guild_id=$1 and raid_id=$2
+         and lower(coalesce(status,'signed')) not in ('absent','abgemeldet','abwesend','nein')
+       order by lower(player_name), created_at asc`,
+      [raid.guild_id, raid.id]
+    );
+    const completed = await query(
+      `select distinct c.player_id, lower(c.name) as player_name
+       from prios pr
+       join characters c on c.id=pr.character_id
+       join players p on p.id=c.player_id and p.guild_id=$1
+       where pr.raid_id=any($2)
+         and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)`,
+      [raid.guild_id, prioRaidIds]
+    );
+    const completedIds = new Set(completed.rows.map(row => clean(row.player_id)));
+    const completedNames = new Set(completed.rows.map(row => clean(row.player_name).toLowerCase()));
+    const missingCharacters = [];
+    const seen = new Set();
+    for (const row of [...internal.rows, ...external.rows]) {
+      const name = clean(row.player_name);
+      const key = name.toLowerCase();
+      if (!name || seen.has(key)) continue;
+      seen.add(key);
+      const hasPrio = clean(row.player_id) ? completedIds.has(clean(row.player_id)) : completedNames.has(key);
+      if (!hasPrio) missingCharacters.push(name);
+    }
+
+    await enqueueBotUpdate({
+      guildId: raid.guild_id,
+      type: "raid_missing_prio_reminder",
+      payload: {
+        reminderKey,
+        raidId: raidPublicId(raid),
+        raid: raid.raid_type || "",
+        raidName: raid.name || displayRaidName(raid.raid_type),
+        raidDate: scheduleDateIso(raid.raid_date),
+        raidTime: clean(raid.raid_time).slice(0, 5),
+        prioPin: raid.raid_pin || "",
+        channelId: raid.discord_channel_id,
+        discordChannelId: raid.discord_channel_id,
+        trackedCharacters: missingCharacters,
+        missingCharacters
+      }
+    });
+    queued += 1;
+  }
+  return { queued };
 }
 
 async function enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, source) {
@@ -32401,10 +32483,28 @@ async function runRaidHelperScheduleTick(){
   }
 }
 
+let missingPrioReminderTickRunning = false;
+async function runMissingPrioReminderTick() {
+  if (missingPrioReminderTickRunning) return;
+  missingPrioReminderTickRunning = true;
+  try {
+    const result = await queueDueMissingPrioReminders();
+    if (result.queued) console.log(`Prio-Erinnerungen: ${result.queued} Auftrag/Aufträge eingeplant.`);
+  } finally {
+    missingPrioReminderTickRunning = false;
+  }
+}
+
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
   setTimeout(runRaidHelperScheduleTick, 5000).unref();
   setInterval(runRaidHelperScheduleTick, 60000).unref();
+  setTimeout(() => runMissingPrioReminderTick().catch(error => {
+    console.warn("Prio-Erinnerungen konnten nicht eingeplant werden:", error.message || error);
+  }), 15000).unref();
+  setInterval(() => runMissingPrioReminderTick().catch(error => {
+    console.warn("Prio-Erinnerungen konnten nicht eingeplant werden:", error.message || error);
+  }), 60000).unref();
   setTimeout(() => {
     autoArchiveFinishedTwentyPlayerRaids()
       .then(result => {

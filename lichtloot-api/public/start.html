@@ -8453,7 +8453,9 @@ function renderMyPrios(data){
       const rowId='myprio-card-'+index;
       const deletePayload=safeAttr(JSON.stringify({
         rowId:rowId,
+        prioId:entry.id || '',
         raidId:entry.raidId || entry.RaidID || entry.id || '',
+        prioPin:entry.prioPin || entry.raidPin || '',
         raid:entry.raid || '',
         raidName:entry.raidName || entry.raid || 'Raid',
         player:entry.player || data.player || '',
@@ -9356,7 +9358,9 @@ async function deleteOwnPrio(payload){
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
     '&server='+encodeURIComponent(payload.server || '')+
+    '&prioId='+encodeURIComponent(payload.prioId || '')+
     '&raidId='+encodeURIComponent(payload.raidId || '')+
+    '&prioPin='+encodeURIComponent(payload.prioPin || '')+
     '&raid='+encodeURIComponent(payload.raid || '')+
     '&createdAt='+encodeURIComponent(payload.createdAt || '')+
     '&t='+Date.now();
