@@ -8650,9 +8650,30 @@ function renderLootLayoutPanel(){
               <span class="muted">Neue Warcraft-Logs werden aus diesem Channel importiert.</span>
             </div>
             <div class="field">
-              <label>Loganalyse Zielchannel</label>
+              <label>Loganalyse Standard-Zielchannel</label>
               <select id="layoutLogAnalysisChannelId">${layoutChannelSelectOptions(layout.logAnalysisChannelId || "")}</select>
-              <span class="muted">Hier kann die Gilde ihre Analyse-Threads und Ergebnisse sammeln.</span>
+              <span class="muted">Wird verwendet, wenn für den Raid unten kein eigener Zielchannel eingetragen ist.</span>
+            </div>
+            <datalist id="layoutLogAnalysisChannelOptions">${raidHelperDiscordChannels.map(channel=>`<option value="${escapeAttr(String(channel.channelId||channel.id||''))}">${escapeHtml([channel.categoryName||channel.category,channel.channelName||channel.name].filter(Boolean).join(' / '))}</option>`).join('')}</datalist>
+            <div class="field">
+              <label for="layoutLogAnalysisMcChannelId">Loganalyse MC – Zielchannel / Thread</label>
+              <input id="layoutLogAnalysisMcChannelId" list="layoutLogAnalysisChannelOptions" inputmode="numeric" pattern="[0-9]{17,20}" value="${escapeAttr(layout.logAnalysisMcChannelId || '')}" placeholder="Channel- oder Thread-ID">
+              <span class="muted">Channel auswählen oder Discord-ID einfügen. Leer = Standard-Zielchannel.</span>
+            </div>
+            <div class="field">
+              <label for="layoutLogAnalysisBwlChannelId">Loganalyse BWL – Zielchannel / Thread</label>
+              <input id="layoutLogAnalysisBwlChannelId" list="layoutLogAnalysisChannelOptions" inputmode="numeric" pattern="[0-9]{17,20}" value="${escapeAttr(layout.logAnalysisBwlChannelId || '')}" placeholder="Channel- oder Thread-ID">
+              <span class="muted">Channel auswählen oder Discord-ID einfügen. Leer = Standard-Zielchannel.</span>
+            </div>
+            <div class="field">
+              <label for="layoutLogAnalysisAq40ChannelId">Loganalyse AQ40 – Zielchannel / Thread</label>
+              <input id="layoutLogAnalysisAq40ChannelId" list="layoutLogAnalysisChannelOptions" inputmode="numeric" pattern="[0-9]{17,20}" value="${escapeAttr(layout.logAnalysisAq40ChannelId || '')}" placeholder="Channel- oder Thread-ID">
+              <span class="muted">Channel auswählen oder Discord-ID einfügen. Leer = Standard-Zielchannel.</span>
+            </div>
+            <div class="field">
+              <label for="layoutLogAnalysisNaxxChannelId">Loganalyse Naxxramas – Zielchannel / Thread</label>
+              <input id="layoutLogAnalysisNaxxChannelId" list="layoutLogAnalysisChannelOptions" inputmode="numeric" pattern="[0-9]{17,20}" value="${escapeAttr(layout.logAnalysisNaxxChannelId || '')}" placeholder="Channel- oder Thread-ID">
+              <span class="muted">Channel auswählen oder Discord-ID einfügen. Leer = Standard-Zielchannel.</span>
             </div>
             <div class="field">
               <label>Warcraft-Logs Gilden-ID</label>
@@ -8861,6 +8882,11 @@ async function saveLootLayoutPanel(){
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
     logSourceChannelId: layoutFieldValue("layoutLogSourceChannelId"),
     logAnalysisChannelId: layoutFieldValue("layoutLogAnalysisChannelId"),
+    logAnalysisMcChannelId: layoutFieldValue("layoutLogAnalysisMcChannelId"),
+    logAnalysisBwlChannelId: layoutFieldValue("layoutLogAnalysisBwlChannelId"),
+    logAnalysisAq40ChannelId: layoutFieldValue("layoutLogAnalysisAq40ChannelId"),
+    logAnalysisNaxxChannelId: layoutFieldValue("layoutLogAnalysisNaxxChannelId"),
+
     raidAnnouncementChannelId: layoutFieldValue("layoutRaidAnnouncementChannelId"),
     warcraftLogsGuildId: layoutFieldValue("layoutWarcraftLogsGuildId").replace(/\D/g,"")
   };
