@@ -13596,6 +13596,58 @@ async function syncPoSignupPrios({ guildId, query: params }) {
   };
 }
 
+// Startseite und Gildenleitung zählen dieselben P0-Auswahlen wie die Prioliste.
+// Discord-IDs identifizieren Konten, nicht Charaktere. Deshalb werden Spiegel
+// anhand von Charakter, Server und Item zusammengeführt; alte serverlose
+// Bot-Einträge ergänzen vorhandene Charaktere, statt sie doppelt zu zählen.
+function raidP0SignupCountSql() {
+  return `(
+    select coalesce(sum(greatest(server_count, 1)), 0)::int
+    from (
+      select lower(trim(player_name)), lower(trim(item_name)),
+             count(distinct nullif(lower(trim(server)), '')) as server_count
+      from (
+        select c.name as player_name, c.server, i.name as item_name
+        from prios pr
+        join characters c on c.id = pr.character_id
+        join players p on p.id = c.player_id and p.guild_id = r.guild_id
+        join items i on i.id = pr.p1_item_id
+        where pr.raid_id = r.id
+          and (
+            pr.comment ~* '"p0Selected"[[:space:]]*:[[:space:]]*"ja"'
+            or pr.comment ~* '"p0Plus"[[:space:]]*:[[:space:]]*"ja"'
+            or (
+              pr.comment !~* '"p0Selected"[[:space:]]*:'
+              and pr.comment ~* '"p0Item"[[:space:]]*:[[:space:]]*"[^"[:space:]][^"]*"'
+            )
+          )
+        union all
+        select pds.player_name, pds.server, pds.item_name
+        from p0_discord_signups pds
+        where pds.guild_id = r.guild_id and pds.raid_id = r.id
+        union all
+        select ppe.player_name, '' as server, ppe.item_name
+        from po_post_entries ppe
+        where ppe.guild_id = r.guild_id
+          and ppe.archived_at is null
+          and not coalesce(ppe.config_only, false)
+          and (
+            ppe.raid_id = r.id::text
+            or (nullif(r.external_raid_id, '') is not null and ppe.raid_id = r.external_raid_id)
+            or (
+              coalesce(ppe.raid_id, '') = ''
+              and nullif(ppe.raid_pin, '') is not null
+              and ppe.raid_pin in (r.id::text, r.external_raid_id, r.raid_pin)
+            )
+          )
+      ) selections
+      where nullif(trim(player_name), '') is not null
+        and nullif(trim(item_name), '') is not null
+      group by lower(trim(player_name)), lower(trim(item_name))
+    ) character_items
+  )`;
+}
+
 function commentMeta(comment) {
   try {
     return JSON.parse(comment || "{}") || {};
@@ -14119,31 +14171,7 @@ async function getGuildLeadershipOverview(guildId, params) {
                 from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id
               ) signup_rows
             ) as signup_counts,
-            (
-              select count(*)::int
-              from (
-                select concat(
-                  coalesce(nullif(lower(ppe.discord_user_id), ''), lower(ppe.player_name)),
-                  '|', lower(coalesce(ppe.item_name, ''))
-                ) as signup_key
-                from po_post_entries ppe
-                where ppe.guild_id = r.guild_id
-                  and ppe.archived_at is null
-                  and not coalesce(ppe.config_only, false)
-                  and coalesce(ppe.player_name, '') <> ''
-                  and (
-                    ppe.raid_id in (r.id::text, coalesce(r.external_raid_id, ''))
-                    or ppe.raid_pin in (r.id::text, coalesce(r.external_raid_id, ''), coalesce(r.raid_pin, ''))
-                  )
-                union
-                select concat(
-                  coalesce(nullif(lower(pds.discord_user_id), ''), lower(pds.player_name)),
-                  '|', lower(coalesce(pds.item_name, ''))
-                ) as signup_key
-                from p0_discord_signups pds
-                where pds.guild_id = r.guild_id and pds.raid_id = r.id
-              ) p0_signups
-            ) as p0_signup_count,
+            ${raidP0SignupCountSql()} as p0_signup_count,
             (
               select count(*)
               from p0plus_points pp
@@ -30308,24 +30336,7 @@ app.get("/api/apps-script", async (req, res, next) => {
                     select lower(coalesce(res.status, 'signed')) as signup_status from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id
                   ) signup_rows
                 ) as signup_counts,
-                (
-                  select count(*)::int
-                  from (
-                    select concat(coalesce(nullif(lower(ppe.discord_user_id), ''), lower(ppe.player_name)), '|', lower(coalesce(ppe.item_name, ''))) as signup_key
-                    from po_post_entries ppe
-                    where ppe.guild_id = r.guild_id
-                      and ppe.archived_at is null
-                      and not coalesce(ppe.config_only, false)
-                      and coalesce(ppe.player_name, '') <> ''
-                      and (
-                        ppe.raid_id in (r.id::text, coalesce(r.external_raid_id, ''))
-                        or ppe.raid_pin in (r.id::text, coalesce(r.external_raid_id, ''), coalesce(r.raid_pin, ''))
-                      )
-                    union
-                    select concat(coalesce(nullif(lower(pds.discord_user_id), ''), lower(pds.player_name)), '|', lower(coalesce(pds.item_name, ''))) as signup_key
-                    from p0_discord_signups pds where pds.guild_id = r.guild_id and pds.raid_id = r.id
-                  ) p0_signups
-                ) as p0_signup_count,
+                ${raidP0SignupCountSql()} as p0_signup_count,
                 (
                   select count(*)
                   from p0plus_points pp
