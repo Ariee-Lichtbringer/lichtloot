@@ -24736,15 +24736,15 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
            guild_id, event_id, character_id, item_id, player_name, server, item_name,
            discord_user_id, discord_name, discord_channel_id, discord_message_id,
            approval_status, approved_by_discord_id, approved_by_discord_name, approved_at
-         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'pending',null,null,null)
+         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'approved',null,'Automatische P0-Prüfung',now())
          on conflict (guild_id,event_id,discord_user_id) do update
            set character_id=excluded.character_id, item_id=excluded.item_id,
                player_name=excluded.player_name, server=excluded.server,
                item_name=excluded.item_name, discord_name=excluded.discord_name,
                discord_channel_id=coalesce(nullif(excluded.discord_channel_id,''),p0_only_signups.discord_channel_id),
                discord_message_id=coalesce(nullif(excluded.discord_message_id,''),p0_only_signups.discord_message_id),
-               approval_status='pending', approved_by_discord_id=null,
-               approved_by_discord_name=null, approved_at=null, updated_at=now()
+               approval_status='approved', approved_by_discord_id=null,
+               approved_by_discord_name='Automatische P0-Prüfung', approved_at=now(), updated_at=now()
          returning *`,
         [guildId, raid.id, character.id, item.id, character.name, character.server, item.name,
           discordUserId, clean(params.discordName), clean(params.discordChannelId || raid.discord_channel_id), clean(params.discordMessageId || raid.discord_message_id)]
@@ -24778,7 +24778,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         p0Event: raid,
         linkedRaid,
         signup: signupResult.rows[0],
-        approvalStatus: "pending"
+        approvalStatus: "approved"
       });
       return {
         success: true,
@@ -24819,7 +24819,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
          discord_user_id, discord_name, discord_channel_id, discord_message_id,
          approval_status, approved_by_discord_id, approved_by_discord_name, approved_at
        )
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', null, null, null)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'approved', null, 'Automatische P0-Prüfung', now())
        on conflict (guild_id, raid_id, discord_user_id) do update
          set character_id = excluded.character_id,
              item_id = excluded.item_id,
@@ -24829,10 +24829,10 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
              discord_name = excluded.discord_name,
              discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), p0_discord_signups.discord_channel_id),
              discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), p0_discord_signups.discord_message_id),
-             approval_status = 'pending',
+             approval_status = 'approved',
              approved_by_discord_id = null,
-             approved_by_discord_name = null,
-             approved_at = null,
+             approved_by_discord_name = 'Automatische P0-Prüfung',
+             approved_at = now(),
              updated_at = now()
        returning *`,
       [
