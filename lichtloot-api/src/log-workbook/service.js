@@ -59,6 +59,7 @@ export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBas
     await query(`insert into bot_update_queue (guild_id,type,payload) values ($1,'raid_workbook_post',$2::jsonb)
       on conflict (guild_id,type,(payload->>'analysisId')) where type='raid_workbook_post'
       do update set payload=excluded.payload where bot_update_queue.status='open'`,[guildId,JSON.stringify(payload)]);
+    await query(`update log_analyses set summary=coalesce(summary,'{}'::jsonb)||$3::jsonb where guild_id=$1 and id=$2`,[guildId,analysisId,JSON.stringify({workbookError:null})]);
     return {queued:true,sheetUrl:result.links.sheetUrl};
   }
   return {generate,afterAnalysis,ensureSchema};
