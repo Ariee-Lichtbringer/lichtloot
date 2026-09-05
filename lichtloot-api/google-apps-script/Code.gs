@@ -20,7 +20,7 @@ function doPost(e) {
     if(!file || file.appProperties.sourceHash!==p.sourceHash){
       const response=UrlFetchApp.fetch(base+p.analysisId+'/workbook.xlsx',{muteHttpExceptions:true});
       if(response.getResponseCode()!==200)throw Error('Raid-Auswertung noch nicht verfügbar.');
-      const blob=response.getBlob().setContentType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').setName('raid.xlsx');
+      const blob=stripFloatingIcons_(response.getBlob());
       const raid=verified.raids[0],name=p.guildSlug+' · '+raid.raid+' · '+String(raid.date||'').slice(0,10);
       const meta={name:name,mimeType:SHEET_MIME,appProperties:{guildlootAnalysisId:p.analysisId,guildlootGuild:p.guildSlug,sourceHash:p.sourceHash}};
       if(file)file=Drive.Files.update(meta,file.id,blob,{fields:'id,name,mimeType,webViewLink'});
@@ -60,4 +60,15 @@ function installCellIcons_(spreadsheet){
   });
   spreadsheet.getSheets().forEach(function(tab){tab.getImages().forEach(function(image){const a=image.getAnchorCell();if(a.getRow()!==1||a.getColumn()!==1)image.remove();});});
   manifest.hideSheet();
+}
+
+function stripFloatingIcons_(blob){
+  const parts=Utilities.unzip(blob.setContentType('application/zip'));
+  parts.forEach(function(part){
+    if(!/^xl\/drawings\/drawing[0-9]+\.xml$/.test(part.getName()))return;
+    const doc=XmlService.parse(part.getDataAsString()),root=doc.getRootElement(),ns=root.getNamespace();
+    root.getChildren().slice().forEach(function(anchor){const from=anchor.getChild('from',ns);if(!from||from.getChildText('row',ns)!=='0'||from.getChildText('col',ns)!=='0')root.removeContent(anchor);});
+    part.setDataFromString(XmlService.getRawFormat().format(doc));
+  });
+  return Utilities.zip(parts,'raid.xlsx').setContentType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 }
