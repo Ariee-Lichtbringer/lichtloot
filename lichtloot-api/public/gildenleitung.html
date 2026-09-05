@@ -5122,7 +5122,22 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   font-weight:900;
 }
 
-#prioModal .modal-box{border-color:rgba(var(--blue-rgb),.38)}
+#prioModal .modal-box{
+  box-sizing:border-box;
+  width:min(1320px,calc(100vw - 28px));
+  height:min(860px,calc(100dvh - 28px));
+  min-width:min(560px,calc(100vw - 28px));
+  min-height:min(360px,calc(100dvh - 28px));
+  max-width:calc(100vw - 28px);
+  max-height:calc(100dvh - 28px);
+  border-color:rgba(var(--blue-rgb),.38);
+  resize:both;
+}
+#prioModal .modal-box.is-maximized{width:calc(100vw - 28px)!important;height:calc(100dvh - 28px)!important;resize:none}
+#prioModal .modal-head{flex-shrink:0;flex-wrap:wrap}
+#prioModal .modal-content{flex:1;min-height:0;min-width:0;overflow:auto}
+.prio-window-actions{display:flex;gap:8px;flex-wrap:wrap}
+.prio-window-resize-hint{flex-shrink:0;padding:6px 24px 6px 12px;color:#94a3b8;font-size:12px;border-top:1px solid #334155;text-align:right}
 #prioModal .modal-title h2{color:var(--gold)}
 #messageModal .modal-box{
   width:min(560px, calc(100vw - 24px));
@@ -6518,11 +6533,12 @@ body.worldbuff-only .master-only{display:none!important}
         <h2 id="prioModalTitle">Prioliste</h2>
         <p id="prioModalSubline"></p>
       </div>
-      <button class="btn danger" type="button" onclick="closePrioModal()">Schließen</button>
+      <div class="prio-window-actions"><button class="btn" type="button" id="prioModalSizeButton" aria-pressed="false" onclick="togglePrioModalSize()">⛶ Maximieren</button><button class="btn danger" type="button" onclick="closePrioModal()">Schließen</button></div>
     </div>
     <div id="prioModalContent" class="modal-content">
       <div class="status">Bereit.</div>
     </div>
+    <div class="prio-window-resize-hint">Größe an der unteren rechten Ecke ziehen ◢</div>
   </div>
 </div>
 
@@ -17793,6 +17809,14 @@ function raidPrioAccessWindow(raid){
   const opensAt=new Date(start.getTime()-30*60*1000);
   if(Date.now()<opensAt.getTime())return {allowed:false,message:`Die Prioliste kann erst 30 Minuten vor Raidbeginn geöffnet werden: ${opensAt.toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"})} Uhr.`};
   return {allowed:true,opensAt};
+}
+
+function togglePrioModalSize(){
+  const box=document.querySelector("#prioModal .modal-box");
+  const maximized=box.classList.toggle("is-maximized");
+  const button=document.getElementById("prioModalSizeButton");
+  button.textContent=maximized?"⛶ Verkleinern":"⛶ Maximieren";
+  button.setAttribute("aria-pressed",String(maximized));
 }
 
 function closePrioModal(){
