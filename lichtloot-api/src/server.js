@@ -1,5 +1,6 @@
 import "dotenv/config";
 import cors from "cors";
+import { calculateGearStats, normalizeArmoryPlannerItem } from "../public/loot/gear-stat-calculator.js";
 import express from "express";
 import nodemailer from "nodemailer";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
@@ -5201,18 +5202,19 @@ async function fetchOfficialBlizzardArmoryProfile({region="eu",realm,name}){
   const gear=Object.values(character.gear||{}).filter(Boolean).map(normalizeOfficialBlizzardGearItem);
   if(!gear.length)throw new Error("Blizzard Armory hat für diesen Charakter noch keine Ausrüstung gespeichert.");
   const stats=Object.fromEntries((character?.stats?.overview||[]).filter(Boolean).map(stat=>[clean(stat.enum),stat?.value?.value??stat?.details?.effective??""]));
-  // Angriffskraft steht bei Classic-Profilen im Angriffsbereich, nicht
-  // zwingend in der allgemeinen Werteübersicht.
-  const attackPowerStat = [
+  // Classic führt Angriffskraft und Zaubermacht außerhalb der Übersicht.
+  const combatStats = [
     ...(character?.stats?.overview || []),
     ...(character?.stats?.basic?.secondary || []),
     ...(character?.stats?.groups || []).flatMap(group => group?.stats || [])
-  ].find(stat => stat?.enum === "ATTACKPOWER" && (
-    stat?.value?.value != null || stat?.details?.effective?.value != null
-  ));
-  if (attackPowerStat) {
-    stats.ATTACKPOWER = attackPowerStat.value?.value ?? attackPowerStat.details?.effective?.value;
+  ];
+  for (const key of ["ATTACKPOWER", "SPELLPOWER"]) {
+    const stat = combatStats.find(entry => entry?.enum === key && (
+      entry?.value?.value != null || entry?.details?.effective?.value != null
+    ));
+    if (stat) stats[key] = stat.value?.value ?? stat.details?.effective?.value;
   }
+  stats.BONUSHEALINGGEAR = calculateGearStats(gear.map(normalizeArmoryPlannerItem)).healing;
   let talentCatalog=[];try{talentCatalog=await getWowheadClassicTalentCatalog(character?.class?.name||character?.class?.slug);}catch(error){console.warn("Vollständige Wowhead-Talentbäume konnten nicht geladen werden:",error.message||error);}
   return{success:true,source:"blizzard-armory",armoryUrl:url,updatedAt:clean(character?.lastUpdatedTimestamp?.iso8601),character:{name:clean(character.name||name),server:clean(character?.realm?.name||realm),className:clean(character?.class?.name||character?.class?.slug),level:Number(character.level||0)||"",race:clean(character?.race?.name),faction:clean(character?.faction?.name),gender:clean(character?.gender?.name),itemLevel:Number(character.averageItemLevel||stats.ITEMLEVEL||0)||"",renderUrl:clean(character?.render?.foreground?.url||character?.renderRaw?.url),avatarUrl:clean(character?.avatar?.url),specs:(character?.specs||[]).map(spec=>({name:clean(spec.name),points:Number(spec.spentPoints||0),active:Boolean(spec.active),talents:(spec?.talents||[]).map(talent=>({id:Number(talent?.id||0)||"",name:clean(talent?.name),rank:Number(talent?.rank||0)||0,description:clean(talent?.description),iconUrl:clean(talent?.icon?.url),cast:clean(talent?.cast),cost:clean(talent?.cost),cooldown:clean(talent?.cooldown),range:clean(talent?.range)}))})),talentCatalog,stats,pvp:{honorableKills:Number(character?.pvp?.honorableKills?.value||0),rank:Number(character?.pvp?.rank?.value||0)}},gear};
 }
@@ -23191,22 +23193,39 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
        from characters c
        join players p on p.id = c.player_id
        where p.guild_id = $1 and lower(c.name) = lower($2)
-       order by c.updated_at desc nulls last
-       limit 1`,
-      [guildId, nextPlayerName]
+         and ($3::uuid is null or c.id = $3::uuid)
+       limit 2`,
+      [guildId, nextPlayerName,
+        nextPlayerName.toLowerCase() === clean(existingSignup.player || existingSignup.playerName).toLowerCase()
+          ? existingSignup.characterId || null : null]
     );
     if (!characterResult.rows[0]) {
       const error = new Error("Der ausgewählte Charakter wurde in der Spielerdatenbank nicht gefunden.");
       error.statusCode = 404;
       throw error;
     }
-    const localUpdate = await query(
+    if (characterResult.rows.length > 1) {
+      const error = new Error("Der Charaktername ist auf mehreren Servern vorhanden. Bitte die Anmeldung mit dem gewünschten Charakter über dessen SpielerLogin vornehmen.");
+      error.statusCode = 409;
+      throw error;
+    }
+    let localUpdate;
+    try {
+      localUpdate = await query(
       `update raid_signups rs set character_id=$3, role=$4, note=$5,
           signup_number=case when $6::boolean then $7::integer else rs.signup_number end,
           updated_at=now()
        from raids r where rs.raid_id=r.id and r.guild_id=$1 and rs.id=$2 returning rs.*`,
       [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote, hasSignupNumber, editedSignupNumber]
-    );
+      );
+    } catch (error) {
+      if (error.code === "23505" && error.constraint === "raid_signups_raid_id_character_id_key") {
+        const conflict = new Error("Dieser Charakter ist bereits für diesen Raid angemeldet. Bitte seine vorhandene Anmeldung bearbeiten.");
+        conflict.statusCode = 409;
+        throw conflict;
+      }
+      throw error;
+    }
     if (localUpdate.rows[0]) {
       const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
       const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup, player:nextPlayerName, className:nextClassName }, "edited", notifyMessage);
