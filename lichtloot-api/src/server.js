@@ -3795,6 +3795,8 @@ async function ensureRaidSchema() {
   );
   await query(`alter table raid_external_signups add column if not exists player_pin text`);
   await query(`alter table raid_external_signups add column if not exists signup_number integer`);
+  await query(`alter table raid_signups add column if not exists staff_benched boolean not null default false`);
+  await query(`alter table raid_external_signups add column if not exists staff_benched boolean not null default false`);
   await query(
     `create table if not exists p0_discord_signups (
        id uuid primary key default gen_random_uuid(),
@@ -20892,6 +20894,87 @@ async function resolveIssueReport({ guildId, query: params }) {
   };
 }
 
+// Mailbox state belongs to the viewer; removing a sent copy never deletes the recipient's mail.
+let playerMailboxSchemaPromise;
+function ensurePlayerMailboxSchema(){
+  if(!playerMailboxSchemaPromise) playerMailboxSchemaPromise=(async()=>{
+    await query(`alter table player_messages
+      add column if not exists sender_player_pin text,
+      add column if not exists delivery_channel text not null default 'mailbox',
+      add column if not exists delivery_status text not null default '',
+      add column if not exists delivery_error text not null default ''`);
+    await query(`create table if not exists player_mailbox_state (
+      guild_id uuid not null references guilds(id) on delete cascade,
+      message_id uuid not null references player_messages(id) on delete cascade,
+      player_pin text not null, folder text not null,
+      trashed boolean not null default false, hidden boolean not null default false,
+      primary key(guild_id,message_id,player_pin,folder))`);
+  })().catch(error=>{playerMailboxSchemaPromise=null;throw error;});
+  return playerMailboxSchemaPromise;
+}
+async function requireMailboxPlayer(guildId,params){
+  const pin=normalizePin(params.playerPin||params.fromPlayerPin||params.pin);
+  const player=await findPlayerByPin(guildId,pin);
+  if(!player)throw Object.assign(new Error("Bitte mit einem gültigen SpielerLogin anmelden."),{statusCode:403});
+  await ensurePlayerMailboxSchema();
+  return player;
+}
+async function getPlayerMailRecipients({guildId,query:params}){
+  await requireMailboxPlayer(guildId,params);
+  const result=await query(`select c.id,c.name,c.server,
+    exists(select 1 from discord_player_links d where d.guild_id=p.guild_id and d.character_id=c.id) as discord
+    from characters c join players p on p.id=c.player_id
+    where p.guild_id=$1 and p.approval_status='approved' and coalesce(p.is_blocked,false)=false
+    order by lower(c.name),lower(c.server)`,[guildId]);
+  return {success:true,recipients:result.rows};
+}
+async function updatePlayerMailboxState({guildId,query:params}){
+  const player=await requireMailboxPlayer(guildId,params),folder=params.folder==='sent'?'sent':'inbox';
+  const source=folder==='sent'?await getPlayerSentMessages({guildId,query:{playerPin:player.player_pin}}):await getPlayerMessages({guildId,query:{playerPin:player.player_pin}});
+  if(!source.messages.some(m=>String(m.id)===clean(params.id)))throw Object.assign(new Error("Nachricht nicht gefunden."),{statusCode:404});
+  const operation=clean(params.operation);
+  if(!['trash','restore','remove'].includes(operation))throw Object.assign(new Error("Ungültige Postfachaktion."),{statusCode:400});
+  await query(`insert into player_mailbox_state(guild_id,message_id,player_pin,folder,trashed,hidden)
+    values($1,$2,$3,$4,$5,$6) on conflict(guild_id,message_id,player_pin,folder)
+    do update set trashed=excluded.trashed,hidden=excluded.hidden`,[guildId,params.id,player.player_pin,folder,operation!=='restore',operation==='remove']);
+  return {success:true};
+}
+async function sendPlayerDiscordDm({guildId,query:params}){
+  const sender=await requireMailboxPlayer(guildId,params),body=clean(params.body),title=clean(params.title)||'Discord-Nachricht';
+  if(!body||body.length>1800||title.length>150)throw Object.assign(new Error("Bitte eine Nachricht mit höchstens 1.800 Zeichen und einen Betreff mit höchstens 150 Zeichen eingeben."),{statusCode:400});
+  const recipient=await query(`select c.name,c.server,p.player_pin,d.discord_user_id
+    from characters c join players p on p.id=c.player_id
+    join lateral(select discord_user_id from discord_player_links where guild_id=p.guild_id and character_id=c.id order by updated_at desc limit 1) d on true
+    where p.guild_id=$1 and c.id=$2 and p.approval_status='approved' and coalesce(p.is_blocked,false)=false`,[guildId,params.recipientId]);
+  const target=recipient.rows[0];
+  if(!target)throw Object.assign(new Error("Für diesen Charakter ist kein Discord-Konto verknüpft."),{statusCode:400});
+  const recent=await query(`select count(*)::int as count from player_messages where guild_id=$1 and sender_player_pin=$2 and delivery_channel='discord' and created_at>now()-interval '1 minute'`,[guildId,sender.player_pin]);
+  if(recent.rows[0]?.count>=5)throw Object.assign(new Error("Bitte warte kurz, bevor du weitere DMs sendest."),{statusCode:429});
+  const senderName=await getVerifiedSenderCharacterName(guildId,sender.player_pin,params.senderCharacter,params.senderServer)||await getPlayerDisplayNameByPin(guildId,sender.player_pin)||'Spieler';
+  const saved=await query(`insert into player_messages(guild_id,player_pin,sender,sender_player_pin,title,body,delivery_channel,delivery_status)
+    values($1,$2,$3,$4,$5,$6,'discord','queued') returning *`,[guildId,target.player_pin,senderName,sender.player_pin,title,body]);
+  const message=saved.rows[0];
+  try{
+    await enqueueBotUpdate({guildId,type:'player_mailbox_dm',payload:{messageId:message.id,discordUserId:target.discord_user_id,sender:senderName,recipient:target.name,title,body}});
+  }catch(error){
+    await query(`update player_messages set delivery_status='failed',delivery_error='Bot-Auftrag konnte nicht angelegt werden.' where guild_id=$1 and id=$2`,[guildId,message.id]);
+    throw error;
+  }
+  return {success:true,message:normalizePlayerMessageRow(message)};
+}
+async function getPlayerDiscordDmStatus({guildId,query:params}){
+  requireMasterOrQueueToken(params);await ensurePlayerMailboxSchema();
+  const result=await query(`select delivery_status,delivery_error from player_messages where guild_id=$1 and id=$2 and delivery_channel='discord'`,[guildId,params.messageId]);
+  if(!result.rows[0])throw Object.assign(new Error("Discord-Nachricht nicht gefunden."),{statusCode:404});
+  return {success:true,status:result.rows[0].delivery_status,error:result.rows[0].delivery_error};
+}
+async function completePlayerDiscordDm({guildId,query:params}){
+  requireMasterOrQueueToken(params);await ensurePlayerMailboxSchema();
+  const status=params.status==='delivered'?'delivered':'failed';
+  await query(`update player_messages set delivery_status=$3,delivery_error=$4 where guild_id=$1 and id=$2 and delivery_channel='discord'`,[guildId,params.messageId,status,status==='failed'?clean(params.error).slice(0,300):'']);
+  return {success:true};
+}
+
 function normalizePlayerMessageRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
   return {
@@ -20908,7 +20991,11 @@ function normalizePlayerMessageRow(row) {
     sender: row.sender_display || row.sender || "",
     createdAt: row.created_at,
     readAt: row.read_at,
-    read: Boolean(row.read_at)
+    read: Boolean(row.read_at),
+    trashed: Boolean(row.mailbox_trashed),
+    channel: row.delivery_channel || "mailbox",
+    deliveryStatus: row.delivery_status || "",
+    deliveryError: row.delivery_error || ""
   };
 }
 
@@ -20952,6 +21039,7 @@ async function sendPlayerMessage({ guildId, query: params }) {
 }
 
 async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
+  await ensurePlayerMailboxSchema();
   const senderPin = normalizePin(params.fromPlayerPin || params.senderPin || params.fromPin);
   const recipient = clean(params.recipient || params.character || params.char || params.player || params.toPlayerPin || params.playerPin || params.pin);
   const body = clean(params.body || params.message);
@@ -20982,9 +21070,9 @@ async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
   const result = await query(
     `insert into player_messages (
        guild_id, player_pin, title, body, raid_id, raid_name,
-       raid_date, raid_time, lead_pin, sender
+       raid_date, raid_time, lead_pin, sender, sender_player_pin
      )
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      returning *`,
     [
       guildId,
@@ -20996,13 +21084,14 @@ async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
       parseDateValue(params.raidDate || params.date || null),
       clean(params.raidTime || params.time),
       clean(params.leadPin),
-      senderName
+      senderName, senderPin
     ]
   );
   return { success: true, message: normalizePlayerMessageRow(result.rows[0]) };
 }
 
 async function getPlayerMessages({ guildId, query: params }) {
+  await requireMailboxPlayer(guildId,params);
   const playerPin = normalizePin(params.playerPin || params.pin);
   if (!playerPin) {
     const error = new Error("Bitte SpielerLogin eingeben.");
@@ -21011,7 +21100,7 @@ async function getPlayerMessages({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select pm.*,
+    `select pm.*, coalesce(ms.trashed,false) as mailbox_trashed,
             coalesce((
               select string_agg(c.name, ', ' order by c.name)
               from players p
@@ -21032,15 +21121,17 @@ async function getPlayerMessages({ guildId, query: params }) {
               limit 1
             ), pm.sender) as sender_display
      from player_messages pm
-     where pm.guild_id = $1 and pm.player_pin = $2
+     left join player_mailbox_state ms on ms.guild_id=pm.guild_id and ms.message_id=pm.id and ms.player_pin=$2 and ms.folder='inbox'
+     where coalesce(ms.hidden,false)=false and pm.guild_id = $1 and pm.player_pin = $2
      order by created_at desc
-     limit 50`,
+     limit 500`,
     [guildId, playerPin]
   );
   return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
 }
 
 async function getPlayerSentMessages({ guildId, query: params }) {
+  await requireMailboxPlayer(guildId,params);
   const playerPin = normalizePin(params.playerPin || params.pin);
   if (!playerPin) {
     const error = new Error("Bitte SpielerLogin eingeben.");
@@ -21049,7 +21140,7 @@ async function getPlayerSentMessages({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select pm.*,
+    `select pm.*, coalesce(ms.trashed,false) as mailbox_trashed,
             coalesce((
               select string_agg(c.name, ', ' order by c.name)
               from players p
@@ -21057,18 +21148,20 @@ async function getPlayerSentMessages({ guildId, query: params }) {
               where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
             ), '') as recipient_names
      from player_messages pm
-     where pm.guild_id = $1
+     left join player_mailbox_state ms on ms.guild_id=pm.guild_id and ms.message_id=pm.id and ms.player_pin=$3 and ms.folder='sent'
+     where coalesce(ms.hidden,false)=false and pm.guild_id = $1
        and (
-         pm.sender = $2
+         pm.sender_player_pin = $3
+         or (pm.sender_player_pin is null and (pm.sender = $2
          or pm.sender = any(
            select c.name
            from players p
            join characters c on c.player_id = p.id
            where p.guild_id = pm.guild_id and p.player_pin = $3
          )
-       )
+       )))
      order by pm.created_at desc
-     limit 50`,
+     limit 500`,
     [guildId, `Spieler ${playerPin}`, playerPin]
   );
   return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
@@ -21096,14 +21189,15 @@ async function getGuildSentMessages({ guildId, query: params }) {
 }
 
 async function markPlayerMessageRead({ guildId, query: params }) {
+  await requireMailboxPlayer(guildId,params);
   const playerPin = normalizePin(params.playerPin || params.pin);
   const id = clean(params.id || params.messageId);
   const result = await query(
     `update player_messages
-     set read_at = coalesce(read_at, now())
+     set read_at = case when $4::boolean then null else coalesce(read_at, now()) end
      where guild_id = $1 and player_pin = $2 and id = $3
      returning *`,
-    [guildId, playerPin, id]
+    [guildId, playerPin, id, params.unread === true || params.unread === "true"]
   );
   return { success: true, message: result.rows[0] ? normalizePlayerMessageRow(result.rows[0]) : null };
 }
@@ -22420,7 +22514,7 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
     );
     const [externalResult, characterResult, discordLinkResult] = await Promise.all([
     client.query(
-      `select id, player_name, class_name, role, status, note, source,
+      `select id, player_name, class_name, role, status, note, source, staff_benched,
               discord_user_id, discord_name, created_at
        from raid_external_signups
        where guild_id = $1 and raid_id = $2`,
@@ -22510,12 +22604,13 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
     await client.query(
       `insert into raid_signups (
          raid_id, character_id, status, note, role, source,
-         discord_user_id, discord_name, created_at, updated_at
+         discord_user_id, discord_name, created_at, updated_at, staff_benched
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now())
+       values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now(),$10)
        on conflict (raid_id, character_id)
        do update set
          status = excluded.status,
+         staff_benched = (excluded.status = 'bench' and (excluded.staff_benched or (raid_signups.status = 'bench' and raid_signups.staff_benched))),
          note = coalesce(nullif(excluded.note, ''), raid_signups.note),
          role = excluded.role,
          source = excluded.source,
@@ -22531,7 +22626,8 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
         clean(external.source) || "account-reconciled",
         clean(external.discord_user_id),
         clean(external.discord_name),
-        external.created_at || null
+        external.created_at || null,
+        external.staff_benched === true && normalizeSignupStatus(external.status) === "bench"
       ]
     );
     await client.query(
@@ -23012,6 +23108,7 @@ async function saveRaidSignup({ guildId, query: params }) {
      on conflict (raid_id, character_id)
      do update
        set status = excluded.status,
+           staff_benched = false,
            note = excluded.note,
            role = excluded.role,
            source = excluded.source,
@@ -23255,6 +23352,7 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const externalUpdate = await query(
     `update raid_external_signups
      set status = $3,
+         staff_benched = ($3 = 'bench'),
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
@@ -23269,6 +23367,7 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const localUpdate = await query(
     `update raid_signups rs
      set status = $3,
+         staff_benched = ($3 = 'bench'),
          updated_at = now()
      from raids r
      where rs.raid_id = r.id
@@ -23522,6 +23621,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     const localUpdate = await query(
       `update raid_signups rs
        set status = $4,
+           staff_benched = (rs.staff_benched and rs.status = 'bench' and $4 = 'bench'),
            role = $5,
            note = $6,
            source = coalesce(nullif($7, ''), rs.source),
@@ -23572,6 +23672,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
            class_name = coalesce(nullif($7, ''), class_name),
            role = $8,
            status = $9,
+           staff_benched = (staff_benched and status = 'bench' and $9 = 'bench'),
            discord_user_id = coalesce(nullif($10, ''), discord_user_id),
            discord_name = coalesce(nullif($11, ''), discord_name),
            discord_channel_id = coalesce(nullif($12, ''), discord_channel_id),
@@ -23634,6 +23735,41 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
   }
 
   return { success: true, raidId: raidPublicId(raid), written };
+}
+
+// The receipt is persisted in the existing points audit, scoped to the exact raid,
+// character and P0+ item. Zero points alone never mean that an item was awarded.
+function p0ItemReceivedPrioSql(prioAlias = "pr") {
+  return `exists(select 1 from p0plus_point_audit received
+    join raids received_raid on received_raid.id=${prioAlias}.raid_id
+    join items received_item on received_item.id=${prioAlias}.p1_item_id
+    where received.guild_id=received_raid.guild_id
+      and received.raid_id=${prioAlias}.raid_id
+      and received.character_id=${prioAlias}.character_id
+      and received.action='item_received_clear'
+      and (received.item_id=${prioAlias}.p1_item_id
+        or lower(received.item_name)=lower(received_item.name)))`;
+}
+
+// prios.bench is the explicit, authenticated Plündermeister/Gildenleitung action.
+// Signup status alone (including WCL attendance) must never imply a staff bench.
+function staffBenchPrioSql(prioAlias = "pr", characterAlias = "c") {
+  return `(
+    lower(coalesce(${prioAlias}.bench::text,'')) in ('ja','true','1','bench')
+    or exists(select 1 from raid_signups staff_signup
+      where staff_signup.raid_id=${prioAlias}.raid_id and staff_signup.character_id=${characterAlias}.id
+        and staff_signup.status='bench' and staff_signup.staff_benched)
+    or exists(select 1 from raid_external_signups staff_external
+      where staff_external.raid_id=${prioAlias}.raid_id
+        and staff_external.status='bench' and staff_external.staff_benched
+        and lower(staff_external.player_name)=lower(${characterAlias}.name)
+        and (exists(select 1 from discord_player_links staff_link
+          where staff_link.guild_id=staff_external.guild_id and staff_link.character_id=${characterAlias}.id
+            and staff_link.discord_user_id=staff_external.discord_user_id)
+          or not exists(select 1 from characters other_char join players other_player on other_player.id=other_char.player_id
+            where other_player.guild_id=staff_external.guild_id and lower(other_char.name)=lower(${characterAlias}.name)
+              and other_char.id<>${characterAlias}.id)))
+  )`;
 }
 
 async function getPublishedPrios({ guildId, query: params }) {
@@ -23752,6 +23888,8 @@ async function getPublishedPrios({ guildId, query: params }) {
          pr.id,
          pr.comment,
          pr.bench,
+         ${staffBenchPrioSql()} as staff_benched,
+         ${p0ItemReceivedPrioSql()} as p0_item_received,
          pr.created_at as prio_created_at,
          pr.updated_at as prio_updated_at,
          c.name as player,
@@ -23864,6 +24002,9 @@ async function getPublishedPrios({ guildId, query: params }) {
           : "no_data",
         wclSourceTitle: wclParticipation.reports[0]?.code ? `Warcraft Logs ${wclParticipation.reports[0].code}` : "Warcraft Logs",
         wclSourceUrl: wclParticipation.reports[0]?.url || "",
+        p0ItemReceived: row.p0_item_received === true,
+        StaffBenched: row.staff_benched === true,
+        staffBenched: row.staff_benched === true,
         Bench: row.bench || "",
         bench: row.bench || ""
       };
@@ -25581,7 +25722,7 @@ async function getRandomPublishedPrios(params = {}) {
   const normalized = normalizeRandomRaidRow(raid);
   return { success: true, ...normalized, open: raid.status === "geöffnet", prios: result.rows.map((row,index)=>({
     id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
-    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench),specName:row.spec_name||"",ownedByBrowser:Boolean(participantHash&&row.participant_hash===participantHash)
+    P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench),staffBenched:Boolean(row.bench),specName:row.spec_name||"",ownedByBrowser:Boolean(participantHash&&row.participant_hash===participantHash)
   })) };
 }
 
@@ -25888,7 +26029,7 @@ async function setPrioBench({ guildId, query: params }) {
   }
 
   const leadPin = clean(params.leadPin || params.raidleadPin);
-  if (!master && raid.lead_pin && leadPin !== raid.lead_pin) {
+  if (!master && (!raid.lead_pin || !leadPin || leadPin !== raid.lead_pin)) {
     const error = new Error("LeadPIN passt nicht zu diesem Raid.");
     error.statusCode = 403;
     throw error;
@@ -26393,7 +26534,7 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
   const awardedByKey = new Map();
   for (const row of awardedRows || []) {
     const key = p0PlusExportKey(row.player, row.server, row.item_name || row.item);
-    awardedByKey.set(key, (awardedByKey.get(key) || 0) + 1);
+    awardedByKey.set(key, (awardedByKey.get(key) || 0) + Number(row.awardPoints ?? 1));
   }
 
   // Bei einer manuellen Sicherung gibt es keine awardedRows aus dem aktuellen
@@ -26706,6 +26847,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query("select pg_advisory_xact_lock(hashtext($1), hashtext($2))", [clean(guildId), "p0plus-review"]);
     let receivedRaidId = null;
     if (requestedRaidId) {
       const raidResult = await client.query(
@@ -26719,6 +26861,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, raidTypeSearchValues(raidType), requestedRaidId]
       );
       receivedRaidId = raidResult.rows[0]?.id || null;
+      if (!receivedRaidId) throw Object.assign(new Error("Raid wurde nicht gefunden. Es wurden keine Punkte gelöscht."), {statusCode:404});
     }
     let itemResult = await client.query(
       `select id, name
@@ -26778,7 +26921,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
       });
     }
     await client.query("commit");
-    return { success: true, deleted };
+    return { success: true, deleted, itemReceived: Boolean(item), raidId: receivedRaidId };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -27046,6 +27189,8 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
          pr.raid_id,
          pr.comment,
          pr.bench,
+         ${staffBenchPrioSql()} as staff_benched,
+         ${p0ItemReceivedPrioSql()} as p0_item_received,
          pr.created_at,
          pr.updated_at,
          c.name as player,
@@ -27130,6 +27275,8 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
       p0Plus: meta.p0Plus || "nein",
       p0Item: meta.p0Item || "",
       bench: row.bench || "",
+      staffBenched: row.staff_benched === true,
+      p0ItemReceived: row.p0_item_received === true,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
@@ -27196,6 +27343,10 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 }
 
 async function transferP0PlusPoints({ guildId, query: params }) {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("select pg_advisory_xact_lock(hashtext($1), hashtext($2))", [clean(guildId), "p0plus-review"]);
   const eraConfig = await getGuildEraConfiguration(guildId);
   const raidTransferPoints = Number(eraConfig.rules.p0Plus.raidTransferPoints || 0);
   const requestedRaidType = normalizeRaidType(params.raid);
@@ -27216,7 +27367,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     raidClause += ` and r.raid_type = $${values.length}`;
   }
 
-  const raidResult = await query(
+  const raidResult = await client.query(
     `select r.*
      from raids r
      where ${raidClause}
@@ -27251,7 +27402,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     }
   }
 
-  const relatedRaidResult = await query(
+  const relatedRaidResult = await client.query(
     `select r.*
      from raids r
      where r.guild_id = $1
@@ -27271,7 +27422,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   ]).filter(Boolean)));
   const transferNote = transferNotes[0];
 
-  const priosResult = await query(
+  const priosResult = await client.query(
     `select
        pr.character_id,
        c.name as player,
@@ -27279,7 +27430,8 @@ async function transferP0PlusPoints({ guildId, query: params }) {
        i.id as item_id,
        i.item_id as item_game_id,
        i.name as item_name,
-       pr.comment
+       pr.comment,
+       ${staffBenchPrioSql()} as staff_benched
      from prios pr
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
@@ -27294,8 +27446,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
-  const receivedResult = await query(
-    `select distinct character_id
+  const receivedResult = await client.query(
+    `select character_id, player_name, server, item_name,
+            sum(greatest(old_points-new_points,0))::numeric as deleted_points
      from p0plus_point_audit
      where guild_id = $1
        and action = 'item_received_clear'
@@ -27306,7 +27459,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
            and lower(coalesce(raid_type, '')) = any($3)
            and (created_at at time zone 'Europe/Berlin')::date = $4::date
          )
-       )`,
+       )
+     group by character_id,player_name,server,item_name
+     order by player_name,item_name`,
     [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
@@ -27330,14 +27485,6 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     dedupedCandidates.push(row);
   }
 
-  const client = await pool.connect();
-
-  try {
-    await client.query("begin");
-    await client.query(
-      "select pg_advisory_xact_lock(hashtext($1), hashtext($2))",
-      [clean(guildId), `${targetRaidType}:${raid.raid_date?.toISOString?.().slice(0, 10) || clean(raid.raid_date)}`]
-    );
     const existingTransfer = await client.query(
       `select pp.character_id, count(*)::int as count
        from p0plus_points pp
@@ -27358,6 +27505,36 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       }
     }
     dedupedCandidates = missingCandidates;
+    const reviewRows=[];
+    for(const row of dedupedCandidates){
+      // Read-only counterpart of upsertItem: a preview must not create item records.
+      const target=await client.query(`select id from items where lower(raid_type)=any($1)
+        and (case when $2<>'' then item_id=$2 else lower(name)=lower($3) end)
+        order by case when item_id is null then 1 else 0 end,created_at asc limit 1`,
+        [raidTypeSearchValues(targetRaidType),clean(row.item_game_id),row.item_name]);
+      const currentPoints=target.rows[0]?await getP0PlusPointTotal(client,guildId,row.character_id,target.rows[0].id):0;
+      row.awardPoints=raidTransferPoints;
+      reviewRows.push({characterId:row.character_id,itemId:row.item_id,player:row.player,server:row.server,item:row.item_name,
+        currentPoints,points:raidTransferPoints,staffBenched:row.staff_benched===true});
+    }
+    const receivedItems=receivedResult.rows.map(row=>({characterId:row.character_id,player:row.player_name,server:row.server,item:row.item_name,deletedPoints:Number(row.deleted_points||0)}));
+    const reviewToken=createHmac("sha256",analyticsHashSecret).update(JSON.stringify({guildId,raidId:raid.id,targetRaidType,reviewRows,receivedItems,skipped})).digest("hex");
+    if(params.preview===true||params.preview==="true"){
+      await client.query("rollback");
+      return {success:true,preview:true,reviewToken,raidId:raidPublicId(raid),raidName:raid.name||raid.raid_type,targetRaid:targetRaidType,entries:reviewRows,receivedItems,skippedEntries:skipped};
+    }
+    if(params.pointEdits!==undefined){
+      if(clean(params.reviewToken)!==reviewToken)throw Object.assign(new Error("Prios oder Punktestände haben sich geändert. Bitte die Vorschau neu laden."),{statusCode:409});
+      const edits=params.pointEdits;
+      if(!Array.isArray(edits)||edits.length!==reviewRows.length)throw Object.assign(new Error("Die Punkteauswahl ist unvollständig."),{statusCode:400});
+      const byKey=new Map();
+      for(const edit of edits){
+        const key=clean(edit.characterId)+":"+clean(edit.itemId),points=Number(edit.points);
+        if(edit.points===""||edit.points===null||!Number.isFinite(points)||points<0||points>100||Math.abs(points*100-Math.round(points*100))>0.00001||byKey.has(key))throw Object.assign(new Error("Bitte Punkte zwischen 0 und 100 mit höchstens zwei Nachkommastellen eingeben."),{statusCode:400});
+        byKey.set(key,points);
+      }
+      for(const row of dedupedCandidates){const key=row.character_id+":"+row.item_id;if(!byKey.has(key))throw Object.assign(new Error("Unbekannter Spieler oder unbekanntes Item in der Punkteauswahl."),{statusCode:400});row.awardPoints=byKey.get(key);}
+    }else if(params.reviewToken){throw Object.assign(new Error("Die bearbeiteten Punkte fehlen."),{statusCode:400});}
     if (!dedupedCandidates.length) {
       await client.query("commit");
       return {
@@ -27386,34 +27563,11 @@ async function transferP0PlusPoints({ guildId, query: params }) {
         await getP0PlusPointTotal(client, guildId, row.character_id, row.target_item_id)
       );
     }
-    if (dedupedCandidates.length) {
-      const characterIds = dedupedCandidates.map(row => row.character_id);
-      const itemNames = dedupedCandidates.map(row => row.item_name);
-      await client.query(
-        `delete from p0plus_points pp
-         using items i
-         where pp.item_id = i.id
-           and pp.guild_id = $1
-           and pp.source = 'Raidlead Transfer'
-           and pp.note = any($2::text[])
-           and (
-             pp.character_id = any($3::uuid[])
-             or regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g') = any($4::text[])
-           )`,
-        [
-          guildId,
-          transferNotes,
-          characterIds,
-          itemNames.map(normalizeTransferKey)
-        ]
-      );
-    }
-
     for (const row of dedupedCandidates) {
       await client.query(
         `insert into p0plus_points (guild_id, character_id, item_id, points, source, note)
          values ($1, $2, $3, $4, $5, $6)`,
-        [guildId, row.character_id, row.target_item_id, raidTransferPoints, "Raidlead Transfer", transferNote]
+        [guildId, row.character_id, row.target_item_id, row.awardPoints, "Raidlead Transfer", transferNote]
       );
       const newPoints = await getP0PlusPointTotal(client, guildId, row.character_id, row.target_item_id);
       await insertP0PlusAudit(client, {
@@ -27435,14 +27589,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     const archivedPoPostEntries = await archivePoPostEntriesForRaid(client, guildId, raid.raid_type);
     await client.query("commit");
     raid.archived_po_post_entries = archivedPoPostEntries;
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
-
-  const transferResult = await query(
+  const transferResult = await client.query(
     `select count(*)::int as count
      from p0plus_points pp
      join items i on i.id = pp.item_id
@@ -27473,6 +27620,11 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     exportQueued: Boolean(exportResult && exportResult.success && !exportResult.skipped),
     exportResult
   };
+  } catch(error) {
+    await client.query("rollback").catch(()=>{});
+    throw error;
+  } finally { client.release(); }
+
 }
 
 async function createPlayerWithCharacter({
@@ -31136,6 +31288,18 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (clean(postParams.masterCode)) {
       if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+    }
+
+    if(action === "transferP0PlusPoints"){
+      requireRaidleadP0MasterCodeForGuild(guild,postParams.masterCode);
+      const result=await transferP0PlusPoints({guildId:guild.id,query:postParams});
+      return res.json({...result,guild:guild.slug});
+    }
+
+    const mailboxHandlers={getPlayerMailRecipients,updatePlayerMailboxState,sendPlayerDiscordDm,getPlayerDiscordDmStatus,completePlayerDiscordDm,sendPlayerMessageFromPlayer,markPlayerMessageRead};
+    if(Object.hasOwn(mailboxHandlers,action)){
+      const result=await mailboxHandlers[action]({guildId:guild.id,query:postParams});
+      return res.json({...result,guild:guild.slug});
     }
 
     if (action === "acceptWorldbuffRuleAgreement") {
