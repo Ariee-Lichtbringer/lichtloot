@@ -35,5 +35,7 @@ async function loadCharacters(){const feedback=document.getElementById("feedback
 async function saveSignup(){const feedback=document.getElementById("feedback"),pin=document.getElementById("playerPin").value.trim(),character=characters[Number(document.getElementById("character").value||0)],spec=document.getElementById("spec").value.trim();if(!pin||!character){feedback.className="status bad";feedback.textContent="Bitte zuerst SpielerLogin und Charakter laden.";return;}feedback.className="status";feedback.textContent="Anmeldung wird gespeichert …";try{await api("saveRaidSignup",{raidId,raid:raid.raid||"other",playerPin:pin,char:character.name||character.char||"",signupStatus:document.getElementById("signupStatus").value,signupRole:roleForSpec(spec),note:spec?"Skillung: "+spec:"",source:"other_raid_page"});feedback.className="status good";feedback.textContent="✓ Anmeldung gespeichert. Der Discord-Anmelder wird aktualisiert.";await loadRaid();}catch(error){feedback.className="status bad";feedback.textContent=error.message;}}
 if(!raidId){document.getElementById("roster").innerHTML='<div class="empty">Keine Raid-ID übergeben.</div>';}else loadRaid();
 </script>
+
+<footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 </body>
 </html>

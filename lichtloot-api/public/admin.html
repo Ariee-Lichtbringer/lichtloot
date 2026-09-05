@@ -47,4 +47,6 @@ async function sendMail(id,button){button.disabled=true;button.textContent="Vers
 async function copyLink(id){const entry=applications.find(item=>item.id===id);if(!entry?.setupUrl)return;try{await navigator.clipboard.writeText(entry.setupUrl);setStatus("Freischaltlink kopiert.","good");}catch{prompt("Freischaltlink kopieren:",entry.setupUrl);}}
 document.getElementById("modal").addEventListener("click",event=>{if(event.target.id==="modal")closeModal();});
 document.querySelectorAll(".metric-doc small").forEach(element=>{if(element.textContent.startsWith("Einzeldaten werden nach "))element.textContent="Einzeldaten werden nach 365 Tagen gelöscht; CSV-Berichte können vorher gesichert werden.";});
-</script></body></html>
+</script>
+<footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
+</body></html>

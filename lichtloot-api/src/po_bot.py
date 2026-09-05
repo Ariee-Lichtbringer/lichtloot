@@ -1,3 +1,4 @@
+from copyright_notice import copyright_text, without_copyright
 import asyncio
 import contextvars
 import hashlib
@@ -675,20 +676,21 @@ class FreeMeetingTopicModal(discord.ui.Modal, title="Thema zum Offi-Meeting hinz
 
     async def on_submit(self, interaction):
         if not interaction.message or not interaction.message.embeds:
-            await interaction.response.send_message("Das Meeting-Embed konnte nicht gefunden werden.", ephemeral=True)
+            await interaction.response.send_message(copyright_text("Das Meeting-Embed konnte nicht gefunden werden."), ephemeral=True)
             return
         embed = discord.Embed.from_dict(interaction.message.embeds[0].to_dict())
+        embed.set_footer(text=copyright_text(embed.footer.text, limit=2048))
         author = clean(getattr(interaction.user, "display_name", "")) or clean(interaction.user.name)
         detail = clean(self.details.value)
         existing = next((field.value.splitlines() for field in embed.fields if field.name == "Zusätzliche Themen"), [])
         number = len([line for line in existing if clean(line)]) + 1
         line = f"{number}. **{clean(self.topic.value)}** — {detail} _({author})_" if detail else f"{number}. **{clean(self.topic.value)}** _({author})_"
         if not meeting_embed_append(embed, "Zusätzliche Themen", line):
-            await interaction.response.send_message("Dieses Thema ist bereits eingetragen.", ephemeral=True)
+            await interaction.response.send_message(copyright_text("Dieses Thema ist bereits eingetragen."), ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
         await interaction.message.edit(embed=embed, view=FreeMeetingView(signup=meeting_message_has_signup(interaction.message)))
-        await interaction.followup.send("✅ Dein Thema wurde zum Meeting hinzugefügt.", ephemeral=True)
+        await interaction.followup.send(copyright_text("✅ Dein Thema wurde zum Meeting hinzugefügt."), ephemeral=True)
 
 
 class FreeMeetingSignupModal(discord.ui.Modal, title="Zum Offi-Meeting anmelden"):
@@ -715,27 +717,28 @@ class FreeMeetingSignupModal(discord.ui.Modal, title="Zum Offi-Meeting anmelden"
         await interaction.response.defer(ephemeral=True, thinking=True)
         characters, error = await load_po_characters_by_pin(clean(self.player_pin.value))
         if not characters:
-            await interaction.followup.send(f"❌ {error or 'SpielerLogin/PIN wurde nicht gefunden.'}", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"❌ {error or 'SpielerLogin/PIN wurde nicht gefunden.'}"), ephemeral=True)
             return
         requested = clean(self.character.value).lower()
         character = next((entry for entry in characters if clean(entry.get("name")).lower() == requested), None) if requested else None
         if requested and character is None:
             available = ", ".join(clean(entry.get("name")) for entry in characters)
-            await interaction.followup.send(f"❌ Dieser Charakter gehört nicht zu dem SpielerLogin. Verfügbar: **{available}**", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"❌ Dieser Charakter gehört nicht zu dem SpielerLogin. Verfügbar: **{available}**"), ephemeral=True)
             return
         character = character or characters[0]
         target_message = await self.target_message(interaction)
         if not target_message or not target_message.embeds:
-            await interaction.followup.send("Das Meeting-Embed konnte nicht gefunden werden.", ephemeral=True)
+            await interaction.followup.send(copyright_text("Das Meeting-Embed konnte nicht gefunden werden."), ephemeral=True)
             return
         embed = discord.Embed.from_dict(target_message.embeds[0].to_dict())
+        embed.set_footer(text=copyright_text(embed.footer.text, limit=2048))
         name = clean(character.get("name"))
         class_name = clean(character.get("className"))
         meeting_embed_set_status(embed, name, class_name, self.status)
         normalize_meeting_signup_fields(embed)
         await target_message.edit(embed=embed, view=FreeMeetingView())
         status_label = {"yes":"nimmt teil", "maybe":"ist vielleicht dabei", "no":"nimmt nicht teil"}.get(self.status, "nimmt teil")
-        await interaction.followup.send(f"✅ Gespeichert: **{name}** {status_label}.", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"✅ Gespeichert: **{name}** {status_label}."), ephemeral=True)
 
 
 class FreeMeetingView(discord.ui.View):
@@ -792,13 +795,14 @@ async def send_free_meeting_dms(payload, message, source_embed, signup=True):
         description=clean(source_embed.description) or "Du wurdest zu einem Offi-Meeting eingeladen.",
         color=source_embed.color,
     )
+    dm_embed.set_footer(text=copyright_text())
     dm_embed.add_field(name="📌 Meeting", value=clean(source_embed.title) or "Offi-Meeting", inline=False)
     for field in source_embed.fields:
         if field.name in {"Termin", "Tagesordnung", "Weitere Informationen"} or field.name == clean(payload.get("sectionTitle")):
             icon = "📅" if field.name == "Termin" else "📋" if field.name in {"Tagesordnung", clean(payload.get("sectionTitle"))} else "ℹ️"
             dm_embed.add_field(name=f"{icon} {field.name}", value=field.value, inline=False)
     dm_embed.add_field(name="🔗 Direkt zum Channel", value=f"[Offi-Meeting öffnen]({message.jump_url})", inline=False)
-    dm_embed.set_footer(text="LichtLoot · Offi-Meeting")
+    dm_embed.set_footer(text=copyright_text("LichtLoot · Offi-Meeting", limit=2048))
     # The common resolver already handles role membership, individual Discord names and duplicate recipients.
     return await send_queue_targeted_embed(payload={**payload, "targets": targets}, embed=dm_embed, view=FreeMeetingDmView(message) if signup else None)
 
@@ -901,6 +905,7 @@ async def post_free_discord_embed_from_queue(payload):
         description=clean(payload.get("description")) or None,
         color=FREE_DISCORD_EMBED_COLORS.get(clean(payload.get("color")).lower(), 0x38BDF8),
     )
+    embed.set_footer(text=copyright_text())
     author = clean(payload.get("author"))
     if author:
         embed.set_author(name=author[:256], icon_url=clean(payload.get("authorIcon")) or None)
@@ -952,7 +957,7 @@ async def post_free_discord_embed_from_queue(payload):
 
     footer = clean(payload.get("footer"))
     if footer:
-        embed.set_footer(text=footer[:2048])
+        embed.set_footer(text=copyright_text(footer[:2048], limit=2048))
     meeting_signup = payload.get("meetingSignup") is True or clean(payload.get("meetingSignup")).lower() == "true"
     if embed_type == "meeting":
         topic_prompt = clean(payload.get("meetingTopicPrompt")) or "Du möchtest ein weiteres Thema besprechen?"
@@ -1001,12 +1006,12 @@ async def post_free_discord_embed_from_queue(payload):
                     for line in kept_lines:
                         meeting_embed_append(embed, target_field, line)
             normalize_meeting_signup_fields(embed)
-            await message.edit(content=clean(payload.get("mentions")) or None, embed=embed, view=meeting_view)
+            await message.edit(content=copyright_text(clean(payload.get("mentions")) or None), embed=embed, view=meeting_view)
         if message is None:
             raise RuntimeError("Kein bestehender Offi-Meeting-Post mit dieser Überschrift im gewählten Channel gefunden.")
     else:
         normalize_meeting_signup_fields(embed)
-        message = await send_silent(channel, content=clean(payload.get("mentions")) or None, embed=embed, view=meeting_view)
+        message = await send_silent(channel, content=copyright_text(clean(payload.get("mentions")) or None), embed=embed, view=meeting_view)
     try:
         await asyncio.to_thread(api_post, {
             "action": "lichtbotSetFreeDiscordEmbedMessage",
@@ -1261,6 +1266,7 @@ def build_raid_announcement_embed(raid):
     if announcement_message and announcement_message not in description:
         description = f"{description}\n\n{announcement_message}"
     embed = discord.Embed(title=raid_name.upper(), description=description[:3900], color=0x7c3aed)
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="Raidlead", value=clean(raid.get("createdBy") or raid.get("erstelltVon") or "Gildenleitung"), inline=True)
     embed.add_field(
         name="Tag / Datum",
@@ -1309,7 +1315,7 @@ def build_raid_announcement_embed(raid):
         image_url = raid_announcement_image_url(raid)
         if image_url:
             embed.set_image(url=image_url)
-    embed.set_footer(text="Bitte meldet euch im Discord an und tragt eure Prios rechtzeitig ein.")
+    embed.set_footer(text=copyright_text("Bitte meldet euch im Discord an und tragt eure Prios rechtzeitig ein.", limit=2048))
     return embed
 
 
@@ -2210,7 +2216,7 @@ async def post_raid_announcement_by_id(raid_id, channel_id=None, payload=None, f
         else:
             message = await send_silent(channel, embed=embed, view=RaidSignupView(raid))
     except discord.HTTPException:
-        message = await send_silent(channel, build_raid_announcement_text(raid))
+        message = await send_silent(channel, copyright_text(build_raid_announcement_text(raid)))
     if message:
         await asyncio.to_thread(api_post, {
             "action": "lichtbotSetRaidDiscordMessage",
@@ -2266,10 +2272,10 @@ class RaidSignupPinModal(discord.ui.Modal, title="Mein SpielerLogin/PIN"):
             characters = result if isinstance(result, list) else (result.get("characters") or result.get("chars") or [])
             characters = [entry for entry in characters if clean(entry.get("name"))]
             if not characters:
-                await interaction.response.send_message("⚠️ Für diesen SpielerLogin/PIN wurden keine Charaktere gefunden.", ephemeral=True)
+                await interaction.response.send_message(copyright_text("⚠️ Für diesen SpielerLogin/PIN wurden keine Charaktere gefunden."), ephemeral=True)
                 return
             await interaction.response.send_message(
-                "Charakter für die Anmeldung wählen:",
+                copyright_text("Charakter für die Anmeldung wählen:"),
                 view=RaidSignupCharacterView(
                     self.raid,
                     self.class_name,
@@ -2283,7 +2289,7 @@ class RaidSignupPinModal(discord.ui.Modal, title="Mein SpielerLogin/PIN"):
                 ephemeral=True
             )
         except Exception as error:
-            await interaction.response.send_message(f"⚠️ SpielerLogin/PIN konnte nicht geladen werden: {error}", ephemeral=True)
+            await interaction.response.send_message(copyright_text(f"⚠️ SpielerLogin/PIN konnte nicht geladen werden: {error}"), ephemeral=True)
 
 
 class RaidSignupCharacterSelect(discord.ui.Select):
@@ -2371,7 +2377,7 @@ class RaidSignupCharacterSelect(discord.ui.Select):
             "source": raid_signup_source(interaction, self.origin_channel_id, self.origin_message_id)
         })
         if not result.get("success"):
-            await interaction.response.send_message(f"⚠️ Anmeldung fehlgeschlagen: {result.get('error') or 'unbekannter Fehler'}", ephemeral=True)
+            await interaction.response.send_message(copyright_text(f"⚠️ Anmeldung fehlgeschlagen: {result.get('error') or 'unbekannter Fehler'}"), ephemeral=True)
             return
         saved_signup = result.get("signup") or {}
         saved_status = clean(saved_signup.get("status") or signup_status).lower()
@@ -2521,7 +2527,7 @@ class RaidSignupModal(discord.ui.Modal, title="Raid anmelden"):
 
     async def on_submit(self, interaction):
         await interaction.response.send_message(
-            "Bitte nutze die neue Anmeldung mit SpielerLogin/PIN und Charakter-Auswahl.",
+            copyright_text("Bitte nutze die neue Anmeldung mit SpielerLogin/PIN und Charakter-Auswahl."),
             ephemeral=True
         )
 
@@ -2549,7 +2555,7 @@ class RaidSignupSpecSelect(discord.ui.Select):
         if matching_characters:
             player_pin = clean(matching_characters[0].get("playerPin"))
             await interaction.response.send_message(
-                "Charakter für die Anmeldung wählen:",
+                copyright_text("Charakter für die Anmeldung wählen:"),
                 view=RaidSignupCharacterView(
                     self.raid,
                     self.class_name,
@@ -2580,7 +2586,7 @@ class RaidSignupClassSelect(discord.ui.Select):
     async def callback(self, interaction):
         class_name = self.values[0]
         class_label = class_display_name(class_name)
-        await interaction.response.send_message(f"Skillung für **{class_label}** wählen:", view=RaidSignupSpecView(self.raid, class_name, interaction.channel_id, getattr(interaction.message, "id", "")), ephemeral=True)
+        await interaction.response.send_message(copyright_text(f"Skillung für **{class_label}** wählen:"), view=RaidSignupSpecView(self.raid, class_name, interaction.channel_id, getattr(interaction.message, "id", "")), ephemeral=True)
 
 
 class RaidSignupStatusModal(discord.ui.Modal):
@@ -2601,7 +2607,7 @@ class RaidSignupStatusModal(discord.ui.Modal):
         char_name = clean(self.char_name.value)
         note = clean(self.note.value)
         if not char_name:
-            await interaction.response.send_message("Bitte Charaktername angeben.", ephemeral=True)
+            await interaction.response.send_message(copyright_text("Bitte Charaktername angeben."), ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
@@ -2661,12 +2667,12 @@ class RaidSignupStatusModal(discord.ui.Modal):
                 "tentative": "als vorläufig markiert",
                 "absent": "als abwesend markiert",
             }.get(self.status, "aktualisiert")
-            await interaction.followup.send(f"✅ **{char_name}** wurde {label}.", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"✅ **{char_name}** wurde {label}."), ephemeral=True)
             await send_raid_player_status_confirmation(interaction, fresh_raid, char_name, self.status, note)
             await send_raid_staff_action_notice(interaction, fresh_raid, char_name, self.status, note)
             await refresh_raid_signup_message(interaction, self.raid)
         except Exception as error:
-            await interaction.followup.send(f"⚠️ Status konnte nicht geändert werden: {error}", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"⚠️ Status konnte nicht geändert werden: {error}"), ephemeral=True)
 
 
 class RaidSignupChangeView(discord.ui.View):
@@ -2704,7 +2710,7 @@ class RaidSignupView(discord.ui.View):
     @discord.ui.button(label="Ändern", emoji="⚙️", style=discord.ButtonStyle.secondary, custom_id="raid_signup_change")
     async def change_signup(self, interaction, button):
         await interaction.response.send_message(
-            "Wähle deine Klasse, um Charakter oder Skillung zu ändern:",
+            copyright_text("Wähle deine Klasse, um Charakter oder Skillung zu ändern:"),
             view=RaidSignupChangeView(self.raid),
             ephemeral=True,
         )
@@ -4105,7 +4111,7 @@ async def send_po_rejection_message(client, entry, reason):
         text = f"❌ Deine PO für **{player}** auf **{item}** wurde abgelehnt."
         if clean(reason):
             text += f"\n\nNachricht der PO-Freigabe: {clean(reason)}"
-        await user.send(text)
+        await user.send(copyright_text(text))
         return True
     except Exception as error:
         print(f"PO-Ablehnung: DM konnte nicht gesendet werden: {error}")
@@ -4140,6 +4146,7 @@ async def send_po_approval_message(client, entry):
             description=f"Deine Priorität für **{item}** wurde bestätigt.",
             color=0x22C55E,
         )
+        embed.set_footer(text=copyright_text())
         embed.add_field(name="🏰 Gilde", value=guild_name, inline=True)
         embed.add_field(name="⚔️ Raid", value=raid, inline=True)
         embed.add_field(name="👤 Charakter", value=player, inline=False)
@@ -4147,7 +4154,7 @@ async def send_po_approval_message(client, entry):
         emoji_match = re.match(r"<a?:[^:]+:(\d+)>", icon)
         if emoji_match:
             embed.set_thumbnail(url=f"https://cdn.discordapp.com/emojis/{emoji_match.group(1)}.png?size=128&quality=lossless")
-        embed.set_footer(text="Deine freigegebene PO ist jetzt für den Raid hinterlegt.")
+        embed.set_footer(text=copyright_text("Deine freigegebene PO ist jetzt für den Raid hinterlegt.", limit=2048))
         await user.send(embed=embed)
         return True
     except Exception as error:
@@ -4157,7 +4164,7 @@ async def send_po_approval_message(client, entry):
         )
         try:
             user = client.get_user(int(user_id)) or await client.fetch_user(int(user_id))
-            await user.send(fallback_text)
+            await user.send(copyright_text(fallback_text))
             return True
         except Exception as fallback_error:
             print(
@@ -4183,6 +4190,7 @@ async def send_raid_signup_confirmation(interaction, raid, char_name, class_name
             description=f"Du bist erfolgreich für **{raid_name}** angemeldet.",
             color=0x22C55E,
         )
+        embed.set_footer(text=copyright_text())
         embed.add_field(name="🏰 Gilde", value=guild_display_name(payload=raid), inline=True)
         embed.add_field(name="⚔️ Raid", value=raid_name, inline=True)
         embed.add_field(name="👤 Charakter", value=clean(char_name) or "-", inline=True)
@@ -4190,7 +4198,7 @@ async def send_raid_signup_confirmation(interaction, raid, char_name, class_name
         embed.add_field(name="✨ Skillung", value=clean(spec) or "-", inline=True)
         if raid_date != "noch offen" or raid_time != "noch offen":
             embed.add_field(name="📅 Termin", value=f"{raid_date} · {raid_time}", inline=False)
-        embed.set_footer(text="Änderungen kannst du jederzeit über den Raidanmelder vornehmen.")
+        embed.set_footer(text=copyright_text("Änderungen kannst du jederzeit über den Raidanmelder vornehmen.", limit=2048))
         await interaction.user.send(embed=embed)
         return True
     except Exception as error:
@@ -4240,6 +4248,7 @@ async def send_raid_player_status_confirmation(interaction, raid, char_name, act
             description=f"**{char_name}** wurde für **{raid_name}** **{raid_signup_action_label(action)}**.",
             color=0xF59E0B,
         )
+        embed.set_footer(text=copyright_text())
         embed.add_field(name="Raid", value=raid_name, inline=True)
         embed.add_field(name="Datum", value=raid_date, inline=True)
         embed.add_field(name="Uhrzeit", value=raid_time, inline=True)
@@ -4273,6 +4282,7 @@ async def send_raid_staff_action_notice(interaction, raid, char_name, action, no
         description=f"**{char_name}** wurde für **{raid_name}** **{raid_signup_action_label(action)}**.",
         color=0x7C3AED,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="Raid", value=raid_name, inline=True)
     embed.add_field(name="Datum", value=raid_date, inline=True)
     embed.add_field(name="Uhrzeit", value=raid_time, inline=True)
@@ -4482,7 +4492,7 @@ async def send_player_login_approval_notice_from_queue(payload):
     delivered = 0
     for member in recipients.values():
         try:
-            await member.send(message)
+            await member.send(copyright_text(message))
             delivered += 1
         except Exception as error:
             print(f"SpielerLogin-DM an {member} fehlgeschlagen: {error}")
@@ -4520,10 +4530,11 @@ async def send_player_login_granted_notice_from_queue(payload):
         ),
         color=0x22C55E,
     )
+    embed.set_footer(text=copyright_text())
     if character_label:
         embed.add_field(name="Charakter", value=character_label, inline=False)
     embed.add_field(name="LichtLoot öffnen", value=f"[Jetzt zum SpielerLogin]({start_url})", inline=False)
-    embed.set_footer(text="Diese Nachricht wurde automatisch nach der Freigabe verschickt.")
+    embed.set_footer(text=copyright_text("Diese Nachricht wurde automatisch nach der Freigabe verschickt.", limit=2048))
     await user.send(embed=embed)
     print(f"SpielerLogin-Freigabe-DM an {user} gesendet: {guild_slug}:{character_label or discord_user_id}")
     return 1
@@ -4541,6 +4552,7 @@ async def send_raid_announcement_notice_from_queue(payload):
         description="📣 Bitte meldet euch rechtzeitig an und tragt eure Prios ein.",
         color=0x7C3AED,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="⚔️ Raid", value=raid_name, inline=True)
     embed.add_field(name="🗓️ Datum", value=raid_date, inline=True)
     embed.add_field(name="⏰ Uhrzeit", value=raid_time, inline=True)
@@ -4592,6 +4604,7 @@ async def send_raid_status_notice_from_queue(payload):
         description=custom_description or f"**{clean(payload.get('player')) or 'Ein Spieler'}** wurde für **{raid_name}** **{raid_signup_action_label(action)}**.",
         color=0x7C3AED,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="Raid", value=raid_name, inline=True)
     embed.add_field(name="Datum", value=format_raid_announcement_date(payload.get("raidDate") or ""), inline=True)
     embed.add_field(name="Uhrzeit", value=format_raid_announcement_time(payload.get("raidTime") or ""), inline=True)
@@ -4660,6 +4673,7 @@ async def send_po_release_request_notice_from_queue(payload):
         description=text or f"Für **{character}** wurde eine **{request_label}** eingereicht und wartet auf Prüfung.",
         color=0xFACC15,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="🏰 Gilde", value=guild_name, inline=True)
     embed.add_field(name="⚔️ Raid", value=display_raid(raid) or raid, inline=True)
     embed.add_field(
@@ -4680,7 +4694,7 @@ async def send_po_release_request_notice_from_queue(payload):
     emoji_match = re.match(r"<a?:[^:]+:(\d+)>", class_emoji)
     if emoji_match:
         embed.set_thumbnail(url=f"https://cdn.discordapp.com/emojis/{emoji_match.group(1)}.png?size=128&quality=lossless")
-    embed.set_footer(text="Der Antrag wartet auf Freigabe durch die Gildenleitung.")
+    embed.set_footer(text=copyright_text("Der Antrag wartet auf Freigabe durch die Gildenleitung.", limit=2048))
     count = await send_queue_targeted_embed(payload,embed)
     print(f"PO-Freigabehinweis an {count} Empfänger gesendet: {character}")
     return count
@@ -4700,12 +4714,13 @@ async def send_po_release_granted_notice_from_queue(payload):
         description=f"Deine PO-Freigabe für **{raid_name}** wurde erfolgreich bestätigt.",
         color=0x22C55E,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="🏰 Gilde", value=guild_name, inline=True)
     embed.add_field(name="⚔️ Raid", value=raid_name, inline=True)
     embed.add_field(name="👤 Charakter", value=f"{character}{f'-{server}' if server else ''}", inline=True)
     if class_name:
         embed.add_field(name="🛡️ Klasse", value=f"{class_icon(class_name)} {class_display_name(class_name)}", inline=True)
-    embed.set_footer(text="Du kannst deine Prios jetzt auf der entsprechenden Lootseite eintragen.")
+    embed.set_footer(text=copyright_text("Du kannst deine Prios jetzt auf der entsprechenden Lootseite eintragen.", limit=2048))
     try:
         user = client.get_user(int(user_id)) or await client.fetch_user(int(user_id))
         await user.send(embed=embed)
@@ -4738,6 +4753,7 @@ async def send_loot_master_leadpin_notice_from_queue(payload):
         description=custom_description or f"Du bist für **{raid_name}** als Plündermeister eingetragen.",
         color=0xFACC15,
     )
+    embed.set_footer(text=copyright_text())
     embed.add_field(name="🏰 Gilde", value=f"**{guild_name}**", inline=True)
     embed.add_field(name="⚔️ Raid", value=f"**{raid_name}**", inline=True)
     embed.add_field(name="🔑 LeadPIN", value=f"`{lead_pin}`", inline=False)
@@ -4768,7 +4784,7 @@ async def send_loot_master_leadpin_notice_from_queue(payload):
         value="• **Erhaltene Items markieren** und die zugehörigen Punkte entfernen\n• Danach **PO+ Punkte übertragen**",
         inline=False,
     )
-    embed.set_footer(text="PM-PIN: nur PO+ übertragen und Item erhalten/Punkte entfernen. Der Mastercode bleibt voll gültig.")
+    embed.set_footer(text=copyright_text("PM-PIN: nur PO+ übertragen und Item erhalten/Punkte entfernen. Der Mastercode bleibt voll gültig.", limit=2048))
     guide_path = Path(__file__).resolve().parent / "assets" / "pluendermeister-anleitung-ariee.png"
     if guide_path.is_file():
         embed.add_field(
@@ -4830,8 +4846,9 @@ def make_embed(payload, entries, p0plus_labels=None):
         title=f"📋 {display_raid(payload.get('raid') or '')} PO-Anmelder",
         color=discord.Color.gold(),
     )
+    embed.set_footer(text=copyright_text())
     if clean(payload.get("postKey")):
-        embed.set_footer(text=f"Post-ID: {payload.get('postKey')}")
+        embed.set_footer(text=copyright_text(f"Post-ID: {payload.get('postKey')}", limit=2048))
 
     note = po_post_note(payload)
     header_lines = build_fixed_po_header(payload)
@@ -4912,6 +4929,7 @@ async def publish_raid_calendar(payload):
         description=f"**{len(events)} kommende Raidtermine**\nAlle Zeiten werden automatisch in deiner Discord-Zeitzone angezeigt.",
         color=0x14B8A6 if guild_slug == "nachtloot" else 0xD4AF37,
     )
+    embed.set_footer(text=copyright_text())
     weekdays = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
     for date_text, rows in list(grouped.items())[:20]:
         try:
@@ -4948,7 +4966,7 @@ async def publish_raid_calendar(payload):
             lead_text = f" · 👑 {lead}" if lead else ""
             lines.append(f"{time_label} · 👥 `{count_text}` · {raid_icon} **{name}**{relative}\n└ {links}{lead_text}")
         embed.add_field(name=field_name, value="\n".join(lines)[:1024] or "–", inline=False)
-    embed.set_footer(text="Europe/Berlin · Automatisch erstellt und aktualisiert durch LichtLoot")
+    embed.set_footer(text=copyright_text("Europe/Berlin · Automatisch erstellt und aktualisiert durch LichtLoot", limit=2048))
     state = load_state()
     state_key = f"_raidCalendar:{payload_guild_slug(payload)}:{channel_id}"
     previous = state.get(state_key) if isinstance(state.get(state_key), dict) else {}
@@ -5010,13 +5028,13 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
     server = clean(server)
 
     if not class_name:
-        await interaction.followup.send("⚠️ Bitte zuerst eine Klasse wählen.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Bitte zuerst eine Klasse wählen."), ephemeral=True)
         return
     if not player_login:
-        await interaction.followup.send("⚠️ Bitte deinen SpielerLogin/PIN eintragen.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Bitte deinen SpielerLogin/PIN eintragen."), ephemeral=True)
         return
     if not char_name:
-        await interaction.followup.send("⚠️ Bitte deinen Charakternamen eintragen.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Bitte deinen Charakternamen eintragen."), ephemeral=True)
         return
 
     try:
@@ -5048,12 +5066,12 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
         })
     except Exception as error:
         detail = po_signup_error_message(error, char_name)
-        await interaction.followup.send(f"⚠️ PO konnte nicht gespeichert werden: {detail}", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"⚠️ PO konnte nicht gespeichert werden: {detail}"), ephemeral=True)
         return
 
     if not result.get("success"):
         detail = po_signup_error_message(result.get("error") or "unbekannt", char_name)
-        await interaction.followup.send(f"⚠️ PO konnte nicht gespeichert werden: {detail}", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"⚠️ PO konnte nicht gespeichert werden: {detail}"), ephemeral=True)
         return
 
     saved_entry = result.get("entry") or {}
@@ -5073,7 +5091,7 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
     if prio_result and not prio_result.get("success"):
         detail = po_signup_error_message(prio_result.get("error") or "unbekannt", saved_player)
         await interaction.followup.send(
-            f"⚠️ Discord-Eintrag ist gespeichert, aber {'PO+' if is_po_plus_item else 'PO'} konnte nicht gespeichert werden: {detail}",
+            copyright_text(f"⚠️ Discord-Eintrag ist gespeichert, aber {'PO+' if is_po_plus_item else 'PO'} konnte nicht gespeichert werden: {detail}"),
             ephemeral=True,
         )
         return
@@ -5083,8 +5101,8 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
     # ältere Momentaufnahme anzeigen und den neuen Eintrag wieder verdrängen.
     asyncio.create_task(refresh_po_message_safely(interaction.client, payload))
     await interaction.followup.send(
-        f"✅ Deine {'PO+' if is_po_plus_item else 'PO'} wurde gespeichert: **{saved_player}** → **{saved_item}**.\n"
-        "Der PO-Post wird gleich aktualisiert.",
+        copyright_text(f"✅ Deine {'PO+' if is_po_plus_item else 'PO'} wurde gespeichert: **{saved_player}** → **{saved_item}**.\n"
+        "Der PO-Post wird gleich aktualisiert."),
         ephemeral=True,
     )
 
@@ -5145,7 +5163,7 @@ class PoKnownCharacterSelect(discord.ui.Select):
         try:
             char = self.characters[int(self.values[0])]
         except Exception:
-            await interaction.followup.send("⚠️ Charakterauswahl konnte nicht gelesen werden.", ephemeral=True)
+            await interaction.followup.send(copyright_text("⚠️ Charakterauswahl konnte nicht gelesen werden."), ephemeral=True)
             return
         class_name = class_display_name(char.get("className") or self.class_name)
         await submit_po_entry(
@@ -5186,7 +5204,7 @@ class PoPlayerLoginCharacterSelect(discord.ui.Select):
         try:
             char = self.characters[int(self.values[0])]
         except Exception:
-            await interaction.followup.send("⚠️ Charakterauswahl konnte nicht gelesen werden.", ephemeral=True)
+            await interaction.followup.send(copyright_text("⚠️ Charakterauswahl konnte nicht gelesen werden."), ephemeral=True)
             return
         class_name = class_display_name(char.get("className") or self.class_name)
         await submit_po_entry(
@@ -5227,19 +5245,19 @@ class PoPlayerLoginModal(discord.ui.Modal):
         item_display = po_item_display_text(self.item_name)
         if error:
             await interaction.followup.send(
-                f"⚠️ SpielerLogin konnte nicht geprüft werden: {error}",
+                copyright_text(f"⚠️ SpielerLogin konnte nicht geprüft werden: {error}"),
                 ephemeral=True,
             )
             return
         if not characters:
             await interaction.followup.send(
-                f"Item gewählt: **{item_display}**.\n"
-                "⚠️ Für diesen SpielerLogin wurden in dieser Gilde keine freigegebenen Charaktere gefunden.",
+                copyright_text(f"Item gewählt: **{item_display}**.\n"
+                "⚠️ Für diesen SpielerLogin wurden in dieser Gilde keine freigegebenen Charaktere gefunden."),
                 ephemeral=True,
             )
             return
         await interaction.followup.send(
-            f"Item gewählt: **{item_display}**.\nWähle jetzt deinen gespeicherten Charakter.",
+            copyright_text(f"Item gewählt: **{item_display}**.\nWähle jetzt deinen gespeicherten Charakter."),
             view=PoPlayerLoginCharacterView(
                 payload_for_interaction(self.payload, interaction),
                 self.item_name,
@@ -5312,13 +5330,13 @@ async def open_po_entry_flow(interaction, payload, item_name, class_name, defaul
     item_display = po_item_display_text(item_name)
     if characters:
         await interaction.followup.send(
-            f"Item gewählt: **{item_display}**.\nWähle deinen Charakter – die Klasse wird automatisch übernommen.",
+            copyright_text(f"Item gewählt: **{item_display}**.\nWähle deinen Charakter – die Klasse wird automatisch übernommen."),
             view=PoKnownCharacterView(payload, item_name, "", characters),
             ephemeral=True,
         )
         return
     await interaction.followup.send(
-        f"Item gewählt: **{item_display}**.\nVerbinde einmalig deinen SpielerLogin; danach kennt der Bot deine Charaktere.",
+        copyright_text(f"Item gewählt: **{item_display}**.\nVerbinde einmalig deinen SpielerLogin; danach kennt der Bot deine Charaktere."),
         view=PoFirstLoginView(payload, item_name),
         ephemeral=True,
     )
@@ -5342,7 +5360,7 @@ class PoClassSelect(discord.ui.Select):
             class_name = class_display_name(self.values[0])
             user_classes[f"{self.payload['postKey']}:{interaction.user.id}"] = class_name
             await interaction.followup.send(
-                f"{class_icon(class_name)} Klasse gespeichert: **{class_name}**. Jetzt Item auswählen.",
+                copyright_text(f"{class_icon(class_name)} Klasse gespeichert: **{class_name}**. Jetzt Item auswählen."),
                 ephemeral=True,
             )
         except Exception as error:
@@ -5429,10 +5447,10 @@ class PoItemSearchModal(discord.ui.Modal):
         query = clean(self.query.value)
         matches = await search_raid_items(self.payload.get("raid"), query)
         if not matches:
-            await interaction.followup.send(f"Keine Items für **{query}** gefunden.", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"Keine Items für **{query}** gefunden."), ephemeral=True)
             return
         await interaction.followup.send(
-            f"Gefundene Items für **{query}**. Wähle dein Item:",
+            copyright_text(f"Gefundene Items für **{query}**. Wähle dein Item:"),
             view=PoItemSearchResultView(self.payload, matches, self.class_name, self.default_char),
             ephemeral=True,
         )
@@ -5478,12 +5496,12 @@ class PoReviewSelect(discord.ui.Select):
     async def callback(self, interaction):
         try:
             if not self.values or self.values[0] == "none":
-                await interaction.response.send_message("Es gibt gerade keinen offenen PO-Eintrag zum Freigeben.", ephemeral=True)
+                await interaction.response.send_message(copyright_text("Es gibt gerade keinen offenen PO-Eintrag zum Freigeben."), ephemeral=True)
                 return
             await interaction.response.defer(ephemeral=True)
             if not await reviewer_allowed(interaction.user):
                 await interaction.followup.send(
-                    "⚠️ Nur PO-Freigeber können PO-Einträge freigeben.",
+                    copyright_text("⚠️ Nur PO-Freigeber können PO-Einträge freigeben."),
                     ephemeral=True,
                 )
                 return
@@ -5525,7 +5543,7 @@ class PoReviewSelect(discord.ui.Select):
             if entry is None:
                 await refresh_po_message(interaction.client, action_payload)
                 await interaction.followup.send(
-                    "⚠️ Diese Auswahl war nicht mehr aktuell. Der PO-Anmelder wurde aktualisiert – bitte die Freigabe erneut auswählen.",
+                    copyright_text("⚠️ Diese Auswahl war nicht mehr aktuell. Der PO-Anmelder wurde aktualisiert – bitte die Freigabe erneut auswählen."),
                     ephemeral=True,
                 )
                 return
@@ -5534,15 +5552,15 @@ class PoReviewSelect(discord.ui.Select):
             await refresh_po_message(interaction.client, action_payload)
             dm_sent = await send_po_approval_message(interaction.client, saved)
             await interaction.followup.send(
-                f"✅ Freigegeben: **{saved.get('player') or entry.get('player')}** → **{saved.get('item') or entry.get('item')}**."
-                + (" Nachricht wurde gesendet." if dm_sent else " Nachricht konnte nicht per DM gesendet werden."),
+                copyright_text(f"✅ Freigegeben: **{saved.get('player') or entry.get('player')}** → **{saved.get('item') or entry.get('item')}**."
+                + (" Nachricht wurde gesendet." if dm_sent else " Nachricht konnte nicht per DM gesendet werden.")),
                 ephemeral=True,
             )
         except Exception as error:
             if interaction.response.is_done():
-                await interaction.followup.send(f"⚠️ Freigabe konnte nicht geöffnet werden: `{error}`", ephemeral=True)
+                await interaction.followup.send(copyright_text(f"⚠️ Freigabe konnte nicht geöffnet werden: `{error}`"), ephemeral=True)
             else:
-                await interaction.response.send_message(f"⚠️ Freigabe konnte nicht geöffnet werden: `{error}`", ephemeral=True)
+                await interaction.response.send_message(copyright_text(f"⚠️ Freigabe konnte nicht geöffnet werden: `{error}`"), ephemeral=True)
 
 
 class PoRejectModal(discord.ui.Modal):
@@ -5569,12 +5587,12 @@ class PoRejectModal(discord.ui.Modal):
             await refresh_po_message(interaction.client, self.payload)
             dm_sent = await send_po_rejection_message(interaction.client, saved, reason)
             await interaction.followup.send(
-                f"❌ Abgelehnt: **{saved.get('player') or self.entry.get('player')}** → **{saved.get('item') or self.entry.get('item')}**."
-                + (" Nachricht wurde gesendet." if dm_sent else " Nachricht konnte nicht per DM gesendet werden."),
+                copyright_text(f"❌ Abgelehnt: **{saved.get('player') or self.entry.get('player')}** → **{saved.get('item') or self.entry.get('item')}**."
+                + (" Nachricht wurde gesendet." if dm_sent else " Nachricht konnte nicht per DM gesendet werden.")),
                 ephemeral=True,
             )
         except Exception as error:
-            await interaction.followup.send(f"⚠️ Ablehnung konnte nicht gespeichert werden: `{error}`", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"⚠️ Ablehnung konnte nicht gespeichert werden: `{error}`"), ephemeral=True)
 
 
 class PoRejectSelect(discord.ui.Select):
@@ -5597,7 +5615,7 @@ class PoRejectSelect(discord.ui.Select):
         try:
             if not await reviewer_allowed(interaction.user):
                 await interaction.response.send_message(
-                    "⚠️ Nur PO-Freigeber können PO-Einträge ablehnen.",
+                    copyright_text("⚠️ Nur PO-Freigeber können PO-Einträge ablehnen."),
                     ephemeral=True,
                 )
                 return
@@ -5622,16 +5640,16 @@ class PoRejectSelect(discord.ui.Select):
                     )
             if entry is None:
                 await interaction.response.send_message(
-                    "⚠️ Diese Auswahl ist nicht mehr aktuell. Bitte den PO-Anmelder neu laden und erneut auswählen.",
+                    copyright_text("⚠️ Diese Auswahl ist nicht mehr aktuell. Bitte den PO-Anmelder neu laden und erneut auswählen."),
                     ephemeral=True,
                 )
                 return
             await interaction.response.send_modal(PoRejectModal(action_payload, entry))
         except Exception as error:
             if interaction.response.is_done():
-                await interaction.followup.send(f"⚠️ Ablehnen konnte nicht geöffnet werden: `{error}`", ephemeral=True)
+                await interaction.followup.send(copyright_text(f"⚠️ Ablehnen konnte nicht geöffnet werden: `{error}`"), ephemeral=True)
             else:
-                await interaction.response.send_message(f"⚠️ Ablehnen konnte nicht geöffnet werden: `{error}`", ephemeral=True)
+                await interaction.response.send_message(copyright_text(f"⚠️ Ablehnen konnte nicht geöffnet werden: `{error}`"), ephemeral=True)
 
 
 class PoRejectEntryView(discord.ui.View):
@@ -5653,15 +5671,15 @@ class PoRejectButton(discord.ui.Button):
     async def callback(self, interaction):
         await interaction.response.defer(ephemeral=True)
         if not await reviewer_allowed(interaction.user):
-            await interaction.followup.send("⚠️ Nur PO-Freigeber können PO-Einträge ablehnen.", ephemeral=True)
+            await interaction.followup.send(copyright_text("⚠️ Nur PO-Freigeber können PO-Einträge ablehnen."), ephemeral=True)
             return
         action_payload = payload_for_interaction(self.payload, interaction)
         entries = await fresh_entries_for_payload(action_payload)
         if not po_reject_entry_options(entries):
-            await interaction.followup.send("Es gibt gerade keinen offenen PO-Eintrag zum Ablehnen.", ephemeral=True)
+            await interaction.followup.send(copyright_text("Es gibt gerade keinen offenen PO-Eintrag zum Ablehnen."), ephemeral=True)
             return
         await interaction.followup.send(
-            "Wähle den PO-Eintrag aus, den du ablehnen möchtest.",
+            copyright_text("Wähle den PO-Eintrag aus, den du ablehnen möchtest."),
             view=PoRejectEntryView(action_payload, entries),
             ephemeral=True,
         )
@@ -5690,17 +5708,17 @@ class PoDeleteEntrySelect(discord.ui.Select):
             can_delete_all = await reviewer_allowed(interaction.user)
             is_own_entry = str(entry.get("discordUserId") or entry.get("discord_user_id") or "").strip() == str(interaction.user.id)
             if not can_delete_all and not is_own_entry:
-                await interaction.followup.send("⚠️ Du kannst nur deinen eigenen PO-Eintrag löschen.", ephemeral=True)
+                await interaction.followup.send(copyright_text("⚠️ Du kannst nur deinen eigenen PO-Eintrag löschen."), ephemeral=True)
                 return
             action_payload = payload_for_interaction(self.payload, interaction)
             await delete_entry(action_payload, entry, interaction.user)
             await refresh_po_message(interaction.client, action_payload)
             await interaction.followup.send(
-                f"🗑️ Gelöscht: **{entry.get('player')}** → **{entry.get('item') or entry.get('itemName')}**.",
+                copyright_text(f"🗑️ Gelöscht: **{entry.get('player')}** → **{entry.get('item') or entry.get('itemName')}**."),
                 ephemeral=True,
             )
         except Exception as error:
-            await interaction.followup.send(f"⚠️ Löschen ging nicht: `{error}`", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"⚠️ Löschen ging nicht: `{error}`"), ephemeral=True)
 
 
 class PoDeleteEntryView(discord.ui.View):
@@ -5730,12 +5748,12 @@ class PoDeleteButton(discord.ui.Button):
         ]
         if not po_entry_options(entries):
             await interaction.followup.send(
-                "Es gibt gerade keinen PO-Eintrag zum Löschen." if can_delete_all else "Es gibt gerade keinen eigenen PO-Eintrag zum Löschen.",
+                copyright_text("Es gibt gerade keinen PO-Eintrag zum Löschen." if can_delete_all else "Es gibt gerade keinen eigenen PO-Eintrag zum Löschen."),
                 ephemeral=True,
             )
             return
         await interaction.followup.send(
-            "Wähle den PO-Eintrag aus, den du löschen möchtest." if can_delete_all else "Wähle deinen PO-Eintrag aus, den du löschen möchtest.",
+            copyright_text("Wähle den PO-Eintrag aus, den du löschen möchtest." if can_delete_all else "Wähle deinen PO-Eintrag aus, den du löschen möchtest."),
             view=PoDeleteEntryView(self.payload, entries),
             ephemeral=True,
         )
@@ -5764,11 +5782,11 @@ class PoLuckSelect(discord.ui.Select):
             await luck_entry(self.payload, entry, interaction.user)
             await refresh_po_message(interaction.client, self.payload)
             await interaction.followup.send(
-                f"🍀 Glück gewünscht: **{entry.get('player')}**.",
+                copyright_text(f"🍀 Glück gewünscht: **{entry.get('player')}**."),
                 ephemeral=True,
             )
         except Exception as error:
-            await interaction.followup.send(f"⚠️ Kleeblatt ging nicht: `{error}`", ephemeral=True)
+            await interaction.followup.send(copyright_text(f"⚠️ Kleeblatt ging nicht: `{error}`"), ephemeral=True)
 
 
 class PoView(discord.ui.View):
@@ -5817,7 +5835,7 @@ class CombinedRaidPoView(discord.ui.View):
     @discord.ui.button(label="Ändern", emoji="⚙️", style=discord.ButtonStyle.secondary, custom_id="combined_raid_signup_change", row=1)
     async def change_signup(self, interaction, button):
         await interaction.response.send_message(
-            "Wähle deine Klasse, um Charakter oder Skillung zu ändern:",
+            copyright_text("Wähle deine Klasse, um Charakter oder Skillung zu ändern:"),
             view=RaidSignupChangeView(self.raid),
             ephemeral=True,
         )
@@ -6322,8 +6340,9 @@ class NachtlootHelpQuestionModal(discord.ui.Modal, title="KI-Frage an die Nachtl
             description=nachtloot_help_answer(self.question.value),
             color=discord.Color.from_rgb(88, 101, 242),
         )
+        embed.set_footer(text=copyright_text())
         embed.add_field(name="Deine Frage", value=clean(self.question.value)[:1024], inline=False)
-        embed.set_footer(text="Die Antwort ist nur für dich sichtbar. Bei ungelösten Problemen hilft die Gildenleitung.")
+        embed.set_footer(text=copyright_text("Die Antwort ist nur für dich sichtbar. Bei ungelösten Problemen hilft die Gildenleitung.", limit=2048))
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -6343,6 +6362,7 @@ class NachtlootHelpTopicSelect(discord.ui.Select):
     async def callback(self, interaction):
         label, answer = NACHTLOOT_HELP_TOPICS.get(self.values[0], NACHTLOOT_HELP_TOPICS["fehler"])
         embed = discord.Embed(title=f"💡 {label}", description=answer, color=discord.Color.from_rgb(250, 204, 21))
+        embed.set_footer(text=copyright_text())
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -6707,7 +6727,7 @@ async def anmelder_refresh(interaction, was: str = "alle"):
     if errors:
         preview = "\n".join(f"• {clean(error)[:220]}" for error in errors[:3])
         text += f"\n⚠️ {len(errors)} Fehler:\n{preview}"
-    await interaction.followup.send(text, ephemeral=True)
+    await interaction.followup.send(copyright_text(text), ephemeral=True)
 
 
 def may_manage_discord_channel(interaction):
@@ -6731,12 +6751,12 @@ def may_manage_discord_channel(interaction):
 async def channel_leeren(interaction, bestaetigung: str):
     if not may_manage_discord_channel(interaction):
         await interaction.response.send_message(
-            "⚠️ Dafür benötigst du die Discord-Berechtigung **Nachrichten verwalten**.",
+            copyright_text("⚠️ Dafür benötigst du die Discord-Berechtigung **Nachrichten verwalten**."),
             ephemeral=True,
         )
         return
     if clean(bestaetigung).lower() != "ja":
-        await interaction.response.send_message("ℹ️ Löschen abgebrochen.", ephemeral=True)
+        await interaction.response.send_message(copyright_text("ℹ️ Löschen abgebrochen."), ephemeral=True)
         return
 
     await interaction.response.defer(ephemeral=True, thinking=True)
@@ -6748,18 +6768,18 @@ async def channel_leeren(interaction, bestaetigung: str):
             reason=f"/channel_leeren von {interaction.user} ({interaction.user.id})",
         )
         await interaction.followup.send(
-            f"✅ Channel geleert: **{len(deleted)}** nicht angeheftete Nachrichten gelöscht. "
-            "Angeheftete Nachrichten wurden behalten.",
+            copyright_text(f"✅ Channel geleert: **{len(deleted)}** nicht angeheftete Nachrichten gelöscht. "
+            "Angeheftete Nachrichten wurden behalten."),
             ephemeral=True,
         )
     except discord.Forbidden:
         await interaction.followup.send(
-            "⚠️ Der Bot benötigt in diesem Channel die Berechtigung **Nachrichten verwalten**.",
+            copyright_text("⚠️ Der Bot benötigt in diesem Channel die Berechtigung **Nachrichten verwalten**."),
             ephemeral=True,
         )
     except Exception as error:
         await interaction.followup.send(
-            f"⚠️ Channel konnte nicht vollständig geleert werden: `{clean(error)[:300]}`",
+            copyright_text(f"⚠️ Channel konnte nicht vollständig geleert werden: `{clean(error)[:300]}`"),
             ephemeral=True,
         )
 
@@ -6862,7 +6882,7 @@ async def restart_all_active_signup_posts():
 async def anmelder_neustart(interaction):
     if not may_manage_discord_channel(interaction):
         await interaction.response.send_message(
-            "⚠️ Dafür benötigst du die Discord-Berechtigung **Nachrichten verwalten**.",
+            copyright_text("⚠️ Dafür benötigst du die Discord-Berechtigung **Nachrichten verwalten**."),
             ephemeral=True,
         )
         return
@@ -6883,7 +6903,7 @@ async def anmelder_neustart(interaction):
     if errors:
         preview = "\n".join(f"• {clean(error)[:220]}" for error in errors[:3])
         text += f"\n⚠️ {len(errors)} Fehler:\n{preview}"
-    await interaction.followup.send(text, ephemeral=True)
+    await interaction.followup.send(copyright_text(text), ephemeral=True)
 
 
 def slash_embed_points(value):
@@ -6943,12 +6963,12 @@ async def raid_anmelder(
         if not posted:
             raise RuntimeError("Der Raidanmelder konnte nicht in Discord gepostet werden.")
         await interaction.followup.send(
-            f"✅ Raidanmelder erstellt und in LichtLoot gespeichert.\n"
-            f"Prio-PIN: `{payload_lichtloot_raid_pin(payload)}` · Lead-PIN: `{clean(payload.get('leadPin'))}`",
+            copyright_text(f"✅ Raidanmelder erstellt und in LichtLoot gespeichert.\n"
+            f"Prio-PIN: `{payload_lichtloot_raid_pin(payload)}` · Lead-PIN: `{clean(payload.get('leadPin'))}`"),
             ephemeral=True,
         )
     except Exception as error:
-        await interaction.followup.send(f"❌ Raidanmelder konnte nicht erstellt werden: {error}", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"❌ Raidanmelder konnte nicht erstellt werden: {error}"), ephemeral=True)
     finally:
         CURRENT_GUILD_SLUG.reset(token)
 
@@ -6957,16 +6977,16 @@ async def post_slash_embed(interaction, payload, success_text):
     await interaction.response.defer(ephemeral=True, thinking=True)
     try:
         posted = await post_free_discord_embed_from_queue({**payload, "channelId": str(interaction.channel_id)})
-        await interaction.followup.send(success_text if posted else "❌ Das Embed konnte nicht gepostet werden.", ephemeral=True)
+        await interaction.followup.send(copyright_text(success_text if posted else "❌ Das Embed konnte nicht gepostet werden."), ephemeral=True)
     except Exception as error:
-        await interaction.followup.send(f"❌ Das Embed konnte nicht gepostet werden: {error}", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"❌ Das Embed konnte nicht gepostet werden: {error}"), ephemeral=True)
 
 
 @client.tree.command(name="abstimmung_erstellen", description="Erstellt eine Abstimmung mit anklickbaren Reaktionen.")
 async def abstimmung_erstellen(interaction: discord.Interaction, thema: str, antworten: str, beschreibung: str = "", farbe: str = "purple"):
     points = slash_embed_points(antworten)
     if len(points) < 2:
-        await interaction.response.send_message("Bitte mindestens zwei Antworten mit | trennen.", ephemeral=True)
+        await interaction.response.send_message(copyright_text("Bitte mindestens zwei Antworten mit | trennen."), ephemeral=True)
         return
     await post_slash_embed(interaction, {"embedType": "poll", "title": thema, "description": beschreibung, "points": points, "color": farbe}, "✅ Abstimmung erstellt.")
 
@@ -7031,8 +7051,8 @@ async def po_anmelder(interaction, raid: str, datum: str, uhrzeit: str, titel: s
         client.add_view(PoView(payload, items, []), message_id=message.id)
         await edit_po_message(message, make_embed(payload, []), PoView(payload, items, []))
         await interaction.followup.send(
-            f"✅ PO-Anmelder erstellt und in LichtLoot gespeichert.\n"
-            f"Prio-PIN: `{payload_lichtloot_raid_pin(payload)}` · Lead-PIN: `{clean(payload.get('leadPin'))}`",
+            copyright_text(f"✅ PO-Anmelder erstellt und in LichtLoot gespeichert.\n"
+            f"Prio-PIN: `{payload_lichtloot_raid_pin(payload)}` · Lead-PIN: `{clean(payload.get('leadPin'))}`"),
             ephemeral=True,
         )
     finally:
@@ -7106,12 +7126,12 @@ async def sync_raid_application_emojis():
 async def raid_emojis_sync(interaction):
     await interaction.response.defer(ephemeral=True, thinking=True)
     if not await can_sync_item_emojis(interaction.user):
-        await interaction.followup.send("⚠️ Dafür brauchst du Gildenleitungs- oder Emoji-Rechte.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Dafür brauchst du Gildenleitungs- oder Emoji-Rechte."), ephemeral=True)
         return
     try:
         result = await sync_raid_application_emojis()
     except Exception as error:
-        await interaction.followup.send(f"⚠️ Raid-Emojis konnten nicht synchronisiert werden: {error}", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"⚠️ Raid-Emojis konnten nicht synchronisiert werden: {error}"), ephemeral=True)
         return
     created = result["created"]
     skipped = result["skipped"]
@@ -7126,23 +7146,23 @@ async def raid_emojis_sync(interaction):
         lines.append("Neu: " + " ".join(created[:20]))
     if failed:
         lines.append("Erste Fehler: " + " | ".join(failed[:5]))
-    await interaction.followup.send("\n".join(lines)[:1900], ephemeral=True)
+    await interaction.followup.send(copyright_text("\n".join(lines)[:1900]), ephemeral=True)
 
 
 async def run_po_emoji_sync(interaction, raid: str, limit: int = 25):
     await interaction.response.defer(ephemeral=True, thinking=True)
     if not interaction.guild:
-        await interaction.followup.send("⚠️ Dieser Befehl geht nur auf einem Discord-Server.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Dieser Befehl geht nur auf einem Discord-Server."), ephemeral=True)
         return
     if not await can_sync_item_emojis(interaction.user):
-        await interaction.followup.send("⚠️ Dafür brauchst du Gildenleitungs- oder Emoji-Rechte.", ephemeral=True)
+        await interaction.followup.send(copyright_text("⚠️ Dafür brauchst du Gildenleitungs- oder Emoji-Rechte."), ephemeral=True)
         return
 
     raid_key = normalize_raid(raid)
     max_create = max(1, min(int(limit or 25), 50))
     rows = await load_raid_item_rows(raid_key)
     if not rows:
-        await interaction.followup.send(f"⚠️ Keine Lootitems für {display_raid(raid_key)} gefunden.", ephemeral=True)
+        await interaction.followup.send(copyright_text(f"⚠️ Keine Lootitems für {display_raid(raid_key)} gefunden."), ephemeral=True)
         return
 
     existing = {normalize_emoji_name(emoji.name): emoji for emoji in getattr(interaction.guild, "emojis", []) or []}
@@ -7176,7 +7196,7 @@ async def run_po_emoji_sync(interaction, raid: str, limit: int = 25):
             await asyncio.sleep(1.5)
         except discord.Forbidden:
             await interaction.followup.send(
-                "⚠️ Der Bot hat keine Rechte, Emojis anzulegen. Bitte dem Bot `Emojis und Sticker verwalten` bzw. `Ausdrücke erstellen` geben.",
+                copyright_text("⚠️ Der Bot hat keine Rechte, Emojis anzulegen. Bitte dem Bot `Emojis und Sticker verwalten` bzw. `Ausdrücke erstellen` geben."),
                 ephemeral=True,
             )
             return
@@ -7198,11 +7218,11 @@ async def run_po_emoji_sync(interaction, raid: str, limit: int = 25):
         lines.append("Fehler: " + " | ".join(failed[:3]))
     if len(created) >= max_create:
         lines.append(f"Limit erreicht ({max_create}). Du kannst den Befehl noch einmal ausführen.")
-    await interaction.followup.send("\n".join(lines)[:1900], ephemeral=True)
+    await interaction.followup.send(copyright_text("\n".join(lines)[:1900]), ephemeral=True)
 
 
 async def send_po_emoji_sync_text(message, text):
-    await message.channel.send(text[:1900], silent=True)
+    await message.channel.send(copyright_text(text[:1900]), silent=True)
 
 
 async def run_po_emoji_sync_for_message(message, raid: str, limit: int = 25):
@@ -7637,14 +7657,14 @@ async def on_message(message):
         ) or personally_allowed
         if not may_clear_channel:
             await message.channel.send(
-                "⚠️ Nur Administratoren oder Mitglieder mit „Nachrichten verwalten“ dürfen diesen Channel leeren.",
+                copyright_text("⚠️ Nur Administratoren oder Mitglieder mit „Nachrichten verwalten“ dürfen diesen Channel leeren."),
                 delete_after=20,
             )
             return
         if lower != "!clearchannel bestätigen":
             await message.channel.send(
-                "⚠️ Dadurch werden alle nicht angehefteten Nachrichten in diesem Channel gelöscht. "
-                "Zum Bestätigen bitte `!clearchannel bestätigen` senden.",
+                copyright_text("⚠️ Dadurch werden alle nicht angehefteten Nachrichten in diesem Channel gelöscht. "
+                "Zum Bestätigen bitte `!clearchannel bestätigen` senden."),
                 delete_after=30,
             )
             return
@@ -7656,24 +7676,24 @@ async def on_message(message):
                 reason=f"!clearchannel von {message.author} ({message.author.id})",
             )
             await message.channel.send(
-                f"✅ Channel geleert: **{len(deleted)}** nicht angeheftete Nachrichten gelöscht.",
+                copyright_text(f"✅ Channel geleert: **{len(deleted)}** nicht angeheftete Nachrichten gelöscht."),
                 delete_after=15,
             )
         except discord.Forbidden:
             await message.channel.send(
-                "⚠️ Der Bot hat in diesem Channel nicht die Berechtigung „Nachrichten verwalten“.",
+                copyright_text("⚠️ Der Bot hat in diesem Channel nicht die Berechtigung „Nachrichten verwalten“."),
                 delete_after=20,
             )
         except Exception as error:
             await message.channel.send(
-                f"⚠️ Channel konnte nicht vollständig geleert werden: `{error}`",
+                copyright_text(f"⚠️ Channel konnte nicht vollständig geleert werden: `{error}`"),
                 delete_after=30,
             )
         return
     if lower in {"!hilfe-start", "!hilfe-aktualisieren", "!hilfe-stop"}:
         if int(message.channel.id) != NACHTLOOT_HELP_CHANNEL_ID:
             await message.channel.send(
-                f"⚠️ Diese Befehle funktionieren nur in <#{NACHTLOOT_HELP_CHANNEL_ID}>.",
+                copyright_text(f"⚠️ Diese Befehle funktionieren nur in <#{NACHTLOOT_HELP_CHANNEL_ID}>."),
                 delete_after=20,
             )
             return
@@ -7688,7 +7708,7 @@ async def on_message(message):
         ) or bool(member_roles & NACHTLOOT_HELP_ROLE_NAMES)
         if not may_manage_help:
             await message.channel.send(
-                "⚠️ Nur Gildenleitung, Offiziere, Raidoffiziere oder PO-Freigeber dürfen die Hilfe aktivieren.",
+                copyright_text("⚠️ Nur Gildenleitung, Offiziere, Raidoffiziere oder PO-Freigeber dürfen die Hilfe aktivieren."),
                 delete_after=20,
             )
             return
@@ -7697,7 +7717,7 @@ async def on_message(message):
             if old_message.author != client.user:
                 continue
             if any(
-                clean(getattr(getattr(embed, "footer", None), "text", "")) == NACHTLOOT_HELP_MARKER
+                without_copyright(getattr(getattr(embed, "footer", None), "text", "")) == NACHTLOOT_HELP_MARKER
                 for embed in old_message.embeds
             ):
                 await old_message.delete()
@@ -7720,7 +7740,8 @@ async def on_message(message):
                 ),
                 color=discord.Color.from_rgb(250, 204, 21),
             )
-            embed.set_footer(text=NACHTLOOT_HELP_MARKER)
+            embed.set_footer(text=copyright_text())
+            embed.set_footer(text=copyright_text(NACHTLOOT_HELP_MARKER, limit=2048))
             await message.channel.send(embed=embed, view=NachtlootHelpView(), silent=True)
             # Falls versehentlich zwei PO-Bot-Instanzen laufen, empfangen beide
             # denselben Befehl. Nach einer kurzen Wartezeit bleibt trotzdem nur
@@ -7731,7 +7752,7 @@ async def on_message(message):
                 if old_message.author != client.user:
                     continue
                 if any(
-                    clean(getattr(getattr(old_embed, "footer", None), "text", "")) == NACHTLOOT_HELP_MARKER
+                    without_copyright(getattr(getattr(old_embed, "footer", None), "text", "")) == NACHTLOOT_HELP_MARKER
                     for old_embed in old_message.embeds
                 ):
                     help_posts.append(old_message)
