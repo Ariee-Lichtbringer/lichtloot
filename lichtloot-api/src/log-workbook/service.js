@@ -14,7 +14,15 @@ export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBas
   })().catch(error=>{schemaPromise=null;throw error;});}
   async function context(guildId,analysisId){
     const r=await query(`select la.*,g.slug as guild_slug,g.name as guild_name,g.logo_url,
-      g.discord_guild_id,coalesce(gs.layout_json,'{}'::jsonb) as guild_layout
+      coalesce(nullif(g.discord_guild_id,''),(
+        select nullif(dbc.discord_guild_id,'') from discord_bot_channels dbc
+        where dbc.guild_id=g.id and nullif(dbc.discord_guild_id,'') is not null
+        order by dbc.updated_at desc limit 1
+      ),(
+        select nullif(ga.discord_guild_id,'') from guild_applications ga
+        where ga.guild_slug=g.slug or lower(ga.guild_name)=lower(g.name) or lower(ga.loot_name)=lower(g.name)
+        order by ga.setup_completed_at desc nulls last,ga.updated_at desc limit 1
+      ),'') as discord_guild_id,coalesce(gs.layout_json,'{}'::jsonb) as guild_layout
       from log_analyses la join guilds g on g.id=la.guild_id
       left join guild_settings gs on gs.guild_id=g.id
       where la.guild_id=$1 and la.id=$2 limit 1`,[guildId,analysisId]);
