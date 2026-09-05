@@ -89,3 +89,14 @@ for(const file of ["raidlead-panel.html","raidlead-panel-public.html","lichtloot
  assert.match(ui.renderP0PlusPoints("Götze",true,"Juksi"),/selected-item.*Götze/);
  assert.doesNotMatch(ui.renderP0PlusPoints("Götze",false,"Juksi"),/selected-item/);
 }
+
+for(const file of ["raidlead-panel.html","raidlead-panel-public.html","lichtloot-api/public/raidlead-panel.html"]){
+ const source=fs.readFileSync(new URL(file,root),"utf8");
+ for(const name of ["renderSelectedPlainP0","renderPlainP0Cell"]) vm.runInContext(extract(source,name),ui);
+ const entry={p0Item:"P0 Item",p1:"Other"};
+ assert.match(ui.renderSelectedPlainP0(entry),/P0 Item/);
+ assert.match(ui.renderSelectedPlainP0(entry),/keine P0\+-Punkte/);
+ assert.match(ui.renderPlainP0Cell(entry,false,true),/P0 Item/);
+ assert.doesNotMatch(ui.renderPlainP0Cell(entry,false,false),/P0 Item/);
+ assert.ok(!source.includes('p0Plus: p.P0Plus || p.p0Plus || p.P0'));
+}
