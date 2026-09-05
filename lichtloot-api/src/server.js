@@ -24688,6 +24688,9 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     throw error;
   }
 
+  // Dieselben Freigabeeinstellungen wie bei der Anmeldung auf der Webseite.
+  // Schema/Layout vor der Transaktion laden, um Sperrkonflikte zu vermeiden.
+  const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -24714,16 +24717,15 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
     const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name, raid.raid_type);
-    // Die Raid-Freigabe gilt fuer jede P0-Eintragung. po_plus_enabled steuert
-    // lediglich, ob der Eintrag als P0+ behandelt wird; es darf nicht die
-    // grundsaetzliche P0-Berechtigung des Charakters umgehen.
-    if (releaseRaid) {
+    // Wenn die Gilde Freigaben fuer diesen Raid verlangt, gilt die Pruefung
+    // fuer jede P0-Eintragung, unabhaengig von po_plus_enabled des Items.
+    if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
       const releaseResult = await client.query(
         `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
         [guildId, character.id, releaseRaid]
       );
       if (!releaseResult.rows[0]) {
-        const error = new Error("du hast keine P0+ Freigabe wende dich an den Raidlead");
+        const error = new Error(`Du hast keine P0-Freigabe für ${releaseRaid.toUpperCase()}. Bitte wende dich an den Raidlead.`);
         error.statusCode = 403;
         throw error;
       }
