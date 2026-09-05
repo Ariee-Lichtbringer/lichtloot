@@ -1368,6 +1368,19 @@ body.random-raidlead .random-home-link{display:inline-block!important}
     margin-right:0;
   }
 }
+
+.staff-bench-icon{display:inline-block;margin-left:6px;font-size:18px;line-height:1;vertical-align:middle;cursor:help}
+
+.p0-item-received .item-name,.p0-item-received .item-link,.p0-item-received .item-with-tooltip,.p0-item-received .item-with-icon>span{color:#f5c451!important}
+.p0-item-received .item-icon{border-color:#f5c451!important}
+.p0-received-button:disabled{opacity:1!important;background:#166534!important;border:1px solid #4ade80!important;color:#dcfce7!important;cursor:default}
+
+.p0-review-overlay{position:fixed;inset:0;z-index:90000;background:#020617de;display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(4px)}
+.p0-review-dialog{background:#0b1324;color:#e2e8f0;border:1px solid #b68d35;border-radius:16px;width:min(1100px,100%);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 70px #0009}
+.p0-review-dialog header,.p0-review-dialog footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid #334155}.p0-review-dialog header h2{margin:0;color:#facc15;font-size:23px}.p0-review-dialog header p{margin:6px 0 0;color:#94a3b8}.p0-review-dialog footer{border-top:1px solid #334155;border-bottom:0;justify-content:flex-end}
+.p0-review-dialog button{padding:10px 15px;border:1px solid #475569;border-radius:8px;background:#172033;color:#f1f5f9;cursor:pointer;font-weight:700}.p0-review-dialog button:disabled{opacity:.5;cursor:default}.p0-review-dialog #p0ReviewConfirm{background:#166534;border-color:#4ade80;color:#dcfce7}
+#p0ReviewContent{padding:8px 22px 20px;overflow:auto;min-height:0}.p0-review-dialog h3{color:#e9bd56;font-size:17px;margin:20px 0 12px}.p0-review-dialog small{display:block;color:#94a3b8;font-size:11px;margin-top:4px}.p0-review-hint{color:#94a3b8;font-size:13px;line-height:1.5}.p0-review-table{overflow-x:auto}.p0-review-table table{width:100%;min-width:620px;border-collapse:collapse}.p0-review-table th,.p0-review-table td{padding:11px 12px;border-bottom:1px solid #253248;text-align:left;font-size:13px}.p0-review-table th{color:#b9c6d9;background:#101c30}.p0-review-table input{width:85px;box-sizing:border-box;padding:9px;background:#060c19;border:1px solid #5b789b;border-radius:7px;color:white;font-size:15px}.p0-review-deleted{color:#86efac;font-weight:800}#p0ReviewStatus{padding:10px 22px;color:#cbd5e1;font-size:13px;line-height:1.5}.p0-review-complete{padding:30px 0;color:#86efac;font-size:22px}.p0-review-target{padding:12px 22px}.p0-review-target select{margin-left:10px;padding:8px;background:#101c30;color:white;border:1px solid #475569;border-radius:6px}
+@media(max-width:650px){.p0-review-overlay{padding:6px}.p0-review-dialog{max-height:97dvh}.p0-review-dialog header,.p0-review-dialog footer{padding:12px}.p0-review-dialog footer button{flex:1}#p0ReviewContent{padding:6px 12px 12px}}
 </style>
 </head>
 
@@ -1971,6 +1984,8 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
       wclParticipation: p.WclParticipation || p.wclParticipation || "no_data",
       wclSourceTitle: p.wclSourceTitle || p.WclSourceTitle || "Warcraft Logs",
       wclSourceUrl: p.wclSourceUrl || p.WclSourceUrl || "",
+      p0ItemReceived: p.p0ItemReceived===true,
+      staffBenched: p.staffBenched===true||p.StaffBenched===true,
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
     currentPrioListDisplay=result.prioListDisplay&&typeof result.prioListDisplay==="object"?result.prioListDisplay:{};
@@ -2635,7 +2650,7 @@ function renderBenchName(entry){
   const directTimestamp=currentPrioListDisplay.prioEntryUnderName===true,directAttendance=currentPrioListDisplay.attendanceUnderName===true;
   const hoverContent=`${directTimestamp?"":timestampHtml}${directAttendance?"":attendance}`;
   const attendanceClass=participation==="participated"?"attendance-participated":participation==="not_found"?"attendance-not-found":"attendance-no-data";
-  return `<span class="prio-player-hover" tabindex="0"><strong class="${attendanceClass}">${safe(entry.player || "-")}</strong>${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${directTimestamp?timestampHtml:""}${directAttendance?attendance:""}`;
+  return `<span class="prio-player-hover" tabindex="0"><strong class="${attendanceClass}">${safe(entry.player || "-")}</strong>${entry.staffBenched===true?'<span class="staff-bench-icon" role="img" aria-label="Durch Raidlead oder Gildenleitung auf Bank gesetzt" title="Durch Raidlead oder Gildenleitung auf Bank gesetzt">🪑</span>':""}${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${directTimestamp?timestampHtml:""}${directAttendance?attendance:""}`;
 }
 
 function formatPrioEntryTimestamp(value){
@@ -2898,8 +2913,9 @@ function renderRows(){
     const isPo = isActiveP0Entry(entry);
     const isP0Plus = isActiveP0PlusEntry(entry);
 
-    const clearButton =
-      currentReleased && isP0Plus && isAllowedP0Raid()
+    const clearButton = entry.p0ItemReceived===true
+      ? '<button class="btn small-btn p0-received-button" type="button" disabled>✓ P0+-Punkte wurden gelöscht</button>'
+      : currentReleased && isP0Plus && isAllowedP0Raid()
         ? `<button class="btn warning small-btn"
              onclick="clearP0PlusForPlayer('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
              Item erhalten
@@ -2949,7 +2965,7 @@ function renderRows(){
           <td>${index + 1}</td>
           <td>${renderBenchName(entry)}</td>
           <td>${renderClass(entry.class)}</td>
-          <td>${renderItem(entry.p1)}</td>
+          <td class="${entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -2960,7 +2976,7 @@ function renderRows(){
         <td>${index + 1}</td>
         <td>${renderBenchName(entry)}</td>
         <td>${renderClass(entry.class)}</td>
-        <td>${renderItem(entry.p1)}</td>
+        <td class="${entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
         <td>${renderItem(entry.p2)}</td>
         <td>${renderItem(entry.p3)}</td>
         <td>${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
@@ -3339,71 +3355,36 @@ async function setPrioBench(rowNumber, bench, player, server){
 }
 
 
+let p0TransferReview=null;
 async function transferP0PlusPoints(){
-  if(!currentRaidData || !currentRaidData.raidId){
-    alert("Kein aktiver Raid geladen.");
-    return;
-  }
-
-  if(!isAllowedP0Raid()){
-    alert("P0+ Punkte können nur für MC, BWL, AQ40, AQ20, Naxx und die freigegebenen ZG-Raids übertragen werden.");
-    return;
-  }
-
-  const masterCode = prompt("Mastercode oder Plündermeister-Passwort eingeben:");
-
-  if(!masterCode) return;
-
-  const p0Count = currentPrios.filter(entry =>
-    isActiveP0Entry(entry) &&
-    !isBenchPrio(entry)
-  ).length;
-
-  if(p0Count === 0){
-    alert("Es gibt keine gesetzten P0+ Einträge in diesem Raid.");
-    return;
-  }
-
-  const confirmed = confirm(
-    "P0+ Punkte übertragen?\n\n" +
-    "Raid: " + raids[currentRaidKey].name + "\n" +
-    "Anzahl gesetzter P0+ Einträge: " + p0Count + "\n\n" +
-    "Alle Spieler mit P0+ erhalten +1 Punkt auf ihr gesetztes Item."
-  );
-
-  if(!confirmed){
-    return;
-  }
-
-  const url =
-    RAID_API_URL +
-    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=transferP0PlusPoints" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
-    "&raid=" + encodeURIComponent(currentRaidKey) +
-    "&masterCode=" + encodeURIComponent(masterCode) +
-    "&t=" + Date.now();
-
-  try{
-    const response = await fetch(url);
-    const result = await response.json();
-
-    if(result.error){
-      alert(result.error);
-      return;
-    }
-
-    alert(
-      "P0+ Punkte wurden übertragen.\n\n" +
-      "Übertragen: " + (result.awarded || 0) + "\n" +
-      "Gefundene P0+ Einträge: " + (result.candidates || 0)
-    );
-
-    await reloadCurrentRaid();
-
-  }catch(error){
-    console.error(error);
-    alert("Fehler beim Übertragen der P0+ Punkte.");
-  }
+  if(!currentRaidData?.raidId){alert('Kein aktiver Raid geladen.');return;}
+  if(!isAllowedP0Raid()){alert('Für diesen Raid ist keine P0+-Übertragung freigegeben.');return;}
+  if(document.getElementById('p0TransferReviewModal'))return;
+  const masterCode=prompt('Mastercode oder Plündermeister-Passwort eingeben:');if(!masterCode)return;
+  const state={masterCode,raidId:currentRaidData.raidId,raid:currentRaidKey,targetRaid:currentRaidKey,plan:null,busy:false};p0TransferReview=state;
+  const modal=document.createElement('div');modal.id='p0TransferReviewModal';modal.className='p0-review-overlay';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','p0ReviewHeading');
+  modal.innerHTML=`<section class="p0-review-dialog"><header><div><h2 id="p0ReviewHeading">P0+-Übertragung prüfen</h2><p>${safe(currentRaidData.raidName||raids[currentRaidKey]?.name||currentRaidKey)}</p></div><button type="button" data-review-close aria-label="Schließen">✕</button></header>${currentRaidKey==='zg'?'<label class="p0-review-target">P0+-Ziel <select id="p0ReviewTarget"><option value="">Bitte auswählen …</option><option value="zg-prime">ZG Prime</option><option value="zg-late">ZG Late-Night</option><option value="zg-mittwoch">ZG Mittwoch</option></select></label>':''}<div id="p0ReviewContent"><p>Vorschau wird geladen …</p></div><div id="p0ReviewStatus" role="status" aria-live="polite"></div><footer><button type="button" data-review-close>Abbrechen</button><button type="button" id="p0ReviewReload">Vorschau neu laden</button><button type="button" id="p0ReviewConfirm" class="btn success" disabled>Punkte verbindlich übertragen</button></footer></section>`;
+  document.body.appendChild(modal);state.previousFocus=document.activeElement;modal.querySelector('[data-review-close]').focus();
+  modal.querySelectorAll('[data-review-close]').forEach(button=>button.onclick=closeP0TransferReview);
+  document.getElementById('p0ReviewReload').onclick=loadP0TransferReview;document.getElementById('p0ReviewConfirm').onclick=confirmP0TransferReview;
+  modal.addEventListener('keydown',event=>{if(event.key==='Escape')closeP0TransferReview();if(event.key==='Tab'){const elements=[...modal.querySelectorAll('button,input,select')].filter(el=>!el.disabled&&el.getClientRects().length);if(event.shiftKey&&document.activeElement===elements[0]){event.preventDefault();elements.at(-1)?.focus();}else if(!event.shiftKey&&document.activeElement===elements.at(-1)){event.preventDefault();elements[0]?.focus();}}});
+  if(currentRaidKey==='zg'){state.targetRaid='';document.getElementById('p0ReviewContent').textContent='Bitte zuerst die P0+-Zieldatenbank auswählen.';document.getElementById('p0ReviewTarget').onchange=event=>{state.targetRaid=event.target.value;loadP0TransferReview();};}else await loadP0TransferReview();
+}
+function closeP0TransferReview(){if(p0TransferReview?.busy)return;const focus=p0TransferReview?.previousFocus;p0TransferReview=null;document.getElementById('p0TransferReviewModal')?.remove();focus?.focus();}
+function setP0ReviewBusy(busy){const state=p0TransferReview;if(!state)return;state.busy=busy;document.getElementById('p0TransferReviewModal').querySelectorAll('button,input,select').forEach(el=>el.disabled=busy);document.getElementById('p0ReviewConfirm').disabled=busy||!state.plan?.entries?.length;}
+async function requestP0Review(state,extra){const response=await fetch(RAID_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'transferP0PlusPoints',guild:currentGuildSlug(),raidId:state.raidId,raid:state.raid,targetRaid:state.targetRaid,masterCode:state.masterCode,...extra})});const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||'P0+-Übertragung konnte nicht ausgeführt werden.');return result;}
+async function loadP0TransferReview(){const state=p0TransferReview;if(!state||state.busy)return;state.plan=null;if(!state.targetRaid){document.getElementById('p0ReviewConfirm').disabled=true;return;}setP0ReviewBusy(true);document.getElementById('p0ReviewStatus').textContent='Vorschau wird geladen …';try{const plan=await requestP0Review(state,{preview:true});if(p0TransferReview!==state)return;state.plan=plan;renderP0TransferReview(plan);document.getElementById('p0ReviewStatus').textContent='Noch nichts übertragen. Die Punkte in der Spalte „Für diesen Raid“ kannst du ändern.';}catch(error){document.getElementById('p0ReviewStatus').textContent=error.message;document.getElementById('p0ReviewContent').textContent='Die Vorschau konnte nicht geladen werden.';}finally{if(p0TransferReview===state)setP0ReviewBusy(false);}}
+function renderP0TransferReview(plan){
+  const skippedLabels={'bereits-übertragen':'Bereits übertragen','charakter-doppelt':'Doppelter Eintrag'};
+  document.getElementById('p0ReviewContent').innerHTML=`<h3>Punkte für diesen Raid <span>(${plan.entries.length})</span></h3><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Item</th><th>Aktuell</th><th>Für diesen Raid</th><th>Danach</th></tr></thead><tbody>${plan.entries.map((entry,index)=>`<tr><td><strong>${safe(entry.player)}</strong>${entry.staffBenched?' 🪑':''}<small>${safe(entry.server)}</small></td><td>${renderItem(entry.item)}</td><td>${safe(entry.currentPoints)}</td><td><input data-review-points="${index}" type="number" min="0" max="100" step="0.01" value="${safe(entry.points)}" aria-label="Punkte für ${safe(entry.player)}"></td><td data-review-total="${index}">${safe(Number(entry.currentPoints)+Number(entry.points))}</td></tr>`).join('')||'<tr><td colspan="5">Keine offenen P0+-Übertragungen.</td></tr>'}</tbody></table></div><h3>Erhaltene Items · bereits gelöschte Punkte</h3><p class="p0-review-hint">Diese Spieler bekommen für diesen Raid keine weiteren P0+-Punkte. Die Löschungen sind bereits gespeichert.</p><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Erhaltenes Item</th><th>Gelöschte Punkte</th></tr></thead><tbody>${plan.receivedItems.map(entry=>`<tr><td><strong>${safe(entry.player)}</strong><small>${safe(entry.server)}</small></td><td class="p0-item-received">${renderItem(entry.item)}</td><td class="p0-review-deleted">−${safe(entry.deletedPoints)}</td></tr>`).join('')||'<tr><td colspan="3">Noch keine Items als erhalten markiert.</td></tr>'}</tbody></table></div>${plan.skippedEntries.length?`<h3>Keine erneute Übertragung</h3><ul>${plan.skippedEntries.map(entry=>`<li>${safe(entry.player)} · ${safe(entry.item)} — ${safe(skippedLabels[entry.reason]||entry.reason)}</li>`).join('')}</ul>`:''}`;
+  document.querySelectorAll('[data-review-points]').forEach(input=>input.addEventListener('input',()=>{const row=plan.entries[Number(input.dataset.reviewPoints)],value=Number(input.value);document.querySelector(`[data-review-total="${input.dataset.reviewPoints}"]`).textContent=input.value!==''&&Number.isFinite(value)?(Number(row.currentPoints)+value).toLocaleString('de-DE',{maximumFractionDigits:2}):'–';}));
+}
+async function confirmP0TransferReview(){
+  const state=p0TransferReview;if(!state?.plan||state.busy)return;
+  const inputs=[...document.querySelectorAll('[data-review-points]')];const invalid=inputs.find(input=>input.value===''||!input.checkValidity());if(invalid){invalid.reportValidity();invalid.focus();document.getElementById('p0ReviewStatus').textContent='Bitte alle Punkte zwischen 0 und 100 eingeben.';return;}
+  const pointEdits=inputs.map(input=>{const row=state.plan.entries[Number(input.dataset.reviewPoints)];return {characterId:row.characterId,itemId:row.itemId,points:Number(input.value)};});
+  setP0ReviewBusy(true);document.getElementById('p0ReviewStatus').textContent='Die geprüften Punkte werden übertragen …';
+  try{const result=await requestP0Review(state,{reviewToken:state.plan.reviewToken,pointEdits});state.plan=null;setP0ReviewBusy(false);document.getElementById('p0ReviewContent').innerHTML=`<div class="p0-review-complete">✓ P0+-Punkte wurden übertragen.<p>${safe(result.awarded||0)} Einträge gespeichert.</p></div>`;document.getElementById('p0ReviewStatus').textContent='Die Prioliste wird aktualisiert.';document.querySelector('#p0TransferReviewModal [data-review-close]').focus();await reloadCurrentRaid();if(p0TransferReview!==state)return;document.getElementById('p0ReviewStatus').textContent='Übertragung abgeschlossen.';}catch(error){if(p0TransferReview!==state)return;state.plan=null;setP0ReviewBusy(false);document.getElementById('p0ReviewStatus').textContent=error.message+' Bitte die Vorschau vor einem weiteren Versuch neu laden.';}
 }
 
 async function clearP0PlusForPlayer(player,server,itemName){
@@ -3447,8 +3428,8 @@ async function clearP0PlusForPlayer(player,server,itemName){
     const response = await fetch(url);
     const result = await response.json();
 
-    if(result.error){
-      alert(result.error);
+    if(!response.ok || !result.success){
+      alert(result.error || "P0+-Punkte konnten nicht gelöscht werden.");
       return;
     }
 
