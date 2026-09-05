@@ -1459,7 +1459,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
         <div id="p0OverviewContent" class="p0-overview-grid">P0+ Übersicht wird geladen ...</div>
       </div>
     </div>
-  <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
+  <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte werden bei der P0+-Übertragung gelöscht. Der Button zeigt, ob die Löschung noch aussteht oder abgeschlossen ist.</aside>
 </main>
 </div>
 
@@ -1988,6 +1988,7 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
       wclSourceTitle: p.wclSourceTitle || p.WclSourceTitle || "Warcraft Logs",
       wclSourceUrl: p.wclSourceUrl || p.WclSourceUrl || "",
       p0ItemReceived: p.p0ItemReceived===true,
+      p0PointsCleared: p.p0PointsCleared===true,
       staffBenched: p.staffBenched===true||p.StaffBenched===true,
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
@@ -2917,7 +2918,7 @@ function renderRows(){
     const isP0Plus = isActiveP0PlusEntry(entry);
 
     const clearButton = entry.p0ItemReceived===true
-      ? '<button class="btn small-btn p0-received-button" type="button" disabled>✓ P0+-Punkte wurden gelöscht</button>'
+      ? `<button class="btn small-btn p0-received-button" type="button" disabled>${entry.p0PointsCleared?'✓ P0+-Punkte wurden gelöscht':'◷ P0+-Punkte werden mit Übertragung gelöscht'}</button>`
       : currentReleased && isP0Plus && isAllowedP0Raid()
         ? `<button class="btn warning small-btn"
              onclick="clearP0PlusForPlayer('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
@@ -3379,7 +3380,7 @@ async function requestP0Review(state,extra){const response=await fetch(RAID_API_
 async function loadP0TransferReview(){const state=p0TransferReview;if(!state||state.busy)return;state.plan=null;if(!state.targetRaid){document.getElementById('p0ReviewConfirm').disabled=true;return;}setP0ReviewBusy(true);document.getElementById('p0ReviewStatus').textContent='Vorschau wird geladen …';try{const plan=await requestP0Review(state,{preview:true});if(p0TransferReview!==state)return;state.plan=plan;renderP0TransferReview(plan);document.getElementById('p0ReviewStatus').textContent='Noch nichts übertragen. Die Punkte in der Spalte „Für diesen Raid“ kannst du ändern.';}catch(error){document.getElementById('p0ReviewStatus').textContent=error.message;document.getElementById('p0ReviewContent').textContent='Die Vorschau konnte nicht geladen werden.';}finally{if(p0TransferReview===state)setP0ReviewBusy(false);}}
 function renderP0TransferReview(plan){
   const skippedLabels={'bereits-übertragen':'Bereits übertragen','charakter-doppelt':'Doppelter Eintrag'};
-  document.getElementById('p0ReviewContent').innerHTML=`<h3>Punkte für diesen Raid <span>(${plan.entries.length})</span></h3><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Item</th><th>Aktuell</th><th>Für diesen Raid</th><th>Danach</th></tr></thead><tbody>${plan.entries.map((entry,index)=>`<tr><td><strong>${safe(entry.player)}</strong>${entry.staffBenched?' 🪑':''}<small>${safe(entry.server)}</small></td><td>${renderItem(entry.item)}</td><td>${safe(entry.currentPoints)}</td><td><input data-review-points="${index}" type="number" min="0" max="100" step="0.01" value="${safe(entry.points)}" aria-label="Punkte für ${safe(entry.player)}"></td><td data-review-total="${index}">${safe(Number(entry.currentPoints)+Number(entry.points))}</td></tr>`).join('')||'<tr><td colspan="5">Keine offenen P0+-Übertragungen.</td></tr>'}</tbody></table></div><h3>Erhaltene Items · bereits gelöschte Punkte</h3><p class="p0-review-hint">Diese Spieler bekommen für diesen Raid keine weiteren P0+-Punkte. Die Löschungen sind bereits gespeichert.</p><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Erhaltenes Item</th><th>Gelöschte Punkte</th></tr></thead><tbody>${plan.receivedItems.map(entry=>`<tr><td><strong>${safe(entry.player)}</strong><small>${safe(entry.server)}</small></td><td class="p0-item-received">${renderItem(entry.item)}</td><td class="p0-review-deleted">−${safe(entry.deletedPoints)}</td></tr>`).join('')||'<tr><td colspan="3">Noch keine Items als erhalten markiert.</td></tr>'}</tbody></table></div>${plan.skippedEntries.length?`<h3>Keine erneute Übertragung</h3><ul>${plan.skippedEntries.map(entry=>`<li>${safe(entry.player)} · ${safe(entry.item)} — ${safe(skippedLabels[entry.reason]||entry.reason)}</li>`).join('')}</ul>`:''}`;
+  document.getElementById('p0ReviewContent').innerHTML=`<h3>Punkte für diesen Raid <span>(${plan.entries.length})</span></h3><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Item</th><th>Aktuell</th><th>Für diesen Raid</th><th>Danach</th></tr></thead><tbody>${plan.entries.map((entry,index)=>`<tr><td><strong>${safe(entry.player)}</strong>${entry.staffBenched?' 🪑':''}<small>${safe(entry.server)}</small></td><td>${renderItem(entry.item)}</td><td>${safe(entry.currentPoints)}</td><td><input data-review-points="${index}" type="number" min="0" max="100" step="0.01" value="${safe(entry.points)}" aria-label="Punkte für ${safe(entry.player)}"></td><td data-review-total="${index}">${safe(Number(entry.currentPoints)+Number(entry.points))}</td></tr>`).join('')||'<tr><td colspan="5">Keine offenen P0+-Übertragungen.</td></tr>'}</tbody></table></div><h3>Erhaltene Items · Punkte-Löschung</h3><p class="p0-review-hint">Diese Spieler bekommen für diesen Raid keine weiteren P0+-Punkte. Vorgemerkte Punkte werden erst mit der bestätigten Übertragung gelöscht. Bereits abgeschlossene Löschungen sind gekennzeichnet.</p><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Erhaltenes Item</th><th>Punkte / Status</th></tr></thead><tbody>${plan.receivedItems.map(entry=>`<tr><td><strong>${safe(entry.player)}</strong><small>${safe(entry.server)}</small></td><td class="p0-item-received">${renderItem(entry.item)}</td><td class="p0-review-deleted">−${safe(entry.deletedPoints)}<small>${entry.pending?"Wird mit Übertragung gelöscht":"Bereits gelöscht"}</small></td></tr>`).join('')||'<tr><td colspan="3">Noch keine Items als erhalten markiert.</td></tr>'}</tbody></table></div>${plan.skippedEntries.length?`<h3>Keine erneute Übertragung</h3><ul>${plan.skippedEntries.map(entry=>`<li>${safe(entry.player)} · ${safe(entry.item)} — ${safe(skippedLabels[entry.reason]||entry.reason)}</li>`).join('')}</ul>`:''}`;
   document.querySelectorAll('[data-review-points]').forEach(input=>input.addEventListener('input',()=>{const row=plan.entries[Number(input.dataset.reviewPoints)],value=Number(input.value);document.querySelector(`[data-review-total="${input.dataset.reviewPoints}"]`).textContent=input.value!==''&&Number.isFinite(value)?(Number(row.currentPoints)+value).toLocaleString('de-DE',{maximumFractionDigits:2}):'–';}));
 }
 async function confirmP0TransferReview(){
@@ -3409,7 +3410,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
     "Item als erhalten markieren?\n\n" +
     "Spieler: " + player + "\n" +
     "Item: " + itemName + "\n\n" +
-    "Alle gesammelten P0+ Punkte dieses Spielers auf dieses Item werden vollständig gelöscht."
+    "Die P0+-Punkte für dieses Item werden bei der P0+-Übertragung gelöscht. Ist die Übertragung bereits abgeschlossen, werden sie jetzt gelöscht."
   );
 
   if(!confirmed){
@@ -3437,7 +3438,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
     }
 
     alert(
-      "P0+ Punkte gelöscht.\n\n" +
+      (result.pointsCleared?"P0+-Punkte wurden gelöscht.\n\n":"Item erhalten vorgemerkt. P0+-Punkte werden mit Übertragung gelöscht.\n\n") +
       "Spieler: " + player + "\n" +
       "Item: " + itemName + "\n" +
       "Gelöschte Zeilen: " + (result.deleted || 0)

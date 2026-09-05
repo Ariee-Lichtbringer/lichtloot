@@ -18011,7 +18011,7 @@ function renderPrioRowActions(prio, raid, listOpen){
   const buttons = [renderBenchAction(prio, raid)];
 
   if(prio.p0ItemReceived===true){
-    buttons.push('<button class="small-btn p0-received-button" type="button" disabled>✓ P0+-Punkte wurden gelöscht</button>');
+    buttons.push(`<button class="small-btn p0-received-button" type="button" disabled>${prio.p0PointsCleared?'✓ P0+-Punkte wurden gelöscht':'◷ P0+-Punkte werden mit Übertragung gelöscht'}</button>`);
   }else if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
     buttons.push(`<button class="small-btn good" type="button" onclick="clearP0PlusForPlayerFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}','${escapeQuotes(p0Item)}')">Item erhalten</button>`);
   }
@@ -18198,7 +18198,7 @@ async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
     return;
   }
 
-  const ok = confirm(`${player} hat "${itemName}" erhalten? Der P0+ Punkt wird entfernt.`);
+  const ok = confirm(`${player} hat "${itemName}" erhalten? Die P0+-Punkte für dieses Item werden bei der Übertragung gelöscht; ist sie bereits abgeschlossen, erfolgt die Löschung jetzt.`);
   if(!ok) return;
 
   try{
