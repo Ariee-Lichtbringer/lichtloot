@@ -1771,7 +1771,7 @@ function isActiveP0Value(value){
 }
 
 function isActiveP0Entry(entry){
-  return Boolean(entry && entry.p0Selected) || isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+  return isActiveP0Value(entry && (entry.p0Selected ?? entry.P0Selected)) || isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
 }
 
 function isActiveP0PlusEntry(entry){
@@ -1979,7 +1979,7 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
       p3: p.P3 || p.p3 || "",
       p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
-      p0Selected: Boolean(p.p0Selected || p.P0Selected || p.PoSelected),
+      p0Selected: isActiveP0Value(p.p0Selected ?? p.P0Selected ?? p.PoSelected),
       p0Item: p.P0 || p.p0 || "",
       worldbuffRulesAccepted: Boolean(p.WorldbuffRulesAccepted || p.worldbuffRulesAccepted),
       prioCreatedAt: p.PrioCreatedAt || p.prioCreatedAt || p.createdAt || p.created_at || "",
@@ -2850,12 +2850,12 @@ function renderP0PlusPoints(itemName,isActiveP0Plus,playerName){
     .filter(entry => !wantedPlayer || normalizeP0Text(entry.player) === wantedPlayer);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>Preraid</strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : ''}<span class="empty">Bisher 0 Punkte</span></div>`;
   }
 
   return `
     <div class="p0plus-points-list">
-      ${isActiveP0Plus ? '<strong>Preraid</strong>' : '<strong>Punkte</strong>'}
+      ${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : '<strong>Punkte</strong>'}
       ${entries.map(entry => `<div class="player-row">${safe(entry.player)}: ${safe(entry.points)}</div>`).join("")}
     </div>
   `;

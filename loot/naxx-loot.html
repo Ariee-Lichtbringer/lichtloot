@@ -2062,7 +2062,7 @@ function openRaidStartAction(action){
 <th data-era-priority-key="p1">P1</th>
 <th data-era-priority-key="p2">P2</th>
 <th data-era-priority-key="p3">P3</th>
-<th>P0 gewählt</th>
+<th>P0 / P0+ gewählt</th>
 <th>Melden</th>
 </tr>
 </thead>
@@ -3772,8 +3772,17 @@ function buildSavePrioUrl(savePin, oldPin){
   return url + "&t="+Date.now();
 }
 
-async function submitPrioWithPin(savePin, oldPin){
-  const response=await fetch(buildSavePrioUrl(savePin, oldPin), { cache:"no-store" });
+async function submitPrioWithPin(savePin, oldPin, selection){
+  const url=new URL(buildSavePrioUrl(savePin, oldPin));
+  if(selection){
+    if(document.getElementById("raidPin").value.trim() !== selection.raidPin ||
+       document.getElementById("playerName").value.trim() !== selection.player ||
+       document.getElementById("playerServer").value !== selection.server){
+      throw new Error("Raid oder Charakter wurde gewechselt. Bitte die gewünschte Auswahl erneut speichern.");
+    }
+    Object.entries(selection).forEach(([key,value])=>url.searchParams.set(key,value));
+  }
+  const response=await fetch(url.toString(), { cache:"no-store" });
   const text=await response.text();
   let data={};
   try{
@@ -3832,6 +3841,17 @@ async function savePrio(){
   // P0 ohne Plus ist ebenfalls eine gespeicherte P0-Auswahl.
   const savedP0Selected = Boolean(window.p0WasClicked || isP0Plus) && Boolean(p1) && p1 === p2 && p2 === p3;
 
+  // Save the clicked selection, even if background loading changes the form.
+  const selection={
+    raidPin:pin, player, server, className:playerClass, p1, p2, p3,
+    p1ItemId:getSelectedPrioItemId("p1"),
+    p2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
+    p3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
+    p0Plus:isP0Plus ? "ja" : "nein",
+    p0Selected:savedP0Selected ? "ja" : "nein",
+    p0Item:savedP0Selected ? p1 : ""
+  };
+
   if(isP0Plus && isP0DeadlineClosed()){
     status.innerHTML=`<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     return;
@@ -3867,7 +3887,7 @@ async function savePrio(){
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
     let result=await Promise.race([
-      submitPrioWithPin(playerPin, ""),
+      submitPrioWithPin(playerPin, "", selection),
       new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
     ]);
 
@@ -9815,7 +9835,7 @@ function renderPrioP0Choice(prio){
 
   return `
     <div class="prio-p0-choice">
-      <strong>P0 gewählt</strong>
+      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+ gewählt" : "P0 gewählt"}</strong>
       ${itemHtml(itemName)}
     </div>
   `;
@@ -10000,7 +10020,7 @@ function renderPrioP0Choice(prio){
 
   return `
     <div class="prio-p0-choice">
-      <strong>P0 gewählt</strong>
+      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+ gewählt" : "P0 gewählt"}</strong>
       ${itemHtml(itemName)}
     </div>
   `;
@@ -10417,7 +10437,8 @@ function prioDraftSignature(prio){
     normalizeOwnPrioText(prio.P1 || prio.p1),
     normalizeOwnPrioText(prio.P2 || prio.p2),
     normalizeOwnPrioText(prio.P3 || prio.p3),
-    normalizeOwnPrioText(lichtlootPrioIsP0(prio) ? "ja" : "nein")
+    normalizeOwnPrioText(lichtlootPrioIsP0(prio) ? "ja" : "nein"),
+    normalizeOwnPrioText(prio.P0Plus || prio.p0Plus || "nein")
   ].join("|");
 }
 
@@ -10751,7 +10772,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="po-release-status.js?v=20260905-layout"></script>
 <script src="raid-signup-mirror.js?v=20260831-1934"></script>
 <script src="../pin-visibility.js"></script>
-<script src="p0-selection-fix.js?v=20260818-1415"></script>
+<script src="p0-selection-fix.js?v=20260905-2105"></script>
 <script src="player-gear-popup.js?v=20260830-1750"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>

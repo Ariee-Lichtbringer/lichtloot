@@ -3420,6 +3420,16 @@ function lootSourceRaidType(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
 }
 
+function raidP0PlusEnabled(layout, raidType) {
+  return layout?.lootPageSectionsByRaid?.[lootSourceRaidType(raidType)]?.p0Plus !== false;
+}
+
+function requireRaidP0PlusEnabled(layout, raidType) {
+  if (!raidP0PlusEnabled(layout, raidType)) {
+    throw Object.assign(new Error("P0+ ist für diesen Raid deaktiviert. Bitte P0 ohne Plus oder normale Prios auswählen."), { statusCode: 403 });
+  }
+}
+
 function poItemSettingsRaidTypes(value) {
   const raid = normalizeRaidType(value);
   if (raid === "zg") return ["zg", "zg-mittwoch", "zg-prime", "zg-late"];
@@ -12930,7 +12940,8 @@ async function savePrio({ guildId, query: params }) {
       }
     }
 
-    const p0PlusSelected = p0Plus === "ja" || p0Plus === "true";
+    const p0PlusSelected = ["ja", "true", "1"].includes(p0Plus);
+    if (p0PlusSelected) requireRaidP0PlusEnabled(guildLayout, savedRaidForSignupCheck.raid_type);
     const submittedPrios = [params.p1, params.p2, params.p3].map(value => clean(value));
     const sameItemInAllThreePrios = submittedPrios.every(Boolean)
       && new Set(submittedPrios.map(value => value.toLocaleLowerCase("de-DE"))).size === 1;
@@ -13202,6 +13213,11 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     const error = new Error("P1 fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+
+  if (["ja", "true", "1"].includes(clean(params.p0Plus).toLowerCase())) {
+    const config = await getGuildEraConfiguration(guildId);
+    requireRaidP0PlusEnabled(config.layout, raidType);
   }
 
   const client = await pool.connect();
@@ -27556,6 +27572,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  requireRaidP0PlusEnabled(eraConfig.layout, raid.raid_type);
   const sourceRaidType = normalizeRaidType(raid.raid_type);
   const isGenericZgSource = sourceRaidType === "zg";
   targetRaidType = await resolveZgPointTarget(client, guildId, raid, targetRaidType);
@@ -29964,21 +29981,25 @@ async function requireGuildPoPlusItem(guildId, itemId, itemName = "", raidType =
 async function guildPoItemRequiresRelease(guildId, itemId, itemName = "", raidType = "") {
   await ensureGuildPoItemsSchema();
   const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
+  // The same game item has several rows (ZG Prime/Late/Wednesday and other
+  // raids). An unscoped LEFT JOIN + LIMIT 1 could pick the wrong row and
+  // silently turn a saved P0+ into P0 during Discord synchronization.
   const result = await query(
-    `select coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
-     from items i
-     left join guild_po_items gpi
-       on gpi.guild_id = $1
-      and gpi.item_id = i.id
-      and lower(gpi.raid_type) = any($4)
-     where i.id::text = $2
-        or i.item_id = $2
-        or ($3 <> '' and lower(i.name) = lower($3))
-     order by case when i.id::text = $2 or i.item_id = $2 then 0 else 1 end
-     limit 1`,
+    `select exists (
+       select 1 from items i
+       join guild_po_items gpi on gpi.item_id = i.id
+       where gpi.guild_id = $1
+         and lower(gpi.raid_type) = any($4)
+         and gpi.enabled = true
+         and gpi.po_plus_enabled = true
+         and (i.id::text = $2 or i.item_id = $2
+              or ($3 <> '' and lower(i.name) = lower($3)))
+     ) as po_plus_enabled`,
     [guildId, clean(itemId), clean(itemName), settingsRaidTypes]
   );
-  return result.rows[0] ? Boolean(result.rows[0].po_plus_enabled) : true;
+  const config = await getGuildEraConfiguration(guildId);
+  return Boolean(result.rows[0]?.po_plus_enabled)
+    && raidP0PlusEnabled(config.layout, raidType);
 }
 
 async function loadStaticLootItems(raidType) {

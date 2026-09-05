@@ -1,6 +1,21 @@
 (function(){
   "use strict";
 
+  function p0PlusEnabled(){
+    const layout=typeof currentGuildInfo !== "undefined" ? currentGuildInfo?.layout : {};
+    const raid=String(location.pathname || "").split("/").pop().replace("-loot.html", "");
+    return layout?.lootPageSectionsByRaid?.[raid]?.p0Plus !== false;
+  }
+  function requireP0PlusEnabled(){
+    if(p0PlusEnabled()) return true;
+    const status=document.getElementById("playerStatus");
+    if(status) status.innerHTML='<span class="bad">P0+ ist für diesen Raid deaktiviert. Bitte P0 ohne Plus oder normale Prios auswählen.</span>';
+    return false;
+  }
+  function refreshP0PlusButtons(){
+    document.querySelectorAll('[data-prio="p0plus"]').forEach(button=>{button.hidden=!p0PlusEnabled();});
+  }
+
   window.p0WasClicked = Boolean(window.p0WasClicked || window.p0PlusWasClicked);
 
   const originalSetPrio = window.setPrio;
@@ -30,8 +45,9 @@
 
   const originalSetP0Plus = window.setP0Plus;
   if(typeof originalSetP0Plus === "function"){
-    window.setP0Plus = function(){
-      const result=originalSetP0Plus.apply(this,arguments);
+    window.setP0Plus = async function(){
+      if(!requireP0PlusEnabled()) return;
+      const result=await originalSetP0Plus.apply(this,arguments);
       if(window.p0PlusWasClicked) window.p0WasClicked=true;
       return result;
     };
@@ -49,6 +65,7 @@
   if(typeof originalUpdateActiveButtons === "function"){
     window.updateActiveButtons = function(){
       const result=originalUpdateActiveButtons.apply(this,arguments);
+      refreshP0PlusButtons();
       const p1=document.getElementById("p1")?.value || "";
       const p2=document.getElementById("p2")?.value || "";
       const p3=document.getElementById("p3")?.value || "";
@@ -70,7 +87,7 @@
       const p1=document.getElementById("p1")?.value || "";
       const p2=document.getElementById("p2")?.value || "";
       const p3=document.getElementById("p3")?.value || "";
-      const selected=Boolean(window.p0WasClicked) && p1 && p1===p2 && p2===p3;
+      const selected=Boolean(window.p0WasClicked || window.p0PlusWasClicked) && p1 && p1===p2 && p2===p3;
       // MC enthält die neuen Parameter bereits direkt. Doppelte Query-Parameter
       // würden von Express als Array gelesen und dadurch als "nein" gewertet.
       if(/[?&]p0Selected=/.test(base)) return base;
@@ -85,7 +102,7 @@
     window.getLiveDraftPrio = function(){
       const draft=originalGetLiveDraftPrio.apply(this,arguments);
       if(!draft) return draft;
-      const selected=Boolean(window.p0WasClicked) && draft.P1 && draft.P1===draft.P2 && draft.P2===draft.P3;
+      const selected=Boolean(window.p0WasClicked || window.p0PlusWasClicked) && draft.P1 && draft.P1===draft.P2 && draft.P2===draft.P3;
       draft.P0Selected=selected ? "ja" : "nein";
       draft.P0Item=selected ? draft.P1 : "";
       return draft;
@@ -98,5 +115,16 @@
     if(["ja","yes","true","1","p0","po"].includes(selected)) return true;
     if(prio?.P0Item || prio?.p0Item) return true;
     return typeof originalPrioIsP0 === "function" ? originalPrioIsP0(prio) : false;
+  };
+  const originalSavePrio=window.savePrio;
+  if(typeof originalSavePrio === "function") window.savePrio=async function(){
+    if(window.p0PlusWasClicked && !requireP0PlusEnabled()) return;
+    return originalSavePrio.apply(this,arguments);
+  };
+  const originalRenderLootList=window.renderLootList;
+  if(typeof originalRenderLootList === "function") window.renderLootList=function(){
+    const result=originalRenderLootList.apply(this,arguments);
+    refreshP0PlusButtons();
+    return result;
   };
 })();
