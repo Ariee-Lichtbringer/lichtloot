@@ -7821,8 +7821,10 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
 }
 
 async function resolveLogAnalysisPostChannelId(guildId, raid) {
-  const configuredChannelId = await getGuildLayoutValue(guildId, "logAnalysisChannelId");
-  return clean(configuredChannelId);
+  const keys={mc:"logAnalysisMcChannelId",bwl:"logAnalysisBwlChannelId",aq40:"logAnalysisAq40ChannelId",naxx:"logAnalysisNaxxChannelId"};
+  const key=keys[clean(normalizeLogRaidType(raid)).toLowerCase()];
+  if(key){const channelId=clean(await getGuildLayoutValue(guildId,key));if(channelId)return channelId;}
+  return clean(await getGuildLayoutValue(guildId,"logAnalysisChannelId"));
 }
 
 async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
