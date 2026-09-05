@@ -24564,22 +24564,36 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
 // verwendet dieselben Konten wie die P0+-Punktesuche, auch wenn eine ältere
 // Anmeldung noch eine andere Charakter- oder Item-ID gespeichert hat.
 async function enrichP0SignupPoints(guildId, rows, raidType) {
-  if (!rows.some(row => row.p0plus_points == null)) return rows;
+  if (!rows.length) return rows;
   const raid = normalizeRaidType(raidType);
   const pointResult = await getP0Plus(guildId, { raid });
   const keyFor = (player, server, item) => JSON.stringify([
     clean(player).toLowerCase(), clean(server).toLowerCase(), itemLookupKey(item)
   ]);
   const pointsByCharacterItem = new Map();
+  const serversByPlayerItem = new Map();
   for (const entry of pointResult.entries || []) {
     if (normalizeRaidType(entry.raid) !== raid) continue;
     const key = keyFor(entry.player, entry.server, entry.item);
     pointsByCharacterItem.set(key, (pointsByCharacterItem.get(key) || 0) + Number(entry.points || 0));
+    const playerItemKey = keyFor(entry.player, "", entry.item);
+    const servers = serversByPlayerItem.get(playerItemKey) || new Set();
+    servers.add(clean(entry.server).toLowerCase());
+    serversByPlayerItem.set(playerItemKey, servers);
   }
-  return rows.map(row => row.p0plus_points == null ? {
-    ...row,
-    p0plus_points: pointsByCharacterItem.get(keyFor(row.player_name, row.server, row.item_name)) ?? 0
-  } : row);
+  return rows.map(row => {
+    const player = row.player_name ?? row.player;
+    const item = row.item_name ?? row.item;
+    let server = clean(row.server).toLowerCase();
+    if (!server) {
+      const servers = serversByPlayerItem.get(keyFor(player, "", item));
+      if (servers?.size === 1) server = [...servers][0];
+    }
+    return {
+      ...row,
+      p0plus_points: pointsByCharacterItem.get(keyFor(player, server, item)) ?? 0
+    };
+  });
 }
 
 async function getP0DiscordSignupContext({ guildId, query: params }) {
@@ -24825,7 +24839,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     ...linkedRegularSignupResult.rows,
     ...linkedP0OnlySignupResult.rows
   ];
-  const signupRows = (await enrichP0SignupPoints(guildId, allSignupDatabaseRows, raid.raid_type)).map(normalizeP0SignupRow);
+  const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
   const normalizedRaid = normalizeRaidRow(raid);
   const poPostSignupRows = poPostSignupResult.rows.map(row => ({
     id: row.id,
@@ -24941,7 +24955,10 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     // Discord-Post und Leitungsseite müssen dieselben Einträge zeigen. Darum
     // werden LichtLoot-Prios und die separate P0-Anmeldedatenbank anhand von
     // Spieler, Server und Item zusammengeführt.
-    signups: [...combinedSignupRows.values()].sort((a, b) => {
+    // Resolve every merged entry against the raid's current point account.
+    // Item UUIDs and older signup snapshots can refer to the generic ZG pool.
+    signups: (await enrichP0SignupPoints(guildId, [...combinedSignupRows.values()], raid.raid_type))
+      .map(row => ({ ...row, p0PlusPoints: Number(row.p0plus_points || 0) })).sort((a, b) => {
       const itemCompare = String(a.item || "").localeCompare(String(b.item || ""));
       if (itemCompare) return itemCompare;
       return String(a.player || "").localeCompare(String(b.player || ""));
