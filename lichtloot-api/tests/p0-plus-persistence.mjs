@@ -68,9 +68,24 @@ layout={lootPageSectionsByRaid:{zg:{p0Plus:true,poReleases:false}}};
 assert.equal(await ctx.guildPoItemRequiresRelease('guild','22637','Götze','zg-prime'),true);
 await db.close();
 const panel=fs.readFileSync(new URL('raidlead-panel.html',root),'utf8');
-const ui=vm.createContext({normalizeP0Text:v=>String(v||'').toLowerCase(),getP0PlusEntriesForItem:()=>[]});
+const ui=vm.createContext({normalizeP0Text:v=>String(v||'').toLowerCase(),getP0PlusEntriesForItem:()=>[],renderItem:name=>`<span class="selected-item">${name}</span>`,safe:v=>String(v)});
 for(const name of ['isActiveP0Value','isActiveP0Entry','isActiveP0PlusEntry','renderP0PlusPoints'])vm.runInContext(extract(panel,name),ui);
 assert.equal(ui.isActiveP0Entry({p0Selected:'nein',p0Plus:'nein'}),false);
 assert.equal(ui.isActiveP0PlusEntry({p0Selected:'ja',p0Plus:'nein'}),false);
 assert.match(ui.renderP0PlusPoints('Götze',true,'Juksi'),/P0\+ gespeichert/);
+assert.match(ui.renderP0PlusPoints('Götze',true,'Juksi'),/selected-item.*Götze/);
+assert.doesNotMatch(ui.renderP0PlusPoints('Götze',false,'Juksi'),/selected-item/);
+ui.getP0PlusEntriesForItem=()=>[{player:'Juksi',points:3}];
+assert.match(ui.renderP0PlusPoints('Götze',true,'Juksi'),/selected-item.*Götze/);
+assert.match(ui.renderP0PlusPoints('Götze',true,'Juksi'),/Juksi: 3/);
 console.log('P0+ async selection, save payload, raid switch, duplicate item classification and raidlead display passed.');
+
+for(const file of ["raidlead-panel.html","raidlead-panel-public.html","lichtloot-api/public/raidlead-panel.html"]){
+ const source=fs.readFileSync(new URL(file,root),"utf8");
+ vm.runInContext(extract(source,"renderP0PlusPoints"),ui);
+ ui.getP0PlusEntriesForItem=()=>[];
+ assert.match(ui.renderP0PlusPoints("Götze",true,"Juksi"),/selected-item.*Götze/);
+ ui.getP0PlusEntriesForItem=()=>[{player:"Juksi",points:3}];
+ assert.match(ui.renderP0PlusPoints("Götze",true,"Juksi"),/selected-item.*Götze/);
+ assert.doesNotMatch(ui.renderP0PlusPoints("Götze",false,"Juksi"),/selected-item/);
+}

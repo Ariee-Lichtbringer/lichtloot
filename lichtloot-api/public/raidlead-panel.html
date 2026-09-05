@@ -2845,17 +2845,19 @@ function renderP0PlusPoints(itemName,isActiveP0Plus,playerName){
     return '<div class="p0plus-points-list"><span class="empty">-</span></div>';
   }
 
+  const selectedItem = isActiveP0Plus ? renderItem(itemName) : "";
   const wantedPlayer = normalizeP0Text(playerName);
   const entries = getP0PlusEntriesForItem(itemName)
     .filter(entry => !wantedPlayer || normalizeP0Text(entry.player) === wantedPlayer);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : ''}<span class="empty">Bisher 0 Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : ''}${selectedItem}<span class="empty">Bisher 0 Punkte</span></div>`;
   }
 
   return `
     <div class="p0plus-points-list">
       ${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : '<strong>Punkte</strong>'}
+      ${selectedItem}
       ${entries.map(entry => `<div class="player-row">${safe(entry.player)}: ${safe(entry.points)}</div>`).join("")}
     </div>
   `;
