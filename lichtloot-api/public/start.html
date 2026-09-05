@@ -2713,6 +2713,31 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 .dashboard-raid-analysis-head button:last-child{justify-self:end}
 .dashboard-raid-analysis-frame{display:block;width:100%;height:max(780px,calc(100vh - 120px));border:0;background:#0a0e14}
 @media(max-width:900px){.dashboard-raid-analysis-head{grid-template-columns:1fr 1fr}.dashboard-raid-analysis-head strong{display:none}.dashboard-raid-analysis-frame{height:calc(100vh - 90px)}}
+
+/* Email-style mailbox: shared by LichtLoot and NachtLoot. */
+.mailbox-launch.right-inline-btn{min-height:48px!important;padding:12px 24px!important;font-size:16px!important;border:1px solid #b78b25!important;background:linear-gradient(135deg,#71531b,#32280f)!important;color:#ffe395!important;display:inline-flex;align-items:center;gap:10px;border-radius:10px!important}.mailbox-launch>span:first-child{font-size:23px}
+#playerMailboxModal{padding:24px;background:rgba(1,5,13,.82);backdrop-filter:blur(4px)}
+#playerMailboxModal .mailbox-shell{width:min(1280px,100%);height:min(820px,92dvh);max-height:92dvh;padding:0;overflow:hidden;border:1px solid #ad8427;border-radius:20px;background:linear-gradient(130deg,#080f1b,#030911);display:flex;flex-direction:column;color:#e9edf3}
+.mailbox-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 25px;border-bottom:1px solid #85702c40;flex-shrink:0}.mailbox-header h2{margin:0;color:#e9bd56;font:700 34px Georgia,serif}.mailbox-brand{color:#b49b5e;font-size:13px}.mailbox-header .report-close{background:transparent;border:0;color:#e9bd56;font-size:23px}
+.mailbox-layout{display:grid;grid-template-columns:220px 365px minmax(0,1fr);flex:1;min-height:0}.mailbox-sidebar{padding:20px 16px;border-right:1px solid #ffffff09;display:flex;flex-direction:column;gap:10px}.mailbox-sidebar h3{color:#dfb657;font:18px Georgia,serif;margin:25px 0 4px}
+#playerMailboxModal button{cursor:pointer;font-family:inherit}#playerMailboxModal button:focus-visible,#playerMailboxModal input:focus-visible,#playerMailboxModal select:focus-visible,#playerMailboxModal textarea:focus-visible{outline:2px solid #e9bd56;outline-offset:3px}
+.mailbox-sidebar button,.mailbox-editor-actions button,.mailbox-reader-toolbar button,.mailbox-reader-toolbar a{border:1px solid #344050;background:#101725;color:#eef1f6;border-radius:7px;min-height:40px;padding:10px 12px;font-size:13px;text-decoration:none}.mailbox-sidebar button{text-align:left}.mailbox-sidebar button.active{background:#bd94221c;border-color:#a883355c;color:#ffde85}.mailbox-sidebar .mailbox-refresh{margin-top:auto;background:transparent;color:#9aa6b8;border-color:transparent}
+#playerMailboxModal .mailbox-new{background:linear-gradient(135deg,#efc452,#b88b29);color:#171409;border-color:#e9bd56;font-weight:700}#playerMailboxModal .mailbox-discord{background:linear-gradient(135deg,#28245d,#3c3188);border-color:#5c4db4;color:#eeebff}#mailboxUnreadCount{float:right;border-radius:20px;background:#e9bd56;color:#111;padding:1px 6px}#mailboxUnreadCount:empty{display:none}
+.mailbox-messages{display:flex;flex-direction:column;min-height:0;padding:20px 12px;border-right:1px solid #ffffff0b}.mailbox-messages input{margin:0;width:100%;box-sizing:border-box;background:#040b13;border:1px solid #344050;border-radius:7px;padding:12px;color:#fff}.mailbox-list-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 0 14px}.mailbox-list-heading h3{margin:0;font:21px Georgia,serif;color:#e9bd56}.mailbox-list-heading button{background:transparent;border:1px solid #303945;border-radius:6px;padding:7px;color:#b9c1cc;font-size:11px}.mailbox-list-heading button.active{border-color:#b68d2f;color:#ebc15e}
+#playerMailboxContent{overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:#675329 transparent}.mailbox-message{display:block;width:100%;text-align:left;border:1px solid transparent;border-bottom-color:#ffffff09;border-radius:9px;padding:17px 12px;background:transparent;color:#e5e9ef}.mailbox-message.selected{border-color:#bc932c;background:#b99a3610}.mailbox-message-top{display:flex;justify-content:space-between;gap:8px;font-size:13px}.mailbox-message-top time{font-size:10px;color:#aab3c0;white-space:nowrap}.mailbox-message-subject{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px}.mailbox-message-preview{display:block;color:#98a3b3;font-size:12px;margin-top:8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.mailbox-message-subject{overflow-wrap:anywhere}.mailbox-message-top strong{overflow-wrap:anywhere}.mailbox-message.unread strong,.mailbox-message.unread .mailbox-message-subject{color:white;font-weight:800}.mailbox-message .mailbox-dot{width:6px;height:6px;background:#e4b741}
+.mailbox-reader{overflow:auto;padding:22px;min-width:0;scrollbar-width:thin;scrollbar-color:#675329 transparent}.mailbox-reader-toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:22px;flex-wrap:wrap}.mailbox-reader-toolbar button,.mailbox-reader-toolbar a{min-height:32px;padding:7px 10px;background:transparent;color:#e7c06e}.mailbox-reader h3{font:700 23px Georgia,serif;color:#e9bd56;line-height:1.3;margin:0 0 10px;overflow-wrap:anywhere}.mailbox-reading-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:#acb5c4;border-bottom:1px solid #ffffff12;padding-bottom:18px}.mailbox-channel{color:#dbb959;border:1px solid #a18032;border-radius:5px;padding:3px 7px;font-size:10px}.mailbox-reading-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.7;margin:24px 0;color:#d9dfe8}.mailbox-reading-body a{color:#9cb9ed}.mailbox-event{padding:15px;border:1px solid #746133;border-radius:7px;display:grid;gap:14px;background:#10172555;margin:20px 0}.mailbox-event>div{display:grid;grid-template-columns:65px 1fr;gap:10px;font-size:13px}.mailbox-event strong{color:#e7c06e}.mailbox-empty{text-align:center;color:#939eae;padding:60px 15px;font-size:30px}.mailbox-empty p{font-size:14px}.mailbox-editor{margin-top:24px;padding:18px;border:1px solid #846bc5;border-radius:10px;background:#11102533}.mailbox-editor h3{font:700 16px inherit;color:#b29aff}.mailbox-editor input,.mailbox-editor select,.mailbox-editor textarea{box-sizing:border-box;width:100%;background:#040a14!important}.mailbox-editor textarea{min-height:120px!important}.mailbox-editor small{display:block;color:#aebbc9;line-height:1.4;margin-top:8px}.mailbox-editor-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:16px}.mailbox-editor-actions button:disabled{opacity:.5;cursor:wait}#playerMailComposeStatus{font-size:13px;margin-top:14px;line-height:1.5}.mailbox-delivery{font-size:12px;color:#aebbc9;margin:12px 0}.mailbox-back{display:none}
+@media(max-width:1050px){.mailbox-layout{grid-template-columns:180px 290px minmax(0,1fr)}.mailbox-reader{padding:15px}.mailbox-sidebar{padding:16px 10px}.mailbox-brand{display:none}}
+@media(max-width:780px){#playerMailboxModal{padding:8px}#playerMailboxModal .mailbox-shell{height:96dvh;max-height:96dvh}.mailbox-header{padding:14px 18px}.mailbox-header h2{font-size:27px}.mailbox-layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.mailbox-sidebar{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;padding:12px;border-bottom:1px solid #85702c40}.mailbox-sidebar h3,.mailbox-sidebar .mailbox-refresh{display:none}.mailbox-sidebar button{font-size:12px;padding:8px;min-height:36px}.mailbox-messages{padding:12px}.mailbox-reader{display:none}.mailbox-layout.reading-open .mailbox-messages{display:none}.mailbox-layout.reading-open .mailbox-reader{display:block}.mailbox-reader-toolbar .mailbox-back{display:inline-block;margin-right:auto}.mailbox-layout.composing .mailbox-messages{display:none}.mailbox-layout.composing .mailbox-reader{display:block}}
+
+
+#playerMailboxModal .mailbox-editor h3{font-family:inherit;font-size:16px;font-weight:700;margin-bottom:12px}
+#playerMailboxModal .mailbox-editor label{margin:9px 0 5px;font-size:11px}
+#playerMailboxModal .mailbox-editor input,#playerMailboxModal .mailbox-editor select,#playerMailboxModal .mailbox-editor textarea{font-family:inherit;font-weight:400;border-radius:7px;border-color:#354052}
+#playerMailboxModal .mailbox-editor textarea{min-height:94px!important}
+#playerMailboxModal .mailbox-editor.discord-mode #mailboxSubjectLabel,#playerMailboxModal .mailbox-editor.discord-mode #playerMailTitle{display:none}
+#playerMailboxModal .mailbox-message{display:flex;gap:12px}
+.mailbox-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 38px;height:38px;border-radius:50%;border:1px solid hsl(var(--avatar-hue) 45% 42%);background:radial-gradient(circle,hsl(var(--avatar-hue) 32% 20%),#060b15);color:hsl(var(--avatar-hue) 60% 70%);font:20px Georgia,serif}
+.mailbox-message-copy{min-width:0;flex:1}.mailbox-discord-icon{width:18px;height:18px;vertical-align:middle;margin-right:5px}.mailbox-editor{padding:16px}.mailbox-event{margin:18px 0}.mailbox-reader-toolbar{margin-bottom:18px}
 </style>
 <style id="mobile-login-and-raids-only">
 @media (max-width:720px){
@@ -3267,7 +3292,7 @@ html,body{max-width:100%;overflow-x:hidden}
           <input id="dashboardPlayerPin" type="hidden">
           <p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p>
           <div class="quick-actions">
-            <button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button>
+            <button class="right-inline-btn mailbox-launch" onclick="openPlayerMailbox()"><span aria-hidden="true">✉</span> Postfach <span id="playerMailboxBadge"></span></button>
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
           <div class="account-private-row"><div id="startPoLoginCallout" class="account-private-pin hidden" aria-live="polite"><div class="account-private-pin-badge" aria-hidden="true">P0!</div><div class="account-private-pin-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Nur hier sichtbar. Beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="account-guild-switch" type="button" onclick="openGlobalGuildMenuFromAccount(event)"><img src="images/content.png" data-account-guild-logo alt=""><span><small>Aktive Lootgilde · wechseln</small><strong data-guild-brand="guildName">Lichtbringer</strong></span><b aria-hidden="true">⌄</b></button></div>
@@ -3413,28 +3438,36 @@ html,body{max-width:100%;overflow-x:hidden}
   </div>
 </div>
 
-<div id="playerMailboxModal" class="report-modal hidden">
-  <div class="report-box">
-    <div class="report-head">
-      <h2>Postfach</h2>
-      <button class="report-close" onclick="closePlayerMailbox()">✕</button>
-    </div>
-    <details class="mailbox-compose">
-      <summary>+ Nachricht schreiben</summary>
-      <div class="mailbox-compose-body">
-        <input id="playerMailTo" type="text" placeholder="Charaktername des Empfängers">
-        <input id="playerMailTitle" type="text" placeholder="Betreff">
-        <textarea id="playerMailBody" placeholder="Nachricht schreiben"></textarea>
-        <button class="right-inline-btn" onclick="sendPlayerMailboxMessage()">Senden</button>
-        <div id="playerMailComposeStatus" class="muted"></div>
-      </div>
-    </details>
-    <div class="mailbox-tabs">
-      <button id="playerMailboxInboxTab" class="active" type="button" onclick="setPlayerMailboxTab('inbox')">Eingang</button>
-      <button id="playerMailboxSentTab" type="button" onclick="setPlayerMailboxTab('sent')">Gesendet</button>
-    </div>
-    <div id="playerMailboxContent" class="dashboard-inline-results">
-      <div class="status">Postfach wird nach dem Laden deines SpielerPins angezeigt.</div>
+<div id="playerMailboxModal" class="report-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mailboxHeading">
+  <div class="report-box mailbox-shell">
+    <header class="mailbox-header"><span class="mailbox-brand">✉ Nachrichten</span><h2 id="mailboxHeading">Postfach</h2><button class="report-close" aria-label="Postfach schließen" onclick="closePlayerMailbox()">✕</button></header>
+    <div class="mailbox-layout">
+      <nav class="mailbox-sidebar" aria-label="Postfachordner">
+        <button class="mailbox-new" onclick="openMailboxComposer('mailbox')">✎ &nbsp; Nachricht schreiben</button>
+        <button class="mailbox-discord" onclick="openMailboxComposer('discord')"><img class="mailbox-discord-icon" src="images/discord.svg" alt=""> Discord-DM schreiben</button>
+        <h3>Ordner</h3>
+        <button id="playerMailboxInboxTab" onclick="setPlayerMailboxTab('inbox')">✉ &nbsp; Posteingang <span id="mailboxUnreadCount"></span></button>
+        <button id="playerMailboxSentTab" onclick="setPlayerMailboxTab('sent')">➤ &nbsp; Gesendet</button>
+        <button id="playerMailboxTrashTab" onclick="setPlayerMailboxTab('trash')">♲ &nbsp; Papierkorb</button>
+        <button class="mailbox-refresh" onclick="loadPlayerMailbox(true)">↻ &nbsp; Aktualisieren</button>
+      </nav>
+      <section class="mailbox-messages" aria-label="Nachrichtenliste">
+        <input id="mailboxSearch" type="search" placeholder="Nachrichten durchsuchen" aria-label="Nachrichten durchsuchen" oninput="renderPlayerMailbox()">
+        <div class="mailbox-list-heading"><h3 id="mailboxFolderTitle">Posteingang</h3><div><button id="mailboxAll" class="active" onclick="setMailboxUnreadFilter(false)">Alle</button><button id="mailboxUnread" onclick="setMailboxUnreadFilter(true)">Ungelesen</button></div></div>
+        <div id="playerMailboxContent" role="list" aria-label="Nachrichten"></div>
+      </section>
+      <section class="mailbox-reader" aria-label="Lesebereich">
+        <div id="mailboxReading"><div class="mailbox-empty">✉<p>Wähle eine Nachricht aus.</p></div></div>
+        <form id="mailboxComposer" class="mailbox-editor hidden" onsubmit="event.preventDefault();sendPlayerMailboxMessage()">
+          <h3 id="mailboxComposeHeading">Nachricht schreiben</h3>
+          <label for="playerMailTo">Empfänger</label><select id="playerMailTo" required onchange="updateMailboxRecipientHint()"><option value="">Charakter auswählen …</option></select>
+          <small id="mailboxRecipientHint"></small>
+          <label id="mailboxSubjectLabel" for="playerMailTitle">Betreff</label><input id="playerMailTitle" maxlength="150" placeholder="Betreff" required>
+          <label for="playerMailBody">Nachricht</label><textarea id="playerMailBody" maxlength="1800" placeholder="Deine Nachricht …" required></textarea>
+          <div class="mailbox-editor-actions"><button id="mailboxSend" type="submit" class="mailbox-new">Nachricht senden</button><button type="button" onclick="closeMailboxComposer()">Abbrechen</button></div>
+        </form>
+        <div id="playerMailComposeStatus" role="status" aria-live="polite"></div>
+      </section>
     </div>
   </div>
 </div>
@@ -5797,68 +5830,6 @@ async function dashboardLoadLichtLoot(){
   await refreshRaidMemberNoticeAfterLogin();
 }
 
-let playerMailboxMessages=[];
-let playerMailboxSentMessages=[];
-let playerMailboxTab="inbox";
-
-async function loadPlayerMailbox(showStatus){
-  const pin=syncHiddenPinFromDashboard();
-  const content=document.getElementById("playerMailboxContent");
-  const badge=document.getElementById("playerMailboxBadge");
-  if(!pin){
-    if(showStatus && content) content.innerHTML='<div class="status bad">Bitte zuerst mit SpielerLogin einloggen.</div>';
-    if(badge) badge.textContent="";
-    return;
-  }
-  if(showStatus && content) content.innerHTML='<div class="status">Postfach wird geladen ...</div>';
-
-  try{
-    const inboxQuery=new URLSearchParams({action:"getPlayerMessages", guild:CURRENT_GUILD_SLUG, playerPin:pin, t:Date.now()});
-    const sentQuery=new URLSearchParams({action:"getPlayerSentMessages", guild:CURRENT_GUILD_SLUG, playerPin:pin, t:Date.now()});
-    const [inboxResponse,sentResponse]=await Promise.all([
-      fetch(LICHTLOOT_API_URL+"?"+inboxQuery.toString(),{cache:"no-store"}),
-      fetch(LICHTLOOT_API_URL+"?"+sentQuery.toString(),{cache:"no-store"})
-    ]);
-    const inboxResult=await inboxResponse.json();
-    const sentResult=await sentResponse.json();
-    playerMailboxMessages=Array.isArray(inboxResult.messages) ? inboxResult.messages : [];
-    playerMailboxSentMessages=Array.isArray(sentResult.messages) ? sentResult.messages : [];
-    const unread=playerMailboxMessages.filter(message=>!message.read).length;
-    if(badge) badge.textContent=unread ? `(${unread})` : "";
-    renderPlayerMailbox();
-  }catch(error){
-    if(content) content.innerHTML='<div class="status bad">Postfach konnte nicht geladen werden.</div>';
-  }
-}
-
-function openPlayerMailbox(){
-  const modal=document.getElementById("playerMailboxModal");
-  if(modal) modal.classList.remove("hidden");
-  loadPlayerMailbox(true);
-}
-
-function closePlayerMailbox(){
-  const modal=document.getElementById("playerMailboxModal");
-  if(modal) modal.classList.add("hidden");
-}
-
-function setPlayerMailboxTab(tab){
-  playerMailboxTab=tab === "sent" ? "sent" : "inbox";
-  const inboxTab=document.getElementById("playerMailboxInboxTab");
-  const sentTab=document.getElementById("playerMailboxSentTab");
-  if(inboxTab) inboxTab.classList.toggle("active",playerMailboxTab === "inbox");
-  if(sentTab) sentTab.classList.toggle("active",playerMailboxTab === "sent");
-  renderPlayerMailbox();
-}
-
-function renderMailboxBody(text){
-  return safeHtml(text || "").replace(/https?:\/\/[^\s<]+/g,url=>`<a href="${safeAttr(url)}" target="_blank" rel="noopener">${safeHtml(url)}</a>`);
-}
-
-function mailboxDirectLink(message){
-  return message && message.raidId ? withGuildUrl("index.html")+"&raidId="+encodeURIComponent(message.raidId) : "";
-}
-
 function getPlayerMailboxSenderCharacter(){
   const select=document.getElementById("dashboardCharSelect") || document.getElementById("myLichtlootCharSelect");
   if(!select || !select.value) return null;
@@ -5873,114 +5844,95 @@ function getPlayerMailboxSenderCharacter(){
   }
 }
 
-function renderPlayerMailbox(){
-  const content=document.getElementById("playerMailboxContent");
-  if(!content) return;
-  const inboxTab=document.getElementById("playerMailboxInboxTab");
-  const sentTab=document.getElementById("playerMailboxSentTab");
-  if(inboxTab) inboxTab.classList.toggle("active",playerMailboxTab === "inbox");
-  if(sentTab) sentTab.classList.toggle("active",playerMailboxTab === "sent");
-  const messages=playerMailboxTab === "sent" ? playerMailboxSentMessages : playerMailboxMessages;
-  if(!messages.length){
-    content.innerHTML=playerMailboxTab === "sent"
-      ? '<div class="status">Noch keine gesendeten Nachrichten.</div>'
-      : '<div class="status">Keine Nachrichten im Postfach.</div>';
-    return;
-  }
-  content.innerHTML=`<div class="mailbox-list">`+messages.map(message=>{
-    const directLink=mailboxDirectLink(message);
-    return `
-    <div class="mailbox-row ${playerMailboxTab === "inbox" && !message.read ? "unread" : ""}">
-      <div>
-        <div class="mailbox-title">${playerMailboxTab === "inbox" && !message.read ? '<span class="mailbox-dot"></span>' : ""}<span>${safeHtml(message.title || "Nachricht")}</span></div>
-        <div class="mailbox-meta">${playerMailboxTab === "sent" ? "An " + safeHtml(message.recipientNames || "Charakter") : safeHtml(message.sender || "Absender")} ${message.raidName ? " · " + safeHtml(message.raidName) : ""}</div>
-        <div class="mailbox-body">${renderMailboxBody(message.body || "")}</div>
-        ${message.raidName ? `<div class="mailbox-meta">${safeHtml(formatRaidDateForDisplay(message.raidDate))} · ${safeHtml(message.raidTime || "")} Uhr</div>` : ""}
-        ${message.leadPin ? `<span class="mailbox-lead" id="mailLead_${safeAttr(message.id)}">${safeHtml(message.leadPin)}</span>` : ""}
-      </div>
-      <div class="mailbox-actions">
-        ${message.leadPin ? `<button type="button" onclick="copyText('mailLead_${safeAttr(message.id)}')">PIN</button>` : ""}
-        ${directLink ? `<a href="${safeAttr(directLink)}" target="_blank" rel="noopener">Raid</a>` : ""}
-        ${playerMailboxTab === "inbox" && !message.read ? `<button type="button" onclick="markPlayerMailRead('${safeAttr(message.id)}')">Gelesen</button>` : ""}
-        <button class="danger" type="button" onclick="deletePlayerMail('${safeAttr(message.id)}')">Löschen</button>
-      </div>
-    </div>
-  `}).join("")+`</div>`;
-}
-
-async function markPlayerMailRead(id){
+let playerMailboxMessages=[],playerMailboxSentMessages=[],playerMailboxTab='inbox';
+let mailboxSelected='',mailboxUnreadOnly=false,mailboxRecipients=[],mailboxComposeChannel='mailbox',mailboxSending=false,mailboxReturnFocus=null,mailboxLoadVersion=0;
+const mailboxEl=id=>document.getElementById(id);
+async function mailboxApi(action,extra={}){
   const pin=syncHiddenPinFromDashboard();
-  if(!pin || !id) return;
-  const query=new URLSearchParams({action:"markPlayerMessageRead", guild:CURRENT_GUILD_SLUG, playerPin:pin, id:id, t:Date.now()});
-  await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"}).catch(()=>{});
-  await loadPlayerMailbox(false);
+  if(!pin)throw new Error('Bitte zuerst mit SpielerLogin anmelden.');
+  const response=await fetch(LICHTLOOT_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,guild:CURRENT_GUILD_SLUG,playerPin:pin,fromPlayerPin:pin,...extra})});
+  const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||'Die Aktion konnte nicht ausgeführt werden.');return result;
 }
-
-async function deletePlayerMail(id){
-  const pin=syncHiddenPinFromDashboard();
-  if(!pin || !id) return;
-  if(!confirm("Nachricht wirklich löschen?")) return;
-  const query=new URLSearchParams({action:"deletePlayerMessage", guild:CURRENT_GUILD_SLUG, playerPin:pin, id:id, folder:playerMailboxTab, t:Date.now()});
-  const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"}).catch(()=>null);
-  const result=response ? await response.json().catch(()=>null) : null;
-  if(!result || !result.success){
-    const status=document.getElementById("playerMailComposeStatus");
-    if(status) status.innerHTML='<span class="bad">Nachricht konnte nicht gelöscht werden.</span>';
-    return;
-  }
-  await loadPlayerMailbox(false);
+function mailboxStatus(text,error=false){const target=mailboxEl('playerMailComposeStatus');if(target){target.textContent=text;target.className=error?'bad':'muted';}}
+function mailboxDate(value){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function mailboxRows(){
+  const inbox=playerMailboxMessages.map(m=>({...m,folder:'inbox',key:'inbox:'+m.id})),sent=playerMailboxSentMessages.map(m=>({...m,folder:'sent',key:'sent:'+m.id}));
+  return playerMailboxTab==='trash'?[...inbox,...sent].filter(m=>m.trashed).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)):(playerMailboxTab==='sent'?sent:inbox).filter(m=>!m.trashed);
 }
-
-async function sendPlayerMailboxMessage(){
-  const pin=syncHiddenPinFromDashboard();
-  const character=document.getElementById("playerMailTo")?.value.trim() || "";
-  const title=document.getElementById("playerMailTitle")?.value.trim() || "Nachricht";
-  const body=document.getElementById("playerMailBody")?.value.trim() || "";
-  const status=document.getElementById("playerMailComposeStatus");
-
-  if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte zuerst deinen SpielerPin laden.</span>';
-    return;
-  }
-  if(!character || !body){
-    if(status) status.innerHTML='<span class="bad">Bitte Charaktername und Nachricht ausfüllen.</span>';
-    return;
-  }
-
-  if(status) status.innerHTML='<span class="warn">Nachricht wird gesendet ...</span>';
-
+async function loadPlayerMailbox(showStatus){
+  const pin=syncHiddenPinFromDashboard(),version=++mailboxLoadVersion;
+  if(!pin){playerMailboxMessages=[];playerMailboxSentMessages=[];mailboxRecipients=[];renderPlayerMailbox();if(showStatus)mailboxStatus('Bitte zuerst mit SpielerLogin anmelden.',true);return;}
+  if(showStatus)mailboxEl('playerMailboxContent').textContent='Postfach wird geladen …';
   try{
-    const senderCharacter=getPlayerMailboxSenderCharacter();
-    const query=new URLSearchParams({
-      action:"sendPlayerMessageFromPlayer",
-      guild:CURRENT_GUILD_SLUG,
-      fromPlayerPin:pin,
-      character,
-      title,
-      body,
-      t:Date.now()
-    });
-    if(senderCharacter && senderCharacter.name){
-      query.set("senderCharacter",senderCharacter.name);
-      if(senderCharacter.server) query.set("senderServer",senderCharacter.server);
-    }
-    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
-    const result=await response.json();
-    if(!result.success){
-      if(status) status.innerHTML='<span class="bad">'+safeHtml(result.error || "Nachricht konnte nicht gesendet werden.")+'</span>';
-      return;
-    }
-
-    document.getElementById("playerMailTo").value="";
-    document.getElementById("playerMailTitle").value="";
-    document.getElementById("playerMailBody").value="";
-    if(status) status.innerHTML='<span class="ok">✓ Nachricht wurde gesendet.</span>';
-    playerMailboxTab="sent";
-    await loadPlayerMailbox(false);
-  }catch(error){
-    if(status) status.innerHTML='<span class="bad">Nachricht konnte nicht gesendet werden.</span>';
-  }
+    const fetchFolder=async action=>{const q=new URLSearchParams({action,guild:CURRENT_GUILD_SLUG,playerPin:pin,t:Date.now()});const response=await fetch(LICHTLOOT_API_URL+'?'+q,{cache:'no-store'});const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||'Postfach konnte nicht geladen werden.');return result.messages||[];};
+    const [inbox,sent]=await Promise.all([fetchFolder('getPlayerMessages'),fetchFolder('getPlayerSentMessages')]);
+    if(version!==mailboxLoadVersion||pin!==syncHiddenPinFromDashboard())return;
+    playerMailboxMessages=inbox;playerMailboxSentMessages=sent;renderPlayerMailbox();
+  }catch(error){if(version===mailboxLoadVersion){mailboxEl('playerMailboxContent').textContent=error.message;mailboxStatus(error.message,true);}}
 }
+function openPlayerMailbox(){mailboxReturnFocus=document.activeElement;mailboxEl('playerMailboxModal').classList.remove('hidden');mailboxEl('mailboxSearch').focus();loadPlayerMailbox(true);}
+function closePlayerMailbox(){if(mailboxSending)return;mailboxEl('playerMailboxModal').classList.add('hidden');mailboxReturnFocus?.focus();}
+function setPlayerMailboxTab(tab){mailboxStatus('');playerMailboxTab=['inbox','sent','trash'].includes(tab)?tab:'inbox';mailboxSelected='';mailboxUnreadOnly=false;closeMailboxComposer();mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.remove('reading-open');renderPlayerMailbox();}
+function setMailboxUnreadFilter(value){mailboxUnreadOnly=value;renderPlayerMailbox();}
+function mailboxBack(){mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.remove('reading-open');}
+function renderMailboxBody(text){return String(text||'').split(/(https?:\/\/[^\s<>]+)/g).map(part=>/^https?:\/\//.test(part)?`<a href="${safeAttr(part)}" target="_blank" rel="noopener">${safeHtml(part)}</a>`:safeHtml(part)).join('');}
+function mailboxDirectLink(message){return message?.raidId?withGuildUrl('index.html')+'&raidId='+encodeURIComponent(message.raidId):'';}
+function renderPlayerMailbox(){
+  const content=mailboxEl('playerMailboxContent');if(!content)return;
+  const unread=playerMailboxMessages.filter(m=>!m.read&&!m.trashed).length;
+  mailboxEl('playerMailboxBadge').textContent=unread?'('+unread+')':'';mailboxEl('mailboxUnreadCount').textContent=unread||'';
+  ['inbox','sent','trash'].forEach((tab,i)=>mailboxEl(['playerMailboxInboxTab','playerMailboxSentTab','playerMailboxTrashTab'][i]).classList.toggle('active',tab===playerMailboxTab));
+  mailboxEl('mailboxFolderTitle').textContent={inbox:'Posteingang',sent:'Gesendet',trash:'Papierkorb'}[playerMailboxTab];
+  mailboxEl('mailboxAll').classList.toggle('active',!mailboxUnreadOnly);mailboxEl('mailboxUnread').classList.toggle('active',mailboxUnreadOnly);
+  const search=mailboxEl('mailboxSearch').value.trim().toLocaleLowerCase('de');
+  const rows=mailboxRows().filter(m=>(!mailboxUnreadOnly||(m.folder==='inbox'&&!m.read))&&[m.sender,m.recipientNames,m.title,m.body].join(' ').toLocaleLowerCase('de').includes(search));
+  if(!rows.some(m=>m.key===mailboxSelected))mailboxSelected=rows[0]?.key||'';
+  content.innerHTML=rows.map((m,i)=>`<button role="listitem" type="button" class="mailbox-message ${m.key===mailboxSelected?'selected':''} ${m.folder==='inbox'&&!m.read?'unread':''}" data-mail-index="${i}" aria-current="${m.key===mailboxSelected}"><span class="mailbox-avatar" aria-hidden="true" style="--avatar-hue:${[42,210,280,45,125][i%5]}">${safeHtml(((m.folder==='sent'?m.recipientNames:m.sender)||'✉').slice(0,1))}</span><span class="mailbox-message-copy"><span class="mailbox-message-top"><strong>${safeHtml(m.folder==='sent'?'An '+(m.recipientNames||'Charakter'):m.sender||'System')}</strong><time>${safeHtml(mailboxDate(m.createdAt))}</time></span><span class="mailbox-message-subject">${m.folder==='inbox'&&!m.read?'<i class="mailbox-dot"></i>':''}${safeHtml(m.title||'Nachricht')}</span><span class="mailbox-message-preview">${safeHtml(m.body||'')}</span></span></button>`).join('')||'<div class="mailbox-empty">✉<p>Keine Nachrichten gefunden.</p></div>';
+  content.querySelectorAll('[data-mail-index]').forEach(button=>button.addEventListener('click',()=>{const message=rows[Number(button.dataset.mailIndex)];mailboxSelected=message.key;mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.add('reading-open');renderPlayerMailbox();if(message.folder==='inbox'&&!message.read)markPlayerMailRead(message.id);}));
+  renderMailboxReading(rows.find(m=>m.key===mailboxSelected));
+}
+function renderMailboxReading(message){
+  const target=mailboxEl('mailboxReading');
+  if(!message){target.innerHTML='<div class="mailbox-empty">✉<p>Wähle eine Nachricht aus.</p></div>';return;}
+  const directLink=mailboxDirectLink(message),delivery={queued:'Discord-DM wartet auf den Bot',delivered:'Discord-DM zugestellt',failed:'Discord-DM konnte nicht zugestellt werden'}[message.deliveryStatus]||'';
+  const event=String(message.body||'').match(/^([\s\S]*?)Bisheriger Termin:\s*([\s\S]*?)Neuer Termin:\s*([\s\S]*?)Grund:\s*([\s\S]*)$/);
+  const body=event?`<div class="mailbox-reading-body">${safeHtml(event[1].trim())}</div><div class="mailbox-event"><div><strong>Bisher</strong><span>${safeHtml(event[2].trim())}</span></div><div><strong>Neu</strong><span>${safeHtml(event[3].trim())}</span></div><div><strong>Grund</strong><span>${safeHtml(event[4].trim())}</span></div></div>`:`<div class="mailbox-reading-body">${renderMailboxBody(message.body)}</div>`;
+  target.innerHTML=`<div class="mailbox-reader-toolbar"><button class="mailbox-back" data-mail-action="back">← Zurück</button>${message.folder==='inbox'?`<button data-mail-action="read">${message.read?'Als ungelesen':'Als gelesen'}</button>`:''}${message.trashed?'<button data-mail-action="restore">Wiederherstellen</button>':''}<button data-mail-action="trash">${message.trashed?'Endgültig entfernen':'♲ Papierkorb'}</button>${directLink?`<a href="${safeAttr(directLink)}" target="_blank" rel="noopener">Raid öffnen ↗</a>`:''}</div><h3>${safeHtml(message.title||'Nachricht')}</h3><div class="mailbox-reading-meta"><span>${safeHtml(message.folder==='sent'?'An '+(message.recipientNames||'Charakter'):message.sender||'System')} · ${safeHtml(mailboxDate(message.createdAt))}</span><span class="mailbox-channel">${message.channel==='discord'?'Discord-DM':'Postfach'}</span></div>${body}${message.leadPin?`<span class="mailbox-lead">${safeHtml(message.leadPin)}</span>`:''}${delivery?`<p class="mailbox-delivery">${safeHtml(delivery)}${message.deliveryError?' · '+safeHtml(message.deliveryError):''}</p>`:''}${!message.trashed?'<div class="mailbox-reader-toolbar"><button data-mail-action="reply">↩ Antworten</button><button class="mailbox-discord" data-mail-action="dm"><img class="mailbox-discord-icon" src="images/discord.svg" alt=""> Discord-DM schreiben</button></div>':''}`;
+  target.querySelectorAll('[data-mail-action]').forEach(button=>button.addEventListener('click',()=>{
+    const action=button.dataset.mailAction;if(action==='back')return mailboxBack();
+    if(action==='reply'||action==='dm')return openMailboxComposer(action==='dm'?'discord':'mailbox',message.folder==='inbox'?message.sender:message.recipientNames,message.title);
+    if(action==='read')return markPlayerMailRead(message.id,message.read);
+    mailboxChangeState(message,action==='restore'?'restore':message.trashed?'remove':'trash');
+  }));
+}
+async function markPlayerMailRead(id,unread=false){try{await mailboxApi('markPlayerMessageRead',{id,unread});const message=playerMailboxMessages.find(m=>String(m.id)===String(id));if(message)message.read=!unread;renderPlayerMailbox();}catch(error){mailboxStatus(error.message,true);}}
+async function mailboxChangeState(message,operation){if(operation==='remove'&&!confirm('Diese Nachricht endgültig aus deinem Papierkorb entfernen?'))return;try{await mailboxApi('updatePlayerMailboxState',{id:message.id,folder:message.folder,operation});await loadPlayerMailbox(false);}catch(error){mailboxStatus(error.message,true);}}
+async function deletePlayerMail(id){const message=mailboxRows().find(m=>String(m.id)===String(id));if(message)await mailboxChangeState(message,'trash');}
+async function openMailboxComposer(channel='mailbox',recipient='',subject=''){
+  if(mailboxSending)return;
+  mailboxComposeChannel=channel;mailboxEl('mailboxComposer').classList.toggle('discord-mode',channel==='discord');mailboxEl('mailboxComposer').classList.remove('hidden');mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.add('composing');
+  mailboxEl('mailboxComposeHeading').textContent=channel==='discord'?'Discord-DM schreiben':'Nachricht schreiben';mailboxEl('mailboxSend').textContent=channel==='discord'?'DM senden':'Nachricht senden';mailboxEl('mailboxSend').className=channel==='discord'?'mailbox-discord':'mailbox-new';
+  mailboxEl('playerMailTitle').value=subject?'Re: '+subject.replace(/^Re:\s*/i,''):(channel==='discord'?'Discord-Nachricht':'');mailboxStatus('');
+  mailboxEl('playerMailTo').innerHTML='<option value="">Empfänger werden geladen …</option>';mailboxEl('mailboxSend').disabled=true;
+  try{
+    const pin=syncHiddenPinFromDashboard(),result=await mailboxApi('getPlayerMailRecipients');if(pin!==syncHiddenPinFromDashboard())return;
+    mailboxRecipients=result.recipients||[];
+    mailboxEl('playerMailTo').innerHTML='<option value="">Charakter auswählen …</option>'+mailboxRecipients.map((r,i)=>`<option value="${i}">${safeHtml(r.name)} · ${safeHtml(r.server)}${r.discord?' · Discord verbunden':''}</option>`).join('');
+    const index=mailboxRecipients.findIndex(r=>r.name.toLocaleLowerCase()===String(recipient).toLocaleLowerCase());if(index>=0)mailboxEl('playerMailTo').value=String(index);
+    updateMailboxRecipientHint();mailboxEl('playerMailTo').focus();
+  }catch(error){mailboxStatus(error.message,true);}
+}
+function updateMailboxRecipientHint(){const value=mailboxEl('playerMailTo').value,r=value===''?null:mailboxRecipients[Number(value)];mailboxEl('mailboxRecipientHint').textContent=mailboxComposeChannel==='discord'?(r?.discord?'Discord verbunden · Die DM wird über den Gildenbot gesendet.':r?'Kein Discord-Konto verknüpft. Bitte einen anderen Empfänger wählen.':'Wähle einen Charakter mit verknüpftem Discord-Konto.'):'Die Nachricht wird im persönlichen Postfach des Empfängers angezeigt.';mailboxEl('mailboxSend').disabled=mailboxSending||!r||(mailboxComposeChannel==='discord'&&!r.discord);}
+function closeMailboxComposer(){if(mailboxSending)return;mailboxEl('mailboxComposer').classList.add('hidden');mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.remove('composing');}
+async function sendPlayerMailboxMessage(){
+  if(mailboxSending)return;const value=mailboxEl('playerMailTo').value,recipient=value===''?null:mailboxRecipients[Number(value)],body=mailboxEl('playerMailBody').value.trim(),title=mailboxEl('playerMailTitle').value.trim();
+  if(!recipient||!body||!title){mailboxStatus('Bitte Empfänger, Betreff und Nachricht ausfüllen.',true);return;}
+  mailboxSending=true;mailboxEl('mailboxSend').disabled=true;mailboxStatus('Nachricht wird übermittelt …');
+  try{const sender=getPlayerMailboxSenderCharacter();await mailboxApi(mailboxComposeChannel==='discord'?'sendPlayerDiscordDm':'sendPlayerMessageFromPlayer',{recipientId:recipient.id,character:recipient.name,server:recipient.server,title,body,senderCharacter:sender?.name||'',senderServer:sender?.server||''});
+    mailboxEl('playerMailBody').value='';mailboxEl('playerMailTitle').value='';mailboxSending=false;closeMailboxComposer();playerMailboxTab='sent';mailboxSelected='';await loadPlayerMailbox(false);mailboxStatus(mailboxComposeChannel==='discord'?'DM wurde an den Bot übergeben. Den Zustellstatus findest du unter Gesendet.':'Nachricht wurde gesendet.');
+  }catch(error){mailboxStatus(error.message,true);}finally{mailboxSending=false;updateMailboxRecipientHint();}
+}
+document.addEventListener('keydown',event=>{const modal=mailboxEl('playerMailboxModal');if(!modal||modal.classList.contains('hidden'))return;if(event.key==='Escape'){event.preventDefault();closePlayerMailbox();}if(event.key==='Tab'){const focusable=[...modal.querySelectorAll('button,input,textarea,select,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
 
 function dashboardSelectCharacter(autoLoad){
   const dashSelect=document.getElementById("dashboardCharSelect");
@@ -6516,6 +6468,8 @@ function logoutLichtLootPlayer(){
   myRaidCalendarPrioEntries=[];
   playerMailboxMessages=[];
   playerMailboxSentMessages=[];
+  mailboxRecipients=[];mailboxSelected="";++mailboxLoadVersion;
+  mailboxEl("mailboxComposer")?.reset();mailboxEl("playerMailboxModal")?.classList.add("hidden");
 
   const dashboardStatus=document.getElementById("dashboardMyStatus");
   if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Bitte auf der Startseite neu einloggen.";
@@ -8546,8 +8500,9 @@ function initCharacterManagementTiles(){
   const nav=document.createElement("div");
   nav.className="character-manage-tiles";
   const showPoReleaseRequest=currentGuildInfo?.layout?.startPageSections?.poReleaseRequest !== false;
-  nav.innerHTML=(showPoReleaseRequest?'<button class="character-manage-tile" data-character-manage-tile="request"><span>📋 Antrag</span>P0-Freigabe beantragen</button>':'')+'<button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Freigaben</span>Meine P0+ Freigaben</button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button><button class="character-manage-tile" data-character-manage-tile="history"><span>🪙 Punkte & Prios</span>P0+ Punkte und Priolisten</button>';
-  if(results)results.insertAdjacentElement("beforebegin",nav);else if(chooser)chooser.appendChild(nav);else root.prepend(nav);
+  nav.innerHTML=(showPoReleaseRequest?'<button class="character-manage-tile" data-character-manage-tile="request"><span>📋 Antrag</span>Lootfreigabe</button>':'')+'<button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Aktive Freigaben</span></button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button><button class="character-manage-tile" data-character-manage-tile="history"><span>🪙 Punkte & Prios</span>P0+ Punkte und Priolisten</button>';
+  const selectionRow=chooser?.querySelector(".dashboard-select-row");
+  if(selectionRow)selectionRow.insertAdjacentElement("afterend",nav);else if(chooser)chooser.prepend(nav);else root.prepend(nav);
   const show=key=>{
     nav.querySelectorAll(".character-manage-tile").forEach(button=>button.classList.toggle("is-active",button.dataset.characterManageTile===key));
     Object.entries(panels).forEach(([panelKey,list])=>list.filter(Boolean).forEach(panel=>panel.classList.toggle("is-tile-hidden",panelKey!==key)));
@@ -8607,7 +8562,7 @@ function renderPoReleaseRequestCard(data,requests){
   const pending=(requests||[]).filter(entry=>entry.status==="pending");
   const last=(requests||[])[0];
   const statusText=pending.length ? `${pending.length} Antrag/Anträge warten auf Prüfung.` : (last ? `Letzter Antrag: ${last.status==="approved"?"freigegeben":last.status==="rejected"?"abgelehnt":"offen"}.` : "Noch kein Antrag gestellt.");
-  return `<div class="lichtloot-fold own-p0-popout-card" style="border-color:#21c77a"><div style="width:100%"><div class="own-p0-release-title">P0-Freigabe beantragen</div><div class="own-p0-release-text">Armory-Link und Screenshot sind für den Antrag erforderlich. Die Gildenleitung prüft die Nachtwächter-Voraussetzungen.</div><div class="po-request-form"><div class="po-request-row"><div class="po-request-field"><label for="poRequestType">Gewünschte Freigabe</label><select id="poRequestType" onchange="updatePoRequestRaidVisibility()"><option value="recruit">Rekrutenstatus aufheben</option><option value="p1p3">P1–P3 freigeben</option><option value="p0">P0 freigeben</option></select></div><div class="po-request-field"><label for="poRequestRaid">Raid</label><select id="poRequestRaid" disabled><option value="">Erst P0 auswählen</option><option value="mc">Molten Core</option><option value="bwl">Blackwing Lair</option><option value="aq40">Ahn'Qiraj 40</option><option value="naxx">Naxxramas</option><option value="zg-mittwoch">ZG Mittwoch</option><option value="zg-prime">ZG Primetime</option><option value="zg-late">ZG Latenight</option></select></div></div><div class="po-request-row"><div class="po-request-field"><label for="poRequestClass">Klasse</label><select id="poRequestClass" onchange="updatePoRequestSpecs()"></select></div><div class="po-request-field"><label for="poRequestSpec">Skillung</label><select id="poRequestSpec"></select></div></div><div class="po-request-field full"><label for="poRequestArmory">Armory-Link (Pflichtfeld)</label><input id="poRequestArmory" type="url" required placeholder="https://classic-armory.org/…"></div><label class="tool-btn po-request-file">📎 Screenshot auswählen (Pflichtfeld)<input id="poRequestScreenshot" type="file" required accept="image/png,image/jpeg,image/webp" style="display:none" onchange="updatePoRequestFileLabel(this)"></label><button class="tool-btn primary" type="button" onclick="submitMyPoReleaseRequest()">Antrag absenden</button><div id="poRequestStatus" class="status">${safeHtml(statusText)}</div></div></div></div>`;
+  return `<div class="lichtloot-fold own-p0-popout-card" style="border-color:#21c77a"><div style="width:100%"><div class="own-p0-release-title">Lootfreigabe beantragen</div><div class="own-p0-release-text">Ein Screenshot ist für den Antrag erforderlich. Die Armory wird automatisch über deinen Charakter zugeordnet. Die Gildenleitung prüft die Nachtwächter-Voraussetzungen.</div><div class="po-request-form"><div class="po-request-row"><div class="po-request-field"><label for="poRequestType">Gewünschte Freigabe</label><select id="poRequestType" onchange="updatePoRequestRaidVisibility()"><option value="recruit">Aufhebung Rekrutenstatus</option><option value="p0">P0-Freigabe</option></select></div><div class="po-request-field"><label for="poRequestRaid">Raid</label><select id="poRequestRaid" disabled><option value="">Erst P0 auswählen</option><option value="mc">Molten Core</option><option value="bwl">Blackwing Lair</option><option value="aq40">Ahn'Qiraj 40</option><option value="naxx">Naxxramas</option><option value="zg-mittwoch">ZG Mittwoch</option><option value="zg-prime">ZG Primetime</option><option value="zg-late">ZG Latenight</option></select></div></div><div class="po-request-row"><div class="po-request-field"><label for="poRequestClass">Klasse</label><select id="poRequestClass" onchange="updatePoRequestSpecs()"></select></div><div class="po-request-field"><label for="poRequestSpec">Skillung</label><select id="poRequestSpec"></select></div></div><label class="tool-btn po-request-file">📎 Screenshot auswählen (Pflichtfeld)<input id="poRequestScreenshot" type="file" required accept="image/png,image/jpeg,image/webp" style="display:none" onchange="updatePoRequestFileLabel(this)"></label><button class="tool-btn primary" type="button" onclick="submitMyPoReleaseRequest()">Antrag absenden</button><div id="poRequestStatus" class="status">${safeHtml(statusText)}</div></div></div></div>`;
 }
 const PO_REQUEST_SPECS={Krieger:["Tank","Fury","Waffen"],Paladin:["Heilig","Schutz","Vergeltung"],Jäger:["Tierherrschaft","Treffsicherheit","Überleben"],Schurke:["Meucheln","Kampf","Täuschung"],Priester:["Disziplin","Heilig","Schatten"],Schamane:["Elementar","Verstärkung","Wiederherstellung"],Magier:["Arkan","Feuer","Frost"],Hexenmeister:["Gebrechen","Dämonologie","Zerstörung"],Druide:["Gleichgewicht","Wildheit (Tank)","Wildheit (Schaden)","Wiederherstellung"]};
 function updatePoRequestRaidVisibility(){const raid=document.getElementById("poRequestRaid"),type=document.getElementById("poRequestType")?.value||"";if(!raid)return;raid.disabled=false;const placeholder=raid.querySelector('option[value=""]');if(placeholder)placeholder.remove();const recruit=["recruit","p1p3"].includes(type),allowed=new Set(["bwl","aq40","naxx"]);Array.from(raid.options).forEach(option=>{option.disabled=recruit&&!allowed.has(option.value);option.hidden=option.disabled;});if(!raid.value||(recruit&&!allowed.has(raid.value)))raid.value=recruit?"bwl":"mc";}
@@ -8619,9 +8574,9 @@ function initPoRequestClassSelect(){
   const card=form.closest(".own-p0-popout-card");
   const title=card?.querySelector(".own-p0-release-title");
   const description=card?.querySelector(".own-p0-release-text");
-  if(description && CURRENT_GUILD_SLUG!=="nachtloot") description.textContent="Armory-Link und Screenshot sind für den Antrag erforderlich. Die Gildenleitung prüft die Voraussetzungen.";
+  if(description && CURRENT_GUILD_SLUG!=="nachtloot") description.textContent="Ein Screenshot ist für den Antrag erforderlich. Die Armory wird automatisch über deinen Charakter zugeordnet. Die Gildenleitung prüft die Voraussetzungen.";
   if(title && !card.querySelector(".po-request-toggle")){
-    title.outerHTML='<button type="button" class="po-request-toggle" aria-expanded="true" onclick="togglePoRequestForm(this)"><span>P0-Freigabe beantragen</span><span class="po-request-toggle-arrow">⌄</span></button>';
+    title.outerHTML='<button type="button" class="po-request-toggle" aria-expanded="true" onclick="togglePoRequestForm(this)"><span>Lootfreigabe beantragen</span><span class="po-request-toggle-arrow">⌄</span></button>';
     if(description)description.classList.add("po-request-collapsible");
     form.classList.add("po-request-collapsible");
   }
@@ -8658,7 +8613,7 @@ async function changePoRequestCharacter(){const requestSelect=document.getElemen
 function updatePoRequestFileLabel(input){const label=input?.closest("label");if(label)label.firstChild.textContent=input.files?.[0]?`📎 ${input.files[0].name} `:"📎 Screenshot auswählen ";}
 function markPoReleaseRequestPending(type,raid){const normalized=String(raid||"").toLowerCase();const raidLabels={bwl:"BWL",aq40:"AQ40",naxx:"NAXX",mc:"MC","zg-mittwoch":"ZG Mittwoch","zg-prime":"ZG PRIME","zg-late":"ZG LATE"};const expected=raidLabels[normalized]||normalized.toUpperCase();const chip=[...document.querySelectorAll(".own-p0-release-chip")].find(node=>{const text=String(node.textContent||"");return text.includes(expected)&&(type!=="recruit"||text.includes("Rekrutenstatus"));});if(!chip)return;chip.classList.remove("is-active");chip.classList.add("is-pending");const state=chip.querySelector("strong");if(state){state.className="warn";state.textContent="● In Prüfung";}}
 async function compressPoRequestImage(file){if(!file)return "";const bitmap=await createImageBitmap(file);const scale=Math.min(1,1400/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement("canvas");canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);return canvas.toDataURL("image/jpeg",.82);}
-async function submitMyPoReleaseRequest(){const data=window.currentPoReleaseRequestData||{};const pin=document.getElementById("myPriosPin")?.value.trim()||"";const type=document.getElementById("poRequestType")?.value||"";const armoryUrl=document.getElementById("poRequestArmory")?.value.trim()||"";const file=document.getElementById("poRequestScreenshot")?.files?.[0];const status=document.getElementById("poRequestStatus");const button=document.querySelector('.po-request-form button.primary');try{if(button){button.disabled=true;button.textContent="Antrag wird gesendet …";}if(status)status.innerHTML='<span class="warn">Antrag wird übermittelt …</span>';if(!pin)throw new Error("SpielerPIN fehlt. Bitte neu einloggen.");if(!data.player)throw new Error("Bitte den Charakter erneut auswählen.");if(!armoryUrl)throw new Error("Bitte den Armory-Link angeben.");if(!file)throw new Error("Bitte einen Screenshot auswählen.");const screenshotData=await compressPoRequestImage(file);const body={action:"submitPoReleaseRequest",guild:CURRENT_GUILD_SLUG,pin,character:data.player,server:data.server||"",requestType:type,raid:document.getElementById("poRequestRaid")?.value||"",className:document.getElementById("poRequestClass")?.value||data.className||"",specialization:document.getElementById("poRequestSpec")?.value||"",armoryUrl,screenshotData};const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const result=await response.json().catch(()=>({success:false,error:"Ungültige Antwort vom Server."}));if(!response.ok||!result.success)throw new Error(result.error||"Antrag konnte nicht gespeichert werden.");markPoReleaseRequestPending(type,body.raid);if(status)status.innerHTML='<span class="ok">✓ Antrag wurde an die Gildenleitung geschickt und ist jetzt in Prüfung.</span>';window.setTimeout(()=>loadMyPrios(),1200);}catch(error){console.error("P0-Antrag fehlgeschlagen",error);if(status)status.innerHTML='<span class="bad">'+safeHtml(error.message||"Antrag konnte nicht gespeichert werden.")+'</span>';}finally{if(button){button.disabled=false;button.textContent="Antrag absenden";}}}
+async function submitMyPoReleaseRequest(){const data=window.currentPoReleaseRequestData||{};const pin=document.getElementById("myPriosPin")?.value.trim()||"";const type=document.getElementById("poRequestType")?.value||"";const file=document.getElementById("poRequestScreenshot")?.files?.[0];const status=document.getElementById("poRequestStatus");const button=document.querySelector('.po-request-form button.primary');try{if(button){button.disabled=true;button.textContent="Antrag wird gesendet …";}if(status)status.innerHTML='<span class="warn">Antrag wird übermittelt …</span>';if(!pin)throw new Error("SpielerPIN fehlt. Bitte neu einloggen.");if(!data.player)throw new Error("Bitte den Charakter erneut auswählen.");if(!file)throw new Error("Bitte einen Screenshot auswählen.");const screenshotData=await compressPoRequestImage(file);const body={action:"submitPoReleaseRequest",guild:CURRENT_GUILD_SLUG,pin,character:data.player,server:data.server||"",requestType:type,raid:document.getElementById("poRequestRaid")?.value||"",className:document.getElementById("poRequestClass")?.value||data.className||"",specialization:document.getElementById("poRequestSpec")?.value||"",screenshotData};const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const result=await response.json().catch(()=>({success:false,error:"Ungültige Antwort vom Server."}));if(!response.ok||!result.success)throw new Error(result.error||"Antrag konnte nicht gespeichert werden.");markPoReleaseRequestPending(type,body.raid);if(status)status.innerHTML='<span class="ok">✓ Antrag wurde an die Gildenleitung geschickt und ist jetzt in Prüfung.</span>';window.setTimeout(()=>loadMyPrios(),1200);}catch(error){console.error("P0-Antrag fehlgeschlagen",error);if(status)status.innerHTML='<span class="bad">'+safeHtml(error.message||"Antrag konnte nicht gespeichert werden.")+'</span>';}finally{if(button){button.disabled=false;button.textContent="Antrag absenden";}}}
 
 function raidCalendarStorageKey(){
   const pinField=document.getElementById("dashboardPlayerPin") || document.getElementById("myPriosPin");
