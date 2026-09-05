@@ -8650,6 +8650,10 @@ function renderLootLayoutPanel(){
               <span class="muted">Neue Warcraft-Logs werden aus diesem Channel importiert.</span>
             </div>
             <div class="field">
+              <label><input id="layoutLogWorkbookAutoPost" type="checkbox" ${layout.logWorkbookAutoPost === true || layout.logWorkbookAutoPost === "true" ? "checked" : ""}> Excel-Auswertung automatisch erstellen und posten</label>
+              <span class="muted">Der PO-Bot postet nach einer fertigen Loganalyse Raidname, Datum, Uhrzeit und Gilde sowie Links zur Excel-Datei, GuildLoot-Auswertung und Warcraft Logs. Es gelten die Analyse-Zielchannels dieser Gilde. Die Excel-Datei wird bei Neuberechnungen aktualisiert.</span>
+            </div>
+            <div class="field">
               <label>Loganalyse Standard-Zielchannel</label>
               <select id="layoutLogAnalysisChannelId">${layoutChannelSelectOptions(layout.logAnalysisChannelId || "")}</select>
               <span class="muted">Wird verwendet, wenn für den Raid unten kein eigener Zielchannel eingetragen ist.</span>
@@ -8881,6 +8885,7 @@ async function saveLootLayoutPanel(){
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
     logSourceChannelId: layoutFieldValue("layoutLogSourceChannelId"),
+    logWorkbookAutoPost: Boolean(document.getElementById("layoutLogWorkbookAutoPost")?.checked),
     logAnalysisChannelId: layoutFieldValue("layoutLogAnalysisChannelId"),
     logAnalysisMcChannelId: layoutFieldValue("layoutLogAnalysisMcChannelId"),
     logAnalysisBwlChannelId: layoutFieldValue("layoutLogAnalysisBwlChannelId"),

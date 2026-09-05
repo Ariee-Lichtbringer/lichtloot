@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createRaidWorkbookService } from "./log-workbook/service.js";
 import cors from "cors";
 import { calculateGearStats, normalizeArmoryPlannerItem } from "../public/loot/gear-stat-calculator.js";
 import express from "express";
@@ -6,6 +7,12 @@ import nodemailer from "nodemailer";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
+
+const raidWorkbookService = createRaidWorkbookService({
+  query, getWeb: getPublicLogAnalysisWeb, resolveChannel: resolveLogAnalysisPostChannelId,
+  publicBaseUrl: process.env.GUILDLOOT_PUBLIC_URL || "https://lichtloot.de",
+  apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
+});
 
 const app = express();
 app.set("trust proxy", 1);
@@ -1081,7 +1088,8 @@ async function fetchWarcraftLogsReportMeta(reportCode) {
   return {
     title: clean(report.title),
     raid,
-    raidDate
+    raidDate,
+    reportStartTime: startTime || null
   };
 }
 
@@ -1691,6 +1699,9 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
   }
   if (!layoutJson || typeof layoutJson !== "object" || Array.isArray(layoutJson)) {
     layoutJson = {};
+  }
+  if (Object.prototype.hasOwnProperty.call(layoutJson,"logWorkbookAutoPost")) {
+    layoutJson.logWorkbookAutoPost = layoutJson.logWorkbookAutoPost === true || clean(layoutJson.logWorkbookAutoPost).toLowerCase() === "true";
   }
   if (Object.prototype.hasOwnProperty.call(layoutJson,"warcraftLogsGuildId")) {
     const wclGuildId=Number(clean(layoutJson.warcraftLogsGuildId).replace(/\D/g,""));
@@ -17545,6 +17556,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     analysis: normalizeLogAnalysis(analysis),
     report: {
       title: report.title || analysis.title || "",
+      startTime: Number(report.startTime) || analysis.summary?.reportStartTime || null,
       raid: report.zone?.name || analysis.raid || "",
       raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : (analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : ""),
       reportCode: analysis.report_code || "",
@@ -19964,7 +19976,7 @@ async function processAutomaticLogAnalysisQueue() {
       const job = automaticLogAnalysisQueue.shift();
       try {
         await updateAutomaticLogAnalysisState(job, "processing");
-        await getPublicLogAnalysisWeb({
+        let completedAnalysis = await getPublicLogAnalysisWeb({
           guildId: job.guildId,
           query: {
             id: job.analysisId,
@@ -19972,7 +19984,26 @@ async function processAutomaticLogAnalysisQueue() {
             refresh: job.forceRefresh ? "true" : "false"
           }
         });
+        if(completedAnalysis.webAnalysis?.refreshPending || completedAnalysis.webAnalysis?.rpb?.refreshPending){
+          completedAnalysis=await getPublicLogAnalysisWeb({guildId:job.guildId,query:{id:job.analysisId,type:"combined",refresh:"true"}});
+        }
         await updateAutomaticLogAnalysisState(job, "completed");
+        try {
+          const exportWeb=completedAnalysis.webAnalysis;
+          if(!exportWeb.report?.startTime && exportWeb.analysis?.reportCode){
+            const meta=await fetchWarcraftLogsReportMetaSafe(exportWeb.analysis.reportCode);
+            if(meta.reportStartTime){
+              exportWeb.report={...exportWeb.report,startTime:meta.reportStartTime};
+              await query(`update log_analyses set summary=coalesce(summary,'{}'::jsonb)||$3::jsonb where guild_id=$1 and id=$2`,[job.guildId,job.analysisId,JSON.stringify({reportStartTime:meta.reportStartTime})]);
+            }
+          }
+          await raidWorkbookService.afterAnalysis({guildId:job.guildId,analysisId:job.analysisId,web:exportWeb});
+        } catch (error) {
+          const workbookError = clean(error?.message || error).slice(0,500);
+          console.warn(`Excel-Auswertung ${job.analysisId}:`, workbookError);
+          await query(`update log_analyses set summary=coalesce(summary,'{}'::jsonb)||$3::jsonb where guild_id=$1 and id=$2`,
+            [job.guildId,job.analysisId,JSON.stringify({workbookError})]).catch(()=>{});
+        }
       } catch (error) {
         const message = clean(error?.message || error || "Unbekannter Fehler").slice(0, 500);
         console.warn(`Automatische Loganalyse ${job.analysisId} fehlgeschlagen:`, message);
@@ -20090,6 +20121,7 @@ async function saveLogAnalysis({ guildId, query: params }) {
     : (params.summary || {});
   const normalizedUrl = normalizeWarcraftLogsReportUrl(reportUrl, reportCode);
   const reportMeta = await fetchWarcraftLogsReportMetaSafe(reportCode);
+  if (reportMeta.reportStartTime) summary.reportStartTime = reportMeta.reportStartTime;
   const logTitle = clean(params.title) || reportMeta.title || "";
   const logRaid = normalizeLogRaidType(params.raid || summary.raid || reportMeta.raid || "");
   const logDate = clean(params.raidDate || summary.raidDate || reportMeta.raidDate || "");
@@ -31955,6 +31987,46 @@ app.post("/api/apps-script", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+app.post("/api/guilds/:guildSlug/log-analyses/workbook-backfill", async (req,res,next) => {
+  try {
+    requireMasterOrQueueToken(req.body || {});
+    enforceSecurityRateLimit(req,"raid-workbook-backfill",10,60*1000);
+    const guild=await requireGuild(resolveGuildSlug(req.params.guildSlug));
+    await ensureLogAnalysesTable();await ensureGuildLayoutSchema();await raidWorkbookService.ensureSchema();
+    const ids=req.body?.analysisIds;
+    if(ids!==undefined&&(!Array.isArray(ids)||ids.length<1||ids.length>5||ids.some(id=>!isUuid(id))||new Set(ids).size!==ids.length))return res.status(400).json({success:false,error:"Ein bis fünf eindeutige Analyse-IDs erforderlich."});
+    const rows=await query(`select la.id,la.title,la.raid,la.raid_date,la.report_url,la.summary,
+      q.status as post_status,q.payload as post_payload
+      from log_analyses la left join bot_update_queue q on q.guild_id=la.guild_id
+        and q.type='raid_workbook_post' and q.payload->>'analysisId'=la.id::text
+      where la.guild_id=$1 and la.report_code ~ '^[A-Za-z0-9]{16}$'
+        and ($2::uuid[] is null or la.id=any($2::uuid[]))
+      order by coalesce(la.raid_date,la.posted_at::date,la.created_at::date) desc,la.created_at desc limit 5`,[guild.id,ids||null]);
+    if(ids&&rows.rows.length!==ids.length)return res.status(404).json({success:false,error:"Mindestens eine Analyse gehört nicht zu dieser Gilde."});
+    const raids=await Promise.all(rows.rows.map(async r=>({id:r.id,title:r.title,raid:r.raid,date:r.raid_date,reportUrl:r.report_url,channelId:await resolveLogAnalysisPostChannelId(guild.id,r.raid),postStatus:r.post_status||null,messageId:r.post_payload?.messageId||null,workbookError:r.summary?.workbookError||null})));
+    if(req.body?.dryRun!==false)return res.json({success:true,guild:guild.slug,raids});
+    if(raids.some(r=>!/^\d{17,20}$/.test(clean(r.channelId))))return res.status(409).json({success:false,error:"Für mindestens einen Raid fehlt der Analyse-Zielchannel.",raids});
+    if(req.body?.enableAutomation===true)await query(`insert into guild_settings(guild_id,layout_json) values($1,'{"logWorkbookAutoPost":true}'::jsonb)
+      on conflict(guild_id) do update set layout_json=coalesce(guild_settings.layout_json,'{}'::jsonb)||excluded.layout_json`,[guild.id]);
+    else if(![true,'true'].includes(await getGuildLayoutValue(guild.id,'logWorkbookAutoPost')))return res.status(409).json({success:false,error:"Automatische Excel-Auswertung ist für diese Gilde deaktiviert."});
+    for(const r of raids){if(r.postStatus==='done'){r.skipped='already-posted';continue;}r.queue=enqueueAutomaticLogAnalysis({guildId:guild.id,analysisId:r.id,forceRefresh:false,source:'workbook-backfill',priority:true});}
+    return res.json({success:true,guild:guild.slug,raids});
+  } catch(error){next(error);}
+});
+
+app.get("/api/guilds/:guildSlug/log-analyses/:analysisId/workbook.xlsx", async (req,res,next) => {
+  try {
+    enforceSecurityRateLimit(req,"raid-workbook",20,60*1000);
+    if (!isUuid(req.params.analysisId)) return res.status(400).json({success:false,error:"Ungültige Analyse-ID."});
+    const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
+    const file = await raidWorkbookService.generate(guild.id,req.params.analysisId);
+    res.setHeader("Content-Type","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition",`attachment; filename="raid-analysis.xlsx"; filename*=UTF-8''${encodeURIComponent(file.fileName)}`);
+    res.setHeader("Cache-Control","no-cache");
+    res.send(file.buffer);
+  } catch(error) {next(error);}
 });
 
 app.get("/api/guilds/:guildSlug", async (req, res, next) => {
