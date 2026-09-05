@@ -22,13 +22,14 @@ function doPost(e) {
       if(response.getResponseCode()!==200)throw Error('Raid-Auswertung noch nicht verfügbar.');
       const blob=stripFloatingIcons_(response.getBlob());
       const raid=verified.raids[0],name=p.guildSlug+' · '+raid.raid+' · '+String(raid.date||'').slice(0,10);
-      const meta={name:name,mimeType:SHEET_MIME,appProperties:{guildlootAnalysisId:p.analysisId,guildlootGuild:p.guildSlug,sourceHash:p.sourceHash}};
+      const meta={name:name,mimeType:SHEET_MIME,appProperties:{guildlootAnalysisId:p.analysisId,guildlootGuild:p.guildSlug,sourceHash:'pending'}};
       if(file)file=Drive.Files.update(meta,file.id,blob,{fields:'id,name,mimeType,webViewLink'});
       else{const folders=DriveApp.getRootFolder().getFoldersByName('ChatGPT');const folder=folders.hasNext()?folders.next():DriveApp.getRootFolder().createFolder('ChatGPT');meta.parents=[folder.getId()];file=Drive.Files.create(meta,blob,{fields:'id,name,mimeType,webViewLink'});}
       const sheet=SpreadsheetApp.openById(file.id);sheet.setSpreadsheetLocale('de_DE');sheet.setSpreadsheetTimeZone('Europe/Berlin');
       sheet.getSheets().forEach(function(tab){if(!tab.isSheetHidden()){tab.setFrozenColumns(0);tab.setFrozenRows(8);tab.setHiddenGridlines(true);}});
       installCellIcons_(sheet);
       SpreadsheetApp.flush();
+      Drive.Files.update({appProperties:{sourceHash:p.sourceHash}},file.id);
     }
     DriveApp.getFileById(file.id).setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);
     const spreadsheet=SpreadsheetApp.openById(file.id);
@@ -42,7 +43,7 @@ function json_(value){return ContentService.createTextOutput(JSON.stringify(valu
 function installCellIcons_(spreadsheet){
   const manifest=spreadsheet.getSheetByName('_GoogleIcons');
   if(!manifest)return;
-  const groups={},images={};
+  const groups={};
   manifest.getDataRange().getValues().slice(1).forEach(function(row){
     const name=String(row[0]),r=Number(row[1]),c=Number(row[2]),url=String(row[3]);
     const prefix='https://wow.zamimg.com/images/wow/icons/large/';
@@ -55,7 +56,7 @@ function installCellIcons_(spreadsheet){
     const rows=groups[key].sort(function(a,b){return a.r-b.r;});
     let start=0;
     while(start<rows.length){let end=start+1;while(end<rows.length&&rows[end].r===rows[end-1].r+1)end++;
-      tab.getRange(rows[start].r,column,end-start,1).setValues(rows.slice(start,end).map(function(row){if(!images[row.url])images[row.url]=SpreadsheetApp.newCellImage().setSourceUrl(row.url).build();return [images[row.url]];}));start=end;
+      tab.getRange(rows[start].r,column,end-start,1).setFormulas(rows.slice(start,end).map(function(row){return ['=IMAGE("'+row.url+'";4;23;23)'];}));start=end;
     }
   });
   spreadsheet.getSheets().forEach(function(tab){tab.getImages().forEach(function(image){const a=image.getAnchorCell();if(a.getRow()!==1||a.getColumn()!==1)image.remove();});});
