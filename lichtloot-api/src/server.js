@@ -5201,6 +5201,18 @@ async function fetchOfficialBlizzardArmoryProfile({region="eu",realm,name}){
   const gear=Object.values(character.gear||{}).filter(Boolean).map(normalizeOfficialBlizzardGearItem);
   if(!gear.length)throw new Error("Blizzard Armory hat für diesen Charakter noch keine Ausrüstung gespeichert.");
   const stats=Object.fromEntries((character?.stats?.overview||[]).filter(Boolean).map(stat=>[clean(stat.enum),stat?.value?.value??stat?.details?.effective??""]));
+  // Angriffskraft steht bei Classic-Profilen im Angriffsbereich, nicht
+  // zwingend in der allgemeinen Werteübersicht.
+  const attackPowerStat = [
+    ...(character?.stats?.overview || []),
+    ...(character?.stats?.basic?.secondary || []),
+    ...(character?.stats?.groups || []).flatMap(group => group?.stats || [])
+  ].find(stat => stat?.enum === "ATTACKPOWER" && (
+    stat?.value?.value != null || stat?.details?.effective?.value != null
+  ));
+  if (attackPowerStat) {
+    stats.ATTACKPOWER = attackPowerStat.value?.value ?? attackPowerStat.details?.effective?.value;
+  }
   let talentCatalog=[];try{talentCatalog=await getWowheadClassicTalentCatalog(character?.class?.name||character?.class?.slug);}catch(error){console.warn("Vollständige Wowhead-Talentbäume konnten nicht geladen werden:",error.message||error);}
   return{success:true,source:"blizzard-armory",armoryUrl:url,updatedAt:clean(character?.lastUpdatedTimestamp?.iso8601),character:{name:clean(character.name||name),server:clean(character?.realm?.name||realm),className:clean(character?.class?.name||character?.class?.slug),level:Number(character.level||0)||"",race:clean(character?.race?.name),faction:clean(character?.faction?.name),gender:clean(character?.gender?.name),itemLevel:Number(character.averageItemLevel||stats.ITEMLEVEL||0)||"",renderUrl:clean(character?.render?.foreground?.url||character?.renderRaw?.url),avatarUrl:clean(character?.avatar?.url),specs:(character?.specs||[]).map(spec=>({name:clean(spec.name),points:Number(spec.spentPoints||0),active:Boolean(spec.active),talents:(spec?.talents||[]).map(talent=>({id:Number(talent?.id||0)||"",name:clean(talent?.name),rank:Number(talent?.rank||0)||0,description:clean(talent?.description),iconUrl:clean(talent?.icon?.url),cast:clean(talent?.cast),cost:clean(talent?.cost),cooldown:clean(talent?.cooldown),range:clean(talent?.range)}))})),talentCatalog,stats,pvp:{honorableKills:Number(character?.pvp?.honorableKills?.value||0),rank:Number(character?.pvp?.rank?.value||0)}},gear};
 }
