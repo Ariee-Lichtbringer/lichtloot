@@ -5274,6 +5274,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .panem-gear-planned{border-color:#0f766e;background:linear-gradient(145deg,rgba(6,78,69,.3),rgba(4,12,23,.96))}
 @media(max-width:980px){.panem-gear-toolbar{grid-template-columns:1fr 1fr}.panem-gear-layout{grid-template-columns:1fr}.panem-gear-picker{position:relative;top:auto;max-height:56vh}}
 @media(max-width:640px){.panem-gear-toolbar,.panem-gear-slots{grid-template-columns:1fr}.panem-gear-slot{grid-template-columns:42px minmax(0,1fr)}}
+
+.staff-bench-icon{display:inline-block;margin-left:6px;font-size:18px;line-height:1;vertical-align:middle;cursor:help}
+
+.p0-item-received .item-name,.p0-item-received .item-link,.p0-item-received .item-with-tooltip,.p0-item-received .item-with-icon>span{color:#f5c451!important}
+.p0-item-received .item-icon{border-color:#f5c451!important}
+.p0-received-button:disabled{opacity:1!important;background:#166534!important;border:1px solid #4ade80!important;color:#dcfce7!important;cursor:default}
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -17795,7 +17801,7 @@ function closePrioModal(){
 
 function renderPrioPlayerDetails(prio){
   const name=escapeHtml(prio.Spieler||prio.player||"-");
-  const bench=isBenchPrio(prio)?'<span class="bench-label">Bench</span>':"";
+  const bench=(prio.staffBenched===true||prio.StaffBenched===true)?'<span class="staff-bench-icon" role="img" aria-label="Durch Raidlead oder Gildenleitung auf Bank gesetzt" title="Durch Raidlead oder Gildenleitung auf Bank gesetzt">🪑</span>':"";
   const rawDate=prio.PrioCreatedAt||prio.prioCreatedAt||prio.PrioUpdatedAt||prio.prioUpdatedAt||"";
   const date=rawDate?new Date(rawDate):null;
   const timestamp=date&&!Number.isNaN(date.getTime())?`<span class="prio-list-entry-time">Eingetragen am ${escapeHtml(date.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}))} um ${escapeHtml(date.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}))} Uhr</span>`:"";
@@ -17810,7 +17816,7 @@ function renderPrioPlayerDetails(prio){
   const settings=currentGuildInfo?.layout?.prioListDisplay||{},directTimestamp=settings.prioEntryUnderName===true,directAttendance=settings.attendanceUnderName===true;
   const hoverContent=`${directTimestamp?"":timestamp||'<span class="prio-list-entry-time">Kein Eintragszeitpunkt gespeichert</span>'}${directAttendance?"":attendance}`;
   const attendanceClass=participation==="participated"?"attendance-participated":participation==="not_found"?"attendance-not-found":"attendance-no-data";
-  return `<span class="prio-list-player-hover" tabindex="0"><strong class="${attendanceClass}">${name}</strong>${hoverContent?`<span class="prio-list-player-card">${hoverContent}</span>`:""}</span>${bench}${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
+  return `<span class="prio-list-player-hover" tabindex="0"><strong class="${attendanceClass}">${name}</strong>${bench}${hoverContent?`<span class="prio-list-player-card">${hoverContent}</span>`:""}</span>${directTimestamp?timestamp:""}${directAttendance?attendance:""}`;
 }
 
 function renderPrioModalContent(result, raid, forceListOpen = false){
@@ -17864,7 +17870,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
               <td>${index + 1}</td>
               <td>${renderPrioPlayerDetails(prio)}</td>
               <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
-              <td>${renderPrioValue(prio.P1, listOpen)}</td>
+              <td class="${prio.p0ItemReceived===true?"p0-item-received":""}">${renderPrioValue(prio.P1, listOpen)}</td>
               <td>${renderPrioValue(prio.P2, listOpen)}</td>
               <td>${renderPrioValue(prio.P3, listOpen)}</td>
               <td>${renderP0PlusChoice(prio, listOpen)}</td>
@@ -17952,7 +17958,9 @@ function renderPrioRowActions(prio, raid, listOpen){
   const p0Item = prio.P1 || prio.p1 || "";
   const buttons = [renderBenchAction(prio, raid)];
 
-  if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
+  if(prio.p0ItemReceived===true){
+    buttons.push('<button class="small-btn p0-received-button" type="button" disabled>✓ P0+-Punkte wurden gelöscht</button>');
+  }else if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
     buttons.push(`<button class="small-btn good" type="button" onclick="clearP0PlusForPlayerFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}','${escapeQuotes(p0Item)}')">Item erhalten</button>`);
   }
 
@@ -18156,7 +18164,7 @@ async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
       setStatus(result.error || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
       return;
     }
-    if(Number(result.deleted || 0) < 1){
+    if(!result.itemReceived && Number(result.deleted || 0) < 1){
       setStatus("Kein passender P0+ Punkt gefunden. Bitte PO+ Liste prüfen.", "bad");
       return;
     }
@@ -18244,7 +18252,7 @@ function renderP0PlusChoice(prio, visible){
   const active = normalize(prio.P0Plus) === "ja";
   if(!active) return '<span class="badge closed">-</span>';
   if(!visible) return '<span class="badge open">P0 gesetzt</span>';
-  return `<span class="prio-p0">${renderLootItem(prio.P1 || "P0+")}</span>`;
+  return `<span class="prio-p0 ${prio.p0ItemReceived===true?"p0-item-received":""}">${renderLootItem(prio.P1 || "P0+")}</span>`;
 }
 
 async function ensureLootDataLoaded(){
