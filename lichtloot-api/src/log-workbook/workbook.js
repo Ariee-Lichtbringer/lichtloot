@@ -18,7 +18,7 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
     s.properties.tabColor={argb:/Heil/.test(name)?'438575':/Ausrüstung|Verbrauch|Worldbuff/.test(name)?'8970AC':'4F7EA7'};
     for(let c=1;c<=Math.max(headers.length,8);c++)s.getColumn(c).width=widths[c]||20;
     s.mergeCells(1,1,2,Math.max(8,headers.length));s.getCell('A1').value=`         ${guild.name||guild.slug} · ${name}`;s.getCell('A1').font={name:'Calibri',size:20,bold:true,color:{argb:NAVY}};s.getRow(1).height=23;s.getRow(2).height=23;
-    s.mergeCells(3,1,3,8);s.getCell('A3').value=`${report.raid||analysis.raid||analysis.title} · ${report.raidDate||analysis.raidDate||''} · ${players.length} Charaktere · ${report.bossKills??'–'} Bosskills`;
+    s.mergeCells(3,1,3,8);s.getCell('A3').value=`${report.raid||analysis.raid||analysis.title} · ${report.raidDate||analysis.raidDate||''} · ${players.length} Charaktere · ${report.bossKills??'–'} Bosskills · © Ariee-Everlook`;
     s.mergeCells(4,1,4,8);s.getCell('A4').value=`Dieses Sheet bietet eine kompakte Übersicht. Die ausführliche Analyse findest du auf ${analysisBrand(guild)} – Link direkt darunter.`;s.getCell('A4').alignment={wrapText:true,vertical:'middle'};s.getRow(4).height=30;s.getCell('A4').font={size:10,color:{argb:'627084'}};
     s.mergeCells(5,1,5,8);s.getCell('A5').value={text:`${guild.name||guild.slug}: Loganalyse auf GuildLoot öffnen`,hyperlink:links.analysisUrl};s.getCell('A5').fill={type:'pattern',pattern:'solid',fgColor:{argb:'DCEAF5'}};s.getCell('A5').font={size:15,bold:true,color:{argb:'174F7B'}};s.getRow(5).height=32;
     s.getCell('A6').value={text:'Warcraft-Logs-Report öffnen',hyperlink:links.reportUrl};s.getCell('D6').value={text:'Aktuelle Excel-Datei herunterladen',hyperlink:links.sheetUrl};
