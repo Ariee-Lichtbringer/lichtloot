@@ -35,6 +35,20 @@ function killMetrics(record,p) {
   });
   return fights.map(f=>({id:f.id,name:f.name,durationMs:num(f.durationMs),...metricsFor(f,p)}));
 }
+export function compareToPeers(value,values) {
+  const known=values.filter(x=>num(x)!==null).map(Number);
+  if(num(value)===null||known.length<3)return null;
+  const mean=known.reduce((s,x)=>s+x,0)/known.length;
+  if(mean<=0)return null;
+  const delta=(Number(value)/mean-1)*100;
+  return {mean:round(mean),deltaPercent:round(delta),peerCount:known.length,poor:delta<=-20+1e-9};
+}
+function countValue(value){
+  if(typeof value==='number')return Number.isFinite(value)?value:null;
+  const match=String(value??'').trim().match(/^(\d+)(?:\s|$)/);
+  return match?Number(match[1]):null;
+}
+const coreAbility=/flash of light|holy light|holy shock|chain heal|healing wave|lesser healing wave|greater heal|flash heal|renew|rejuvenation|regrowth|healing touch|fireball|frostbolt|scorch|shadow bolt|shadowburn|mind blast|mind flay|sinister strike|backstab|bloodthirst|whirlwind|mortal strike|heroic strike|aimed shot|multi-shot|shred|claw|starfire|wrath/i;
 function summarize(record) {
   const {p,r,report}=record, fights=killMetrics(record,p);
   const durationMs=sum(fights,'durationMs'), damage=sum(fights,'damageDone'), healing=sum(fights,'healingDone');
@@ -44,7 +58,8 @@ function summarize(record) {
   const peerRows=(r.players||[]).filter(x=>x.className===p.className&&role(x)===role(p)).map(x=>{
     const peerFights=killMetrics(record,x).filter(f=>fights.some(t=>t.id===f.id&&t.name===f.name));
     const complete=peerFights.length===fights.length&&fights.length>0;
-    return {name:x.name,server:x.server,value:complete?round(rate(sum(peerFights,metric),sum(peerFights,'durationMs'))):null};
+    const heal=complete?sum(peerFights,'healingDone'):null,damage=complete?sum(peerFights,'damageDone'):null,over=complete?sum(peerFights,'overheal'):null,duration=complete?sum(peerFights,'durationMs'):null;
+    return {name:x.name,server:x.server,value:complete?round(rate(sum(peerFights,metric),duration)):null,hps:round(rate(heal,duration)),dps:round(rate(damage,duration)),healingDone:heal,damageDone:damage,overheal:over,overhealPercent:heal!==null&&over!==null&&heal+over>0?round(over*100/(heal+over)):null};
   }).filter(x=>x.value!==null).sort((a,b)=>b.value-a.value);
   const own=peerRows.find(x=>key(x.name)===key(p.name)&&key(x.server)===key(p.server));
   const deaths=(r.fights||[]).filter(f=>num(metricsFor(f,p)?.deaths)>0).map(f=>({boss:f.name,isBoss:f.isBoss===true,kill:f.kill===true,deaths:num(metricsFor(f,p).deaths)}));
@@ -60,7 +75,26 @@ function summarize(record) {
     if(/uptime|%/i.test(label)||num(value)===null) continue;
     casts[label]=(casts[label]||0)+Number(value);
   }
-  return {id:record.id,date:record.date,raid:record.raid,reportUrl:report.reportUrl||'',generatedAt:record.generatedAt,name:p.name,server:p.server,className:p.className,role:role(p),kills:fights.length,raidKills:num(report.bossKills),bossDurationMs:durationMs,healing:healing,damage:damage,hps:round(rate(healing,durationMs)),dps:round(rate(damage,durationMs)),overhealPercent:healing!==null&&overheal!==null&&healing+overheal>0?round(overheal*100/(healing+overheal)):null,totalHealing:num(p.healingDone),totalDamage:num(p.damageDone),totalDeaths:num(p.deaths),bossDeaths:sum(fights,'deaths'),activity:num(p.activityPercent),worldBuffCount:num(p.worldBuffCount),rank:own?peerRows.filter(x=>x.value>own.value).length+1:null,peerCount:peerRows.length,peers:peerRows,deaths,casts,consumables:(r.consumableUsage?.players?.[p.name]?.items||[]).map(x=>({label:x.label||x.originalLabel,percent:num(x.percent),fightsUsed:num(x.fightsUsed)})),bosses:fights.map(f=>({name:f.name,id:f.id,durationMs:f.durationMs,healing:num(f.healingDone),damage:num(f.damageDone),hps:round(rate(num(f.healingDone),f.durationMs)),dps:round(rate(num(f.damageDone),f.durationMs)),deaths:num(f.deaths)})),warnings};
+  const peerPlayers=(r.players||[]).filter(x=>x.className===p.className&&role(x)===role(p)&&!(key(x.name)===key(p.name)&&key(x.server)===key(p.server))&&peerRows.some(y=>y.name===x.name&&y.server===x.server));
+  const metricComparison=role(p)==='tank'?null:compareToPeers(round(rate(metric==='healingDone'?healing:damage,durationMs)),peerRows.filter(x=>!(key(x.name)===key(p.name)&&key(x.server)===key(p.server))).map(x=>x.value));
+  const activityComparison=compareToPeers(num(p.activityPercent),peerPlayers.map(x=>num(x.activityPercent)));
+  const sectionId=role(p)==='healer'?'healer-casts':role(p)==='tank'?'tank-casts':['Warrior','Rogue','Hunter'].includes(p.className)?'physical-casts':'caster-casts';
+  const sourceRows=(r.sections||[]).find(s=>s.id===sectionId)?.rows||[];
+  const reportUsage=sourceRows.filter(row=>Number(row.spellId)>0&&row.originalLabel&&['count','text'].includes(row.type)).map(row=>{
+    const value=row.values?.[p.name],count=countValue(value);
+    const comparison=compareToPeers(count,peerPlayers.map(x=>countValue(row.values?.[x.name])));
+    return {label:row.label,originalLabel:row.originalLabel,icon:row.icon||'',value:value==null?null:String(value),count,comparison:comparison?{...comparison,poor:comparison.poor&&coreAbility.test(row.originalLabel)&&!['cooldown','total'].includes(row.tone)}:null};
+  }).filter(row=>row.count!==null);
+  const castMetadata={};
+  for(const row of sourceRows){if(!row.originalLabel)continue;const normalized=row.originalLabel.replace(/\s*\((?:overheal|überheilung)%[^)]*\)/gi,'');if(!castMetadata[normalized])castMetadata[normalized]={label:row.label.replace(/\s*\((?:overheal|überheilung)%[^)]*\)/gi,'').replace(/ (auf Trash|auf Bossen|gesamt)$/,''),icon:row.icon||''};}
+  const castComparisons={};
+  for(const [name,value] of Object.entries(casts)){
+    const peers=peerPlayers.map(x=>{
+      let count=0,known=false;for(const f of killMetrics(record,x).filter(f=>fights.some(t=>t.id===f.id))){for(const [n,v] of Object.entries(f.abilityCasts||{})){if(n.replace(/\s*\((?:overheal|überheilung)%[^)]*\)/gi,'')===name&&num(v)!==null){count+=Number(v);known=true;}}}return known?count:null;
+    });
+    const comparison=compareToPeers(value,peers);if(comparison)castComparisons[name]={...comparison,poor:comparison.poor&&coreAbility.test(name)};
+  }
+  return {metricComparison,activityComparison,reportUsage,castMetadata,castComparisons,id:record.id,date:record.date,raid:record.raid,reportUrl:report.reportUrl||'',generatedAt:record.generatedAt,name:p.name,server:p.server,className:p.className,role:role(p),kills:fights.length,raidKills:num(report.bossKills),bossDurationMs:durationMs,healing:healing,damage:damage,hps:round(rate(healing,durationMs)),dps:round(rate(damage,durationMs)),overhealPercent:healing!==null&&overheal!==null&&healing+overheal>0?round(overheal*100/(healing+overheal)):null,totalHealing:num(p.healingDone),totalDamage:num(p.damageDone),totalDeaths:num(p.deaths),bossDeaths:sum(fights,'deaths'),activity:num(p.activityPercent),worldBuffCount:num(p.worldBuffCount),rank:own?peerRows.filter(x=>x.value>own.value).length+1:null,peerCount:peerRows.length,peers:peerRows,deaths,casts,consumables:(r.consumableUsage?.players?.[p.name]?.items||[]).map(x=>({label:x.label||x.originalLabel,icon:x.icon||'',percent:num(x.percent),fightsUsed:num(x.fightsUsed),uses:num(x.uses),comparison:compareToPeers(num(x.percent),peerPlayers.map(peer=>num((r.consumableUsage?.players?.[peer.name]?.items||[]).find(item=>(item.label||item.originalLabel)===(x.label||x.originalLabel))?.percent)))})),bosses:fights.map(f=>({name:f.name,id:f.id,durationMs:f.durationMs,healing:num(f.healingDone),damage:num(f.damageDone),hps:round(rate(num(f.healingDone),f.durationMs)),dps:round(rate(num(f.damageDone),f.durationMs)),deaths:num(f.deaths),comparison:role(p)==='tank'?null:compareToPeers(round(rate(num(f[metric]),f.durationMs)),peerPlayers.map(peer=>{const b=killMetrics(record,peer).find(x=>x.id===f.id&&x.name===f.name);return b?round(rate(num(b[metric]),b.durationMs)):null;}))})),warnings};
 }
 export function buildPlayerAnalysis(rows,params) {
   const name=String(params.playerName||'').trim(),server=String(params.server||'').trim();
@@ -80,6 +114,8 @@ export function buildPlayerAnalysis(rows,params) {
   if(raids.length<count) add('Weniger Teilnahmen verfügbar',`Es wurden ${raids.length} statt ${count} passende Teilnahmen gefunden. Alle verfügbaren werden ausgewertet.`);
   const comparable=raids.filter(x=>x.role===last.role&&x.rank!==null);
   if(comparable.length) add('Vergleich innerhalb der Klasse',comparable.map(x=>`${x.date}: Rang ${x.rank}/${x.peerCount}`).join(' · ')+'. Grundlage: dieselben Bosskills, Klasse und Rolle. Heil-/Tankaufträge und Ausrüstung sind nicht normalisiert.','Den Auftrag mit einem Spieler derselben Klasse und Rolle abgleichen, bevor aus Rangunterschieden Maßnahmen abgeleitet werden.');
+  const low=raids.filter(x=>x.metricComparison?.poor);
+  if(low.length)add('Deutlich unter dem Klassenvergleich',low.map(x=>`${x.date}: ${x[metric]} ${metric.toUpperCase()} gegenüber Ø ${x.metricComparison.mean} (${x.metricComparison.deltaPercent} %, ${x.metricComparison.peerCount} Vergleichsspieler)`).join(' · ')+'. Rot bedeutet mindestens 20 % unter dem Durchschnitt von mindestens drei anderen Spielern gleicher Klasse und Rolle auf denselben Bosskills. Aufgaben und Bedarf bleiben zu prüfen.');
   const repeated=new Map();
   raids.forEach(x=>{for(const boss of new Set(x.deaths.filter(d=>d.isBoss).map(d=>d.boss))){if(!repeated.has(boss))repeated.set(boss,[]);repeated.get(boss).push(x.date);}});
   for(const [boss,dates] of repeated) if(dates.length>=2) add(`Wiederkehrende Tode: ${boss}`,`In ${dates.length} ausgewerteten Raids dokumentiert (${dates.join(', ')}). Ursache und Vermeidbarkeit sind in den Summen nicht belegt.`,`Bei ${boss} die Todessequenzen, Positionen und vereinbarten Aufgaben gemeinsam prüfen.`);

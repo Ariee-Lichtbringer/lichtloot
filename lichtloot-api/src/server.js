@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { getStoredPlayerAnalysis } from "./player-analysis/service.js";
+import { saveReport, getReport, queueReportDm, completeReportDm, makeReportUrl, reportRecipients } from "./player-analysis/reports.js";
 import { getZgPrioAttendance, getZgAttendanceByCharacter } from "./prio-attendance.js";
 import { prepareRaidWorkbookWeb } from "./log-workbook/prepare.js";
 import { createRaidWorkbookService } from "./log-workbook/service.js";
@@ -30603,7 +30604,18 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicPlayerAnalysis") {
       enforceSecurityRateLimit(req, "player-analysis", 40, 60_000);
       const result = await getStoredPlayerAnalysis({ query, guildId: guild.id, params: req.query });
-      return res.json({ ...result, guild: guild.slug });
+      const stored = result.analysis ? await saveReport(query, guild, result.analysis) : {};
+      return res.json({ ...result, ...stored, guild: guild.slug });
+    }
+
+    if (action === "getPublicPlayerAnalysisReport") {
+      return res.json(await getReport(query, guild.id, req.query.reportToken));
+    }
+
+    if (action === "lichtbotGetPlayerAnalysisDelivery") {
+      requireMasterOrQueueToken(req.query);
+      const row = await getReport(query, guild.id, req.query.reportToken, true);
+      return res.json({ success:true, status:row.delivery_status, error:row.delivery_error, messageId:row.discord_message_id, queueId:row.queue_id, discordUserId:row.discord_user_id, reportUrl:makeReportUrl(guild.slug, req.query.reportToken) });
     }
 
     if (action === "getPublicLogAnalysisPlayerProfile") {
@@ -31487,6 +31499,29 @@ app.post("/api/apps-script", async (req, res, next) => {
       requireRaidleadP0MasterCodeForGuild(guild,postParams.masterCode);
       const result=await transferP0PlusPoints({guildId:guild.id,query:postParams});
       return res.json({...result,guild:guild.slug});
+    }
+
+    if (action === "guildSendPlayerAnalysisDm" || action === "guildGetPlayerAnalysisDelivery" || action === "guildGetPlayerAnalysisRecipients") {
+      const authorize = async className => {
+        if (clean(postParams.masterCode)) requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+        else await authorizePoClassManagement(guild.id, postParams, className);
+      };
+      enforceSecurityRateLimit(req, "player-analysis-dm", 30, 60_000);
+      if (action === "guildGetPlayerAnalysisRecipients") {
+        const row = await getReport(query, guild.id, postParams.reportToken, true);
+        await authorize(row.payload.className);
+        return res.json(await reportRecipients(query, guild.id));
+      }
+      if (action === "guildGetPlayerAnalysisDelivery") {
+        const row = await getReport(query, guild.id, postParams.reportToken, true);
+        await authorize(row.payload.className);
+        return res.json({ success:true, status:row.delivery_status, error:row.delivery_error, recipient:row.discord_name||row.payload.name });
+      }
+      return res.json(await queueReportDm({ pool, query, guild, token:postParams.reportToken, authorize, retry:postParams.retry === true, recipientId:postParams.recipientId || null }));
+    }
+    if (action === "lichtbotCompletePlayerAnalysisDm") {
+      requireMasterOrQueueToken(postParams);
+      return res.json(await completeReportDm(query, guild.id, postParams));
     }
 
     const mailboxHandlers={getPlayerMailRecipients,updatePlayerMailboxState,sendPlayerDiscordDm,getPlayerDiscordDmStatus,completePlayerDiscordDm,sendPlayerMessageFromPlayer,markPlayerMessageRead};
