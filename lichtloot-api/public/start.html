@@ -5917,12 +5917,21 @@ async function openMailboxComposer(channel='mailbox',recipient='',subject=''){
   try{
     const pin=syncHiddenPinFromDashboard(),result=await mailboxApi('getPlayerMailRecipients');if(pin!==syncHiddenPinFromDashboard())return;
     mailboxRecipients=result.recipients||[];
-    mailboxEl('playerMailTo').innerHTML='<option value="">Charakter auswählen …</option>'+mailboxRecipients.map((r,i)=>`<option value="${i}">${safeHtml(r.name)} · ${safeHtml(r.server)}${r.discord?' · Discord verbunden':''}</option>`).join('');
-    const index=mailboxRecipients.findIndex(r=>r.name.toLocaleLowerCase()===String(recipient).toLocaleLowerCase());if(index>=0)mailboxEl('playerMailTo').value=String(index);
+    if(channel==='discord'){
+      const accounts=new Map();
+      mailboxRecipients.filter(r=>r.discord).forEach(r=>{
+        const key=r.discordUserId||r.id,existing=accounts.get(key);
+        if(existing)existing.characters.push(r.name);
+        else accounts.set(key,{...r,characters:[r.name]});
+      });
+      mailboxRecipients=[...accounts.values()].sort((a,b)=>(a.discordName||a.name).localeCompare(b.discordName||b.name,'de'));
+    }
+    mailboxEl('playerMailTo').innerHTML=`<option value="">${channel==='discord'?'Discord-Namen auswählen …':'Charakter auswählen …'}</option>`+mailboxRecipients.map((r,i)=>`<option value="${i}">${channel==='discord'?safeHtml(r.discordName||'Discord-Konto')+(r.discordUsername?' (@'+safeHtml(r.discordUsername)+')':'')+' · '+safeHtml(r.characters.join(', ')):safeHtml(r.name)+' · '+safeHtml(r.server)}</option>`).join('');
+    const index=mailboxRecipients.findIndex(r=>(r.characters||[r.name]).some(name=>name.toLocaleLowerCase()===String(recipient).toLocaleLowerCase()));if(index>=0)mailboxEl('playerMailTo').value=String(index);
     updateMailboxRecipientHint();mailboxEl('playerMailTo').focus();
   }catch(error){mailboxStatus(error.message,true);}
 }
-function updateMailboxRecipientHint(){const value=mailboxEl('playerMailTo').value,r=value===''?null:mailboxRecipients[Number(value)];mailboxEl('mailboxRecipientHint').textContent=mailboxComposeChannel==='discord'?(r?.discord?'Discord verbunden · Die DM wird über den Gildenbot gesendet.':r?'Kein Discord-Konto verknüpft. Bitte einen anderen Empfänger wählen.':'Wähle einen Charakter mit verknüpftem Discord-Konto.'):'Die Nachricht wird im persönlichen Postfach des Empfängers angezeigt.';mailboxEl('mailboxSend').disabled=mailboxSending||!r||(mailboxComposeChannel==='discord'&&!r.discord);}
+function updateMailboxRecipientHint(){const value=mailboxEl('playerMailTo').value,r=value===''?null:mailboxRecipients[Number(value)];mailboxEl('mailboxRecipientHint').textContent=mailboxComposeChannel==='discord'?(r?.discord?'Discord verbunden · Die DM wird über den Gildenbot gesendet.':r?'Kein Discord-Konto verknüpft. Bitte einen anderen Empfänger wählen.':'Wähle einen Discord-Namen. Es werden verknüpfte Konten deiner Gilde angezeigt.'):'Die Nachricht wird im persönlichen Postfach des Empfängers angezeigt.';mailboxEl('mailboxSend').disabled=mailboxSending||!r||(mailboxComposeChannel==='discord'&&!r.discord);}
 function closeMailboxComposer(){if(mailboxSending)return;mailboxEl('mailboxComposer').classList.add('hidden');mailboxEl('playerMailboxModal').querySelector('.mailbox-layout').classList.remove('composing');}
 async function sendPlayerMailboxMessage(){
   if(mailboxSending)return;const value=mailboxEl('playerMailTo').value,recipient=value===''?null:mailboxRecipients[Number(value)],body=mailboxEl('playerMailBody').value.trim(),title=mailboxEl('playerMailTitle').value.trim();

@@ -21044,9 +21044,16 @@ async function requireMailboxPlayer(guildId,params){
 }
 async function getPlayerMailRecipients({guildId,query:params}){
   await requireMailboxPlayer(guildId,params);
+  await ensureDiscordChannelSchema();
   const result=await query(`select c.id,c.name,c.server,
-    exists(select 1 from discord_player_links d where d.guild_id=p.guild_id and d.character_id=c.id) as discord
+    (d.discord_user_id is not null) as discord,
+    d.discord_user_id as "discordUserId",
+    coalesce(nullif(m.display_name,''),nullif(m.global_name,''),nullif(m.username,''),d.discord_user_id) as "discordName",
+    m.username as "discordUsername"
     from characters c join players p on p.id=c.player_id
+    left join lateral(select discord_user_id from discord_player_links
+      where guild_id=p.guild_id and character_id=c.id order by updated_at desc limit 1) d on true
+    left join discord_bot_members m on m.guild_id=p.guild_id and m.user_id=d.discord_user_id
     where p.guild_id=$1 and p.approval_status='approved' and coalesce(p.is_blocked,false)=false
     order by lower(c.name),lower(c.server)`,[guildId]);
   return {success:true,recipients:result.rows};
