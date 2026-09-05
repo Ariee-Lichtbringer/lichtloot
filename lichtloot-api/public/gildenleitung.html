@@ -2633,9 +2633,8 @@ tr.selected-row td{
 .raid-helper-workflow b{grid-row:1 / span 2;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#0ea5e9;color:#fff}
 .raid-helper-workflow strong{font-size:13px}.raid-helper-workflow span{color:#94a3b8;font-size:11px;line-height:1.3}
 .raid-helper-tools{margin:0 0 14px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:rgba(2,6,23,.28)}
-.raid-helper-tools>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;color:#cbd5e1;font-size:12px;font-weight:900;cursor:pointer;list-style:none}.raid-helper-tools>summary::-webkit-details-marker{display:none}.raid-helper-tools>summary::after{content:"anzeigen +";color:#7dd3fc}.raid-helper-tools[open]>summary::after{content:"schließen −"}
-.raid-helper-tools .raid-helper-tabs{padding:0 10px 10px;margin:0;grid-template-columns:repeat(3,minmax(0,1fr))}
-.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:repeat(8,minmax(120px,1fr));overflow-x:auto}
+.raid-helper-tools-heading{margin:0;padding:12px 14px;color:#cbd5e1;font-size:12px;font-weight:900}
+.raid-helper-tools .raid-helper-tabs{padding:0 10px 10px;margin:0;grid-template-columns:repeat(8,minmax(120px,1fr));overflow-x:auto}
 .raid-helper-tools .raid-helper-tab{min-height:54px;padding:8px}
 .raid-helper-tools .raid-helper-tab-copy strong{font-size:12px}
 .raid-helper-tools .raid-helper-tab-copy span{font-size:10px}
@@ -2647,8 +2646,8 @@ tr.selected-row td{
 .raid-helper-current-card::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 8%,color-mix(in srgb,var(--raid-color,#a78bfa) 14%,transparent),transparent 45%);pointer-events:none}
 .raid-helper-current-card-image{width:116px;height:146px;border-radius:10px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.32);box-shadow:0 10px 24px rgba(0,0,0,.34);position:relative;z-index:1}
 .raid-helper-current-card-body{display:flex;min-width:0;flex-direction:column;position:relative;z-index:1}.raid-helper-current-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.raid-helper-current-card-head h4{margin:0;color:#f8fafc;font-size:16px;line-height:1.25}.raid-helper-current-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;color:#bfdbfe;font-size:11px;font-weight:850}.raid-helper-current-card-meta span{white-space:nowrap}.raid-helper-current-card-status{margin-top:9px}.raid-helper-current-status-breakdown{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.raid-helper-current-status-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid #334155;border-radius:999px;background:#0f172a;color:#cbd5e1;font-size:10px;font-weight:900}.raid-helper-current-status-chip.signed{border-color:rgba(34,197,94,.5);background:rgba(22,101,52,.22);color:#bbf7d0}.raid-helper-current-status-chip.bench{border-color:rgba(245,158,11,.5);background:rgba(146,64,14,.22);color:#fde68a}.raid-helper-current-status-chip.late{border-color:rgba(249,115,22,.56);background:rgba(154,52,18,.24);color:#fed7aa}.raid-helper-current-status-chip.tentative{border-color:rgba(59,130,246,.5);background:rgba(30,64,175,.22);color:#bfdbfe}.raid-helper-current-status-chip.absent{border-color:rgba(239,68,68,.55);background:rgba(153,27,27,.24);color:#fecaca}.raid-helper-current-card-counts{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}.raid-helper-current-card-count{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid rgba(148,163,184,.17);border-radius:7px;background:rgba(15,23,42,.55);color:#cbd5e1;font-size:11px;font-weight:850}.raid-helper-current-card-count.p0{border-color:rgba(168,85,247,.36);background:rgba(88,28,135,.16);color:#e9d5ff}.raid-helper-current-card-count b{font-size:17px;color:#fff}.raid-helper-current-card-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;position:relative;z-index:1}.raid-helper-current-card-actions .small-btn{min-height:38px}.raid-helper-current-card .raid-select-checkbox{width:20px;height:20px;margin:0;accent-color:#8b5cf6}
-@media(max-width:1250px){.raid-helper-current-grid{grid-template-columns:repeat(2,minmax(280px,1fr))}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:repeat(4,minmax(150px,1fr))}}
-@media(max-width:760px){.raid-helper-current-toolbar{grid-template-columns:1fr}.raid-helper-current-filter-stack{justify-items:start}.raid-helper-current-filter-stack .po-signup-filter-row{justify-content:flex-start}.raid-helper-current-grid{grid-template-columns:1fr}.raid-helper-current-card{grid-template-columns:86px minmax(0,1fr);min-height:190px}.raid-helper-current-card-image{width:86px;height:112px}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:1fr 1fr}}
+@media(max-width:1250px){.raid-helper-current-grid{grid-template-columns:repeat(2,minmax(280px,1fr))}.raid-helper-tools .raid-helper-tabs{grid-template-columns:repeat(4,minmax(150px,1fr))}}
+@media(max-width:760px){.raid-helper-current-toolbar{grid-template-columns:1fr}.raid-helper-current-filter-stack{justify-items:start}.raid-helper-current-filter-stack .po-signup-filter-row{justify-content:flex-start}.raid-helper-current-grid{grid-template-columns:1fr}.raid-helper-current-card{grid-template-columns:86px minmax(0,1fr);min-height:190px}.raid-helper-current-card-image{width:86px;height:112px}.raid-helper-tools .raid-helper-tabs{grid-template-columns:1fr 1fr}}
 .raid-center-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}
 .raid-center-modal{width:min(760px,100%);max-height:92vh;overflow:auto;border:1px solid rgba(56,189,248,.38);border-radius:16px;background:linear-gradient(145deg,#111c32,#060c19);box-shadow:0 28px 80px rgba(0,0,0,.55);padding:20px}
 .raid-center-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.raid-center-head h2{margin:0;color:#f8fafc}.raid-center-head p{margin:5px 0 0;color:#94a3b8}.raid-center-close{width:38px;height:38px;border:1px solid #334155;border-radius:9px;background:#0f172a;color:#e2e8f0;cursor:pointer}
@@ -5467,8 +5466,8 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="openNewRaidHelperForm()"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>Neuen Raid erstellen</strong><span>Raid und Anmelder gemeinsam anlegen</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Erstellte Raids verwalten</strong><span>Raid auswählen, Teilnehmer und POs bearbeiten</span></span></button>
       </div>
-      <details class="raid-helper-tools">
-        <summary>Weitere Funktionen und Sonderfälle</summary>
+      <section class="raid-helper-tools" aria-labelledby="raidHelperToolsHeading">
+        <h3 id="raidHelperToolsHeading" class="raid-helper-tools-heading">Weitere Funktionen und Sonderfälle</h3>
         <div class="raid-helper-tabs" role="tablist" aria-label="Weitere Werkzeuge">
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>Alle PO-Anmelder</strong><span>Raidübergreifende Übersicht</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO ohne Raid erstellen</strong><span>Manueller Sonderfall</span></span></button>
@@ -5479,7 +5478,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
         </div>
-      </details>
+      </section>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
@@ -7483,7 +7482,10 @@ async function loadOverview(options){
     raidHelperCurrentSignupStatsPending.clear();
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
-    showRaidDashboard();
+    // Das Nachladen der Rhythmen darf die Raidkacheln nicht wieder vor
+    // den geöffneten Raidanmelder setzen.
+    if(document.getElementById("raidHelperPanel")?.open) hideRaidDashboard();
+    else showRaidDashboard();
     renderAll();
     handleRaidHelperDeepLink();
     handlePlayerLoginDeepLink();
@@ -10681,6 +10683,7 @@ function raidHelperClassIconMarkup(className, fallbackIcon, filename){
 
 function setRaidHelperTab(tabName){
   const target = String(tabName || "createEvent");
+  hideRaidDashboard();
   if(target==="currentEvents" && raidHelperCurrentSelectedRaidId) document.body.classList.add("raid-unified-open");
   else if(target!=="currentEvents") document.body.classList.remove("raid-unified-open");
   const tabAccents = {
