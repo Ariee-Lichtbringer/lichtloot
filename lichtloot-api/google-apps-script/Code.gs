@@ -42,7 +42,7 @@ function json_(value){return ContentService.createTextOutput(JSON.stringify(valu
 function installCellIcons_(spreadsheet){
   const manifest=spreadsheet.getSheetByName('_GoogleIcons');
   if(!manifest)return;
-  const groups={};
+  const groups={},images={};
   manifest.getDataRange().getValues().slice(1).forEach(function(row){
     const name=String(row[0]),r=Number(row[1]),c=Number(row[2]),url=String(row[3]);
     const prefix='https://wow.zamimg.com/images/wow/icons/large/';
@@ -55,7 +55,7 @@ function installCellIcons_(spreadsheet){
     const rows=groups[key].sort(function(a,b){return a.r-b.r;});
     let start=0;
     while(start<rows.length){let end=start+1;while(end<rows.length&&rows[end].r===rows[end-1].r+1)end++;
-      tab.getRange(rows[start].r,column,end-start,1).setFormulas(rows.slice(start,end).map(function(row){return ['=IMAGE("'+row.url+'";4;23;23)'];}));start=end;
+      tab.getRange(rows[start].r,column,end-start,1).setValues(rows.slice(start,end).map(function(row){if(!images[row.url])images[row.url]=SpreadsheetApp.newCellImage().setSourceUrl(row.url).build();return [images[row.url]];}));start=end;
     }
   });
   spreadsheet.getSheets().forEach(function(tab){tab.getImages().forEach(function(image){const a=image.getAnchorCell();if(a.getRow()!==1||a.getColumn()!==1)image.remove();});});
