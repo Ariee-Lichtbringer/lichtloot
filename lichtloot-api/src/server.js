@@ -24240,6 +24240,28 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
   };
 }
 
+// Anmeldungen bleiben in ihrer jeweiligen Datenbank. Die Punktezuordnung
+// verwendet dieselben Konten wie die P0+-Punktesuche, auch wenn eine ältere
+// Anmeldung noch eine andere Charakter- oder Item-ID gespeichert hat.
+async function enrichP0SignupPoints(guildId, rows, raidType) {
+  if (!rows.some(row => row.p0plus_points == null)) return rows;
+  const raid = normalizeRaidType(raidType);
+  const pointResult = await getP0Plus(guildId, { raid });
+  const keyFor = (player, server, item) => JSON.stringify([
+    clean(player).toLowerCase(), clean(server).toLowerCase(), itemLookupKey(item)
+  ]);
+  const pointsByCharacterItem = new Map();
+  for (const entry of pointResult.entries || []) {
+    if (normalizeRaidType(entry.raid) !== raid) continue;
+    const key = keyFor(entry.player, entry.server, entry.item);
+    pointsByCharacterItem.set(key, (pointsByCharacterItem.get(key) || 0) + Number(entry.points || 0));
+  }
+  return rows.map(row => row.p0plus_points == null ? {
+    ...row,
+    p0plus_points: pointsByCharacterItem.get(keyFor(row.player_name, row.server, row.item_name)) ?? 0
+  } : row);
+}
+
 async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
   await ensurePoPostEntriesSchema();
@@ -24483,7 +24505,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     ...linkedRegularSignupResult.rows,
     ...linkedP0OnlySignupResult.rows
   ];
-  const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
+  const signupRows = (await enrichP0SignupPoints(guildId, allSignupDatabaseRows, raid.raid_type)).map(normalizeP0SignupRow);
   const normalizedRaid = normalizeRaidRow(raid);
   const poPostSignupRows = poPostSignupResult.rows.map(row => ({
     id: row.id,
@@ -24780,11 +24802,12 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         signup: signupResult.rows[0],
         approvalStatus: "approved"
       });
+      const pointRows = await enrichP0SignupPoints(guildId, [signupResult.rows[0], ...itemSignupResult.rows], raid.raid_type);
       return {
         success: true,
         raid: normalizeRaidRow(raid),
-        signup: normalizeP0SignupRow({ ...signupResult.rows[0], raid_public_id: raid.external_p0_id, raid_type: raid.raid_type }),
-        itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow),
+        signup: normalizeP0SignupRow({ ...pointRows[0], raid_public_id: raid.external_p0_id, raid_type: raid.raid_type }),
+        itemSignups: pointRows.slice(1).map(normalizeP0SignupRow),
         syncedPrio: Boolean(linkedPrioSync?.synced),
         linkedPrioSync,
         storage: "separate-p0-database"
