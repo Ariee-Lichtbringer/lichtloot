@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { getStoredPlayerAnalysis } from "./player-analysis/service.js";
 import { getZgPrioAttendance, getZgAttendanceByCharacter } from "./prio-attendance.js";
 import { prepareRaidWorkbookWeb } from "./log-workbook/prepare.js";
 import { createRaidWorkbookService } from "./log-workbook/service.js";
@@ -30597,6 +30598,12 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicLogAnalysisWeb") {
       const webAnalysis = await getPublicLogAnalysisWeb({ guildId: guild.id, query: req.query });
       return res.json({ ...webAnalysis, guild: guild.slug });
+    }
+
+    if (action === "getPublicPlayerAnalysis") {
+      enforceSecurityRateLimit(req, "player-analysis", 40, 60_000);
+      const result = await getStoredPlayerAnalysis({ query, guildId: guild.id, params: req.query });
+      return res.json({ ...result, guild: guild.slug });
     }
 
     if (action === "getPublicLogAnalysisPlayerProfile") {
