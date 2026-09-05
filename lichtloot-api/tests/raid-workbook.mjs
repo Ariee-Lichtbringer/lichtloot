@@ -48,3 +48,10 @@ const native={success:true,mimeType:'application/vnd.google-apps.spreadsheet',sp
 assert.deepEqual(await publishGoogleSheet({...publishArgs,fetchImpl:async(url,options)=>{const body=JSON.parse(options.body);assert.equal(body.guildSlug,guild.slug);assert.equal(body.analysisId,analysis.id);return {ok:true,json:async()=>native};}}),{id:'native_id',url:native.url});
 for(const bad of [{...native,mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},{...native,url:'https://docs.google.com.evil.invalid/spreadsheets/d/native_id/edit'},{success:false,error:'Unauthorized'}])await assert.rejects(publishGoogleSheet({...publishArgs,fetchImpl:async()=>({ok:true,json:async()=>bad})}));
 console.log('Native Google Sheet identity and rejected invalid publisher responses verified.');
+contexts.a.guild_layout.logWorkbookAutoPost=true;
+const before=queued;
+assert.equal(service.enqueueBackfill({guildId:'guild-a',analysisId:analysis.id}).queued,true);
+assert.equal(service.enqueueBackfill({guildId:'guild-a',analysisId:analysis.id}).reason,'already-queued');
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(queued,before+1);
+console.log('Completed-data backfill publishes independently and coalesces duplicate requests.');

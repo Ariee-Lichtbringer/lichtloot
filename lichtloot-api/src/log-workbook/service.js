@@ -3,7 +3,7 @@ import path from 'node:path';
 import {buildRaidWorkbook} from './workbook.js';
 import {sourceDigest,workbookLinks,buildPostPayload,clean} from './model.js';
 export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBaseUrl,apiBaseUrl,publicDir=path.resolve('public'),build=buildRaidWorkbook,bridgeUrl=process.env.GOOGLE_SHEETS_BRIDGE_URL,queueToken=process.env.LICHTBOT_QUEUE_TOKEN,publishSheet=publishGoogleSheet}) {
-  let schemaPromise;const running=new Map();
+  let schemaPromise;const running=new Map(),backfilling=new Map();let backfillChain=Promise.resolve();
   function ensureSchema(){return schemaPromise ||= (async()=>{
     await query(`create table if not exists log_analysis_workbooks (
       analysis_id uuid primary key references log_analyses(id) on delete cascade,
@@ -76,5 +76,18 @@ export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBas
     await query(`update log_analyses set summary=coalesce(summary,'{}'::jsonb)||$3::jsonb where guild_id=$1 and id=$2`,[guildId,analysisId,JSON.stringify({workbookError:null})]);
     return {queued:true,sheetUrl:sheet.url};
   }
-  return {generate,afterAnalysis,ensureSchema};
+  function enqueueBackfill({guildId,analysisId}){
+    const key=`${guildId}:${analysisId}`;
+    if(backfilling.has(key))return {queued:false,reason:'already-queued'};
+    // Publishing existing completed data must not wait for unrelated WCL recalculations.
+    const job=backfillChain.then(async()=>{
+      const result=await generate(guildId,analysisId);
+      return afterAnalysis({guildId,analysisId,web:result.web});
+    }).catch(async error=>{
+      await query(`update log_analyses set summary=coalesce(summary,'{}'::jsonb)||$3::jsonb where guild_id=$1 and id=$2`,[guildId,analysisId,JSON.stringify({workbookError:clean(error?.message||error).slice(0,500)})]);
+    }).finally(()=>backfilling.delete(key));
+    backfilling.set(key,job);backfillChain=job.catch(()=>{});
+    return {queued:true};
+  }
+  return {generate,afterAnalysis,ensureSchema,enqueueBackfill};
 }

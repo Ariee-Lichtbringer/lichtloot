@@ -32022,7 +32022,7 @@ app.post("/api/guilds/:guildSlug/log-analyses/workbook-backfill", async (req,res
     if(req.body?.enableAutomation===true)await query(`insert into guild_settings(guild_id,layout_json) values($1,'{"logWorkbookAutoPost":true}'::jsonb)
       on conflict(guild_id) do update set layout_json=coalesce(guild_settings.layout_json,'{}'::jsonb)||excluded.layout_json`,[guild.id]);
     else if(![true,'true'].includes(await getGuildLayoutValue(guild.id,'logWorkbookAutoPost')))return res.status(409).json({success:false,error:"Automatische Google-Sheets-Auswertung ist für diese Gilde deaktiviert."});
-    for(const r of raids){if(r.postStatus==='done' && !req.body?.replaceExisting){r.skipped='already-posted';continue;}r.queue=enqueueAutomaticLogAnalysis({guildId:guild.id,analysisId:r.id,forceRefresh:false,source:'workbook-backfill',priority:true});}
+    for(const r of raids){if(r.postStatus==='done' && !req.body?.replaceExisting){r.skipped='already-posted';continue;}r.queue=raidWorkbookService.enqueueBackfill({guildId:guild.id,analysisId:r.id});}
     return res.json({success:true,guild:guild.slug,raids});
   } catch(error){next(error);}
 });
