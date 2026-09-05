@@ -7974,7 +7974,7 @@ function renderMyPrios(data){
         points:"",
         createdAt:entry.createdAt || ''
       };
-      const deletePayload=safeAttr(JSON.stringify({
+      const deletePayload=jsonAttribute(JSON.stringify({
         rowId:rowId,
         prioId:entry.id || entry.prioId || entry.prio_id || '',
         raidId:entry.raidId || entry.RaidID || entry.id || '',
@@ -10751,8 +10751,18 @@ function reportIconFallback(img){
   if(fallback) fallback.classList.remove("hidden");
 }
 
+function jsonAttribute(value){
+  // JSON is already valid JavaScript; only escape the surrounding HTML attribute.
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/'/g,"&#39;")
+    .replace(/"/g,"&quot;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
 function reportButtonHtml(payload){
-  const json = safeAttr(JSON.stringify(payload || {}));
+  const json = jsonAttribute(JSON.stringify(payload || {}));
   return `
     <button class="report-btn" title="Fehler melden" onclick='openReportModal(${json})'>
       <img src="../images/Brief.png" alt="" onerror="reportIconFallback(this)">
@@ -10945,11 +10955,11 @@ function prioActionCellHtml(prio,index,ownRow){
     return reportHtml;
   }
 
-  const deletePayload=safeAttr(JSON.stringify(publishedPrioDeletePayload(prio,index)));
+  const deletePayload=jsonAttribute(JSON.stringify(publishedPrioDeletePayload(prio,index)));
   return `
     <div class="prio-action-cell">
       ${reportHtml}
-      ${new URLSearchParams(window.location.search).get("random") === "1" ? `<button class="delete-prio-btn" title="Prio bearbeiten" onclick='editRandomPrio(${safeAttr(JSON.stringify(prio))})'>✏️</button>` : ""}
+      ${new URLSearchParams(window.location.search).get("random") === "1" ? `<button class="delete-prio-btn" title="Prio bearbeiten" onclick='editRandomPrio(${jsonAttribute(JSON.stringify(prio))})'>✏️</button>` : ""}
       <button class="delete-prio-btn" title="Prio löschen" onclick='deleteOwnPrio(${deletePayload})'>🗑</button>
     </div>
   `;

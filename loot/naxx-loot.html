@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script src="../guild-page-boot.js"></script>
+<script src="../guild-page-boot.js?v=20260831-1735"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>Lichtloot - Naxxramas</title>
 
 <style>
@@ -71,7 +72,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(var(--gold-rgb),.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
-.mini-btn.plus{color:var(--gold)}
+.mini-btn.plus{color:#241500;background:linear-gradient(135deg,#fde68a,#f59e0b);border-color:#fbbf24;box-shadow:0 0 0 1px rgba(251,191,36,.28)}
 .mini-btn.active{background:linear-gradient(135deg,rgba(var(--gold-rgb),.65),rgba(180,83,9,.75));color:#111827;border-color:var(--gold)}
 .mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(var(--gold-rgb),.55));color:white;border-color:var(--gold)}
 
@@ -270,6 +271,26 @@ body.random-prio .item-p0plus-line,
 body.random-prio .tooltip-p0{
   display:none!important;
 }
+
+body.random-prio{
+  background:linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.93)),url('../images/guildloot-index-background-v2.png') center top/cover fixed!important;
+}
+body.random-prio>.overlay{padding-left:22px!important}
+body.random-prio .loot-side-shell,
+body.random-prio .header-actions,
+body.random-prio #selectedCharacterPoReleases,
+body.random-prio .loot-attendance-title,
+body.random-prio .loot-attendance-list,
+body.random-prio .plundermeister-login-btn{display:none!important}
+body.random-prio .player-card-layout{display:none!important}
+.random-character-profile{display:none}
+body.random-prio .random-character-profile{display:none!important}
+.random-character-profile h2{grid-column:1/-1;margin:0;color:#facc15;font-size:18px}.random-character-profile label{margin:0}.random-character-profile input{margin-top:6px}
+@media(max-width:720px){body.random-prio .random-character-profile{grid-template-columns:1fr}}
+.random-prio-home{display:none}
+body.random-prio .random-prio-home{width:min(1600px,100%);margin:0 auto 18px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.random-prio-home img{width:min(230px,48vw);max-height:92px;object-fit:contain}
+.random-prio-home a{padding:11px 15px;border:1px solid rgba(250,204,21,.45);border-radius:12px;background:rgba(2,6,23,.78);color:#fff;text-decoration:none;font-weight:900}
 
 .raid-create-box{
   position:fixed;
@@ -1739,7 +1760,7 @@ body.random-prio .tooltip-p0{
 .raid-page-title-icon{width:72px;height:72px;flex:0 0 72px;border-radius:12px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.48);box-shadow:0 10px 24px rgba(0,0,0,.38)}
 @media(max-width:700px){.raid-page-title{gap:10px}.raid-page-title-icon{width:48px;height:48px;flex-basis:48px;border-radius:9px}}
 </style>
-<link rel="stylesheet" href="raid-signup-mirror.css?v=20260809-1205">
+<link rel="stylesheet" href="raid-signup-mirror.css?v=20260831-1125">
 </head>
 
 <body class="raid-naxx">
@@ -1997,12 +2018,13 @@ function openRaidStartAction(action){
 <span class="search-icon">🔎</span>
 <input id="itemSearch" type="text" placeholder="Item suchen..." oninput="renderLootList()">
 </div>
+<select id="lootClassFilter" aria-label="Loot nach Klasse filtern" onchange="renderLootList()" style="width:100%;margin-top:8px"><option value="">Alle Klassen</option><option value="krieger">Krieger</option><option value="paladin">Paladin</option><option value="jäger">Jäger</option><option value="schurke">Schurke</option><option value="priester">Priester</option><option value="schamane">Schamane</option><option value="magier">Magier</option><option value="hexenmeister">Hexenmeister</option><option value="druide">Druide</option></select>
 
 <div class="status">Suche nach Itemname, Slot, Typ, Boss oder Kategorie.</div>
 <div class="loot-save-area">
   <button class="btn" onclick="savePrio()">Prios speichern</button>
 </div>
-<div class="loot-hint">Hinweis: Wenn du nur P2 oder P3 auswählst, dann gönn dir einen <a href="https://www.wowhead.com/classic/item=521" target="_blank" rel="noopener">Kaese</a>.</div>
+<div class="loot-hint" hidden>Rekrutenregeln werden geladen …</div>
 
 
 <div id="lootList" class="loot-list">
@@ -2037,9 +2059,9 @@ function openRaidStartAction(action){
 <th>#</th>
 <th>Spieler</th>
 <th>Klasse</th>
-<th>P1</th>
-<th>P2</th>
-<th>P3</th>
+<th data-era-priority-key="p1">P1</th>
+<th data-era-priority-key="p2">P2</th>
+<th data-era-priority-key="p3">P3</th>
 <th>P0 gewählt</th>
 <th>Melden</th>
 </tr>
@@ -2205,7 +2227,6 @@ function guildLogoUrl(guild){
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
 async function fetchCurrentGuildInfo(){
   const slug=currentGuildSlug();
-  if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
   try{
     const response=await fetch(RAID_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
     const data=await response.json();
@@ -2256,6 +2277,7 @@ async function applyGuildBranding(){
     if(logo) el.src=logo;
     el.alt=lootName + " - " + guildName;
   });
+  applyEraPriorityUi();
 }
 if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
@@ -2273,11 +2295,50 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
 let GUILD_PO_ITEM_KEYS = new Set();
+let GUILD_PO_PLUS_ITEM_KEYS = new Set();
 function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
 async function loadGuildPoItems(){
-  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
+
+function eraPriorityLevels(){
+  const configured=currentGuildInfo?.layout?.eraRules?.priorityLevels;
+  return ["p1","p2","p3"].map((key,index)=>{
+    const entry=Array.isArray(configured)?configured.find(level=>String(level?.key||"").toLowerCase()===key):null;
+    return {key,label:String(entry?.label||key.toUpperCase()).trim()||key.toUpperCase(),enabled:index<PRIO_COUNT&&entry?.enabled!==false};
+  });
+}
+function eraPriorityLevel(key){return eraPriorityLevels().find(level=>level.key===key)||{key,label:String(key||"").toUpperCase(),enabled:false};}
+function eraRequiredPriorityKeys(){
+  let keys=eraPriorityLevels().filter(level=>level.enabled).map(level=>level.key);
+  const recruit=currentGuildInfo?.layout?.eraRules?.recruit;
+  if(recruit?.enabled&&Array.isArray(recruit.raids)&&recruit.raids.includes(RAID_NAME)&&Array.isArray(recruit.allowedPriorities)){
+    keys=keys.filter(key=>recruit.allowedPriorities.includes(key));
+  }
+  return keys;
+}
+function applyEraPriorityUi(root=document){
+  root.querySelectorAll(".prio-buttons [data-prio='p1'],.prio-buttons [data-prio='p2'],.prio-buttons [data-prio='p3']").forEach(button=>{
+    const level=eraPriorityLevel(button.dataset.prio);
+    button.hidden=!level.enabled;
+    button.textContent=level.label;
+  });
+  document.querySelectorAll("[data-era-priority-key]").forEach(element=>{
+    const level=eraPriorityLevel(element.dataset.eraPriorityKey);
+    element.textContent=level.label;
+  });
+  const hint=document.querySelector(".loot-hint");
+  const recruit=currentGuildInfo?.layout?.eraRules?.recruit;
+  if(hint){
+    if(recruit?.enabled&&Array.isArray(recruit.raids)&&recruit.raids.includes(RAID_NAME)){
+      const labels=eraRequiredPriorityKeys().map(key=>eraPriorityLevel(key).label);
+      hint.textContent=labels.length?`Hinweis für Rekruten: Bitte ${labels.join(" und ")} vollständig auswählen.`:"Hinweis für Rekruten: Für diesen Raid ist keine normale Prioritätsstufe erforderlich.";
+      hint.hidden=false;
+    }else hint.hidden=true;
+  }
+}
+
 
 
 let p0PlusData = {};
@@ -2367,14 +2428,11 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  return Boolean(currentPublishedMode);
+  return false;
 }
 
 function getP0DeadlineClosedMessage(){
-  if(currentPublishedMode){
-    return "P0+ ist geschlossen, weil die Prioliste bereits geöffnet ist.";
-  }
-  return "P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.";
+  return "P0 kann auch nach dem Öffnen der Prioliste weiterhin gesetzt werden.";
 }
 
 function formatRaidDate(value){
@@ -2410,9 +2468,9 @@ function updateRaidTimeDisplay(){
   timeEl.textContent=formatTime(currentRaidTime);
 
   if(currentPublishedMode){
-    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0+ geschlossen</span><br>P0+ kann nicht mehr gesetzt werden, weil die Prioliste geöffnet ist.';
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 offen</span><br>Weitere Prio-Anmeldungen bleiben auch bei geöffneter Prioliste möglich.';
   }else{
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.';
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 offen</span><br>Prio-Anmeldungen sind weiterhin möglich.';
   }
 
   updateActiveButtons();
@@ -2969,6 +3027,7 @@ function mapAq40JsonLoot(items){
     Slot_DE: obj.slot || obj.Slot_DE || "",
     Typ_DE: obj.type || obj.Typ_DE || "",
     Boss: obj.boss || obj.Boss || "",
+    Klassen: obj.classes || obj.Classes || obj.Klassen || obj.klasse || obj.Klasse || "",
     Stats_DE: Array.isArray(obj.stats) ? obj.stats.join("|") : (obj.statsText || obj.Stats_DE || ""),
     Tooltip_DE: obj.tooltip || obj.Tooltip_DE || "",
     Dropchance: obj.dropChance || obj.Dropchance || "",
@@ -2995,6 +3054,7 @@ function mapAq40SheetLootRow(obj){
     boss: obj.Boss || "",
     category: obj.Kategorie || obj.Category || "",
     wowhead: obj.Wowhead || obj.WowheadLink || "",
+    classes: obj.Klassen || obj.Classes || obj.classes || obj.Klasse || obj.klasse || "",
     p0: [],
     stats: String(obj.Stats_DE || obj.Tooltip_DE || "")
       .split("|")
@@ -3086,6 +3146,17 @@ function fillItems(){
   });
 }
 
+function lootItemMatchesClassFilter(item){
+  const classFilter=document.getElementById("lootClassFilter")?.value || "";
+  if(!classFilter) return true;
+  const classText=[item.classes,item.className,item.class,item.klasse,item.tooltipText,item.tooltip,item.statsText,item.stats]
+    .flat().filter(Boolean).join(" ").toLowerCase();
+    const hasClassRestriction=/(?:klassen?|classes)\s*:/.test(classText) || Boolean(item.classes||item.className||item.klasse);
+  if(!hasClassRestriction) return true;
+  const aliases={"jäger":["jäger","jaeger","hunter"],krieger:["krieger","warrior"],paladin:["paladin"],schurke:["schurke","rogue"],priester:["priester","priest"],schamane:["schamane","shaman"],magier:["magier","mage"],hexenmeister:["hexenmeister","warlock"],druide:["druide","druid"]};
+  return (aliases[classFilter]||[classFilter]).some(name=>classText.includes(name));
+}
+
 function renderLootList(){
   const list=document.getElementById("lootList");
   const query=document.getElementById("itemSearch").value.trim().toLowerCase();
@@ -3100,7 +3171,7 @@ function renderLootList(){
       item.boss,
       item.category,
       item.quality
-    ].join(" ").toLowerCase().includes(query);
+    ].join(" ").toLowerCase().includes(query) && lootItemMatchesClassFilter(item);
   });
 
   if(filteredLoot.length===0){
@@ -3142,7 +3213,10 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
+    if(GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))&&!GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
+    }
+    if(SUPPORTS_P0PLUS && GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -3158,6 +3232,7 @@ function renderLootList(){
       createdAt:""
     }));
     buttons.innerHTML = prioButtonParts.join("");
+    applyEraPriorityUi(buttons);
 
     row.appendChild(name);
     row.appendChild(buttons);
@@ -3211,9 +3286,18 @@ function manualSelectChanged(){
 }
 
 function updateActiveButtons(){
-  const p1=document.getElementById("p1").value;
-  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
-  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  let p1=document.getElementById("p1").value;
+  let p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
+  let p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  if((!p1 && !(currentGuildSlug()==="nachtloot" && p2 && p3)) || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
+    try{
+      const draft=JSON.parse(localStorage.getItem(getPlayerKey())||"{}");
+      p1=p1||String(draft.p1||""); p2=p2||String(draft.p2||""); p3=p3||String(draft.p3||"");
+      if(p1) document.getElementById("p1").value=p1;
+      if(PRIO_COUNT >= 2 && p2) document.getElementById("p2").value=p2;
+      if(PRIO_COUNT >= 3 && p3) document.getElementById("p3").value=p3;
+    }catch(_error){}
+  }
 
   const p0Closed=isP0DeadlineClosed();
 
@@ -3668,10 +3752,14 @@ function buildSavePrioUrl(savePin, oldPin){
     "&player="+encodeURIComponent(player)+
     "&server="+encodeURIComponent(server)+
     "&className="+encodeURIComponent(playerClass)+
+    "&specName="+encodeURIComponent(document.getElementById("randomCharacterSpec")?.value || "")+
+    "&randomParticipantToken="+encodeURIComponent(typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : "")+
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
     "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
+
+  if(new URLSearchParams(window.location.search).get("random") === "1") url += "&random=1";
 
   if(oldPin && oldPin !== savePin){
     url +=
@@ -3712,14 +3800,28 @@ function isPinConflictError(result){
 
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
-  const player=document.getElementById("playerName").value.trim();
-  const server=document.getElementById("playerServer").value;
-  const playerClass=document.getElementById("playerClass").value;
+  let player=document.getElementById("playerName").value.trim();
+  let server=document.getElementById("playerServer").value;
+  let playerClass=document.getElementById("playerClass").value;
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
   const status=document.getElementById("playerStatus");
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
+
+  // Die sichtbare LichtLoot-Auswahl ist die verlässliche Quelle, falls ein
+  // später Ladevorgang die ausgeblendeten Formularfelder geleert hat.
+  if(lichtlootSelectedCharacter){
+    player=player || String(lichtlootSelectedCharacter.name || "").trim();
+    server=server || String(lichtlootSelectedCharacter.server || "").trim();
+    playerClass=playerClass || String(
+      lichtlootSelectedCharacter.className || lichtlootSelectedCharacter.class || ""
+    ).trim();
+
+    document.getElementById("playerName").value=player;
+    document.getElementById("playerServer").value=server;
+    document.getElementById("playerClass").value=playerClass;
+  }
 
   const isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
@@ -3737,24 +3839,23 @@ async function savePrio(){
     return;
   }
 
-  if(!player||!server||!playerClass||!p1 || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
+  const selectedPriorities={p1,p2,p3};
+  const missingRequiredPriority=eraRequiredPriorityKeys().some(key=>!selectedPriorities[key]);
+  if(!player||!server||!playerClass||missingRequiredPriority){
     status.innerHTML=`<span class="bad">Bitte Charakter und benötigte Prios vollständig ausfüllen.</span>`;
     return;
   }
 
   await loadPublishedPrios();
-  if(currentPublishedMode){
-    status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
-    return;
-  }
-
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await Promise.race([
-      ensurePlayerPinForSave(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
-    ]);
+    const pinInfo = new URLSearchParams(window.location.search).get("random") === "1"
+      ? {success:true,pin:getRandomParticipantToken(),generated:false}
+      : await Promise.race([
+        ensurePlayerPinForSave(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
+      ]);
     if(!pinInfo.success){
       throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
@@ -3764,7 +3865,7 @@ async function savePrio(){
 
     let result=await Promise.race([
       submitPrioWithPin(playerPin, ""),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
     ]);
 
     if(result.error){
@@ -3798,6 +3899,31 @@ async function savePrio(){
     }
 
     await refreshAfterPrioSave();
+    // Die API hat die Speicherung bestätigt. Ein eventuell noch gecachter
+    // Listenabruf darf den Eintrag deshalb nicht als lokalen Entwurf zeigen.
+    const confirmedPrio={
+      id:result.prioId || "",
+      Spieler:player,
+      Server:server,
+      Klasse:playerClass,
+      P1:p1,
+      P2:p2,
+      P3:p3,
+      P0Selected:isP0Plus ? "ja" : "nein",
+      P0Plus:isP0Plus ? "ja" : "nein",
+      P0Item:isP0Plus ? p1 : ""
+    };
+    const confirmedSignature=prioDraftSignature(confirmedPrio);
+    window.lastSavedPrioSignature=confirmedSignature;
+    const serverConfirmed=(currentPublishedPrios||[]).some(prio=>
+      samePrioCharacter(prio,confirmedPrio) && prioDraftSignature(prio)===confirmedSignature
+    );
+    if(!serverConfirmed){
+      currentPublishedPrios=sortPriosWithOwnFirst([
+        confirmedPrio,
+        ...(currentPublishedPrios||[]).filter(prio=>!samePrioCharacter(prio,confirmedPrio))
+      ]);
+    }
     renderCurrentPrios();
 
   }catch(error){
@@ -3944,7 +4070,9 @@ async function loadPublishedPrios(){
     const result = await apiJsonp({
       action:"getPublishedPrios",
       raid:RAID_NAME,
-      playerPin:pin
+      playerPin:pin,
+      random:new URLSearchParams(window.location.search).get("random") === "1" ? "1" : "",
+      randomParticipantToken:typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : ""
     });
 
     if(result.error){
@@ -4205,8 +4333,23 @@ const isRandomPrioLink=params.get("random")==="1";
 
 if(isRandomPrioLink){
   document.body.classList.add("random-prio");
+  document.title=document.title.replace(/Lichtloot|LichtLoot/g,"GuildLoot Random Raid");
+  const overlay=document.querySelector("body > .overlay");
+  if(overlay){const home=document.createElement("div");home.className="random-prio-home";home.innerHTML='<img src="../images/guildloot-logo-concept.png" alt="GuildLoot"><a href="../index.html">GuildLoot-Startseite</a>';overlay.prepend(home);}
+  const playerCard=document.getElementById("playerCard");
+  if(playerCard){playerCard.insertAdjacentHTML("afterbegin",'<div class="random-character-profile"><input id="randomCharacterName"><input id="randomCharacterServer"><input id="randomCharacterClass"><input id="randomCharacterSpec"></div>');initializeRandomCharacterProfile();}
   const randomLeadInput=document.getElementById("raidleadPin");
   if(randomLeadInput) randomLeadInput.placeholder="Random Raidlead PIN";
+}
+
+function randomCookieValue(name){const prefix=name+"=";return document.cookie.split(";").map(value=>value.trim()).find(value=>value.startsWith(prefix))?.slice(prefix.length)||"";}
+function getRandomParticipantToken(){let token=decodeURIComponent(randomCookieValue("guildloot_random_token")||"");if(!token){const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);token=Array.from(bytes,value=>value.toString(16).padStart(2,"0")).join("");document.cookie="guildloot_random_token="+encodeURIComponent(token)+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";}return token;}
+function initializeRandomCharacterProfile(){
+  getRandomParticipantToken();
+  let profile={};try{profile=JSON.parse(decodeURIComponent(randomCookieValue("guildloot_random_profile")||"%7B%7D"));}catch(error){}
+  const name=document.getElementById("randomCharacterName"),server=document.getElementById("randomCharacterServer"),playerClass=document.getElementById("randomCharacterClass"),spec=document.getElementById("randomCharacterSpec");
+  if(name)name.value=profile.name||"";if(server)server.value=profile.server||"";if(playerClass)playerClass.value=profile.playerClass||"";if(spec)spec.value=profile.spec||"";
+  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",playerClass:playerClass?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField){let option=Array.from(serverField.options).find(entry=>entry.value===values.server);if(!option&&values.server){option=new Option(values.server,values.server);serverField.add(option);}serverField.value=values.server;}const classField=document.getElementById("playerClass");if(classField){let option=Array.from(classField.options).find(entry=>entry.value===values.playerClass);if(!option&&values.playerClass){option=new Option(values.playerClass,values.playerClass);classField.add(option);}classField.value=values.playerClass;}};[name,server,playerClass,spec].forEach(field=>field?.addEventListener("input",sync));sync();
 }
 
 if(pinFromUrl){
@@ -4601,7 +4744,7 @@ function dropCharacterOnZone(event){
   if(!isNaN(index)) selectLoggedInCharacter(index);
 }
 
-+function poReleaseStatusKey(entry){
+function poReleaseStatusKey(entry){
   if(entry?.requestType === "recruit") return "recruit";
   if(entry?.requestType === "p1p3") return "p1p3";
   return String(entry?.raid || "").trim().toLowerCase();
@@ -5133,6 +5276,8 @@ function resolveGearPlannerItem(item){
     id:itemId,
     itemId:itemId,
     slotName:item.slotName || item.slot || known.slot || "",
+    stats:(item.source === "Blizzard Armory" && Array.isArray(item.stats) && item.stats.length) ? item.stats : known.stats,
+    tooltipText:(item.source === "Blizzard Armory" && item.tooltipText) ? item.tooltipText : known.tooltipText,
     wclName:item.name || "",
     raidKey:known.raidKey || RAID_NAME
   });
@@ -5322,7 +5467,7 @@ function renderGearReplacementPicker(slotName){
     ].join(" ").toLowerCase().includes(query));
   }
 
-  const shown=candidates.slice(0,80);
+  const shown=candidates;
   const rows=shown.map(item=>{
     const itemId=item.itemId || item.id || "";
     return ''+
@@ -5373,6 +5518,7 @@ function gearStatLines(item){
 
   if(item.equip) lines.push(String(item.equip));
   gearEnchantLines(item).forEach(line => lines.push(line));
+  (Array.isArray(item.plannerEnchantStats) ? item.plannerEnchantStats : []).forEach(line => lines.push(line));
 
   return lines;
 }
@@ -7432,6 +7578,8 @@ async function deleteOwnPrio(payload){
 
   const baseParams=
     '&guild='+encodeURIComponent(typeof currentGuildSlug === "function" ? currentGuildSlug() : "lichtloot")+
+    (new URLSearchParams(window.location.search).get("random") === "1" ? '&random=1' : '')+
+    '&randomParticipantToken='+encodeURIComponent(typeof getRandomParticipantToken === "function" ? getRandomParticipantToken() : "")+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
@@ -9059,24 +9207,43 @@ async function p0V9FetchCsv(){
   return [];
 }
 
+let p0V9LoadPromise = null;
+let p0V9LoadedAt = 0;
+
 async function loadP0PlusFromSheet(){
-  let entries = [];
+  const cachedEntries = Array.isArray(window.p0plusEntries) ? window.p0plusEntries : [];
+  if(p0V9LoadedAt && Date.now() - p0V9LoadedAt < 8000){
+    return cachedEntries;
+  }
+  if(p0V9LoadPromise) return p0V9LoadPromise;
 
-  try{ entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API"); }catch(error){ console.warn("P0+ V9 Live-API fetch fehlgeschlagen:", error); }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJsonp(P0PLUS_API_URL,"oldapi"); }catch(error){ console.warn("P0+ V9 Live-API JSONP fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJson(APPS_SCRIPT_URL,"Haupt-API"); }catch(error){ console.warn("P0+ V9 Haupt-API fetch fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJsonp(APPS_SCRIPT_URL,"mainapi"); }catch(error){ console.warn("P0+ V9 Haupt-API JSONP fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    entries = await p0V9FetchCsv();
-  }
+  p0V9LoadPromise = (async () => {
+    let entries = [];
 
-  return p0V9Store(entries);
+    try{ entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API"); }catch(error){ console.warn("P0+ V9 Live-API fetch fehlgeschlagen:", error); }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJsonp(P0PLUS_API_URL,"oldapi"); }catch(error){ console.warn("P0+ V9 Live-API JSONP fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJson(APPS_SCRIPT_URL,"Haupt-API"); }catch(error){ console.warn("P0+ V9 Haupt-API fetch fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJsonp(APPS_SCRIPT_URL,"mainapi"); }catch(error){ console.warn("P0+ V9 Haupt-API JSONP fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      entries = await p0V9FetchCsv();
+    }
+
+    const stored = p0V9Store(entries);
+    p0V9LoadedAt = Date.now();
+    return stored;
+  })();
+
+  try{
+    return await p0V9LoadPromise;
+  }finally{
+    p0V9LoadPromise = null;
+  }
 }
 
 function getP0PlusEntriesForItem(itemName){
@@ -9615,12 +9782,9 @@ function renderPrioP0Points(prio){
 
 /* === FINAL FIX: P0-Auswahl sichtbar + P0+-Punkte getrennt und nur aktueller Raid === */
 function lichtlootPrioIsP0(prio){
-  const value = String(
-    (prio && (prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po)) ||
-    ""
-  ).trim().toLowerCase();
-
-  return value === "ja" || value === "yes" || value === "true" || value === "1" || value === "p0" || value === "po";
+  if(!prio) return false;
+  const value = String(prio.P0Selected || prio.p0Selected || prio.POSelected || prio.poSelected || prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po || "").trim().toLowerCase();
+  return ["ja","yes","true","1","p0","po"].includes(value) || Boolean(String(prio.P0Item || prio.p0Item || prio.POItem || prio.poItem || "").trim());
 }
 
 function lichtlootPrioP0Item(prio){
@@ -10122,6 +10286,7 @@ function getCurrentPlayerServerForPrioMatch(){
 }
 
 function isOwnPublishedPrio(prio){
+  if(new URLSearchParams(window.location.search).get("random") === "1") return prio?.ownedByBrowser === true;
   const player=getCurrentPlayerNameForPrioMatch();
   const server=getCurrentPlayerServerForPrioMatch();
   const rowPlayer=normalizeOwnPrioText(prio && (prio.Spieler || prio.player || prio.Player));
@@ -10201,12 +10366,15 @@ function prioActionCellHtml(prio,index,ownRow){
   return `
     <div class="prio-action-cell">
       ${reportHtml}
+      ${new URLSearchParams(window.location.search).get("random") === "1" ? `<button class="delete-prio-btn" title="Prio bearbeiten" onclick='editRandomPrio(${safeAttr(JSON.stringify(prio))})'>✏️</button>` : ""}
       <button class="delete-prio-btn" title="Prio löschen" onclick='deleteOwnPrio(${deletePayload})'>🗑</button>
     </div>
   `;
 }
 
 function getLiveDraftPrio(){
+  // Automatisch geladene gespeicherte Werte sind kein neuer Entwurf.
+  if(window.prioDraftDirty !== true) return null;
   if(currentPublishedMode) return null;
 
   const player=document.getElementById("playerName")?.value.trim() || "";
@@ -10260,10 +10428,30 @@ function samePrioCharacter(a,b){
   return aPlayer && bPlayer && aPlayer === bPlayer && (!aServer || !bServer || aServer === bServer);
 }
 
+function isPrioFromCurrentLichtLootAccount(prio){
+  if(!prio) return false;
+  const player=normalizeOwnPrioText(prio.Spieler || prio.player || prio.Player);
+  const server=normalizeOwnPrioText(prio.Server || prio.server || prio.Realm);
+  return Boolean(player) && (lichtlootLoggedInCharacters || []).some(char=>{
+    const accountPlayer=normalizeOwnPrioText(char?.name);
+    const accountServer=normalizeOwnPrioText(char?.server);
+    return accountPlayer === player && (!server || !accountServer || accountServer === server);
+  });
+}
+
 function priosWithLiveDraft(prios){
   const draft=getLiveDraftPrio();
   const list=Array.isArray(prios) ? prios : [];
   if(!draft) return list;
+
+  // Ist bereits ein anderer Charakter desselben LichtLoot-Accounts für den
+  // Raid eingetragen, darf die aktuelle Charakterauswahl nicht zusätzlich
+  // als ungespeicherter Entwurf in der Prioliste erscheinen.
+  const selectedCharacterIsSaved=list.some(prio=>samePrioCharacter(prio,draft));
+  const otherAccountCharacterIsSaved=!selectedCharacterIsSaved && list.some(prio=>
+    isPrioFromCurrentLichtLootAccount(prio)
+  );
+  if(otherAccountCharacterIsSaved) return list;
 
   const draftSignature=prioDraftSignature(draft);
   const savedMatch=list.find(prio => samePrioCharacter(prio,draft) && prioDraftSignature(prio) === draftSignature);
@@ -10556,8 +10744,11 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
+<script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260814-0015"></script>
-<script src="raid-signup-mirror.js?v=20260814-1630"></script>
+<script src="raid-signup-mirror.js?v=20260831-1934"></script>
 <script src="../pin-visibility.js"></script>
+<script src="p0-selection-fix.js?v=20260818-1415"></script>
+<script src="player-gear-popup.js?v=20260830-1750"></script>
 </body>
 </html>
