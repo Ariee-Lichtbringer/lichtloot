@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { prepareRaidWorkbookWeb } from "./log-workbook/prepare.js";
 import { createRaidWorkbookService } from "./log-workbook/service.js";
 import cors from "cors";
 import { calculateGearStats, normalizeArmoryPlannerItem } from "../public/loot/gear-stat-calculator.js";
@@ -9,6 +10,7 @@ import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
 const raidWorkbookService = createRaidWorkbookService({
+  prepareWeb: (web,ctx)=>prepareRaidWorkbookWeb(web,ctx,{getReport:getWorkbookParticipantReport,getSpellMetadata:getRpbSpellMetadata}),
   query, getWeb: getPublicLogAnalysisWeb, resolveChannel: resolveLogAnalysisPostChannelId,
   publicBaseUrl: process.env.GUILDLOOT_PUBLIC_URL || "https://lichtloot.de",
   apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
@@ -14570,13 +14572,23 @@ async function getGuildClassMap(guildId) {
   return map;
 }
 
+const workbookParticipantReports=new Map();
+async function getWorkbookParticipantReport(code){
+  const old=workbookParticipantReports.get(code);
+  if(old&&old.expires>Date.now())return old.promise;
+  const promise=fetchReportBaseForAnalysis(code).catch(error=>{workbookParticipantReports.delete(code);throw error;});
+  workbookParticipantReports.set(code,{promise,expires:Date.now()+5*60*1000});
+  if(workbookParticipantReports.size>100)workbookParticipantReports.delete(workbookParticipantReports.keys().next().value);
+  return promise;
+}
+
 async function fetchReportBaseForAnalysis(reportCode) {
   const token = await getWarcraftLogsAccessToken();
   const gqlQuery =
     "query($code:String!){"+
     "reportData{report(code:$code){"+
     "title startTime endTime zone{name}"+
-    "fights{ id name startTime endTime encounterID kill }"+
+    "fights{ id name startTime endTime encounterID kill friendlyPlayers }"+
     "masterData{actors{ id name server type subType }}"+
     "}}}";
   const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode });
@@ -16979,7 +16991,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     .concat(rpbEngineering.flatMap(([, , ids]) => ids || []))
     .concat((rpbConfig.trinketsAndRacials || []).flatMap(item => item.ids || []))
     .filter(Boolean);
-  const rpbSpellMetadata = await getRpbSpellMetadata(configuredSpellIds);
+  const rpbSpellMetadata = await getRpbSpellMetadata(configuredSpellIds.concat(Object.keys(healingById).map(Number)));
 
   const playerNames = players.map(player => player.name);
   const countRow = (label, table, options = {}) => ({

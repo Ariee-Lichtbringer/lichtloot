@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import {CLASSES,analysisBrand,classInfo,cellValue,activityByClass,raidTimestamp,clean} from './model.js';
-import {workbookImage} from './images.js';
+import {workbookImage,workbookIconUrl} from './images.js';
 const NAVY='19283E',STRIPE='F0F3F7';
 const col=n=>{let s='';for(n++;n;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;};
 const sectionNames={general:'Allgemein',caster:'Zauberer',healer:'Heiler',physical:'Nahkampf',tank:'Tanks','caster-casts':'Zauberer','healer-casts':'Heiler','physical-casts':'Nahkampf','tank-casts':'Tanks','cla-combat-buffs':'Kampfbuffs','cla-gear-listing':'Ausrüstung Quelle','cla-gear-issues':'Verzauberungen fehlen','cla-ignites':'Ignite','cla-validate':'Logprüfung'};
@@ -29,7 +29,26 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
     });
     s.autoFilter={from:{row:8,column:1},to:{row:Math.max(9,rows.length+8),column:headers.length}};
     if(matrixPlayers)matrixPlayers.forEach((p,i)=>s.getCell(8,i+4).font={name:'Calibri',size:12,bold:true,color:{argb:classInfo(p)[1]}});
+    headers.forEach((h,i)=>{if(h==='Icon'){s.getColumn(i+1).width=10;s.getCell(8,i+1).alignment={vertical:'middle',wrapText:false};}if(/-ID$/.test(h))for(let r=9;r<=rows.length+8;r++)s.getCell(r,i+1).numFmt='0';});
     picture(s,guild.logoUrl,0,0,true);icons.forEach((icon,i)=>picture(s,icon,headers.length-1,i+8));return s;
+  }
+  function compareRow(s,row,start,end){
+    const cells=[];for(let c=start;c<=end;c++){const cell=s.getCell(row,c),v=cell.value;const n=typeof v==='number'?v:v&&typeof v==='object'&&typeof v.result==='number'?v.result:null;if(n!==null&&Number.isFinite(n))cells.push([cell,n]);}
+    if(!cells.length)return;const maximum=Math.max(...cells.map(([,n])=>n));
+    for(const[cell,n]of cells){const ratio=maximum>0?Math.max(0,Math.min(1,n/maximum)):1;
+      const stops=ratio<=.5?[[248,215,218],[255,239,179],ratio*2]:[[255,239,179],[183,225,205],(ratio-.5)*2];
+      const color=stops[0].map((v,i)=>Math.round(v+(stops[1][i]-v)*stops[2]).toString(16).padStart(2,'0')).join('').toUpperCase();
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}};cell.font={...cell.font,color:{argb:NAVY},bold:n===maximum};
+    }
+  }
+  function styleMatrix(s,rows,count){
+    rows.forEach((values,i)=>{
+      values.slice(3).forEach((value,j)=>{
+        const match=typeof value==='string'&&value.match(/^(\d+) Einsätze? · (\d+(?:[.,]\d+)?)% Overheal$/);
+        if(match){const cell=s.getCell(i+9,j+4);cell.value=Number(match[1]);cell.numFmt='#,##0" ('+match[2]+' % OH)"';s.getCell(i+9,3).value='Einsätze (OH)';}
+      });compareRow(s,i+9,4,count+3);
+    });
+    s.getCell('A4').value='Vergleich je Fähigkeit innerhalb der Klasse: höchster Wert grün, relativ dazu gelb bis rot. OH = Overheal in Klammern.';
   }
   const summary=players.map(p=>[p.name,classInfo(p)[0],p.signupRole||p.raidRole||'',p.damageDone,p.healingDone,p.deaths,p.activityPercent==null?null:p.activityPercent/100,p.worldBuffCount,activity.values.get(p.name),p.specialization?.name||p.specName||'Nicht im Log erfasst']);
   init('Übersicht',['Charakter','Klasse','Raidrolle','Schaden','Heilung','Tode','WCL-Aktivität','Worldbuffs','Aktivsekunden','Spezialisierung'],summary,{formats:{7:'0.0%'},widths:{1:22,3:23,10:30}});
@@ -52,6 +71,7 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
         const s=init(`${sectionNames[section.id]} - ${classInfo(groupPlayers[0])[0]}`,['Icon','Fähigkeit','Einheit',...groupPlayers.map(p=>p.name)],rows,{matrixPlayers:groupPlayers,widths:{1:6,2:45,3:12}});
         picture(s,classInfo(groupPlayers[0])[2],0,6);let ri=9;owner='';for(const r of section.rows||[]){if(r.type==='header'){owner=r.className||r.label;continue;}if(owner!==klass||/Sekunden aktiv|Aktiv auf|Aktiv gesamt|WCL-Aktivität/.test(r.label)||!groupPlayers.some(p=>r.values?.[p.name]!==''&&r.values?.[p.name]!=null))continue;picture(s,r.icon,0,ri-1);if(Object.values(r.values||{}).some(v=>typeof v==='string'&&v.endsWith('%')))for(let c=4;c<=groupPlayers.length+3;c++)s.getCell(ri,c).numFmt='0.0%';ri++;}
         for(let c=4;c<=groupPlayers.length+3;c++)s.getCell(secondsRow+1,c).numFmt='0.0%';
+        styleMatrix(s,rows,groupPlayers.length);
       }
     }else{
       const rows=(section.rows||[]).filter(r=>r.type!=='header'),roster=section.playerFilter?players.filter(p=>section.playerFilter.includes(p.name)):players;
@@ -69,14 +89,34 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
     for(const spell of rpb.healingSummary?.players?.[p.name]?.spells||[]){heals.push([p.name,classInfo(p)[0],spell.name,spell.spellId,spell.amount,spell.overheal,spell.hits,spell.crits,spell.overhealPercent==null?null:spell.overhealPercent/100,null]);healIcons.push(spell.icon);}
     for(const m of rpb.combatStatistics?.metrics||[]){const v=rpb.combatStatistics.players?.[p.name]?.values?.[m.key];if(v)combat.push([p.name,classInfo(p)[0],m.label,v.count,v.denominator,v.percentage==null?null:v.percentage/100]);}
   }
-  for(const f of rpb.fights||[])for(const p of players){const v=f.players?.[p.name];if(!v)continue;const base=[p.name,classInfo(p)[0],f.id,f.name,f.isBoss?'Boss':'Trash'];fights.push([...base,f.durationMs/1000,v.damageDone,v.healingDone,v.overheal,v.damageTaken,v.threat,v.deaths,v.activityPercent==null?null:v.activityPercent/100,v.parsePercent==null?null:v.parsePercent/100]);if(v.deaths)deaths.push([...base,v.deaths]);for(const[spell,count]of Object.entries(v.abilityCasts||{}))casts.push([...base,spell,count]);for(const[id,h]of Object.entries(v.healingSpells||{}))fightHeals.push([...base,id,h.amount,h.overheal,h.hits,h.crits]);}
+  for(const f of rpb.fights||[])for(const p of players){const v=f.players?.[p.name];if(!v)continue;const base=[p.name,classInfo(p)[0],f.id,f.name,f.isBoss?'Boss':'Trash'];fights.push([...base,f.durationMs/1000,v.damageDone,v.healingDone,v.overheal,v.damageTaken,v.threat,v.deaths,v.activityPercent==null?null:v.activityPercent/100,v.parsePercent==null?null:v.parsePercent/100]);if(v.deaths)deaths.push([...base,v.deaths]);for(const[spell,count]of Object.entries(v.abilityCasts||{}))casts.push([...base,spell,count]);for(const[id,h]of Object.entries(v.healingSpells||{}))fightHeals.push([...base,(rpb.healingSummary?.players?.[p.name]?.spells||[]).find(s=>String(s.spellId)===id)?.name||id,h.amount,h.overheal,h.hits,h.crits]);}
   init('Ausrüstung Details',['Charakter','Klasse','Slot','Gegenstand','Verzauberung','Itemlevel','Qualität','Enchant fehlt','Item-ID','Link','Icon'],gear,{widths:{4:38,5:45,11:7},icons:gearIcons});
   init('Verbrauch Details',['Charakter','Klasse','Kategorie','Gegenstand','Anwendungen','Bosskämpfe aktiv','Bosskämpfe gesamt','Abdeckung','Zauber-ID','Icon'],cons,{widths:{4:38,10:7},formats:{8:'0.0%'},icons:consIcons});
-  init('Heilzauber',['Charakter','Klasse','Heilzauber','Zauber-ID','Heilung','Überheilung','Treffer','Kritisch','Overheal','Icon'],heals,{widths:{3:38,10:7},formats:{9:'0.0%'},icons:healIcons});
+  const healingViews=[];
+  const definitions=new Map();
+  for(const section of rpb.sections||[])if(section.id?.endsWith('-casts'))for(const row of section.rows||[])if(row.tone==='healing')for(const id of row.spellIds||[row.spellId])if(id)definitions.set(Number(id),row);
+  for(const klass of new Set(players.map(p=>p.className))){
+    const group=players.filter(p=>p.className===klass),abilities=new Map();
+    for(const player of group)for(const spell of rpb.healingSummary?.players?.[player.name]?.spells||[]){
+      const def=definitions.get(Number(spell.spellId)),label=def?.label||spell.name;
+      if(!abilities.has(label))abilities.set(label,{label,icon:def?.icon||spell.icon,values:new Map()});
+      const a=abilities.get(label),v=a.values.get(player.name)||{amount:0,overheal:0};v.amount+=Number(spell.amount)||0;v.overheal+=Number(spell.overheal)||0;a.values.set(player.name,v);
+    }
+    if(!abilities.size)continue;
+    const spells=[...abilities.values()],rows=spells.map(a=>[null,a.label,'Heilung (OH)',...group.map(p=>a.values.has(p.name)?a.values.get(p.name).amount:null)]);
+    const sheet=init('Heilzauber - '+classInfo(group[0])[0],['Icon','Heilzauber','Einheit',...group.map(p=>p.name)],rows,{matrixPlayers:group,widths:{1:10,2:45,3:16}});
+    styleMatrix(sheet,rows,group.length);picture(sheet,classInfo(group[0])[2],0,6);
+    spells.forEach((a,i)=>{picture(sheet,a.icon,0,i+8);group.forEach((p,j)=>{const v=a.values.get(p.name);if(v){const percent=v.amount+v.overheal?Math.round(v.overheal*100/(v.amount+v.overheal)):0;sheet.getCell(i+9,j+4).numFmt='#,##0" ('+percent+' % OH)"';}});});
+    healingViews.push([classInfo(group[0])[0],{text:sheet.name,hyperlink:"#'"+sheet.name+"'!A1"},group.length]);
+  }
+  init('Heilzauber',['Klasse','Klassenvergleich öffnen','Charaktere'],healingViews,{widths:{1:20,2:38}});
+  const healingDetails=init('Heilzauber Details',['Charakter','Klasse','Heilzauber','Zauber-ID','Heilung','Überheilung','Treffer','Kritisch','Overheal','Icon'],heals,{widths:{3:38,10:10},formats:{9:'0.0%'},icons:healIcons});
+  healingDetails.getColumn(4).hidden=true;
+
   init('Kampfstatistik',['Charakter','Klasse','Kennzahl','Anzahl','Basis','Anteil'],combat,{widths:{3:38},formats:{6:'0.0%'}});
   init('Kämpfe',['Charakter','Klasse','Kampf-ID','Kampf','Bereich','Dauer (s)','Schaden','Heilung','Überheilung','Schaden erhalten','Bedrohung','Tode','Aktivität','Parse'],fights,{widths:{4:30},formats:{6:'0.000',13:'0.0%',14:'0.0%'}});
   init('Zauber je Kampf',['Charakter','Klasse','Kampf-ID','Kampf','Bereich','Fähigkeit','Anwendungen'],casts,{widths:{4:30,6:45}});
-  init('Heilung je Kampf',['Charakter','Klasse','Kampf-ID','Kampf','Bereich','Zauber-ID','Heilung','Überheilung','Treffer','Kritisch'],fightHeals,{widths:{4:30}});
+  init('Heilung je Kampf',['Charakter','Klasse','Kampf-ID','Kampf','Bereich','Heilzauber','Heilung','Überheilung','Treffer','Kritisch'],fightHeals,{widths:{4:30,6:38}});
   init('Tode',['Charakter','Klasse','Kampf-ID','Kampf','Bereich','Tode'],deaths,{widths:{4:30}});
   init('Bosse',['Kampf-ID','Boss','Ergebnis','Dauer (s)','Tode','Charaktere'],bosses.map(b=>[b.id,b.name,b.kill===false?'Nicht besiegt':'Besiegt',b.durationMs/1000,b.deaths,Object.keys(b.players||{}).length]),{widths:{2:32},formats:{4:'0.000'}});
   const details=init('Charakterdetails',['Charakter','Klasse','Bereich','Kategorie','Kennzahl','Wert','Einheit','Details'],records,{widths:{3:25,4:25,5:44,6:38,8:40}});details.getCell('A4').value='Charakter in Spalte A filtern: alle erfassten Quellwerte, Fähigkeiten, Ausrüstung und Verbrauch.';records.forEach((r,i)=>{if(r[6]==='%')details.getCell(i+9,6).numFmt='0.0%';});
@@ -85,6 +125,11 @@ export async function buildRaidWorkbook({web,guild,analysis,links,publicDir,publ
   const unique=[...new Map(imageJobs.map(j=>[(j.logo?'logo:':'icon:')+j.icon,j])).entries()];let next=0;
   await Promise.all(Array.from({length:Math.min(8,unique.length)},async()=>{while(next<unique.length){const[key,j]=unique[next++];const img=await workbookImage(j.icon,{publicDir,publicBaseUrl,logo:j.logo});if(img)imageIds.set(key,wb.addImage(img));}}));
   for(const j of imageJobs){const id=imageIds.get((j.logo?'logo:':'icon:')+j.icon);if(id!==undefined)j.s.addImage(id,{tl:{col:j.c+.05,row:j.r+.05},ext:{width:j.logo?38:23,height:j.logo?38:23},editAs:'oneCell'});}
+  // Google imports Excel drawings as floating pictures, which drift on filter/scroll.
+  // The bridge replaces them with IMAGE values at these explicit cell addresses.
+  const manifest=wb.addWorksheet('_GoogleIcons',{state:'veryHidden'});
+  manifest.addRow(['Blatt','Zeile','Spalte','URL']);
+  for(const j of imageJobs){const url=!j.logo&&workbookIconUrl(j.icon);if(url)manifest.addRow([j.s.name,j.r+1,j.c+1,url]);}
   const fileName=`${guild.slug}_${clean(report.raid||analysis.raid||'Raid').replace(/[^\p{L}\p{N}_-]/gu,'_')}_${clean(report.raidDate||analysis.raidDate||'Report')}.xlsx`;
   return {buffer:Buffer.from(await wb.xlsx.writeBuffer()),fileName,stats:{players:players.length,sourceMetrics:records.length,sheets:wb.worksheets.length,images:imageIds.size}};
 }

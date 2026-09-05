@@ -2,7 +2,7 @@ import {publishGoogleSheet} from './google-sheets.js';
 import path from 'node:path';
 import {buildRaidWorkbook} from './workbook.js';
 import {sourceDigest,workbookLinks,buildPostPayload,clean} from './model.js';
-export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBaseUrl,apiBaseUrl,publicDir=path.resolve('public'),build=buildRaidWorkbook,bridgeUrl=process.env.GOOGLE_SHEETS_BRIDGE_URL,queueToken=process.env.LICHTBOT_QUEUE_TOKEN,publishSheet=publishGoogleSheet}) {
+export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBaseUrl,apiBaseUrl,publicDir=path.resolve('public'),build=buildRaidWorkbook,bridgeUrl=process.env.GOOGLE_SHEETS_BRIDGE_URL,queueToken=process.env.LICHTBOT_QUEUE_TOKEN,publishSheet=publishGoogleSheet,prepareWeb=async web=>web}) {
   let schemaPromise;const running=new Map(),backfilling=new Map();let backfillChain=Promise.resolve();
   function ensureSchema(){return schemaPromise ||= (async()=>{
     await query(`create table if not exists log_analysis_workbooks (
@@ -34,7 +34,8 @@ export function createRaidWorkbookService({query,getWeb,resolveChannel,publicBas
   }
   function generate(guildId,analysisId,web){const key=`${guildId}:${analysisId}`;if(running.has(key))return running.get(key);const job=(async()=>{
     await ensureSchema();const ctx=await context(guildId,analysisId);
-    const data=web||(await getWeb({guildId,query:{id:analysisId,type:'combined'}})).webAnalysis;
+    const raw=web||(await getWeb({guildId,query:{id:analysisId,type:'combined'}})).webAnalysis;
+    const data=raw?await prepareWeb(raw,ctx):raw;
     if(!data || data.refreshPending || data.rpb?.refreshPending)throw Object.assign(new Error('Die Loganalyse wird noch berechnet.'),{statusCode:409});
     const links=workbookLinks({...ctx,publicBaseUrl,apiBaseUrl}),hash=sourceDigest(data,ctx.guild);
     const old=await query('select file_name,content,source_hash,generated_at from log_analysis_workbooks where guild_id=$1 and analysis_id=$2',[guildId,analysisId]);

@@ -1,3 +1,8 @@
+export function workbookIconUrl(icon){
+  if(!icon)return null;
+  if(/^https:/i.test(icon)){try{const u=new URL(icon);if(u.hostname!=='wow.zamimg.com'||u.username||u.password||u.port)return null;const m=u.pathname.match(/^\/images\/wow\/icons\/(?:small|medium|large)\/([a-z0-9_]+)\.(?:jpg|png)$/i);if(!m)return null;icon=m[1];}catch{return null;}}
+  return /^[a-z0-9_]+$/i.test(icon)?`https://wow.zamimg.com/images/wow/icons/large/${icon.toLowerCase()}.jpg`:null;
+}
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 const cache=new Map();

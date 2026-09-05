@@ -55,3 +55,38 @@ assert.equal(service.enqueueBackfill({guildId:'guild-a',analysisId:analysis.id})
 await new Promise(resolve=>setImmediate(resolve));
 assert.equal(queued,before+1);
 console.log('Completed-data backfill publishes independently and coalesces duplicate requests.');
+
+const {prepareRaidWorkbookWeb}=await import('../src/log-workbook/prepare.js');
+const input={source:'warcraft-logs-direct',rpb:{players:[{id:1,name:'Present',className:'Paladin',damageDone:0},{id:2,name:'Absent',className:'Mage',damageDone:999}],fights:[{id:10,players:{Present:{damageDone:0},Absent:{damageDone:999}}}],encounters:[{id:10,players:{Present:{},Absent:{}}}],healingSummary:{players:{Present:{spells:[{spellId:19993,name:'Heilzauber 19993',icon:'spell_holy_heal',amount:10}]},Absent:{spells:[]}}}}};
+const deps={getReport:async()=>({fights:[{id:10,friendlyPlayers:[1]},{id:20,friendlyPlayers:[2]}]}),getSpellMetadata:async()=>new Map([[19993,{name:'Lichtblitz',icon:'spell_holy_flashheal'}]])};
+const prepared=await prepareRaidWorkbookWeb(input,{analysis:{report_code:'test'}},deps);
+assert.deepEqual(prepared.rpb.players.map(p=>p.name),['Present']);
+assert.deepEqual(Object.keys(prepared.rpb.encounters[0].players),['Present']);
+assert.equal(input.rpb.players.length,2);
+assert.equal(prepared.rpb.healingSummary.players.Present.spells[0].name,'Lichtblitz');
+assert.deepEqual(await prepareRaidWorkbookWeb(prepared,{analysis:{report_code:'test'}},deps),prepared);
+await assert.rejects(prepareRaidWorkbookWeb(input,{analysis:{report_code:'test'}},{...deps,getReport:async()=>({fights:[{id:10}]})}),/Teilnehmer/);
+const iconOut=await buildRaidWorkbook({web,guild,analysis,links,images:true});
+const iconBook=new ExcelJS.Workbook();await iconBook.xlsx.load(iconOut.buffer);
+const manifest=iconBook.getWorksheet('_GoogleIcons');
+assert.equal(manifest.state,'veryHidden');
+assert(manifest.getSheetValues().some(row=>row&&row[1]==='Heiler - Druide'&&row[2]===9&&row[3]===1&&row[4].endsWith('/spell_nature_healingtouch.jpg')));
+assert.equal(iconBook.getWorksheet('Verbrauch Details').getCell('I9').numFmt,'0');
+console.log('WCL membership (including zero-metric participants), spell names and cell-icon addresses verified.');
+
+const matrixWeb=structuredClone(web);
+matrixWeb.rpb.sections[1].rows.push({tone:'healing',label:'Heilende Berührung (Rang 1-4)',spellIds:[5187,5188],icon:'spell_nature_healingtouch',values:{Eins:'20 Einsätze · 25% Overheal',Zwei:'10 Einsätze · 50% Overheal'}});
+matrixWeb.rpb.healingSummary={players:{Eins:{spells:[{spellId:5187,name:'Heilende Berührung',amount:60,overheal:20},{spellId:5188,name:'Heilende Berührung',amount:40,overheal:80}]},Zwei:{spells:[{spellId:5188,name:'Heilende Berührung',amount:20,overheal:5}]}}};
+const matrixOut=await buildRaidWorkbook({web:matrixWeb,guild,analysis,links,images:false});
+const matrixBook=new ExcelJS.Workbook();await matrixBook.xlsx.load(matrixOut.buffer);
+const healingMatrix=matrixBook.getWorksheet('Heilzauber - Druide');
+assert.equal(healingMatrix.getCell('B9').value,'Heilende Berührung (Rang 1-4)');
+assert.equal(healingMatrix.getCell('D9').value,100);
+assert.equal(healingMatrix.getCell('D9').numFmt,'#,##0" (50 % OH)"');
+assert.equal(healingMatrix.getCell('E9').numFmt,'#,##0" (20 % OH)"');
+assert.equal(healingMatrix.getCell('D9').fill.fgColor.argb,'B7E1CD');
+assert.notEqual(healingMatrix.getCell('E9').fill.fgColor.argb,'B7E1CD');
+assert.equal(healingMatrix.getCell('F9').value,null);
+assert.equal(matrixBook.getWorksheet('Heiler - Druide').getCell('D10').value,20);
+assert.equal(matrixBook.getWorksheet('Heiler - Druide').getCell('D10').numFmt,'#,##0" (25 % OH)"');
+console.log('Class healing matrices, weighted overheal, numeric comparisons and blank missing values verified.');
