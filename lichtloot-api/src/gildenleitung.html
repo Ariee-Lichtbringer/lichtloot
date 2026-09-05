@@ -18672,12 +18672,14 @@ function poReleaseCheckHtml(entry, raid, index){
   const warning=Number(currentGuildInfo?.layout?.eraRules?.poRelease?.lowAttendanceWarning??6);
   const lowAttendance = Boolean(attendance && Number(attendance.total) > 0 && Number(attendance.attended) <= warning);
   const attended=Number(attendance?.attended||0);
+  const attendanceWindow=Number(currentGuildInfo?.layout?.eraRules?.poRelease?.attendanceWindow || 16);
+  const displayTotal=raid.startsWith("zg-") ? attendanceWindow : Number(attendance?.total || attendanceWindow);
   const attendanceColor=attended<=3?"#f87171":attended<=7?"#fbbf24":"#4ade80";
   const attendanceHtml = attendance && Number(attendance.total) > 0
-    ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="${attendance.source === 'prio-list' ? 'GuildLoot-Priolisten' : 'Warcraft Logs'} · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${Number(attendance.total)} Teilnahmen</span>`
-    : (["mc","bwl","aq40","naxx"].includes(raid) ? '<span class="po-release-attendance muted">keine WCL-Daten</span>' : '');
+    ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="${attendance.source === 'prio-list' ? 'GuildLoot-Priolisten' : 'Warcraft Logs'} · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${displayTotal} Teilnahmen</span>`
+    : (["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(raid) ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="Noch keine Teilnahmen erfasst">0/${attendanceWindow} Teilnahmen</span>` : '');
   const stateHtml = checked
-    ? `<span class="po-release-state active${lowAttendance ? " low-attendance" : ""}" title="${escapeAttr(lowAttendance ? `${poReleaseRaidLabel(raid)} · Warnung: nur ${Number(attendance.attended)}/${Number(attendance.total)} Teilnahmen` : poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
+    ? `<span class="po-release-state active${lowAttendance ? " low-attendance" : ""}" title="${escapeAttr(lowAttendance ? `${poReleaseRaidLabel(raid)} · Warnung: nur ${Number(attendance.attended)}/${displayTotal} Teilnahmen` : poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
     : `<button class="po-release-state empty" type="button" title="${escapeAttr(poReleaseRaidLabel(raid))} erteilen" onclick="setPoReleaseDirect(${Number(index)}, '${escapeAttr(raid)}', true)">offen</button>`;
   return `<div class="po-release-cell">${stateHtml}${attendanceHtml}</div>`;
 }
