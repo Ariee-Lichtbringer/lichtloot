@@ -8580,8 +8580,8 @@ function renderLootLayoutPanel(){
               <span class="muted">Neue Warcraft-Logs werden aus diesem Channel importiert.</span>
             </div>
             <div class="field">
-              <label><input id="layoutLogWorkbookAutoPost" type="checkbox" ${layout.logWorkbookAutoPost === true || layout.logWorkbookAutoPost === "true" ? "checked" : ""}> Excel-Auswertung automatisch erstellen und posten</label>
-              <span class="muted">Der PO-Bot postet nach einer fertigen Loganalyse Raidname, Datum, Uhrzeit und Gilde sowie Links zur Excel-Datei, GuildLoot-Auswertung und Warcraft Logs. Es gelten die Analyse-Zielchannels dieser Gilde. Die Excel-Datei wird bei Neuberechnungen aktualisiert.</span>
+              <label><input id="layoutLogWorkbookAutoPost" type="checkbox" ${layout.logWorkbookAutoPost === true || layout.logWorkbookAutoPost === "true" ? "checked" : ""}> Google Sheet automatisch erstellen und im Raid-Thread posten</label>
+              <span class="muted">Der PO-Bot postet nach einer fertigen Loganalyse Raidname, Datum, Uhrzeit und Gilde sowie Links zum Google Sheet, zur GuildLoot-Auswertung und zu Warcraft Logs. Der Bot nutzt im Analyse-Zielchannel dieser Gilde den passenden Raid-Thread (z. B. MC, BWL oder NAXX). Das Google Sheet wird bei Neuberechnungen unter demselben Link aktualisiert.</span>
             </div>
             <div class="field">
               <label>Loganalyse Zielchannel</label>

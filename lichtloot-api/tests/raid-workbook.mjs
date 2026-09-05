@@ -27,7 +27,7 @@ const db=async(sql,params=[])=>{
  if(sql.startsWith('insert into bot_update_queue')){queued++;assert.match(sql,/on conflict/);const p=JSON.parse(params[1]);assert.equal(p.guildSlug,'testgilde');assert.equal(p.channelId,'234567890123456789');}
  return {rows:[]};
 };
-const service=createRaidWorkbookService({query:db,getWeb:async()=>({webAnalysis:web}),resolveChannel:async()=> '234567890123456789',publicBaseUrl:'https://guildloot.example',apiBaseUrl:'https://api.guildloot.example',build:async()=>{generated++;return out;}});
+const service=createRaidWorkbookService({query:db,getWeb:async()=>({webAnalysis:web}),resolveChannel:async()=> '234567890123456789',publicBaseUrl:'https://guildloot.example',apiBaseUrl:'https://api.guildloot.example',publishSheet:async()=>({id:"test_sheet_id",url:"https://docs.google.com/spreadsheets/d/test_sheet_id/edit"}),build:async()=>{generated++;return out;}});
 await service.afterAnalysis({guildId:'guild-a',analysisId:analysis.id,web});assert.equal(generated,1);assert.equal(queued,1);
 await service.generate('guild-a',analysis.id);assert.equal(generated,1);
 await assert.rejects(service.generate('guild-b',analysis.id),e=>e.statusCode===404);
@@ -41,3 +41,10 @@ assert.equal(analysisBrand({slug:'nachtloot'}),'NachtLoot');
 assert.equal(analysisBrand({slug:'lichtloot'}),'LichtLoot');
 assert.equal(analysisBrand({slug:'other'}),'GuildLoot');
 assert.match(workbook.getWorksheet('Übersicht').getCell('A4').value,/kompakte Übersicht.*GuildLoot/);
+
+const {publishGoogleSheet}=await import('../src/log-workbook/google-sheets.js');
+const publishArgs={bridgeUrl:'https://script.google.com/macros/s/test/exec',queueToken:'test-token',guildSlug:guild.slug,analysisId:analysis.id,sourceHash:'a'.repeat(64)};
+const native={success:true,mimeType:'application/vnd.google-apps.spreadsheet',spreadsheetId:'native_id',url:'https://docs.google.com/spreadsheets/d/native_id/edit'};
+assert.deepEqual(await publishGoogleSheet({...publishArgs,fetchImpl:async(url,options)=>{const body=JSON.parse(options.body);assert.equal(body.guildSlug,guild.slug);assert.equal(body.analysisId,analysis.id);return {ok:true,json:async()=>native};}}),{id:'native_id',url:native.url});
+for(const bad of [{...native,mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},{...native,url:'https://docs.google.com.evil.invalid/spreadsheets/d/native_id/edit'},{success:false,error:'Unauthorized'}])await assert.rejects(publishGoogleSheet({...publishArgs,fetchImpl:async()=>({ok:true,json:async()=>bad})}));
+console.log('Native Google Sheet identity and rejected invalid publisher responses verified.');

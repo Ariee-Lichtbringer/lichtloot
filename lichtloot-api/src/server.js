@@ -12554,10 +12554,10 @@ async function resolveBotQueue({ guildId, query: params }) {
          resolved_at = now(),
          payload = case
            when $3 = '' then payload
-           else payload || jsonb_build_object('messageId', $3::text)
+           else payload || jsonb_build_object('messageId', $3::text) || case when $4::text='' then '{}'::jsonb else jsonb_build_object('postChannelId',$4::text) end
          end
      where guild_id = $1 and id = $2`,
-    [guildId, rowNumber, messageId]
+    [guildId, rowNumber, messageId, /^\d{17,20}$/.test(clean(params.messageChannelId)) ? clean(params.messageChannelId) : ""]
   );
   return { success: true };
 }
@@ -32016,13 +32016,13 @@ app.post("/api/guilds/:guildSlug/log-analyses/workbook-backfill", async (req,res
         and ($2::uuid[] is null or la.id=any($2::uuid[]))
       order by coalesce(la.raid_date,la.posted_at::date,la.created_at::date) desc,la.created_at desc limit 5`,[guild.id,ids||null]);
     if(ids&&rows.rows.length!==ids.length)return res.status(404).json({success:false,error:"Mindestens eine Analyse gehört nicht zu dieser Gilde."});
-    const raids=await Promise.all(rows.rows.map(async r=>({id:r.id,title:r.title,raid:r.raid,date:r.raid_date,reportUrl:r.report_url,channelId:await resolveLogAnalysisPostChannelId(guild.id,r.raid),postStatus:r.post_status||null,messageId:r.post_payload?.messageId||null,workbookError:r.summary?.workbookError||null})));
+    const raids=await Promise.all(rows.rows.map(async r=>({id:r.id,title:r.title,raid:r.raid,date:r.raid_date,reportUrl:r.report_url,channelId:await resolveLogAnalysisPostChannelId(guild.id,r.raid),postStatus:r.post_status||null,messageId:r.post_payload?.messageId||null,sheetUrl:r.post_payload?.sheetUrl||null,postChannelId:r.post_payload?.postChannelId||null,workbookError:r.summary?.workbookError||null})));
     if(req.body?.dryRun!==false)return res.json({success:true,guild:guild.slug,raids});
     if(raids.some(r=>!/^\d{17,20}$/.test(clean(r.channelId))))return res.status(409).json({success:false,error:"Für mindestens einen Raid fehlt der Analyse-Zielchannel.",raids});
     if(req.body?.enableAutomation===true)await query(`insert into guild_settings(guild_id,layout_json) values($1,'{"logWorkbookAutoPost":true}'::jsonb)
       on conflict(guild_id) do update set layout_json=coalesce(guild_settings.layout_json,'{}'::jsonb)||excluded.layout_json`,[guild.id]);
-    else if(![true,'true'].includes(await getGuildLayoutValue(guild.id,'logWorkbookAutoPost')))return res.status(409).json({success:false,error:"Automatische Excel-Auswertung ist für diese Gilde deaktiviert."});
-    for(const r of raids){if(r.postStatus==='done'){r.skipped='already-posted';continue;}r.queue=enqueueAutomaticLogAnalysis({guildId:guild.id,analysisId:r.id,forceRefresh:false,source:'workbook-backfill',priority:true});}
+    else if(![true,'true'].includes(await getGuildLayoutValue(guild.id,'logWorkbookAutoPost')))return res.status(409).json({success:false,error:"Automatische Google-Sheets-Auswertung ist für diese Gilde deaktiviert."});
+    for(const r of raids){if(r.postStatus==='done' && !req.body?.replaceExisting){r.skipped='already-posted';continue;}r.queue=enqueueAutomaticLogAnalysis({guildId:guild.id,analysisId:r.id,forceRefresh:false,source:'workbook-backfill',priority:true});}
     return res.json({success:true,guild:guild.slug,raids});
   } catch(error){next(error);}
 });
