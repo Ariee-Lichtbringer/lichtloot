@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { getZgPrioAttendance, getZgAttendanceByCharacter } from "./prio-attendance.js";
 import { prepareRaidWorkbookWeb } from "./log-workbook/prepare.js";
 import { createRaidWorkbookService } from "./log-workbook/service.js";
 import cors from "cors";
@@ -4247,7 +4248,7 @@ async function notificationMessageTemplate(guildId,notificationKey){
   return clean(result.rows[0]?.message_template);
 }
 
-const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
+const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
 
 function poReleaseDisplaySettingsFromLayout(layout = {}) {
   const saved = layout?.poReleaseVisibleRaids;
@@ -4266,6 +4267,10 @@ function poReleaseDisplaySettingsFromLayout(layout = {}) {
   };
 }
 
+function lootPoReleaseVisibleRaids(settings) {
+  return ALL_PO_RELEASE_DISPLAY_RAIDS.filter(raid => poReleasesRequiredForRaid(settings, raid));
+}
+
 async function getPoReleaseDisplaySettings(guildId) {
   await ensureGuildLayoutSchema();
   const result = await query(`select layout_json from guild_settings where guild_id=$1`, [guildId]);
@@ -4274,8 +4279,8 @@ async function getPoReleaseDisplaySettings(guildId) {
 
 function poReleasesRequiredForRaid(settings, raidType) {
   if (settings?.poReleasesEnabled === false) return false;
-  const normalized = normalizePoReleaseRaid(raidType);
-  if (settings?.configured && normalized && !settings.visibleRaids?.includes(normalized)) return false;
+  const normalized = normalizePoReleaseRaid(raidType) || normalizeRaidType(raidType);
+  // Staff column visibility never controls loot-page release requirements.
   const pageKey = normalized?.startsWith("zg-") ? "zg" : normalized;
   return settings?.poReleaseSectionsByRaid?.[pageKey]?.poReleases !== false;
 }
@@ -4983,7 +4988,7 @@ async function getP0ReleaseList(guildId = "") {
 function normalizePoReleaseRaid(value) {
   const raid = normalizeRaidType(value);
   if (["p1p3", "p1-p3", "p1_p3"].includes(clean(value).toLowerCase())) return "p1p3";
-  return ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
+  return ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
 }
 
 function normalizePoReleaseCharacterName(value) {
@@ -5678,6 +5683,23 @@ async function getCharacterPoReleaseRows(guildId) {
   return [...byCharacter.values()];
 }
 
+async function attachZgPrioAttendance(guildId, characters) {
+  const guildResult = await query("select slug from guilds where id=$1", [guildId]);
+  if (guildResult.rows[0]?.slug !== "nachtloot") return;
+  const config = await getGuildEraConfiguration(guildId);
+  const {byCharacter, totals} = await getZgAttendanceByCharacter(query, {
+    guildId, guildSlug:"nachtloot", window:config.rules.poRelease.attendanceWindow,
+    countBench:config.rules.recruit.countBenchAsAttendance
+  });
+  for (const entry of characters) {
+    entry.attendance16 ||= {};
+    for (const [key,total] of Object.entries(totals)) {
+      entry.attendance16[key] = byCharacter.get(String(entry.characterId || entry.id))?.[key]
+        || {attended:0, bench:0, total, source:"prio-list"};
+    }
+  }
+}
+
 async function getCharacterPoReleases({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   const search = clean(params.search || params.q).toLowerCase();
@@ -5710,6 +5732,7 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
     characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+(eraConfig.rules.recruit.countBenchAsAttendance?Number(player.bench||0):0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
   } catch(error) { console.warn("Warcraft-Logs-Attendance konnte nicht geladen werden:",error.message||error); characters.forEach(entry=>{entry.attendance16={};}); }
   else characters.forEach(entry=>{entry.attendance16={};});
+  if (includeAttendance) await attachZgPrioAttendance(guildId, characters);
   return { success: true, characters, entries: characters, count: characters.length };
 }
 
@@ -13774,6 +13797,9 @@ async function getPlayerPrioHistory(guildId, params) {
     console.warn("Warcraft-Logs-Attendance für Mein LichtLoot konnte nicht geladen werden:", error.message || error);
   }
 
+  const zgCharacter = {id:character.id, attendance16};
+  await attachZgPrioAttendance(guildId, [zgCharacter]);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -13820,7 +13846,7 @@ async function getPlayerPrioHistory(guildId, params) {
     attendance16,
     poReleasesEnabled: poReleaseDisplaySettings.poReleasesEnabled,
     poReleaseDisplayConfigured: poReleaseDisplaySettings.configured,
-    visiblePoReleaseRaids: poReleaseDisplaySettings.visibleRaids,
+    visiblePoReleaseRaids: lootPoReleaseVisibleRaids(poReleaseDisplaySettings),
     characterId: character.id,
     poReleaseDetails: releaseResult.rows.map(row => ({
       raid: normalizePoReleaseRaid(row.raid_type),
@@ -26926,8 +26952,32 @@ async function setP0PlusPoints({ guildId, query: params }) {
   }
 }
 
+async function resolveZgPointTarget(client, guildId, raid, requestedTarget = "") {
+  const source = normalizeRaidType(raid.raid_type);
+  const variants = ["zg-prime", "zg-late", "zg-mittwoch"];
+  if (source !== "zg" && !variants.includes(source)) return requestedTarget || source;
+  const recorded = await client.query(`select distinct raid_type from p0plus_point_audit
+    where guild_id=$1 and raid_id=$2 and action in ('raid_transfer','item_received_pending','item_received_clear')
+      and raid_type = any($3)`, [guildId, raid.id, variants]);
+  const targets = [...new Set(recorded.rows.map(row => row.raid_type))];
+  let target = source === "zg" ? targets[0] : source;
+  if (targets.length > 1 || (source !== "zg" && targets.some(value => value !== source))) {
+    throw Object.assign(new Error("Dieser ZG-Raid hat widersprüchliche P0+-Zuordnungen. Bitte die Zuordnung prüfen."), {statusCode:409});
+  }
+  if (!target) {
+    const guild = await client.query("select slug from guilds where id=$1", [guildId]);
+    const date = new Date(raid.raid_date);
+    if (guild.rows[0]?.slug === "nachtloot" && date.getUTCDay() === 3) target = "zg-mittwoch";
+    else if (variants.includes(requestedTarget)) target = requestedTarget;
+  }
+  if (!target || (requestedTarget && requestedTarget !== "zg" && requestedTarget !== target)) {
+    throw Object.assign(new Error("Das P0+-Ziel passt nicht zu diesem ZG-Raid. Prime, Late und Mittwoch müssen getrennt bleiben."), {statusCode:400});
+  }
+  return target;
+}
+
 async function clearP0PlusForPlayer({ guildId, query: params }) {
-  const raidType = normalizeRaidType(params.raid);
+  let raidType = normalizeRaidType(params.raid);
   const requestedRaidId = clean(params.raidId || params.id);
   await requireConfiguredSpecialRaidType(guildId, raidType);
   const player = clean(params.player || params.char || params.spieler);
@@ -26949,7 +26999,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
     let deferDeletion = false;
     if (requestedRaidId) {
       const raidResult = await client.query(
-        `select id,p0plus_transferred_at
+        `select id,raid_type,raid_date,p0plus_transferred_at
          from raids
          where guild_id = $1
            and lower(raid_type) = any($2)
@@ -26961,6 +27011,8 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
       receivedRaidId = raidResult.rows[0]?.id || null;
       deferDeletion = !raidResult.rows[0]?.p0plus_transferred_at;
       if (!receivedRaidId) throw Object.assign(new Error("Raid wurde nicht gefunden. Es wurden keine Punkte gelöscht."), {statusCode:404});
+      raidType = await resolveZgPointTarget(client, guildId, raidResult.rows[0], normalizeRaidType(params.targetRaid || params.raid));
+      await requireConfiguredSpecialRaidType(guildId, raidType);
     }
     if(receivedRaidId && deferDeletion){
       const transferred=await client.query(`select 1 from p0plus_point_audit where guild_id=$1 and raid_id=$2 and action='raid_transfer' limit 1`,[guildId,receivedRaidId]);
@@ -27463,7 +27515,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   const eraConfig = await getGuildEraConfiguration(guildId);
   const raidTransferPoints = Number(eraConfig.rules.p0Plus.raidTransferPoints || 0);
   const requestedRaidType = normalizeRaidType(params.raid);
-  const targetRaidType = normalizeRaidType(params.targetRaid || params.targetRaidType || params.raid);
+  let targetRaidType = normalizeRaidType(params.targetRaid || params.targetRaidType || params.raid);
   await requireConfiguredSpecialRaidType(guildId, targetRaidType);
   const raidId = clean(params.raidId);
   const values = [guildId];
@@ -27497,6 +27549,8 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   }
   const sourceRaidType = normalizeRaidType(raid.raid_type);
   const isGenericZgSource = sourceRaidType === "zg";
+  targetRaidType = await resolveZgPointTarget(client, guildId, raid, targetRaidType);
+  await requireConfiguredSpecialRaidType(guildId, targetRaidType);
   if (isGenericZgSource && !["zg-prime", "zg-late", "zg-mittwoch"].includes(targetRaidType)) {
     const error = new Error("Für einen allgemeinen ZG-Raid muss ZG Prime, ZG Late-Night oder ZG Mittwoch als Ziel gewählt werden.");
     error.statusCode = 400;
@@ -27525,7 +27579,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   );
   const relatedRaids = [
     raid,
-    ...relatedRaidResult.rows.filter(row => clean(row.id) !== clean(raid.id))
+    ...relatedRaidResult.rows.filter(row => !["zg", "zg-prime", "zg-late", "zg-mittwoch"].includes(sourceRaidType) && clean(row.id) !== clean(raid.id))
   ];
   const relatedRaidIds = [...new Set(relatedRaids.map(row => row.id).filter(Boolean))];
   const transferNotes = Array.from(new Set(relatedRaids.flatMap(row => [
@@ -30297,7 +30351,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "getPoReleaseDisplaySettings") {
       const settings = await getPoReleaseDisplaySettings(guild.id);
-      return res.json({ ...settings, guild: guild.slug });
+      return res.json({ ...settings, visibleRaids:lootPoReleaseVisibleRaids(settings), configured:true, guild: guild.slug });
+    }
+    if (action === "guildGetPoReleaseDisplaySettings") {
+      requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
+      return res.json({ ...await getPoReleaseDisplaySettings(guild.id), guild:guild.slug });
     }
 
     if (action === "getRaidMemberNoticeAcceptance") {
@@ -30447,6 +30505,13 @@ app.get("/api/apps-script", async (req, res, next) => {
         return leftDate.localeCompare(rightDate);
       });
       return res.json({ success: true, guild: guild.slug, guildId: guild.id, raids: activeRaids, allRaids: activeRaids, activeRaids });
+    }
+
+    if (action === "guildGetZgPrioAttendance") {
+      requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
+      return res.json(await getZgPrioAttendance(query, {
+        guildId:guild.id, guildSlug:guild.slug, raidKey:clean(req.query.raidKey) || "zg"
+      }));
     }
 
     if (action === "getRaidHelper" || action === "getRaidSignups") {

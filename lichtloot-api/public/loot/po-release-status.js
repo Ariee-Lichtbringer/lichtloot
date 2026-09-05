@@ -11,14 +11,13 @@
     }
     return[file.replace(/-loot\.html$/,"")];
   }
-  function poReleasesEnabledForCurrentPage(apiEnabled,visibleRaids,configured){
+  function poReleasesEnabledForCurrentPage(apiEnabled,visibleRaids,configured,sectionsByRaid){
     if(apiEnabled===false)return false;
     const layout=window.currentGuildInfo&&currentGuildInfo.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{};
     if(layout.lootPageSections?.poReleases===false)return false;
     const file=String(location.pathname||"").split("/").pop().toLowerCase();
     const pageKey=file.replace(/-loot\.html$/,"").replace(/^zg.*$/,"zg");
-    if(layout.lootPageSectionsByRaid?.[pageKey]?.poReleases===false)return false;
-    if(configured===true&&Array.isArray(visibleRaids)&&!currentPagePoReleaseKeys().some(key=>visibleRaids.includes(key)))return false;
+    if((sectionsByRaid || layout.lootPageSectionsByRaid)?.[pageKey]?.poReleases===false)return false;
     return true;
   }
   async function showRaidMemberNotice(notice){
@@ -127,7 +126,7 @@
       const display=await responses[1].json().catch(function(){return {};});
       showRaidMemberNotice(display.raidMemberNotice);
       window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
-      history.poReleasesEnabled=poReleasesEnabledForCurrentPage(display.poReleasesEnabled!==false,display.visibleRaids,display.configured);
+      history.poReleasesEnabled=poReleasesEnabledForCurrentPage(display.poReleasesEnabled!==false,display.visibleRaids,display.configured,display.poReleaseSectionsByRaid);
       history.poReleaseDisplayConfigured=display.configured===true;
       if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(history.poReleasesEnabled);
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
@@ -150,5 +149,5 @@
   if(typeof originalSetPrio==="function") window.setPrio=async function(slot,item){if(await requireWorldbuffAgreementForSave(item))return originalSetPrio.apply(this,arguments);};
   const originalSetP0Plus=window.setP0Plus;
   if(typeof originalSetP0Plus==="function") window.setP0Plus=async function(item){if(await requireWorldbuffAgreementForSave(item))return originalSetP0Plus.apply(this,arguments);};
-  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;if(typeof window.applyPoReleaseRequirementSetting==="function")window.applyPoReleaseRequirementSetting(poReleasesEnabledForCurrentPage(data.poReleasesEnabled!==false,data.visibleRaids,data.configured));showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
+  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;if(typeof window.applyPoReleaseRequirementSetting==="function")window.applyPoReleaseRequirementSetting(poReleasesEnabledForCurrentPage(data.poReleasesEnabled!==false,data.visibleRaids,data.configured,data.poReleaseSectionsByRaid));showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
 })();

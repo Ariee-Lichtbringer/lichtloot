@@ -9033,7 +9033,7 @@ function getRaidKey(raid){
 }
 
 function isAllowedP0RaidForRaid(raid){
-  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid));
+  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)) || (CURRENT_GUILD_SLUG === "nachtloot" && getRaidKey(raid) === "zg");
 }
 
 function isZgRaidForP0Transfer(raid){
@@ -18062,6 +18062,11 @@ async function toggleRaidPrioStatusFromModal(raidId){
 function openP0PlusTransferDialog(raidId){
   const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id||"")===String(raidId));
   if(!raid){setStatus("Raid wurde nicht gefunden.","bad");return;}
+  const fixedTarget = getRaidKey(raid);
+  if (["zg-prime","zg-late","zg-mittwoch"].includes(fixedTarget) || (CURRENT_GUILD_SLUG === "nachtloot" && fixedTarget === "zg")) {
+    transferP0PlusFromGuild(raidId, fixedTarget === "zg" ? "zg-mittwoch" : fixedTarget);
+    return;
+  }
   document.getElementById("p0PlusTransferTargetModal")?.remove();
   const backdrop=document.createElement("div");
   backdrop.id="p0PlusTransferTargetModal";
@@ -18618,7 +18623,7 @@ async function loadP0ReleasePanel(){
       poReleaseRequests = result?.success && Array.isArray(result.entries) ? result.entries : [];
       renderP0ReleasePanelContent();
     });
-    const displayTask = railwayApi({ action:"getPoReleaseDisplaySettings" }, 10000).then(async result=>{
+    const displayTask = railwayApi({ action:"guildGetPoReleaseDisplaySettings",masterCode }, 10000).then(async result=>{
       if(result?.configured && Array.isArray(result.visibleRaids)){
         poReleaseVisibleColumns = new Set(result.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
       }else if(result?.success){
@@ -18656,7 +18661,7 @@ function renderP0ReleasePanelContent(){
             <option value="zero" ${poReleaseAttendanceFilter==="zero"?"selected":""}>Ohne Teilnahme</option>
           </select>
         </label>
-        <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span>Spalten anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
+        <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span title="Nur Tabellenanzeige. Die Freigabepflicht wird unter Layout → Lootseiten eingestellt.">Spalten / Attendance anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -18848,7 +18853,7 @@ async function togglePoReleaseColumn(raid, visible){
   try{
     const result=await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode:document.getElementById("masterCode").value.trim(),visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
     if(!result.success) throw new Error(result.error||"Spaltenauswahl konnte nicht gespeichert werden.");
-    setStatus("Sichtbare PO-Freigaben wurden für diese Gilde gespeichert.","good");
+    setStatus("Spalten und Attendance-Anzeige gespeichert. Die Freigabepflicht bleibt unverändert.","good");
   }catch(error){setStatus(error.message||"Spaltenauswahl konnte nicht gespeichert werden.","bad");}
 }
 
@@ -18860,7 +18865,7 @@ function poReleaseCheckHtml(entry, raid, index){
   const attended=Number(attendance?.attended||0);
   const attendanceColor=attended<=3?"#f87171":attended<=7?"#fbbf24":"#4ade80";
   const attendanceHtml = attendance && Number(attendance.total) > 0
-    ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="Warcraft Logs · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${Number(attendance.total)} Teilnahmen</span>`
+    ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="${attendance.source === 'prio-list' ? 'GuildLoot-Priolisten' : 'Warcraft Logs'} · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${Number(attendance.total)} Teilnahmen</span>`
     : (["mc","bwl","aq40","naxx"].includes(raid) ? '<span class="po-release-attendance muted">keine WCL-Daten</span>' : '');
   const stateHtml = checked
     ? `<span class="po-release-state active${lowAttendance ? " low-attendance" : ""}" title="${escapeAttr(lowAttendance ? `${poReleaseRaidLabel(raid)} · Warnung: nur ${Number(attendance.attended)}/${Number(attendance.total)} Teilnahmen` : poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
@@ -21802,5 +21807,6 @@ function escapeQuotes(value){
 <script src="loot/player-gear-popup.js?v=20260830-2015"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
+<script src="zg-prio-attendance.js?v=20260905"></script>
 </body>
 </html>

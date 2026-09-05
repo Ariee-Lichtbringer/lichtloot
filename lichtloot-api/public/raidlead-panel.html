@@ -1750,11 +1750,11 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
-  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
+  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey) || (currentGuildSlug() === "nachtloot" && currentRaidKey === "zg");
 }
 
 function isPlainP0Raid(){
-  return ["zg"].includes(currentRaidKey);
+  return ["zg"].includes(currentRaidKey) && currentGuildSlug() !== "nachtloot";
 }
 
 function isP1OnlyRaid(){
@@ -3372,7 +3372,7 @@ async function transferP0PlusPoints(){
   modal.querySelectorAll('[data-review-close]').forEach(button=>button.onclick=closeP0TransferReview);
   document.getElementById('p0ReviewReload').onclick=loadP0TransferReview;document.getElementById('p0ReviewConfirm').onclick=confirmP0TransferReview;
   modal.addEventListener('keydown',event=>{if(event.key==='Escape')closeP0TransferReview();if(event.key==='Tab'){const elements=[...modal.querySelectorAll('button,input,select')].filter(el=>!el.disabled&&el.getClientRects().length);if(event.shiftKey&&document.activeElement===elements[0]){event.preventDefault();elements.at(-1)?.focus();}else if(!event.shiftKey&&document.activeElement===elements.at(-1)){event.preventDefault();elements[0]?.focus();}}});
-  if(currentRaidKey==='zg'){state.targetRaid='';document.getElementById('p0ReviewContent').textContent='Bitte zuerst die P0+-Zieldatenbank auswählen.';document.getElementById('p0ReviewTarget').onchange=event=>{state.targetRaid=event.target.value;loadP0TransferReview();};}else await loadP0TransferReview();
+  if(currentRaidKey==='zg' && currentGuildSlug()==='nachtloot'){state.targetRaid='zg';document.getElementById('p0ReviewTarget').closest('label').style.display='none';await loadP0TransferReview();}else if(currentRaidKey==='zg'){state.targetRaid='';document.getElementById('p0ReviewContent').textContent='Bitte zuerst die P0+-Zieldatenbank auswählen.';document.getElementById('p0ReviewTarget').onchange=event=>{state.targetRaid=event.target.value;loadP0TransferReview();};}else await loadP0TransferReview();
 }
 function closeP0TransferReview(){if(p0TransferReview?.busy)return;const focus=p0TransferReview?.previousFocus;p0TransferReview=null;document.getElementById('p0TransferReviewModal')?.remove();focus?.focus();}
 function setP0ReviewBusy(busy){const state=p0TransferReview;if(!state)return;state.busy=busy;document.getElementById('p0TransferReviewModal').querySelectorAll('button,input,select').forEach(el=>el.disabled=busy);document.getElementById('p0ReviewConfirm').disabled=busy||!state.plan;}
