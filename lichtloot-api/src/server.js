@@ -5403,7 +5403,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   const character = await findCharacterForPin(guildId, pin, params.character || params.char || params.player, params.server);
   if (!character) { const error = new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode = 403; throw error; }
   const requestType = clean(params.requestType || params.type).toLowerCase();
-  if (!["recruit", "p1p3", "p0"].includes(requestType)) { const error = new Error("Bitte eine gültige Freigabe auswählen."); error.statusCode = 400; throw error; }
+  if (!["recruit", "p0"].includes(requestType)) { const error = new Error("Bitte eine gültige Freigabe auswählen."); error.statusCode = 400; throw error; }
   const selectedRaid = normalizePoReleaseRaid(params.raid || params.raidType);
   const raid = selectedRaid;
   if (!raid || raid === "p1p3") { const error = new Error("Bitte den Raid für die Freigabe auswählen."); error.statusCode = 400; throw error; }
@@ -5412,9 +5412,8 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
     error.statusCode = 400;
     throw error;
   }
-  const armoryUrl = clean(params.armoryUrl);
+  const armoryUrl = clean(params.armoryUrl) || `https://worldofwarcraft.blizzard.com/de-de/classic1x/eu/armory/character/${encodeURIComponent(clean(character.server).toLowerCase())}/${encodeURIComponent(clean(character.name).toLowerCase())}`;
   const screenshotData = clean(params.screenshotData);
-  if (!armoryUrl) { const error = new Error("Bitte den Armory-Link angeben."); error.statusCode = 400; throw error; }
   if (!screenshotData) { const error = new Error("Bitte einen Screenshot hochladen."); error.statusCode = 400; throw error; }
   if (screenshotData && !/^data:image\/(png|jpe?g|webp);base64,/i.test(screenshotData)) { const error = new Error("Screenshot-Format ist ungültig."); error.statusCode = 400; throw error; }
   const requirements = poRequestRequirements(requestType, selectedRaid, clean(params.className) || character.class_name, params.specialization);
@@ -27437,7 +27436,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
      where pr.raid_id = any($2::uuid[])
-     order by case when pr.raid_id = $3 then 0 else 1 end, pr.updated_at desc`,
+     order by case when pr.raid_id = $3 then 0 else 1 end, pr.updated_at desc, pr.character_id, pr.id`,
     [guildId, relatedRaidIds, raid.id]
   );
 
