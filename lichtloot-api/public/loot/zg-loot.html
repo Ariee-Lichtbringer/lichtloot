@@ -3898,6 +3898,9 @@ async function savePrio(){
     p1 === p2 &&
     p2 === p3;
 
+  // P0 ohne Plus ist ebenfalls eine gespeicherte P0-Auswahl.
+  const savedP0Selected = Boolean(window.p0WasClicked || isP0Plus) && Boolean(p1) && p1 === p2 && p2 === p3;
+
   if(isP0Plus && isP0DeadlineClosed()){
     status.innerHTML=`<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     return;
@@ -3941,7 +3944,7 @@ async function savePrio(){
       new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
     ]);
 
-    if(result.error){
+    if(result.success === false || result.error){
       throw new Error(result.error);
     }
 
@@ -3956,7 +3959,7 @@ async function savePrio(){
       P2:p2,
       P3:p3,
       P0Plus:isP0Plus ? "ja" : "nein",
-      P0Item:isP0Plus ? p1 : ""
+      P0Item:savedP0Selected ? p1 : ""
     });
 
     const displayedPin = result.tempPin || result.characterPin || playerPin;
@@ -3987,9 +3990,9 @@ async function savePrio(){
       P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
       P3:p3,
       P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
-      P0Selected:isP0Plus ? "ja" : "nein",
+      P0Selected:savedP0Selected ? "ja" : "nein",
       P0Plus:isP0Plus ? "ja" : "nein",
-      P0Item:isP0Plus ? p1 : ""
+      P0Item:savedP0Selected ? p1 : ""
     };
     const confirmedSignature=prioDraftSignature(confirmedPrio);
     // refreshAfterPrioSave kann Auswahlfelder und Item-IDs noch einmal
