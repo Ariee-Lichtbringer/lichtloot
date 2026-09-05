@@ -11111,13 +11111,14 @@ function renderRaidHelperEventCard(raid, mode){
           ${slots ? `<span class="raid-helper-meta-pill">${escapeHtml(slots)}</span>` : ""}
           ${prioEnabled && raid.playerPin ? `<span class="raid-helper-meta-pill">PIN ${escapeHtml(raid.playerPin)}</span>` : ""}
         </div>
+        ${mode === "past" ? renderRaidOverviewStats(raid) : ""}
         ${description ? `<div class="raid-helper-event-description">${escapeHtml(description).slice(0,1200)}</div>` : ""}
       </div>
       <div class="raid-helper-event-actions">
         ${mode === "current" ? `<button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>` : ""}
         ${mode === "current" ? `<button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${escapeHtml(raidDiscordSignupActionLabel(raid))}</button>` : ""}
         ${mode === "current" && raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Raidanmelder neu erstellen</button>` : ""}
-        ${prioEnabled ? `<button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}')">Prios</button>` : ""}
+        ${prioEnabled ? `<button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}',${mode === 'past' || isArchived})">Prios</button>` : ""}
         ${!isArchived ? `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raidId)}')">Archivieren</button>` : ""}
         <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
         <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
