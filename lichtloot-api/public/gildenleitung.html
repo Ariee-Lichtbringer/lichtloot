@@ -5295,6 +5295,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .p0-item-received .item-name,.p0-item-received .item-link,.p0-item-received .item-with-tooltip,.p0-item-received .item-with-icon>span{color:#f5c451!important}
 .p0-item-received .item-icon{border-color:#f5c451!important}
 .p0-received-button:disabled{opacity:1!important;background:#166534!important;border:1px solid #4ade80!important;color:#dcfce7!important;cursor:default}
+
+.p0-received-legend{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(245,196,81,.35);border-radius:9px;background:rgba(245,196,81,.06);color:#cbd5e1;font-size:13px;line-height:1.5}.p0-received-legend span{color:#f5c451;font-weight:700}
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -6523,6 +6525,7 @@ body.worldbuff-only .master-only{display:none!important}
   </div>
 </div>
   </div>
+<aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
 </main>
 </div>
 
@@ -17895,8 +17898,8 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
               <td>${renderPrioPlayerDetails(prio)}</td>
               <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
               <td class="${prio.p0ItemReceived===true?"p0-item-received":""}">${renderPrioValue(prio.P1, listOpen)}</td>
-              <td>${renderPrioValue(prio.P2, listOpen)}</td>
-              <td>${renderPrioValue(prio.P3, listOpen)}</td>
+              <td class="${prio.p0ItemReceived===true && String(prio.P2||" ").trim().toLowerCase()===String(prio.P1||"").trim().toLowerCase()?"p0-item-received":""}">${renderPrioValue(prio.P2, listOpen)}</td>
+              <td class="${prio.p0ItemReceived===true && String(prio.P3||" ").trim().toLowerCase()===String(prio.P1||"").trim().toLowerCase()?"p0-item-received":""}">${renderPrioValue(prio.P3, listOpen)}</td>
               <td>${renderP0PlusChoice(prio, listOpen)}</td>
               <td>${renderPrioRowActions(prio, raid, listOpen)}</td>
             </tr>
@@ -17904,6 +17907,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
         </tbody>
       </table>
     </div>
+    <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
   `;
 }
 

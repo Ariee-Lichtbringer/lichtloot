@@ -1381,6 +1381,8 @@ body.random-raidlead .random-home-link{display:inline-block!important}
 .p0-review-dialog button{padding:10px 15px;border:1px solid #475569;border-radius:8px;background:#172033;color:#f1f5f9;cursor:pointer;font-weight:700}.p0-review-dialog button:disabled{opacity:.5;cursor:default}.p0-review-dialog #p0ReviewConfirm{background:#166534;border-color:#4ade80;color:#dcfce7}
 #p0ReviewContent{padding:8px 22px 20px;overflow:auto;min-height:0}.p0-review-dialog h3{color:#e9bd56;font-size:17px;margin:20px 0 12px}.p0-review-dialog small{display:block;color:#94a3b8;font-size:11px;margin-top:4px}.p0-review-hint{color:#94a3b8;font-size:13px;line-height:1.5}.p0-review-table{overflow-x:auto}.p0-review-table table{width:100%;min-width:620px;border-collapse:collapse}.p0-review-table th,.p0-review-table td{padding:11px 12px;border-bottom:1px solid #253248;text-align:left;font-size:13px}.p0-review-table th{color:#b9c6d9;background:#101c30}.p0-review-table input{width:85px;box-sizing:border-box;padding:9px;background:#060c19;border:1px solid #5b789b;border-radius:7px;color:white;font-size:15px}.p0-review-deleted{color:#86efac;font-weight:800}#p0ReviewStatus{padding:10px 22px;color:#cbd5e1;font-size:13px;line-height:1.5}.p0-review-complete{padding:30px 0;color:#86efac;font-size:22px}.p0-review-target{padding:12px 22px}.p0-review-target select{margin-left:10px;padding:8px;background:#101c30;color:white;border:1px solid #475569;border-radius:6px}
 @media(max-width:650px){.p0-review-overlay{padding:6px}.p0-review-dialog{max-height:97dvh}.p0-review-dialog header,.p0-review-dialog footer{padding:12px}.p0-review-dialog footer button{flex:1}#p0ReviewContent{padding:6px 12px 12px}}
+
+.p0-received-legend{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(245,196,81,.35);border-radius:9px;background:rgba(245,196,81,.06);color:#cbd5e1;font-size:13px;line-height:1.5}.p0-received-legend span{color:#f5c451;font-weight:700}
 </style>
 </head>
 
@@ -1457,7 +1459,8 @@ body.random-raidlead .random-home-link{display:inline-block!important}
         <div id="p0OverviewContent" class="p0-overview-grid">P0+ Übersicht wird geladen ...</div>
       </div>
     </div>
-  </main>
+  <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte wurden gelöscht.</aside>
+</main>
 </div>
 
 <script>
@@ -2977,8 +2980,8 @@ function renderRows(){
         <td>${renderBenchName(entry)}</td>
         <td>${renderClass(entry.class)}</td>
         <td class="${entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
-        <td>${renderItem(entry.p2)}</td>
-        <td>${renderItem(entry.p3)}</td>
+        <td class="${entry.p0ItemReceived===true && String(entry.p2||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p2)}</td>
+        <td class="${entry.p0ItemReceived===true && String(entry.p3||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p3)}</td>
         <td>${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
