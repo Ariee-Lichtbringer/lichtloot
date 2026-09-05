@@ -3714,6 +3714,8 @@ async function ensureRaidSchema() {
        add column if not exists discord_message_id text,
        add column if not exists signup_post_id text,
        add column if not exists deleted_at timestamptz,
+       add column if not exists p0plus_transferred_at timestamptz,
+       add column if not exists p0plus_transfer_reset_at timestamptz,
        add column if not exists description text,
        add column if not exists raid_image_url text,
        add column if not exists loot_master text,
@@ -4567,8 +4569,10 @@ function normalizeRaidRow(row) {
     signupCounts: row.signup_counts || null,
     signupCount: Number(row.signup_count || 0),
     p0SignupCount: Number(row.p0_signup_count || 0),
-    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferred: Boolean(row.p0plus_transferred_at) || p0PlusTransferCount > 0,
     p0PlusTransferCount,
+    p0TransferEntries: row.p0_transfer_entries || [],
+    p0ReceivedEntries: row.p0_received_entries || [],
     playerLink: row.player_link || "",
     createdBy: row.created_by || "",
     erstelltVon: row.created_by || "",
@@ -14144,6 +14148,24 @@ async function getGuildLeadershipOverview(guildId, params) {
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
+  const auditSummary = await query(`select raid_id,action,character_id,player_name,server,item_name,
+      sum(case when action='raid_transfer' then delta_points else greatest(old_points-new_points,0) end)::numeric as points
+    from p0plus_point_audit where guild_id=$1 and raid_id=any($2::uuid[])
+      and action in ('raid_transfer','item_received_clear')
+      and (action<>'raid_transfer' or created_at>coalesce((select p0plus_transfer_reset_at from raids where id=raid_id),'-infinity'::timestamptz))
+    group by raid_id,action,character_id,player_name,server,item_name
+    order by player_name,item_name`, [guildId,raidsResult.rows.map(row=>row.id)]);
+  const summaryByRaid=new Map();
+  for(const entry of auditSummary.rows){
+    if(!summaryByRaid.has(entry.raid_id))summaryByRaid.set(entry.raid_id,{transfers:[],received:[]});
+    const summary=summaryByRaid.get(entry.raid_id);
+    (entry.action==='raid_transfer'?summary.transfers:summary.received).push({player:entry.player_name,server:entry.server,item:entry.item_name,points:Number(entry.points||0)});
+  }
+  for(const row of raidsResult.rows){
+    const summary=summaryByRaid.get(row.id)||{transfers:[],received:[]};
+    row.p0_transfer_entries=summary.transfers;row.p0_received_entries=summary.received;
+    row.p0plus_transfer_count=Math.max(Number(row.p0plus_transfer_count||0),summary.transfers.length);
+  }
   const regularRaidIds = new Set(
     raidsResult.rows
       .map(row => clean(row.external_raid_id || row.id))
@@ -22912,7 +22934,7 @@ async function getRaidHelper({ guildId, query: params }) {
     signups,
     externalSignups,
     attendancePrios,
-    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferred: Boolean(raid.p0plus_transferred_at) || p0PlusTransferCount > 0,
     p0PlusTransferCount,
     counts: buildSignupCounts(signups, externalSignups),
     prioCount,
@@ -23738,14 +23760,14 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
 
 // The receipt is persisted in the existing points audit, scoped to the exact raid,
 // character and P0+ item. Zero points alone never mean that an item was awarded.
-function p0ItemReceivedPrioSql(prioAlias = "pr") {
+function p0ItemReceivedPrioSql(prioAlias = "pr", clearedOnly = false) {
   return `exists(select 1 from p0plus_point_audit received
     join raids received_raid on received_raid.id=${prioAlias}.raid_id
     join items received_item on received_item.id=${prioAlias}.p1_item_id
     where received.guild_id=received_raid.guild_id
       and received.raid_id=${prioAlias}.raid_id
       and received.character_id=${prioAlias}.character_id
-      and received.action='item_received_clear'
+      and received.action ${clearedOnly?"= 'item_received_clear'":"in ('item_received_clear','item_received_pending')"}
       and (received.item_id=${prioAlias}.p1_item_id
         or lower(received.item_name)=lower(received_item.name)))`;
 }
@@ -23889,6 +23911,7 @@ async function getPublishedPrios({ guildId, query: params }) {
          pr.bench,
          ${staffBenchPrioSql()} as staff_benched,
          ${p0ItemReceivedPrioSql()} as p0_item_received,
+         ${p0ItemReceivedPrioSql("pr",true)} as p0_points_cleared,
          pr.created_at as prio_created_at,
          pr.updated_at as prio_updated_at,
          c.name as player,
@@ -23953,7 +23976,7 @@ async function getPublishedPrios({ guildId, query: params }) {
   return {
     success: true,
     ...normalizedRaid,
-    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferred: Boolean(raid.p0plus_transferred_at) || p0PlusTransferCount > 0,
     p0PlusTransferCount,
     prioListDisplay,
     published,
@@ -24002,6 +24025,7 @@ async function getPublishedPrios({ guildId, query: params }) {
         wclSourceTitle: wclParticipation.reports[0]?.code ? `Warcraft Logs ${wclParticipation.reports[0].code}` : "Warcraft Logs",
         wclSourceUrl: wclParticipation.reports[0]?.url || "",
         p0ItemReceived: row.p0_item_received === true,
+        p0PointsCleared: row.p0_points_cleared === true,
         StaffBenched: row.staff_benched === true,
         staffBenched: row.staff_benched === true,
         Bench: row.bench || "",
@@ -26848,9 +26872,10 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
     await client.query("begin");
     await client.query("select pg_advisory_xact_lock(hashtext($1), hashtext($2))", [clean(guildId), "p0plus-review"]);
     let receivedRaidId = null;
+    let deferDeletion = false;
     if (requestedRaidId) {
       const raidResult = await client.query(
-        `select id
+        `select id,p0plus_transferred_at
          from raids
          where guild_id = $1
            and lower(raid_type) = any($2)
@@ -26860,7 +26885,12 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, raidTypeSearchValues(raidType), requestedRaidId]
       );
       receivedRaidId = raidResult.rows[0]?.id || null;
+      deferDeletion = !raidResult.rows[0]?.p0plus_transferred_at;
       if (!receivedRaidId) throw Object.assign(new Error("Raid wurde nicht gefunden. Es wurden keine Punkte gelöscht."), {statusCode:404});
+    }
+    if(receivedRaidId && deferDeletion){
+      const transferred=await client.query(`select 1 from p0plus_point_audit where guild_id=$1 and raid_id=$2 and action='raid_transfer' limit 1`,[guildId,receivedRaidId]);
+      deferDeletion=!transferred.rows.length;
     }
     let itemResult = await client.query(
       `select id, name
@@ -26881,6 +26911,12 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
       );
     }
     const item = itemResult.rows[0] || await upsertItem(client, raidType, itemName);
+    if(receivedRaidId && item){
+      const existing=await client.query(`select action from p0plus_point_audit where guild_id=$1 and raid_id=$2 and character_id=$3
+        and (item_id=$4 or lower(item_name)=lower($5)) and action in ('item_received_pending','item_received_clear')
+        order by case when action='item_received_clear' then 0 else 1 end limit 1`,[guildId,receivedRaidId,character.id,item.id,item.name]);
+      if(existing.rows.length){await client.query("commit");return {success:true,deleted:0,itemReceived:true,pointsCleared:existing.rows[0].action==='item_received_clear',raidId:receivedRaidId};}
+    }
     const matchingItemIds = itemResult.rows.map(row => row.id).filter(Boolean);
     if (!matchingItemIds.length && item?.id) matchingItemIds.push(item.id);
     let deleted = 0;
@@ -26893,7 +26929,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, character.id, matchingItemIds]
       );
       oldPoints = Number(oldPointsResult.rows[0]?.points || 0);
-      const result = await client.query(
+      const result = deferDeletion ? {rowCount:0} : await client.query(
         `delete from p0plus_points
          where guild_id = $1 and character_id = $2 and item_id = any($3::uuid[])
          returning id`,
@@ -26913,14 +26949,14 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         server: character.server || server,
         itemName: item.name || itemName,
         oldPoints,
-        newPoints: 0,
-        action: "item_received_clear",
+        newPoints: deferDeletion ? oldPoints : 0,
+        action: deferDeletion ? "item_received_pending" : "item_received_clear",
         source: "PO item erhalten",
         note: "Kein PO+-Punkt fuer diesen Raid, weil das PO-Item erhalten wurde."
       });
     }
     await client.query("commit");
-    return { success: true, deleted, itemReceived: Boolean(item), raidId: receivedRaidId };
+    return { success: true, deleted, itemReceived: Boolean(item), pointsCleared: !deferDeletion, raidId: receivedRaidId };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -26975,6 +27011,8 @@ async function resetRaidP0PlusTransfer({ guildId, query: params }) {
      returning id`,
     [guildId, transferNotes]
   );
+
+  await query("update raids set p0plus_transferred_at=null,p0plus_transfer_reset_at=now(),status=case when status='archiviert' then 'geschlossen' else status end,updated_at=now() where id=$1 and guild_id=$2",[raid.id,guildId]);
 
   return {
     success: true,
@@ -27190,6 +27228,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
          pr.bench,
          ${staffBenchPrioSql()} as staff_benched,
          ${p0ItemReceivedPrioSql()} as p0_item_received,
+         ${p0ItemReceivedPrioSql("pr",true)} as p0_points_cleared,
          pr.created_at,
          pr.updated_at,
          c.name as player,
@@ -27276,6 +27315,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
       bench: row.bench || "",
       staffBenched: row.staff_benched === true,
       p0ItemReceived: row.p0_item_received === true,
+        p0PointsCleared: row.p0_points_cleared === true,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
@@ -27463,6 +27503,23 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      order by player_name,item_name`,
     [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
+  const pendingReceipts=await client.query(`select pending.* from p0plus_point_audit pending
+    where pending.guild_id=$1 and pending.raid_id=any($2::uuid[]) and pending.action='item_received_pending'
+      and not exists(select 1 from p0plus_point_audit done where done.guild_id=pending.guild_id and done.raid_id=pending.raid_id
+        and done.character_id=pending.character_id and done.item_id=pending.item_id and done.action='item_received_clear')
+    order by pending.player_name,pending.item_name,pending.id`,[guildId,relatedRaidIds]);
+  const pendingKeys=new Set();
+  const pendingDeletions=[];
+  for(const receipt of pendingReceipts.rows){
+    const key=receipt.character_id+':'+receipt.item_id;if(pendingKeys.has(key))continue;pendingKeys.add(key);
+    const itemIds=await client.query(`select id from items where id=$1 or (lower(name)=lower($2) and lower(raid_type)=any($3))`,
+      [receipt.item_id,receipt.item_name,raidTypeSearchValues(receipt.raid_type==='zg'?targetRaidType:receipt.raid_type)]);
+    const ids=itemIds.rows.map(row=>row.id);
+    const total=await client.query(`select coalesce(sum(points),0)::numeric as points from p0plus_points where guild_id=$1 and character_id=$2 and item_id=any($3::uuid[])`,[guildId,receipt.character_id,ids]);
+    const points=Number(total.rows[0]?.points||0);
+    pendingDeletions.push({...receipt,ids,points});
+    receivedResult.rows.push({...receipt,deleted_points:points,pending:true});
+  }
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
   const candidates = priosResult.rows.filter(row =>
     commentMeta(row.comment).p0Plus === "ja" &&
@@ -27516,7 +27573,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       reviewRows.push({characterId:row.character_id,itemId:row.item_id,player:row.player,server:row.server,item:row.item_name,
         currentPoints,points:raidTransferPoints,staffBenched:row.staff_benched===true});
     }
-    const receivedItems=receivedResult.rows.map(row=>({characterId:row.character_id,player:row.player_name,server:row.server,item:row.item_name,deletedPoints:Number(row.deleted_points||0)}));
+    const receivedItems=receivedResult.rows.map(row=>({characterId:row.character_id,player:row.player_name,server:row.server,item:row.item_name,deletedPoints:Number(row.deleted_points||0),pending:row.pending===true}));
     const reviewToken=createHmac("sha256",analyticsHashSecret).update(JSON.stringify({guildId,raidId:raid.id,targetRaidType,reviewRows,receivedItems,skipped})).digest("hex");
     if(params.preview===true||params.preview==="true"){
       await client.query("rollback");
@@ -27534,7 +27591,14 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       }
       for(const row of dedupedCandidates){const key=row.character_id+":"+row.item_id;if(!byKey.has(key))throw Object.assign(new Error("Unbekannter Spieler oder unbekanntes Item in der Punkteauswahl."),{statusCode:400});row.awardPoints=byKey.get(key);}
     }else if(params.reviewToken){throw Object.assign(new Error("Die bearbeiteten Punkte fehlen."),{statusCode:400});}
+    for(const receipt of pendingDeletions){
+      await client.query(`delete from p0plus_points where guild_id=$1 and character_id=$2 and item_id=any($3::uuid[])`,[guildId,receipt.character_id,receipt.ids]);
+      await insertP0PlusAudit(client,{guildId,characterId:receipt.character_id,itemId:receipt.item_id,raidId:receipt.raid_id,
+        raidType:receipt.raid_type,playerName:receipt.player_name,server:receipt.server,itemName:receipt.item_name,
+        oldPoints:receipt.points,newPoints:0,action:'item_received_clear',source:'P0+ Übertragung',note:'Erhaltenes Item: vorgemerkte Punkte bei Übertragung gelöscht.'});
+    }
     if (!dedupedCandidates.length) {
+      await client.query("update raids set status='archiviert',p0plus_transferred_at=coalesce(p0plus_transferred_at,now()),updated_at=now() where id=$1 and guild_id=$2",[raid.id,guildId]);
       await client.query("commit");
       return {
         success: true,
@@ -27586,6 +27650,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       });
     }
     const archivedPoPostEntries = await archivePoPostEntriesForRaid(client, guildId, raid.raid_type);
+    await client.query("update raids set status='archiviert',p0plus_transferred_at=coalesce(p0plus_transferred_at,now()),updated_at=now() where id=$1 and guild_id=$2",[raid.id,guildId]);
     await client.query("commit");
     raid.archived_po_post_entries = archivedPoPostEntries;
   const transferResult = await client.query(
@@ -27613,7 +27678,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     skipped: skipped.length,
     skippedEntries: skipped,
     archivedPoPostEntries: Number(raid.archived_po_post_entries || 0),
-    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferred: Boolean(raid.p0plus_transferred_at) || p0PlusTransferCount > 0,
     p0PlusTransferCount,
     targetRaid: targetRaidType,
     exportQueued: Boolean(exportResult && exportResult.success && !exportResult.skipped),
