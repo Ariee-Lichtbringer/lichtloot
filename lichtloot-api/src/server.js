@@ -25098,6 +25098,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
   await ensureGuildPoItemsSchema();
   const eraConfig = await getGuildEraConfiguration(guildId);
   const poReleaseSettings = poReleaseDisplaySettingsFromLayout(eraConfig.layout);
+  await p0Deletions.ensure();
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -25138,6 +25139,9 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       }
     }
     if (raid.p0_only) {
+      await client.query('select pg_advisory_xact_lock(hashtext($1))',[guildId+':'+raid.id+':'+discordUserId]);
+      const tombstones=(await client.query('select signup_id from p0_signup_deletions where guild_id=$1 and event_id=$2 and discord_user_id=$3',[guildId,raid.id,discordUserId])).rows;
+      if(tombstones.length)await p0Query('delete from p0_only_signups where guild_id=$1 and id=any($2::uuid[])',[guildId,tombstones.map(r=>r.signup_id)]);
       const signupResult = await p0Query(
         `insert into p0_only_signups (
            guild_id, event_id, character_id, item_id, player_name, server, item_name,
@@ -25425,7 +25429,7 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
   const client = await pool.connect();
   try {
     await client.query("begin");
-    await client.query('select pg_advisory_xact_lock(hashtext($1))',[guildId+':'+p0Event.id+':'+signup.character_id]);
+    await client.query('select pg_advisory_xact_lock(hashtext($1))',[guildId+':'+p0Event.id+':'+signup.discord_user_id]);
     if((await client.query('select 1 from p0_signup_deletions where guild_id=$1 and signup_id=$2',[guildId,signup.id])).rows.length){
       await client.query('commit');return {success:true,skipped:true,reason:'signup_deleted'};
     }
