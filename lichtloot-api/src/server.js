@@ -26229,7 +26229,7 @@ async function setRaidStatus({ guildId, query: params }) {
   const archiveRequested = ["archiviert", "archive"].includes(status);
   const raidType = normalizeRaidType(raid.raid_type || raid.raid || params.raid);
 
-  if (archiveRequested && ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
+  if (archiveRequested && ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType) && raidP0PlusEnabled((await getGuildEraConfiguration(guildId)).layout, raidType)) {
     const transferNotes = Array.from(new Set([
       `RaidID: ${raidPublicId(raid)}`,
       `RaidID: ${raid.id}`,

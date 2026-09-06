@@ -9260,7 +9260,14 @@ function getRaidKey(raid){
   return "aq40";
 }
 
+function guildRaidP0PlusEnabled(raid){
+  const key=getRaidKey(raid||{});
+  const layoutKey=key.startsWith("zg-")?"zg":key;
+  return currentGuildInfo?.layout?.lootPageSectionsByRaid?.[layoutKey]?.p0Plus !== false;
+}
+
 function isAllowedP0RaidForRaid(raid){
+  if(!guildRaidP0PlusEnabled(raid))return false;
   return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)) || (CURRENT_GUILD_SLUG === "nachtloot" && getRaidKey(raid) === "zg");
 }
 
@@ -9269,7 +9276,7 @@ function isZgRaidForP0Transfer(raid){
 }
 
 function canTransferP0PlusFromRaid(raid){
-  return isAllowedP0RaidForRaid(raid) || isZgRaidForP0Transfer(raid);
+  return guildRaidP0PlusEnabled(raid) && (isAllowedP0RaidForRaid(raid) || isZgRaidForP0Transfer(raid));
 }
 
 function hasP0PlusTransfer(raidOrResult){
