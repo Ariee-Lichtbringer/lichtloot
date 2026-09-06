@@ -10,6 +10,16 @@ for(const result of [null,{ok:false,body:{error:'Service unavailable'}},{ok:true
 }
 ctx.fetch=async()=>({ok:true,json:async()=>({success:true,prios:[],raidId:'r1',published:false})});eq(await ctx.loadPriosFromRailway('fixture','aq40'),true);eq(ctx.currentPrios.length,0);eq(ctx.raidLoadError,'');eq(ctx.currentReleased,false);
 ctx.fetch=async()=>({ok:true,json:async()=>({success:true,entries:[]})});await ctx.loadP0PlusPoints();eq(ctx.currentP0PlusEntries.length,0);eq(ctx.p0PointsLoadError,'');
+// Changing the PIN must not retain a different raid from the URL or session.
+let requested;
+ctx.fetch=async url=>{requested=new URL(url);return {ok:true,json:async()=>({success:true,prios:[],raidId:'resolved',published:false})}};
+ctx.sessionStorage.getItem=key=>({prioPin:'OLD',raidId:'old-session'}[key]||'');
+ctx.window.location.search='?raidId=old-link&leadPin=OLD';
+await ctx.loadPriosFromRailway('NEW');eq(requested.searchParams.get('raidId'),null);
+await ctx.loadPriosFromRailway('old');eq(requested.searchParams.get('raidId'),'old-link');
+ctx.window.location.search='';
+await ctx.loadPriosFromRailway('NEW');eq(requested.searchParams.get('raidId'),null);
+await ctx.loadPriosFromRailway('OLD');eq(requested.searchParams.get('raidId'),'old-session');
 // Dashboard refresh preserves real values on failure, and removes retired raid statistics.
 const stats=vm.createContext({dashboardRaidStatsGeneration:0,dashboardRaidStats:{r1:{prios:8,signups:10},old:{prios:2}},getDashboardActiveRaids:()=>[{raidId:'r1'}],renderDashboardCards(){},railwayApi:async()=>{throw Error('offline')}});
 vm.runInContext(fn(lead,'loadDashboardRaidStats'),stats);await stats.loadDashboardRaidStats();eq(stats.dashboardRaidStats.r1.prios,8);eq(stats.dashboardRaidStats.r1.signups,10);eq(stats.dashboardRaidStats.r1.error,true);eq(stats.dashboardRaidStats.old,undefined);
