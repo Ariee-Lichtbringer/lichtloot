@@ -1,6 +1,7 @@
 import { randomBytes, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
 import nodemailer from 'nodemailer';
 
+const READ_SCOPE='https://www.googleapis.com/auth/gmail.readonly';
 const SEND_SCOPE='https://www.googleapis.com/auth/gmail.send';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const problem=(message,code='GMAIL_NOT_READY',statusCode=503)=>Object.assign(new Error(message),{code,statusCode});
@@ -9,6 +10,7 @@ export function createGmailApi({query,env=process.env,fetchImpl=fetch,compose=op
   async function schema(){
     if(!schemaPromise)schemaPromise=(async()=>{
       await query(`create table if not exists platform_gmail_connection(id integer primary key check(id=1),email text not null,refresh_token text not null,connected_at timestamptz not null default now())`);
+      await query(`alter table platform_gmail_connection add column if not exists scopes text not null default ''`);
       await query(`create table if not exists platform_gmail_oauth_states(state_hash text primary key,binding_hash text not null,verifier text not null,expires_at timestamptz not null)`);
     })().catch(e=>{schemaPromise=null;throw e});
     return schemaPromise;
@@ -27,13 +29,13 @@ export function createGmailApi({query,env=process.env,fetchImpl=fetch,compose=op
     return body;
   }
   async function tokens(params){const c=settings();return request('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:c.clientId,client_secret:c.clientSecret,...params})});}
-  async function status(){await schema();const row=(await query('select email,connected_at from platform_gmail_connection where id=1')).rows[0];return {configured:configured(),connected:!!row&&configured()&&row.email===settings().email,email:settings().email,connectedAt:row?.connected_at?new Date(row.connected_at).toISOString():'',redirectUri:settings().redirectUri};}
+  async function status(){await schema();const row=(await query('select email,connected_at,scopes from platform_gmail_connection where id=1')).rows[0];return {configured:configured(),connected:!!row&&configured()&&row.email===settings().email,email:settings().email,readConnected:!!row&&configured()&&row.email===settings().email&&String(row.scopes).split(' ').includes(READ_SCOPE),connectedAt:row?.connected_at?new Date(row.connected_at).toISOString():'',redirectUri:settings().redirectUri};}
   async function start(){
     if(!configured())throw problem('Google-OAuth ist noch nicht eingerichtet. Client-ID und Client-Secret müssen in Railway hinterlegt sein.');
     await schema();await query('delete from platform_gmail_oauth_states where expires_at<now()');
     const state=randomBytes(32).toString('base64url'),binding=randomBytes(32).toString('base64url'),verifier=randomBytes(48).toString('base64url'),c=settings();
     await query("insert into platform_gmail_oauth_states(state_hash,binding_hash,verifier,expires_at) values($1,$2,$3,now()+interval '10 minutes')",[digest(state),digest(binding),encrypt(verifier)]);
-    const url=new URL('https://accounts.google.com/o/oauth2/v2/auth');url.search=new URLSearchParams({client_id:c.clientId,redirect_uri:c.redirectUri,response_type:'code',scope:'openid email '+SEND_SCOPE,access_type:'offline',prompt:'consent',login_hint:c.email,state,code_challenge:createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'S256'}).toString();
+    const url=new URL('https://accounts.google.com/o/oauth2/v2/auth');url.search=new URLSearchParams({client_id:c.clientId,redirect_uri:c.redirectUri,response_type:'code',scope:'openid email '+SEND_SCOPE+' '+READ_SCOPE,include_granted_scopes:'true',access_type:'offline',prompt:'consent',login_hint:c.email,state,code_challenge:createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:'S256'}).toString();
     return {url:url.toString(),binding};
   }
   async function callback({state,code,binding,error}){
@@ -45,7 +47,7 @@ export function createGmailApi({query,env=process.env,fetchImpl=fetch,compose=op
     if(!t.access_token||!t.refresh_token||!String(t.scope||'').split(' ').includes(SEND_SCOPE))throw problem('Die dauerhafte Gmail-Sendefreigabe fehlt. Bitte erneut verbinden und E-Mail-Versand erlauben.','GMAIL_AUTH',400);
     const user=await request('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:'Bearer '+t.access_token}});
     if(user.email_verified!==true||String(user.email||'').toLowerCase()!==settings().email)throw problem('Bitte ausschließlich das in GuildLoot hinterlegte Gmail-Konto verbinden.','GMAIL_AUTH',400);
-    await query('insert into platform_gmail_connection(id,email,refresh_token) values(1,$1,$2) on conflict(id) do update set email=excluded.email,refresh_token=excluded.refresh_token,connected_at=now()',[settings().email,encrypt(t.refresh_token)]);
+    await query('insert into platform_gmail_connection(id,email,refresh_token,scopes) values(1,$1,$2,$3) on conflict(id) do update set email=excluded.email,refresh_token=excluded.refresh_token,scopes=excluded.scopes,connected_at=now()',[settings().email,encrypt(t.refresh_token),t.scope]);
     return {connected:true,email:settings().email};
   }
   async function accessToken(){
@@ -60,9 +62,23 @@ export function createGmailApi({query,env=process.env,fetchImpl=fetch,compose=op
     // Prepare/refresh before submitting: failures here cannot have delivered mail.
     const token=await accessToken();let compiled;
     try{compiled=await compose({...options,from:{name:'GuildLoot Support',address:settings().email},disableFileAccess:true,disableUrlAccess:true});}catch(e){throw problem('Die E-Mail konnte nicht erstellt werden.','GMAIL_REJECTED');}
-    const data=await request('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({raw:Buffer.from(compiled.message).toString('base64url')})},'send');
+    const data=await request('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({raw:Buffer.from(compiled.message).toString('base64url'),...(options.threadId?{threadId:options.threadId}:{})})},'send');
     if(!data.id)throw problem('Gmail hat den Versand nicht bestätigt.','GMAIL_UNKNOWN');
-    return {messageId:data.id,accepted:[options.to],rejected:[]};
+    return {messageId:data.id,threadId:data.threadId||'',accepted:[options.to],rejected:[]};
   }
-  return {status,start,callback,verify,sendMail};
+
+  async function readToken(){if(!(await status()).readConnected)throw problem('Bitte Google-Freigabe für den Supporteingang erneuern.','GMAIL_READ_REQUIRED');return accessToken();}
+  async function supportThreadMetadata(anchors){
+    const token=await readToken(),headers={Authorization:'Bearer '+token},threads=new Set();
+    for(const anchor of anchors){
+      if(anchor.gmail_thread_id){threads.add(anchor.gmail_thread_id);continue;}
+      const q='rfc822msgid:<support-reply-'+anchor.id+'@lichtloot.de>';
+      const found=await request('https://gmail.googleapis.com/gmail/v1/users/me/messages?'+new URLSearchParams({q,maxResults:'100'}),{headers});
+      for(const m of found.messages||[])if(m.threadId)threads.add(m.threadId);
+    }
+    const messages=new Map();for(const id of threads){const result=await request('https://gmail.googleapis.com/gmail/v1/users/me/threads/'+encodeURIComponent(id)+'?format=metadata',{headers});for(const m of result.messages||[])messages.set(m.id,m);}return [...messages.values()];
+  }
+  async function supportMessage(id){const token=await readToken();return request('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+encodeURIComponent(id)+'?format=full',{headers:{Authorization:'Bearer '+token}});}
+
+  return {status,start,callback,verify,sendMail,supportThreadMetadata,supportMessage};
 }

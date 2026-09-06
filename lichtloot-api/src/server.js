@@ -1,3 +1,4 @@
+import { createSupportInbox } from "./support-inbox.js";
 import { createGmailApi } from "./gmail-api.js";
 import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
 import { loadRaidCompletion } from "./raid-completion.js";
@@ -31,6 +32,7 @@ const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,p
 let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
 const gmailApi = createGmailApi({query});
+const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensureSupportReplySchema});
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -2408,7 +2410,7 @@ async function ensureSupportTicketSchema() {
 
 function normalizeSupportTicketRow(row, internal = false) {
   return {
-    ...(internal ? { internalNote: row.internal_note || "", notificationStatus:row.notification_status||"not_requested",notificationError:row.notification_error||"",notificationSentAt:row.notification_sent_at?row.notification_sent_at.toISOString():"" } : {}),
+    ...(internal ? { incomingUnread:Number(row.incoming_unread||0), internalNote: row.internal_note || "", notificationStatus:row.notification_status||"not_requested",notificationError:row.notification_error||"",notificationSentAt:row.notification_sent_at?row.notification_sent_at.toISOString():"" } : {}),
     hasScreenshot: Boolean(row.has_screenshot || row.screenshot_data),
     screenshotName: row.screenshot_name || "",
 
@@ -2500,10 +2502,11 @@ async function ensureSupportReplySchema() {
     status text not null default 'sending', error text not null default '',
     created_at timestamptz not null default now(), sent_at timestamptz
   )`);
+  await query("alter table platform_support_replies add column if not exists gmail_message_id text not null default '',add column if not exists gmail_thread_id text not null default ''");
   await query('create index if not exists idx_support_replies_ticket on platform_support_replies(ticket_id,created_at)');
 }
 function normalizeSupportReply(row) {
-  return {id:row.id,ticketId:row.ticket_id,recipient:row.recipient,sender:row.sender,subject:row.subject,message:row.message,
+  return {direction:'outgoing',id:row.id,ticketId:row.ticket_id,recipient:row.recipient,sender:row.sender,subject:row.subject,message:row.message,
     status:row.status==='sending' && Date.now()-new Date(row.created_at).getTime()>300000?'unknown':row.status,
     error:row.error,createdAt:new Date(row.created_at).toISOString(),sentAt:row.sent_at?new Date(row.sent_at).toISOString():''};
 }
@@ -2514,7 +2517,7 @@ async function getPlatformSupportReplies({body={}}) {
   const ticket=(await query('select contact_email from platform_support_tickets where id=$1',[id])).rows[0];
   if(!ticket)throw Object.assign(Error('Supportmeldung nicht gefunden.'),{statusCode:404});
   const rows=await query('select * from platform_support_replies where ticket_id=$1 order by created_at,id',[id]);
-  return {success:true,recipient:ticket.contact_email,sender:clean(process.env.GMAIL_USER),replies:rows.rows.map(normalizeSupportReply)};
+  return {success:true,recipient:ticket.contact_email,sender:clean(process.env.GMAIL_USER),replies:rows.rows.map(normalizeSupportReply),...await supportInbox.history(id)};
 }
 async function sendPlatformSupportReply({body={}}) {
   requirePlatformMasterCode(body.masterCode);
@@ -2537,23 +2540,25 @@ async function sendPlatformSupportReply({body={}}) {
   const claimed=await query(`insert into platform_support_replies(id,ticket_id,recipient,sender,subject,message)
     values($1,$2,$3,$4,$5,$6) on conflict(id) do nothing returning *`,[requestId,id,recipient,sender,subject,message]);
   if(!claimed.rows.length)return sendPlatformSupportReply({body});
-  let status='sent',error='';
+  let status='sent',error='',gmailId='',gmailThread='';
   try{
+    const previous=await supportInbox.latest(id);
     const result=await gmailApi.sendMail({from:{name:'GuildLoot Support',address:sender},to:recipient,replyTo:sender,
-      messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message});
+      messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message,...(previous?.rfc_id?{inReplyTo:previous.rfc_id,references:previous.rfc_id,threadId:previous.thread_id}:{})});
+    gmailId=result.messageId||'';gmailThread=result.threadId||'';
     if(result.rejected?.length||!result.accepted?.length){status='failed';error='Der Mailserver hat die Empfängeradresse nicht angenommen.';}
   }catch(e){
     // Do not auto-retry replies after an ambiguous network failure: SMTP may have accepted them.
     status=['EAUTH','EENVELOPE','GMAIL_NOT_READY','GMAIL_AUTH','GMAIL_REJECTED'].includes(e.code)?'failed':'unknown';
     error=status==='failed'?(e.code?.startsWith('GMAIL_')?e.message:'Gmail hat den Versand abgelehnt. Bitte die Verbindung und Empfängeradresse prüfen.'):'Versand nicht bestätigt. Bitte zuerst im Gmail-Ordner „Gesendet“ prüfen; die Antwort wird nicht automatisch erneut gesendet.';
   }
-  const saved=await query(`update platform_support_replies set status=$2,error=$3,sent_at=case when $2='sent' then now() else null end where id=$1 returning *`,[requestId,status,error]);
+  const saved=await query(`update platform_support_replies set status=$2,error=$3,gmail_message_id=$4,gmail_thread_id=$5,sent_at=case when $2='sent' then now() else null end where id=$1 returning *`,[requestId,status,error,gmailId,gmailThread]);
   return {success:true,reply:normalizeSupportReply(saved.rows[0])};
 }
 
 async function getPlatformSupportTickets({ query: params = {} }) {
   requirePlatformMasterCode(params.masterCode);
-  await ensureSupportTicketSchema();
+  await supportInbox.ensure();
   const status = clean(params.status), guild = clean(params.guildFilter), category = clean(params.category);
   if (status && !["new", "in_progress", "resolved"].includes(status)) {
     const error = new Error("Ungültiger Supportstatus."); error.statusCode = 400; throw error;
@@ -2561,7 +2566,7 @@ async function getPlatformSupportTickets({ query: params = {} }) {
   const offset = Math.max(0, Math.min(1000000, parseInt(params.offset, 10) || 0));
   const groups = await query(`select guild_slug,guild_name,category,status,count(*)::int as count from platform_support_tickets group by guild_slug,guild_name,category,status`);
   const total = groups.rows.filter(row => (!status || row.status === status) && (!guild || row.guild_slug === guild) && (!category || row.category === category)).reduce((sum,row) => sum + Number(row.count), 0);
-  const result = await query(`select id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,status,created_at,updated_at,resolved_at,internal_note,notification_status,notification_error,notification_sent_at,screenshot_name,(screenshot_data <> '') as has_screenshot from platform_support_tickets
+  const result = await query(`select id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,status,created_at,updated_at,resolved_at,internal_note,notification_status,notification_error,notification_sent_at,screenshot_name,(screenshot_data <> '') as has_screenshot,(select count(*)::int from platform_support_incoming i where i.ticket_id=platform_support_tickets.id and i.read_at is null) as incoming_unread from platform_support_tickets
     where ($1='' or status=$1) and ($2='' or guild_slug=$2) and ($3='' or category=$3)
     order by case status when 'new' then 0 when 'in_progress' then 1 else 2 end, created_at desc,id desc limit 100 offset $4`, [status,guild,category,offset]);
   return { success: true, tickets: result.rows.map(row => normalizeSupportTicketRow(row, true)), groups: groups.rows, total, hasMore: offset + result.rows.length < total };
@@ -31830,6 +31835,14 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(await updateSystemError({guildId:null,query:req.body}));
     }
 
+    if (action === "platformSyncSupportInbox" || action === "platformReadSupportInbox") {
+      enforceSecurityRateLimit(req,'platform-support-inbox',30,15*60*1000);requirePlatformMasterCode(req.body.masterCode);res.set('Cache-Control','no-store');
+      const id=clean(req.body.id);if(!isUuid(id))return res.status(400).json({success:false,error:'Ungültige Supportmeldung.'});
+      await ensureSupportReplySchema();if(!(await query('select id from platform_support_tickets where id=$1',[id])).rows.length)return res.status(404).json({success:false,error:'Supportmeldung nicht gefunden.'});
+      const result=action==='platformSyncSupportInbox'?await supportInbox.syncTicket(id):await supportInbox.markRead(id,req.body.messageIds);
+      return res.json({success:true,...result});
+    }
+
     if (action === "platformGmailStatus" || action === "platformGmailVerify") {
       enforceSecurityRateLimit(req,'platform-gmail',20,15*60*1000);
       requirePlatformMasterCode(req.body.masterCode);
@@ -32827,6 +32840,8 @@ async function runMissingPrioReminderTick() {
 }
 
 app.listen(port, () => {
+  const inboxTick=()=>supportInbox.tick().catch(()=>console.error('Support inbox check failed'));
+  setTimeout(inboxTick,15000).unref();setInterval(inboxTick,60000).unref();
   const supportTick=()=>runSupportNotificationTick().catch(()=>console.error('Support notification worker failed'));
   setTimeout(supportTick,10000).unref();setInterval(supportTick,60000).unref();
   console.log(`LichtLoot API listening on port ${port}`);
