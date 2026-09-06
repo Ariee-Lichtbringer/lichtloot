@@ -1384,6 +1384,8 @@ body.random-raidlead .random-home-link{display:inline-block!important}
 
 .p0-received-legend{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(245,196,81,.35);border-radius:9px;background:rgba(245,196,81,.06);color:#cbd5e1;font-size:13px;line-height:1.5}.p0-received-legend span{color:#f5c451;font-weight:700}
 </style>
+<link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
+<script src="raid-closeout.js?v=20260906-1"></script>
 </head>
 
 <body>
@@ -2292,6 +2294,7 @@ function renderRaidView(){
     </div>
 
     ${renderRaidStatCards()}
+    ${!RANDOM_RAIDLEAD_MODE ? '<div id="raidCloseoutCheck"></div>' : ""}
 
     <div class="raid-control-bar">
       <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
@@ -2333,6 +2336,11 @@ function renderRaidView(){
   `;
 
   loadRaidleadItemOptions();
+  if(!RANDOM_RAIDLEAD_MODE) window.GuildLootCloseout?.mount(document.getElementById("raidCloseoutCheck"), {
+    api: RAID_API_URL, guild: currentGuildSlug(), raidId: currentRaidData.raidId,
+    credentials: () => ({leadPin:document.getElementById("raidPinInput").value.trim()}),
+    onApplied: () => reloadCurrentRaid()
+  });
 }
 
 function renderRaidleadPrioForm(){

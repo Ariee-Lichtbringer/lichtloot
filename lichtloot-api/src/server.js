@@ -1,3 +1,4 @@
+import { createRaidCloseoutService } from "./raid-closeout.js";
 import "dotenv/config";
 import { getStoredPlayerAnalysis } from "./player-analysis/service.js";
 import { saveReport, getReport, queueReportDm, completeReportDm, makeReportUrl, reportRecipients } from "./player-analysis/reports.js";
@@ -28,6 +29,27 @@ const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const lichtstatsApiToken = process.env.LICHTSTATS_API_TOKEN || "";
 const analyticsHashSecret = process.env.ANALYTICS_HASH_SECRET || masterCode;
+
+const raidCloseoutService = createRaidCloseoutService({
+  pool, secret: analyticsHashSecret,
+  authorize: async (guild, params, raid, write) => {
+    if (write || clean(params.masterCode)) return requireRaidleadP0MasterCodeForGuild(guild, params.masterCode);
+    if (!clean(raid.lead_pin) || clean(params.leadPin) !== clean(raid.lead_pin)) {
+      throw Object.assign(new Error("Bitte die Raidlead-PIN oder den Mastercode angeben."), {statusCode:403});
+    }
+  },
+  configuration: async (client, guild) => {
+    const result = await client.query("select layout_json from guild_settings where guild_id=$1", [guild.id]);
+    const layout = result.rows[0]?.layout_json || {};
+    return {layout, rules:guildEraRulesFromLayout(layout,guild.slug)};
+  },
+  resolveTarget: resolveZgPointTarget,
+  plusEnabled: raidP0PlusEnabled,
+  itemPlus: guildPoItemRequiresRelease,
+  staffBenchSql: staffBenchPrioSql,
+  reminderQueueSql: currentPrioReminderQueueSql
+});
+
 const p0PlusTransferExportChannelId = "1529393614247952434";
 const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
@@ -30517,7 +30539,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     await loadWorldbuffAccessCode(guild.id);
     await loadLootMasterAccessCode(guild.id);
     if (clean(req.query.masterCode)) {
-      if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") {
+      if (["transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout"].includes(action)) {
         requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
       } else {
         requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
@@ -31684,8 +31706,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     await loadWorldbuffAccessCode(guild.id);
     await loadLootMasterAccessCode(guild.id);
     if (clean(postParams.masterCode)) {
-      if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
+      if (["transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout"].includes(action)) requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+    }
+
+    if (action === "getRaidCloseout" || action === "applyRaidCloseout") {
+      enforceSecurityRateLimit(req, "raid-closeout", 60, 60_000);
+      const result = action === "applyRaidCloseout"
+        ? await raidCloseoutService.apply(guild, postParams)
+        : await raidCloseoutService.review(guild, postParams);
+      return res.json({...result, guild:guild.slug});
     }
 
     if(action === "transferP0PlusPoints"){

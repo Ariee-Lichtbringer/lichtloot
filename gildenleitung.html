@@ -5316,6 +5316,8 @@ body.worldbuff-only .master-only{display:none!important}
 .admin-gear-link{appearance:none;display:inline-flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:950;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(var(--cyan-rgb,34,211,238),.38);text-underline-offset:3px}
 .admin-gear-link:before{content:"⚔";color:#5eead4;font-size:.82em;text-decoration:none}.admin-gear-link:hover,.admin-gear-link:focus-visible{color:#5eead4;text-decoration-color:currentColor;outline:none}.character-chip .admin-gear-link{font-size:inherit}.player-identity-title .admin-gear-link{font-size:1.05rem}
 </style>
+<link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
+<script src="raid-closeout.js?v=20260906-1"></script>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -17926,16 +17928,22 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
     </div>
   `;
 
+  const mountCloseout = () => window.GuildLootCloseout?.mount(document.getElementById("guildRaidCloseout"), {
+    api:LICHTLOOT_API_URL, guild:CURRENT_GUILD_SLUG, raidId,
+    credentials:() => ({masterCode:document.getElementById("masterCode").value.trim()}),
+    onApplied:() => openPrioModal(raidId,forceListOpen)
+  });
   if(!prios.length){
     document.getElementById("prioModalContent").innerHTML = `
-      ${toolbar}
+      ${toolbar}<div id="guildRaidCloseout"></div>
       <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
     `;
+    mountCloseout();
     return;
   }
 
   document.getElementById("prioModalContent").innerHTML = `
-    ${toolbar}
+    ${toolbar}<div id="guildRaidCloseout"></div>
     <div class="table-wrap">
       <table class="prio-table">
         <thead>
@@ -17967,6 +17975,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
       </table>
     </div>
   `;
+  mountCloseout();
 }
 
 function isPrioListVisibleForGuild(result, raid){
