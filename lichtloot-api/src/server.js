@@ -1,3 +1,4 @@
+import { createGmailApi } from "./gmail-api.js";
 import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
 import { loadRaidCompletion } from "./raid-completion.js";
 import { createRaidTaskReviewService } from "./raid-task-review.js";
@@ -29,6 +30,7 @@ const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,p
 
 let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
+const gmailApi = createGmailApi({query});
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -2202,13 +2204,12 @@ function escapeEmailHtml(value) {
 
 async function sendGuildApprovalEmail(application) {
   const gmailUser = clean(process.env.GMAIL_USER);
-  const gmailAppPassword = clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, "");
   const from = clean(process.env.GUILD_MAIL_FROM) || (gmailUser ? `LichtLoot <${gmailUser}>` : "");
   const replyTo = clean(process.env.GUILD_MAIL_REPLY_TO);
   const to = clean(application?.contactEmail);
   if (!to) return { sent: false, error: "Bei der Anfrage ist keine E-Mail-Adresse hinterlegt." };
-  if (!gmailUser || !gmailAppPassword) {
-    return { sent: false, error: "Gmail-Versand ist noch nicht konfiguriert (GMAIL_USER und GMAIL_APP_PASSWORD)." };
+  if (!gmailUser) {
+    return { sent: false, error: "Gmail-Konto ist noch nicht konfiguriert." };
   }
 
   const guildName = clean(application.guildName) || "eure Gilde";
@@ -2255,17 +2256,7 @@ async function sendGuildApprovalEmail(application) {
       <p style="color:#94a3b8;font-size:13px">Falls der Button nicht funktioniert: ${escapeEmailHtml(setupUrl)}</p>
     </div>`;
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      auth: {
-        user: gmailUser,
-        pass: gmailAppPassword
-      }
-    });
-    const info = await transporter.sendMail({
+    const info = await gmailApi.sendMail({
       from,
       to,
       subject,
@@ -2479,12 +2470,11 @@ async function submitSupportTicket({ query: params = {}, body = {} }) {
 async function sendSupportNotification(id) {
   const claimed=await query(`update platform_support_tickets set notification_status='sending',notification_attempts=notification_attempts+1,notification_attempted_at=now() where id=$1 and notification_status in ('pending','failed') and notification_attempts<3 returning *`,[id]);
   const ticket=claimed.rows[0];if(!ticket)return {sent:false,skipped:true};
-  const user=clean(process.env.GMAIL_USER),pass=clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g,'');
+  const user=clean(process.env.GMAIL_USER);
   try{
-    if(!user||!pass)throw Error('Gmail-Versand ist nicht eingerichtet.');
-    const transporter=nodemailer.createTransport({service:'gmail',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user,pass}});
+    if(!user)throw Error('Gmail-Versand ist nicht eingerichtet.');
     const screenshot=validateSupportScreenshot(ticket.screenshot_data);
-    await transporter.sendMail({from:clean(process.env.GUILD_MAIL_FROM)||`GuildLoot <${user}>`,to:user,
+    await gmailApi.sendMail({from:clean(process.env.GUILD_MAIL_FROM)||`GuildLoot <${user}>`,to:user,
       ...(ticket.contact_email?{replyTo:ticket.contact_email}:{}),
       messageId:`<support-${ticket.id}@lichtloot.de>`,
       subject:`[GuildLoot Support] ${String(ticket.subject).replace(/[\r\n]/g,' ')}`,
@@ -2494,6 +2484,7 @@ async function sendSupportNotification(id) {
   }catch(error){await query("update platform_support_tickets set notification_status='failed',notification_error=$2 where id=$1",[id,clean(error.message).slice(0,500)||'Gmail-Versand fehlgeschlagen.']);return {sent:false};}
 }
 async function runSupportNotificationTick(){
+  if(!(await gmailApi.status()).connected)return;
   await ensureSupportTicketSchema();
   // A process restart must not leave a notification permanently marked as sending.
   await query("update platform_support_tickets set notification_status='failed',notification_error='Versand unterbrochen; erneuter Versuch.' where notification_status='sending' and notification_attempted_at<now()-interval '5 minutes'");
@@ -2540,22 +2531,21 @@ async function sendPlatformSupportReply({body={}}) {
   const ticket=(await query('select contact_email from platform_support_tickets where id=$1',[id])).rows[0];
   if(!ticket)throw Object.assign(Error('Supportmeldung nicht gefunden.'),{statusCode:404});
   // The recipient comes only from the original ticket, never from the request body.
-  const recipient=clean(ticket.contact_email),sender=clean(process.env.GMAIL_USER),pass=clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g,'');
+  const recipient=clean(ticket.contact_email),sender=clean(process.env.GMAIL_USER);
   if(!/^[^\s@<>;,]+@[^\s@<>;,]+\.[^\s@<>;,]+$/.test(recipient))throw Object.assign(Error('Für diese Meldung ist keine gültige E-Mail-Adresse hinterlegt.'),{statusCode:400});
-  if(!sender||!pass)throw Object.assign(Error('Der Gmail-Versand ist nicht eingerichtet.'),{statusCode:503});
+  if(!sender)throw Object.assign(Error('Der Gmail-Versand ist nicht eingerichtet.'),{statusCode:503});
   const claimed=await query(`insert into platform_support_replies(id,ticket_id,recipient,sender,subject,message)
     values($1,$2,$3,$4,$5,$6) on conflict(id) do nothing returning *`,[requestId,id,recipient,sender,subject,message]);
   if(!claimed.rows.length)return sendPlatformSupportReply({body});
   let status='sent',error='';
   try{
-    const transporter=nodemailer.createTransport({service:'gmail',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user:sender,pass}});
-    const result=await transporter.sendMail({from:{name:'GuildLoot Support',address:sender},to:recipient,replyTo:sender,
+    const result=await gmailApi.sendMail({from:{name:'GuildLoot Support',address:sender},to:recipient,replyTo:sender,
       messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message});
     if(result.rejected?.length||!result.accepted?.length){status='failed';error='Der Mailserver hat die Empfängeradresse nicht angenommen.';}
   }catch(e){
     // Do not auto-retry replies after an ambiguous network failure: SMTP may have accepted them.
-    status=['EAUTH','EENVELOPE'].includes(e.code)?'failed':'unknown';
-    error=status==='failed'?'Gmail hat den Versand abgelehnt. Bitte die Verbindung und Empfängeradresse prüfen.':'Versand nicht bestätigt. Bitte zuerst im Gmail-Ordner „Gesendet“ prüfen; die Antwort wird nicht automatisch erneut gesendet.';
+    status=['EAUTH','EENVELOPE','GMAIL_NOT_READY','GMAIL_AUTH','GMAIL_REJECTED'].includes(e.code)?'failed':'unknown';
+    error=status==='failed'?(e.code?.startsWith('GMAIL_')?e.message:'Gmail hat den Versand abgelehnt. Bitte die Verbindung und Empfängeradresse prüfen.'):'Versand nicht bestätigt. Bitte zuerst im Gmail-Ordner „Gesendet“ prüfen; die Antwort wird nicht automatisch erneut gesendet.';
   }
   const saved=await query(`update platform_support_replies set status=$2,error=$3,sent_at=case when $2='sent' then now() else null end where id=$1 returning *`,[requestId,status,error]);
   return {success:true,reply:normalizeSupportReply(saved.rows[0])};
@@ -30553,6 +30543,21 @@ async function resetPlayerPinBySecurity({guildId,charName,server,securityQuestio
   return pin;
 }
 
+
+app.post('/api/gmail/connect',async(req,res)=>{
+  res.set('Cache-Control','no-store');res.set('Referrer-Policy','no-referrer');
+  try{enforceSecurityRateLimit(req,'gmail-connect',10,15*60*1000);requirePlatformMasterCode(req.body.masterCode);
+    const result=await gmailApi.start();res.cookie('gmail_oauth_binding',result.binding,{httpOnly:true,secure:true,sameSite:'lax',maxAge:600000,path:'/api/gmail'});return res.redirect(303,result.url);
+  }catch(e){return res.status(e.statusCode||503).type('text/plain').send(e.statusCode===403?'Zugriff verweigert.':e.message);}
+});
+app.get('/api/gmail/callback',async(req,res)=>{
+  res.set('Cache-Control','no-store');res.set('Referrer-Policy','no-referrer');res.set('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'");
+  const binding=String(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('gmail_oauth_binding='))?.slice('gmail_oauth_binding='.length)||'';
+  res.clearCookie('gmail_oauth_binding',{httpOnly:true,secure:true,sameSite:'lax',path:'/api/gmail'});
+  try{await gmailApi.callback({state:clean(req.query.state),code:clean(req.query.code),error:clean(req.query.error),binding});return res.type('html').send('<!doctype html><meta charset="utf-8"><title>Gmail verbunden</title><h1>Gmail ist verbunden.</h1><p>Du kannst dieses Fenster schließen und in der Administration „Verbindung prüfen“ klicken.</p>');}
+  catch(e){return res.status(e.statusCode||503).type('text/plain').send(e.code?.startsWith('GMAIL_')?e.message:'Google-Verknüpfung fehlgeschlagen. Bitte erneut in der Administration starten.');}
+});
+
 app.get("/api/apps-script", async (req, res, next) => {
   try {
     const action = clean(req.query.action);
@@ -31823,6 +31828,13 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "platformUpdateSystemError") {
       enforceSecurityRateLimit(req,"platform-admin-write",60,15*60*1000);
       return res.json(await updateSystemError({guildId:null,query:req.body}));
+    }
+
+    if (action === "platformGmailStatus" || action === "platformGmailVerify") {
+      enforceSecurityRateLimit(req,'platform-gmail',20,15*60*1000);
+      requirePlatformMasterCode(req.body.masterCode);
+      res.set('Cache-Control','no-store');
+      return res.json({success:true,...await (action==='platformGmailVerify'?gmailApi.verify():gmailApi.status())});
     }
 
     if (action === "platformGetSupportReplies" || action === "platformSendSupportReply") {

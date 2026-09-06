@@ -15,7 +15,8 @@
     "test:support-admin": "node tests/support-admin.test.cjs",
     "test:player-recovery": "node tests/player-recovery.test.cjs",
     "test:support-mail": "node tests/support-mail.test.cjs",
-    "test:support-reply": "node tests/support-reply.test.cjs"
+    "test:support-reply": "node tests/support-reply.test.cjs",
+    "test:gmail-api": "node tests/gmail-api.test.cjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
