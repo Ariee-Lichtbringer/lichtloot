@@ -26484,7 +26484,7 @@ async function importUnlinkedP0Plus({ guild, params }) {
   try{
     await client.query('begin');
     for(const entry of entries){
-      const playerName=clean(entry.player); const server=clean(entry.server)||'Everlook';
+      const playerName=clean(entry.player); let server=clean(entry.server);
       const className=clean(entry.className); const raidType=normalizeRaidType(entry.raid);
       const itemName=clean(entry.item); const points=Number(entry.points)||0;
       if(!playerName||!itemName||points<0) continue;
@@ -26496,9 +26496,14 @@ async function importUnlinkedP0Plus({ guild, params }) {
       const itemId=itemResult.rows[0].id;
       const charResult=await client.query(
         `select c.id,c.name,c.server from characters c join players p on p.id=c.player_id
-         where p.guild_id=$1 and lower(c.name)=lower($2) and lower(c.server)=lower($3) limit 1`,
+         where p.guild_id=$1 and lower(c.name)=lower($2) and ($3='' or lower(c.server)=lower($3)) limit 2`,
         [guild.id,playerName,server]
       );
+      if(charResult.rows.length>1 || (!server && charResult.rows.length!==1)){
+        const error=new Error(`Server für ${playerName} nicht eindeutig. Bitte den tatsächlichen Charakterserver im Import angeben.`);
+        error.statusCode=400;throw error;
+      }
+      if(!server)server=charResult.rows[0].server;
       await client.query(`delete from unlinked_p0plus_points where guild_id=$1 and lower(player_name)=lower($2) and lower(server)=lower($3) and item_id=$4`,[guild.id,playerName,server,itemId]);
       if(charResult.rows.length){
         await client.query(`delete from p0plus_points where guild_id=$1 and character_id=$2 and item_id=$3`,[guild.id,charResult.rows[0].id,itemId]);

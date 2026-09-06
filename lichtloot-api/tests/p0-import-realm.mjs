@@ -1,0 +1,10 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../src/server.js',import.meta.url),'utf8'),a=source.indexOf('async function importUnlinkedP0Plus('),b=source.indexOf('\nasync function queueP0PlusPointsUpdate',a);let chars=[{id:'c',name:'Fixture',server:'Lakeshire'}],writes=[];
+const client={release(){},async query(sql,args){if(sql.includes('select id,name from items'))return {rows:[{id:'item'}]};if(sql.includes('select c.id,c.name,c.server'))return {rows:chars};writes.push([sql,args]);return {rows:[]};}};
+const ctx=vm.createContext({requireMasterCodeForGuild(){},ensureUnlinkedP0PlusSchema:async()=>{},clean:v=>String(v||'').trim(),normalizeRaidType:v=>v,raidTypeSearchValues:v=>[v],pool:{connect:async()=>client}});vm.runInContext(source.slice(a,b),ctx);
+const run=server=>ctx.importUnlinkedP0Plus({guild:{id:'guild'},params:{entries:[{player:'Fixture',item:'Item',raid:'bwl',points:7,...(server?{server}:{})}]}});
+assert.equal((await run()).linked,1);assert.equal(writes.find(([s])=>s.startsWith('delete from unlinked'))[1][2],'Lakeshire');
+chars=[];writes=[];await assert.rejects(run(),/Server/);assert(writes.some(([s])=>s==='rollback'));assert(!writes.some(([s])=>/delete from|insert into/.test(s)));
+chars=[{id:'a',server:'Lakeshire'},{id:'b',server:'Everlook'}];await assert.rejects(run(),/Server/);
+chars=[];writes=[];assert.equal((await run('Everlook')).unlinked,1);assert.equal(writes.find(([s])=>s.startsWith('insert into unlinked'))[1][2],'Everlook');
+console.log('PASS missing realm resolves unique guild character; ambiguous/unknown missing realm rolls back without writes; explicit realm preserved.');
