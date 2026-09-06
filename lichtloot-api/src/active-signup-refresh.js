@@ -6,7 +6,7 @@ export async function queueActiveSignupRefresh(pool, guild, p0OnlyRaids = []) {
     const result=await client.query(`select id::text,discord_channel_id,discord_message_id,false as p0_only from raids r
       where guild_id=$1 and deleted_at is null
         and (coalesce(prio_enabled,true) or coalesce(raidhelper_enabled,true))
-        and lower(coalesce(status,'')) not in ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled','geschlossen','closed','beendet','finished','completed')
+        and lower(coalesce(status,'')) not in ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled','beendet','finished','completed')
         and coalesce(discord_channel_id,'') ~ '^[0-9]+$' and coalesce(discord_message_id,'') ~ '^[0-9]+$'
         and case when coalesce(raid_time,'') ~ '^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$'
           then ((raid_date+raid_time::time) at time zone 'Europe/Berlin') > now() else false end
