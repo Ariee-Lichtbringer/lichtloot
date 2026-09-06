@@ -3,7 +3,7 @@ export async function queueActiveSignupRefresh(pool, guild, p0OnlyRaids = []) {
   try {
     await client.query('begin');
     await client.query('select pg_advisory_xact_lock(73924062)');
-    const result=await client.query(`select id::text,discord_channel_id,discord_message_id,false as p0_only from raids r
+    const result=await client.query(`select coalesce(nullif(external_raid_id,''),id::text) as id,discord_channel_id,discord_message_id,false as p0_only from raids r
       where guild_id=$1 and deleted_at is null
         and (coalesce(prio_enabled,true) or coalesce(raidhelper_enabled,true))
         and lower(coalesce(status,'')) not in ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled','beendet','finished','completed')
