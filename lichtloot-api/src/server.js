@@ -1,3 +1,4 @@
+import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
 import {createPrioReminderPosts} from "./prio-reminder-posts.js";
 import { createDkpService, lootSystem } from "./dkp.js";
 import {createSupportNotices,SUPPORT_NOTICE_TEXT} from "./support-notices.js";
@@ -8316,6 +8317,7 @@ async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued();
   await ensureRaidMissingPrioRemindersQueued();
+  await maintainRaidRefreshQueue(query);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
   // Wurde ein Bot während der Verarbeitung beendet, wird sein Auftrag nach
@@ -32461,6 +32463,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if(action==='lichtbotPreparePrioReminder' || action==='lichtbotCompletePrioReminder'){
       requireMasterOrQueueToken(postParams);
       return res.json(action==='lichtbotPreparePrioReminder'?await reminderPosts.prepare(guild.id,postParams.rowNumber):await reminderPosts.complete(guild.id,postParams));
+    }
+
+    if(action === 'lichtbotFailQueue'){
+      requireMasterOrQueueToken(postParams);
+      return res.json(await failBotQueue(query,guild.id,postParams.rowNumber,postParams.reason));
     }
 
     if (action === "lichtbotResolveQueue") {

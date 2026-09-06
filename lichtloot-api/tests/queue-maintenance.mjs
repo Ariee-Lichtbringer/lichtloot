@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import {maintainRaidRefreshQueue,failBotQueue} from '../src/queue-maintenance.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+await db.exec(`create table raids(id uuid,guild_id uuid,external_raid_id text,deleted_at timestamptz,status text,raid_date date);create table bot_update_queue(id uuid,guild_id uuid,type text,status text,payload jsonb,created_at timestamptz,resolved_at timestamptz);`);
+const id=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
+await db.query("insert into raids values($1,$2,'past',null,'offen','2020-01-01'),($3,$2,'future',null,'geschlossen','2099-01-01')",[id(1),id(9),id(2)]);
+for(const [n,raid,type,guild] of [[10,'past','raid_announcement_refresh',9],[11,'future','raid_announcement_refresh',9],[12,'future','raid_announcement_refresh',9],[13,'future','po_post',9],[14,'future','raid_announcement_refresh',8]])await db.query("insert into bot_update_queue values($1,$2,$3,'open',$4,now()+$5*interval '1 second',null)",[id(n),id(guild),type,JSON.stringify({raidId:raid}),n]);
+const query=async(s,a)=>{const r=await db.query(s,a);return {...r,rowCount:r.affectedRows};};
+await maintainRaidRefreshQueue(query);const rows=(await db.query('select id,status from bot_update_queue order by id')).rows;
+assert.deepEqual(rows.map(r=>r.status),['cancelled','cancelled','open','open','open']);
+assert.equal((await failBotQueue(query,id(8),id(12),'Wrong guild')).blocked,false);
+assert.equal((await failBotQueue(query,id(9),id(12),'Original channel removed')).blocked,true);
+assert.equal((await db.query('select status from bot_update_queue where id=$1',[id(12)])).rows[0].status,'failed');
+await db.close();console.log('Queue maintenance: stale and superseded refreshes cancelled; closed future raids, other types and guild isolation preserved.');
