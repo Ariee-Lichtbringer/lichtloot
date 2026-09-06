@@ -1,4 +1,4 @@
-import { queueActiveSignupRefresh } from "./active-signup-refresh.js";
+import { queueActiveSignupRefresh, mergeP0PostIdentity } from "./active-signup-refresh.js";
 import { noticeContent, collectOfflineTargets, queueOfflineNotice, onlineNoticeContent, recoveryTargets, queueOnlineNotice } from "./bot-offline-notice.js";
 import { createRaidCloseoutService } from "./raid-closeout.js";
 import "dotenv/config";
@@ -23016,7 +23016,11 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
-  const normalizedRaid = normalizeRaidRow(raid);
+  let normalizedRaid = normalizeRaidRow(raid);
+  if(normalizedRaid.raidHelperEnabled===false && normalizedRaid.raidId?.startsWith("P0-")){
+    const event=await findP0OnlyEvent(guildId,{raidId:normalizedRaid.raidId});
+    if(event)normalizedRaid=mergeP0PostIdentity(normalizedRaid,normalizeRaidRow(event));
+  }
   const guildRaidImageUrl = await getGuildRaidImageUrl(
     guildId,
     raid.raid_type,
@@ -30686,6 +30690,9 @@ app.get("/api/apps-script", async (req, res, next) => {
         LeadPin: "",
         p0Only: true
       }));
+      for(let index=0;index<raids.length;index++){
+        raids[index]=mergeP0PostIdentity(raids[index],p0OnlyRaids.find(event=>event.raidId===raids[index].raidId));
+      }
       // Ein an einen normalen Raid gekoppelter P0-Anmelder verwendet dieselbe
       // oeffentliche Raid-ID. Er darf nicht zusaetzlich als "reiner
       // P0-Anmelder" erscheinen, sonst zeigt die Leitung zwei Karten und die
@@ -31718,7 +31725,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       requireMatchingGuildId(refreshGuild, postParams);
       await loadWorldbuffAccessCode(refreshGuild.id);
       requireMasterCodeForGuild(refreshGuild, postParams.masterCode, action, postParams);
-      return res.json(await queueActiveSignupRefresh(pool, refreshGuild));
+      return res.json(await queueActiveSignupRefresh(pool, refreshGuild, await getManagedP0OnlyEvents(refreshGuild.id)));
     }
 
     if (["guildPreviewBotOfflineNotice", "guildQueueBotOfflineNotice", "guildPreviewBotOnlineNotice", "guildQueueBotOnlineNotice"].includes(action)) {

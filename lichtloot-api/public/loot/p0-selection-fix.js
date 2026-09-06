@@ -1,6 +1,17 @@
 (function(){
   "use strict";
 
+  if(typeof window.getSelectedPrioItemId!=="function"){
+    window.getSelectedPrioItemId=function(slot){
+      const field=document.getElementById(slot);
+      const option=field?.selectedOptions?.[0];
+      const explicit=String(option?.dataset?.itemId||document.getElementById(slot+"ItemId")?.value||"").trim();
+      if(explicit)return explicit;
+      const resolved=typeof getPrio3ItemId==="function"?String(getPrio3ItemId(field?.value||"")||"").trim():"";
+      return /^\d+$/.test(resolved)?resolved:"";
+    };
+  }
+
   function p0PlusEnabled(){
     const layout=typeof currentGuildInfo !== "undefined" ? currentGuildInfo?.layout : {};
     const raid=String(location.pathname || "").split("/").pop().replace("-loot.html", "");

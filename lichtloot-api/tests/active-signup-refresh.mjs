@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {queueActiveSignupRefresh} from '../src/active-signup-refresh.js';
+import {queueActiveSignupRefresh,mergeP0PostIdentity} from '../src/active-signup-refresh.js';
 const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
 await db.exec(`create table raids(id uuid,guild_id uuid,deleted_at timestamptz,prio_enabled boolean,raidhelper_enabled boolean,status text,discord_channel_id text,discord_message_id text,raid_time text,raid_date date);create table bot_update_queue(id uuid default gen_random_uuid(),guild_id uuid,type text,status text,payload jsonb,created_at timestamptz default now());`);
 const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
@@ -9,4 +9,15 @@ const pool={connect:async()=>({query:(sql,args)=>sql.includes('pg_advisory_xact_
 assert.deepEqual(await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'}),{success:true,activeCount:1,queuedCount:1,alreadyQueuedCount:0});
 assert.equal((await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'})).alreadyQueuedCount,1);
 const rows=(await db.query('select * from bot_update_queue')).rows;assert.equal(rows.length,1);assert.equal(rows[0].payload.raidId,id(1));assert.equal(rows[0].payload.editOnly,true);
+const event={guildId:id(88),raidId:'P0-NAXX-TEST',p0Only:true,raidHelperEnabled:false,status:'geschlossen',discordChannelId:'123',discordMessageId:'999',raidDate:'2099-01-01',raidTime:'22:00'};
+const shadow={...event,p0Only:false,discordChannelId:'',discordMessageId:''};
+assert.equal(mergeP0PostIdentity(shadow,event).discordMessageId,'999');
+assert.equal(mergeP0PostIdentity(shadow,event).p0Only,true);
+assert.equal(mergeP0PostIdentity({...shadow,raidHelperEnabled:true},event).p0Only,false);
+assert.equal(mergeP0PostIdentity(shadow,{...event,guildId:id(99)}).discordMessageId,'');
+const mixed=await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'},[event,{...event,guildId:id(99)},{...event,raidId:'P0-OLD',raidDate:'2000-01-01'},{...event,raidId:'P0-ARCHIVE',status:'archiviert'}]);
+assert.equal(mixed.activeCount,2);assert.equal(mixed.queuedCount,1);
+const pure=(await db.query("select * from bot_update_queue where type='p0_post_refresh'")).rows;
+assert.equal(pure.length,1);assert.equal(pure[0].payload.raidId,event.raidId);assert.equal(pure[0].payload.editOnly,true);
+assert.equal((await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'},[event])).queuedCount,0);
 await db.close();console.log('Active signup refresh: guild isolation, expired/closed/archived/deleted raids, missing posts, invalid dates, disabled signups and duplicate requests passed.');

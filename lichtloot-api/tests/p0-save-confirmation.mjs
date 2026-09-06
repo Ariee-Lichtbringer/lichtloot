@@ -25,7 +25,7 @@ for (const folder of ['loot', 'lichtloot-api/public/loot']) {
         loadPublishedPrios:async()=>{},ensurePlayerPinForSave:async()=>({success:true,pin:'2882'}),
         submitPrioWithPin:async()=>mode==='failed'?{success:false,error:'Test failure'}:{success:true,prioId:'saved'},
         autoSaveDraft:noop,saveCharacterProfile:noop,updateLocalRaidleadData:noop,showParticipantPinPopup:noop,
-        getSelectedPrioItemId:()=>'',sortPriosWithOwnFirst:rows=>rows,
+        sortPriosWithOwnFirst:rows=>rows,
         setTimeout:()=>0,
         refreshAfterPrioSave:async()=>{if(mode==='edited') fields.p1.value='A new unsaved choice';},
         renderCurrentPrios:()=>{rendered=ctx.priosWithLiveDraft(ctx.currentPublishedPrios);}
