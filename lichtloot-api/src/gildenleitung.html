@@ -5334,6 +5334,30 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .raid-overview-card .rc-transfer-overdue{color:#fdba74;background:rgba(234,120,35,.12);border-color:rgba(251,146,60,.48)}
 .raid-overview-card .rc-transfer-cancelled,.raid-overview-card .rc-transfer-unknown{color:var(--muted);background:var(--panel2);border-color:var(--soft)}
 
+.raid-overview-card button.rc-metrics{width:100%;text-align:left;background:transparent;color:var(--text);border:0;border-block:1px solid var(--line);border-radius:0;font-family:inherit;letter-spacing:normal;text-transform:none;cursor:pointer;box-shadow:none}
+.raid-overview-card button.rc-metrics:hover{background:rgba(var(--gold-rgb),.07);border-color:var(--gold)}
+.raid-overview-card .rc-metrics .rc-metrics-open{grid-column:1/-1;color:var(--gold);font-size:11px;margin-top:5px}
+.raid-signups-backdrop{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:16px;background:rgba(2,6,23,.72);backdrop-filter:blur(6px)}
+.raid-signups-popup{display:flex;flex-direction:column;width:min(1200px,94vw);height:85vh;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);min-width:min(340px,calc(100vw - 32px));min-height:260px;resize:both;overflow:hidden;background:color-mix(in srgb,var(--panel) 98%,var(--text) 2%);border:1px solid rgba(var(--gold-rgb),.5);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4);color:var(--text)}
+.raid-signups-popup.is-maximized{width:calc(100vw - 32px)!important;height:calc(100dvh - 32px)!important;resize:none}
+.raid-signups-popup-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.raid-signups-popup-head h3{font-size:18px;color:var(--gold);margin:0 0 4px}
+.raid-signups-popup-head small{color:var(--muted)}
+.raid-signups-popup-head>div:last-child{display:flex;gap:8px}
+.raid-signups-popup-body{flex:1;min-height:0;overflow:auto;padding:16px;overscroll-behavior:contain;container-type:inline-size}
+.raid-signups-popup>footer{padding:7px 16px;border-top:1px solid var(--line);font-size:11px;text-align:right;color:var(--muted)}
+.raid-signups-popup .raid-unified-back,.raid-signups-popup .raid-helper-current-detail-head{display:none!important}
+.raid-signups-popup .raid-unified-columns{display:block}
+.raid-signups-popup .raid-helper-current-detail{width:100%;min-width:0;margin:0}
+.raid-signups-popup .raid-unified-pane{min-width:0}
+@container(max-width:680px){.raid-signups-popup .raid-helper-signup-admin-grid,.raid-signups-popup .raid-helper-signup-columns{grid-template-columns:1fr!important}}
+@media(max-width:600px){.raid-signups-backdrop{padding:8px}.raid-signups-popup{max-width:calc(100vw - 16px);width:calc(100vw - 16px);min-width:0}.raid-signups-popup-head,.raid-signups-popup-body{padding:12px}.raid-signups-popup-head h3{font-size:16px}}
+
+
+.raid-signups-popup .raid-unified-pane .raid-helper-loot-grid{column-count:2}
+@container(max-width:680px){.raid-signups-popup .raid-unified-pane .raid-helper-loot-grid{column-count:1}.raid-signups-popup .raid-helper-loot-inactive{grid-template-columns:1fr}}
+.raid-signups-popup-head h3{overflow-wrap:anywhere}
+
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -9327,6 +9351,46 @@ function yesterdayIsoDate(){
   ].join("-");
 }
 
+let raidSignupPopupState=null;
+async function openRaidSignupPopup(raidId){
+  const raid=findRaidByAnyId(raidId);
+  if(!raid||raid.p0Only||raid.raidHelperEnabled===false)return;
+  if(raidSignupPopupState)closeRaidSignupPopup(false);
+  const source=document.getElementById('raidHelperCurrentEventsList');
+  if(!source){setStatus('Die Anmeldeansicht konnte nicht geöffnet werden.','bad');return;}
+  const parked=document.createDocumentFragment();
+  while(source.firstChild)parked.appendChild(source.firstChild);
+  const state={raidId:String(raid.raidId||raid.id),source,parked,selected:raidHelperCurrentSelectedRaidId,editing:raidHelperEditingData,editId:document.getElementById('raidHelperEditRaidId')?.value||'',editChannel:document.getElementById('raidHelperEditChannel')?.value||'',unified:document.body.classList.contains('raid-unified-open'),focus:document.activeElement,overflow:document.body.style.overflow};
+  raidSignupPopupState=state;
+  const backdrop=document.createElement('div');state.backdrop=backdrop;backdrop.className='raid-signups-backdrop';
+  backdrop.innerHTML=`<section class="raid-signups-popup" role="dialog" aria-modal="true" aria-labelledby="raidSignupPopupTitle"><header class="raid-signups-popup-head"><div><h3 id="raidSignupPopupTitle">${escapeHtml(raid.raidName||raid.raid||'Raid')} · Anmeldungen &amp; Aufstellung</h3><small>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime||'')} Uhr</small></div><div><button type="button" class="small-btn ghost" data-popup-refresh>Neu laden</button><button type="button" class="small-btn ghost" data-popup-max aria-pressed="false">Maximieren</button><button type="button" class="small-btn danger" data-popup-close>Schließen</button></div></header><div class="raid-signups-popup-body"><div id="raidHelperCurrentDetail" class="raid-helper-current-detail"></div></div><footer>Größe an der unteren rechten Ecke ändern ◢</footer></section>`;
+  document.body.appendChild(backdrop);document.body.style.overflow='hidden';raidHelperCurrentSelectedRaidId=state.raidId;
+  const dialog=backdrop.querySelector('.raid-signups-popup'),max=backdrop.querySelector('[data-popup-max]');
+  backdrop.querySelector('[data-popup-refresh]').onclick=()=>renderRaidHelperCurrentDetail(state.raidId,{signupsOnly:true});
+  max.onclick=()=>{const full=dialog.classList.toggle('is-maximized');max.textContent=full?'Verkleinern':'Maximieren';max.setAttribute('aria-pressed',String(full));};
+  backdrop.querySelector('[data-popup-close]').onclick=()=>closeRaidSignupPopup();
+  state.onKey=event=>{
+    if(document.querySelector('.raid-helper-notify-backdrop'))return;
+    if(event.key==='Escape'){event.preventDefault();closeRaidSignupPopup();return;}
+    if(event.key!=='Tab')return;
+    const items=[...dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary,[tabindex="0"]')].filter(e=>e.getClientRects().length);
+    const first=items[0],last=items[items.length-1];if(!first)return;
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  };
+  backdrop.addEventListener('keydown',state.onKey);backdrop.querySelector('[data-popup-close]').focus();
+  try{await renderRaidHelperCurrentDetail(state.raidId,{signupsOnly:true});}
+  catch(error){if(raidSignupPopupState===state)backdrop.querySelector('#raidHelperCurrentDetail').innerHTML=`<div class="status bad">${escapeHtml(error.message||'Anmeldungen konnten nicht geladen werden.')}</div>`;}
+}
+function closeRaidSignupPopup(refresh=true){
+  const state=raidSignupPopupState;if(!state)return;raidSignupPopupState=null;
+  state.backdrop.remove();state.source.replaceChildren(state.parked);
+  raidHelperCurrentSelectedRaidId=state.selected;raidHelperEditingData=state.editing;
+  setRaidHelperEditValue('raidHelperEditRaidId',state.editId);setRaidHelperEditValue('raidHelperEditChannel',state.editChannel);
+  document.body.classList.toggle('raid-unified-open',state.unified);document.body.style.overflow=state.overflow;
+  if(state.focus?.isConnected)state.focus.focus();
+  if(refresh){loadDashboardRaidStats();if(state.selected)renderRaidHelperCurrentEvents();}
+}
+
 function dashboardRaidCapacity(raid){
   if(Number(raid.maxPlayers)>0)return Number(raid.maxPlayers);
   const key=getRaidKey(raid);
@@ -9367,7 +9431,7 @@ function renderDashboardRaidCard(raid){
     <div class="rc-content"><header class="rc-header"><img class="rc-image" src="${escapeAttr(image)}" alt="${escapeAttr(raid.raidName||key)}"><div><h4>${escapeHtml(raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||'Raid')}</h4><button type="button" class="rc-date" onclick="editRaidDateTimePopup(${arg})" title="Name, Datum und Uhrzeit ändern">${escapeHtml(formatRaidWeekday(raid.raidDate))} · ${escapeHtml(formatRaidDate(raid.raidDate))}<br>${escapeHtml(raid.raidTime||'—')} Uhr</button></div></header>
     <div class="rc-states"><span>${stage}</span>${!signupOnly&&!p0Only?`<span>Prioliste ${isOpenStatus(raid.status)?'sichtbar':'verborgen'}</span>`:''}</div>
     ${transferBadge}
-    <div class="rc-metrics"><div><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></div><div><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></div><div><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></div></div>
+    <${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'} class="rc-metrics" ${!p0Only&&raid.raidHelperEnabled!==false?`type="button" onclick="openRaidSignupPopup(${arg})" aria-label="Anmeldungen und Aufstellung für ${escapeAttr(raid.raidName||raid.raid||'diesen Raid')} öffnen"`:''}><span><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></span><span><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></span><span><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></span>${!p0Only&&raid.raidHelperEnabled!==false?'<span class="rc-metrics-open">Anmeldungen &amp; Aufstellung öffnen ↗</span>':''}</${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'}>
     <div class="rc-hint">${escapeHtml(hint)}</div>
     ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM senden',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`,'','aria-label="DC-Nachricht kopieren"')}</div>`:''}
     <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
@@ -11192,6 +11256,7 @@ function renderRaidHelperEventCard(raid, mode){
 }
 
 function renderRaidHelperCurrentEvents(){
+  if(raidSignupPopupState)return renderRaidHelperCurrentDetail(raidSignupPopupState.raidId,{signupsOnly:true});
   const box = document.getElementById("raidHelperCurrentEventsList");
   if(!box) return;
   renderRaidHelperCurrentFilters();
@@ -11474,14 +11539,14 @@ function primeRaidHelperCurrentEditState(raid){
   setRaidHelperEditValue("raidHelperEditChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
 }
 
-async function renderRaidHelperCurrentDetail(raidId){
+async function renderRaidHelperCurrentDetail(raidId, options={}){
   const box = document.getElementById("raidHelperCurrentDetail");
   const raid = findRaidByAnyId(raidId);
   if(!box || !raid) return;
   document.body.classList.add("raid-unified-open");
   primeRaidHelperCurrentEditState(raid);
   const key = getRaidKey(raid);
-  const signupOnlyRaid = isSignupOnlyRaid(raid);
+  const signupOnlyRaid = isSignupOnlyRaid(raid) || options.signupsOnly===true;
   const slots = [
     raid.maxPlayers ? "Gesamt " + raid.maxPlayers : "",
     raid.tankSlots ? "Tanks " + raid.tankSlots : "",
@@ -11706,6 +11771,8 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
   box.innerHTML = '<div class="muted">Anmeldungen werden geladen ...</div>';
   try{
     const helper = await railwayApi({ action:"getRaidHelper", raidId, t:Date.now() });
+    if(!box.isConnected||box!==document.getElementById('raidHelperCurrentSignups'))return;
+    if(!helper?.success)throw new Error(helper?.error||'Anmeldungen konnten nicht geladen werden.');
     raidHelperEditingData = { raid:helper.raid || raid || findRaidByAnyId(raidId), helper };
     const rows = [...(helper.signups || []), ...(helper.externalSignups || [])];
     const count = rows.length;
@@ -11717,6 +11784,7 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
     box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
     setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
   }catch(error){
+    if(!box.isConnected||box!==document.getElementById('raidHelperCurrentSignups'))return;
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
     setRaidHelperCurrentStatus(error.message || "Anmeldungen konnten nicht geladen werden.", "bad");
   }
