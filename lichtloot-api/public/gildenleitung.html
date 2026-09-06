@@ -5794,7 +5794,7 @@ body.worldbuff-only .master-only{display:none!important}
                   </div>
                   <div class="raid-helper-row" style="margin-top:10px">
                     <div class="field"><label for="raidHelperWeeklyChannel">Discord-Channel für die Automatik</label><select id="raidHelperWeeklyChannel"></select></div>
-                    <label class="layout-loot-toggle"><input id="raidHelperWeeklyClearChannel" type="checkbox"><span><strong>Channel vorher leeren</strong><small>Löscht vor dem Wochenpost alle nicht angepinnten Nachrichten in diesem Channel.</small></span></label>
+                    <label class="layout-loot-toggle"><input id="raidHelperWeeklyClearChannel" type="checkbox"><span><strong>Vorherigen Rhythmus-Post entfernen</strong><small>Entfernt den vorherigen Botpost dieses Rhythmus erst nach erfolgreichem Versand. Andere Nachrichten bleiben erhalten.</small></span></label>
                   </div>
                 </div>
               </div>
@@ -13621,7 +13621,11 @@ function renderRaidHelperScheduleRules(){
             <span title="Der Anmelder wird zu diesem Zeitpunkt automatisch erstellt und gepostet"><strong>Nächster Post:</strong> ${escapeHtml(formatRaidDate(schedule.nextPostDate || schedule.nextRaidDate))} · ${escapeHtml(schedule.postTime || "-")} Uhr</span>
             <span title="Termin, der im Anmelder angezeigt wird">Raid: ${escapeHtml(formatRaidDate(schedule.nextRaidDate))} · ${escapeHtml(schedule.raidTime || "-")}</span>
           </div>
-          <div class="raid-helper-current-card-status"><span class="status-badge open">↻ Automatischer Rhythmus</span></div>
+          <div class="raid-helper-current-card-status"><span class="status-badge open">↻ Automatischer Rhythmus</span>
+            <span>${escapeHtml(({open:"Versand vorgemerkt",processing:"Bot verarbeitet",done: schedule.currentMessageId ? "Post gespeichert" : "Kein Post bestätigt",failed:"Versand fehlgeschlagen"})[schedule.deliveryStatus] || "Nächster Versand geplant")}</span>
+            ${schedule.currentMessageId ? `<span>Post-ID: ${escapeHtml(schedule.currentMessageId)}</span>` : ""}
+            ${schedule.deliveryError ? `<span>${escapeHtml(schedule.deliveryError)}</span>` : ""}
+          </div>
           <div class="raid-helper-current-card-counts">
             <div class="raid-helper-current-card-count"><span>↻</span><b>${escapeHtml(interval)}</b><span>${interval === "1" ? "Woche" : "Wochen"} · ${escapeHtml(weekday)}</span></div>
             <div class="raid-helper-current-card-count"><span>#</span><span>${escapeHtml(channelLabel)}</span></div>
@@ -16857,7 +16861,7 @@ function toggleRaidHelperWeeklyOptions(){
     const date=document.getElementById("raidHelperWeeklyFirstDate");
     if(date && !date.value)date.value=addDaysToIsoDate(raidHelperValue("raidHelperDate"),7) || addDaysToIsoDate(new Date().toISOString().slice(0,10),7);
     const postDate=document.getElementById("raidHelperWeeklyPostDate");
-    if(postDate&&!postDate.value)postDate.value=date?.value||"";
+    if(postDate&&!postDate.value)postDate.value=addDaysToIsoDate(date?.value,-7)||"";
     syncRaidHelperWeeklyWeekdayFromDate();
     renderRaidHelperWeeklyChannelSelect();
   }

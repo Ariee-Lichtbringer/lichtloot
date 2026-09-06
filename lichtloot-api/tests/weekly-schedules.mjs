@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';import {calendarDate,berlinNow,scheduleWindow,createWeeklyScheduler} from '../src/weekly-schedules.js';
+assert.equal(berlinNow(new Date('2026-09-10T20:30:00Z')),'2026-09-10T22:30');
+assert.equal(berlinNow(new Date('2026-12-10T21:30:00Z')),'2026-12-10T22:30');
+assert.equal(calendarDate(new Date(2026,8,17)),'2026-09-17');
+const rule={weekday:4,interval_weeks:1,next_raid_date:'2026-09-10',next_post_date:'2026-09-10',raid_time:'21:30',post_time:'22:30'};
+assert.deepEqual(scheduleWindow(rule,new Date('2026-09-10T20:30:00Z')),{raid:'2026-09-17',post:'2026-09-10',step:7,due:true});
+assert.equal(scheduleWindow({...rule,next_raid_date:'2026-09-17'},new Date('2026-09-10T20:29:00Z')).due,false);
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+await db.exec(`create table raid_helper_schedules(id text,guild_id text,enabled boolean,next_raid_date date,next_post_date date,last_raid_date date,last_raid_id text,interval_weeks int,weekday int,raid_type text,title text,raid_time text,post_time text,discord_channel_id text,updated_at timestamptz,last_error text);create table raids(id text,guild_id text,discord_message_id text,discord_channel_id text);create table jobs(id text);insert into raid_helper_schedules values('s','g',true,'2099-09-17','2099-09-10',null,null,1,4,'aq40','AQ40','21:30','22:30','channel',now(),null);`);
+let active=db;const query=(...a)=>active.query(...a);let fail=true,seen;
+const run=createWeeklyScheduler({query,transaction:fn=>db.transaction(async tx=>{active=tx;try{return await fn();}finally{active=db;}}),randomCode:()=> 'CODE',createRaid:async()=>{await query("insert into raids values('manual','g','original','channel')");return {success:true,reused:true,id:'manual',raidId:'ACTUAL-ID',discordMessageId:'original',discordChannelId:'channel'};},enqueue:async job=>{seen=job;if(fail)throw Error('injected failure');await query("insert into jobs values('job')");return {success:true};}});
+let result=await run({guildId:'g',force:true});assert.equal(result[0].queued,false);assert.equal((await query('select * from raids')).rows.length,0);assert.equal((await query('select last_raid_id from raid_helper_schedules')).rows[0].last_raid_id,null);
+fail=false;result=await run({guildId:'g',force:true});assert.equal(result[0].queued,true);assert.equal(seen.payload.raidId,'ACTUAL-ID');assert.equal(seen.payload.updateExistingOnly,true);assert.equal((await query('select * from jobs')).rows.length,1);
+await db.close();console.log('PASS: Berlin summer/winter, DATE preservation, weekly lead, due boundary, rollback, actual reused ID and original post.');

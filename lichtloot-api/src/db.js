@@ -1,3 +1,5 @@
+import {AsyncLocalStorage} from "node:async_hooks";
+const transactionClient = new AsyncLocalStorage();
 import pg from "pg";
 
 const { Pool } = pg;
@@ -58,7 +60,7 @@ randomPool?.on("error", error => {
 });
 
 export async function query(text, params = []) {
-  return pool.query(text, params);
+  return (transactionClient.getStore() || pool).query(text, params);
 }
 
 export async function p0Query(text, params = []) {
@@ -95,4 +97,12 @@ export async function requireGuild(slug) {
     throw error;
   }
   return guild;
+}
+
+export async function inTransaction(fn) {
+  if(transactionClient.getStore()) return fn();
+  const client=await pool.connect();
+  try {await client.query('begin'); const value=await transactionClient.run(client,fn);await client.query('commit');return value;}
+  catch(error){await client.query('rollback');throw error;}
+  finally{client.release();}
 }

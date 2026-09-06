@@ -1,3 +1,4 @@
+import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-schedules.js";
 import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
 import {createPrioReminderPosts} from "./prio-reminder-posts.js";
 import { createDkpService, lootSystem } from "./dkp.js";
@@ -22,7 +23,7 @@ import express from "express";
 import nodemailer from "nodemailer";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
+import { inTransaction, pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
 const raidWorkbookService = createRaidWorkbookService({
   prepareWeb: (web,ctx)=>prepareRaidWorkbookWeb(web,ctx,{getReport:getWorkbookParticipantReport,getSpellMetadata:getRpbSpellMetadata}),
@@ -4354,6 +4355,7 @@ async function ensureRaidHelperScheduleSchema() {
   );
   await query(`alter table raid_helper_schedules add column if not exists post_time text not null default '09:00'`);
   await query(`alter table raid_helper_schedules add column if not exists next_post_date date`);
+  await query(`alter table raid_helper_schedules add column if not exists last_error text`);
   await query(`alter table raid_helper_schedules add column if not exists link_url text not null default ''`);
   await query(`alter table raid_helper_schedules add column if not exists link_text text not null default ''`);
   await query(`alter table raid_helper_schedules add column if not exists link_icon text not null default ''`);
@@ -8641,16 +8643,10 @@ function normalizeRaidHelperTemplateRow(row) {
   };
 }
 
-function scheduleDateIso(value) {
-  if (!value) return "";
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  const text = String(value);
-  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
-  const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
-}
+function scheduleDateIso(value) { return calendarDate(value); }
 
 function normalizeRaidHelperScheduleRow(row) {
+  const window = scheduleWindow(row);
   const id = row.id || "";
   return {
     id,
@@ -8670,13 +8666,17 @@ function normalizeRaidHelperScheduleRow(row) {
     discordChannelId: row.discord_channel_id || "",
     raidImageUrl: row.raid_image_url || "",
     createdBy: row.created_by || "",
+    currentRaidId: row.current_raid_id || "",
+    currentMessageId: row.current_message_id || "",
+    deliveryStatus: row.delivery_status || "",
+    deliveryError: row.last_error || row.delivery_error || "",
     recurrence: row.recurrence || "weekly",
     intervalWeeks: row.interval_weeks ?? 1,
     weekday: row.weekday ?? 3,
     raidTime: row.raid_time || "20:00",
     postTime: row.post_time || "09:00",
-    nextRaidDate: scheduleDateIso(row.next_raid_date),
-    nextPostDate: scheduleDateIso(row.next_post_date),
+    nextRaidDate: window.raid,
+    nextPostDate: window.post,
     linkUrl: row.link_url || "",
     linkText: row.link_text || "",
     linkIcon: row.link_icon || "",
@@ -8686,7 +8686,7 @@ function normalizeRaidHelperScheduleRow(row) {
     showWorldbuffs: row.show_worldbuffs !== false,
     lastRaidDate: scheduleDateIso(row.last_raid_date),
     lastRaidId: row.last_raid_id || "",
-    currentRaidId: id ? `schedule-${id}` : "",
+
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || ""
   };
@@ -8755,211 +8755,23 @@ function schedulePostIsDue({ postDate, postTime, force = false }) {
   return scheduled <= new Date();
 }
 
-async function processRaidHelperSchedules({ guildId, force = false, scheduleId = "" }) {
+const weeklyScheduler=createWeeklyScheduler({query,transaction:inTransaction,createRaid:createRaidRecord,enqueue:enqueueBotUpdate,randomCode:randomRaidCode});
+async function processRaidHelperSchedules(params) {
   await ensureRaidHelperScheduleSchema();
-  const scopedScheduleId = clean(scheduleId);
-  const scheduleValues = [guildId];
-  let scheduleClause = "";
-  if (scopedScheduleId && isUuid(scopedScheduleId)) {
-    scheduleValues.push(scopedScheduleId);
-    scheduleClause = "and id = $2";
-  }
-  const schedules = await query(
-    `select *
-     from raid_helper_schedules
-     where guild_id = $1 and enabled = true
-       ${scheduleClause}
-     order by next_raid_date nulls first, raid_time, lower(title)`,
-    scheduleValues
-  );
-
-  const processed = [];
-  for (const schedule of schedules.rows) {
-    const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(clean(schedule.raid_type).toLowerCase());
-    const nextDate = resolveNextScheduleDate({
-      weekday: schedule.weekday,
-      nextRaidDate: scheduleDateIso(schedule.next_raid_date),
-      intervalWeeks: schedule.interval_weeks
-    });
-    const nextDateIso = formatDateIso(nextDate);
-    const externalRaidId = `schedule-${schedule.id}`;
-    const existing = await query(
-      `select id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
-       from raids
-       where guild_id = $1 and external_raid_id = $2
-       limit 1`,
-      [guildId, externalRaidId]
-    );
-    const existingRaid = existing.rows[0] || null;
-    const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
-    const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
-    const storedNextRaidDateIso = scheduleDateIso(schedule.next_raid_date);
-    const storedNextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date);
-    let postingLeadDays = 0;
-    if (storedNextRaidDateIso && storedNextPostDateIso) {
-      postingLeadDays = Math.max(0, Math.round(
-        (localDateOnly(storedNextRaidDateIso) - localDateOnly(storedNextPostDateIso)) / 86400000
-      ));
-    }
-    const nextPostDateIso = storedNextRaidDateIso && storedNextRaidDateIso !== nextDateIso
-      ? formatDateIso(addDays(nextDate, -postingLeadDays))
-      : scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
-    const postDue = schedulePostIsDue({
-      postDate: nextPostDateIso,
-      postTime: schedule.post_time,
-      force
-    });
-    if (!postDue) {
-      processed.push({
-        scheduleId: schedule.id,
-        raidId: externalRaidId,
-        skipped: true,
-        reason: "not_due",
-        nextRaidDate: nextDateIso,
-        nextPostDate: nextPostDateIso,
-        postTime: schedule.post_time || ""
-      });
-      continue;
-    }
-
-    if (dateChanged) {
-      await query(
-        `delete from raid_signups rs
-         using raids r
-         where r.id = rs.raid_id
-           and r.guild_id = $1
-           and rs.raid_id = $2`,
-        [guildId, existingRaid.id]
-      );
-      await query("delete from raid_external_signups where guild_id = $1 and raid_id = $2", [guildId, existingRaid.id]);
-      await query(
-        `update raids
-         set discord_message_id = null, updated_at = now()
-         where guild_id = $1 and id = $2`,
-        [guildId, existingRaid.id]
-      );
-    }
-
-    const created = await createRaidRecord({
-      guildId,
-      query: {
-        raidId: externalRaidId,
-        raid: schedule.raid_type,
-        raidName: schedule.title,
-        raidDate: nextDateIso,
-        raidTime: schedule.raid_time,
-        guild: "Lichtbringer",
-        playerPin: dateChanged || !existingRaid?.raid_pin ? randomRaidCode(3) : existingRaid.raid_pin,
-        leadPin: dateChanged || !existingRaid?.lead_pin ? randomRaidCode(4) : existingRaid.lead_pin,
-        status: "geschlossen",
-        p0PlusFreigabe: "geöffnet",
-        createdBy: schedule.created_by || "Gildenleitung",
-        raidHelperEnabled: "true",
-        prioEnabled: signupOnlyRaid || schedule.prio_enabled === false ? "false" : "true",
-        showWorldbuffs: schedule.show_worldbuffs === false ? "false" : "true",
-        maxPlayers: schedule.max_players,
-        tankSlots: schedule.tank_slots,
-        healSlots: schedule.heal_slots,
-        ddSlots: schedule.dd_slots,
-        signupDeadline: schedule.signup_deadline,
-        discordChannelId: schedule.discord_channel_id,
-        description: schedule.description,
-        linkUrl: schedule.link_url,
-        linkText: schedule.link_text,
-        linkIcon: schedule.link_icon,
-        raidImageUrl: schedule.raid_image_url
-      }
-    });
-
-    const createdRaid = {
-      ...created,
-      raidId: externalRaidId,
-      raid: created.raid || schedule.raid_type,
-      raidName: created.raidName || created.name || schedule.title,
-      raidDate: created.raidDate || nextDateIso,
-      raidTime: created.raidTime || schedule.raid_time,
-      createdBy: created.createdBy || schedule.created_by || "Gildenleitung",
-      discordChannelId: created.discordChannelId || schedule.discord_channel_id || ""
-    };
-
-    const intervalDays = Math.max(1, Number(schedule.interval_weeks) || 1) * 7;
-    const followingRaidDateIso = formatDateIso(addDays(nextDate, intervalDays));
-    const followingPostDateIso = formatDateIso(addDays(localDateOnly(nextPostDateIso), intervalDays));
-    await query(
-      `update raid_helper_schedules
-       set next_raid_date = $2,
-           next_post_date = $3,
-           last_raid_date = $4::date,
-           last_raid_id = $5,
-           updated_at = now()
-       where guild_id = $1 and id = $6`,
-      [guildId, followingRaidDateIso, followingPostDateIso, nextDateIso, created.id || created.raidId || null, schedule.id]
-    );
-
-    const shouldQueuePost = clean(schedule.discord_channel_id) && (force || dateChanged || !existingRaid?.discord_message_id);
-    if (shouldQueuePost) {
-      await enqueueBotUpdate({
-        guildId,
-        type: "raid_announcement",
-        payload: {
-          raidId: externalRaidId,
-          playerPin: created.playerPin || created.raidPin || "",
-          prioPin: created.playerPin || created.raidPin || "",
-          raid: createdRaid.raid,
-          raidName: createdRaid.raidName,
-          raidDate: createdRaid.raidDate,
-          raidTime: createdRaid.raidTime,
-          createdBy: createdRaid.createdBy,
-          channelId: schedule.discord_channel_id,
-          discordChannelId: schedule.discord_channel_id,
-          clearChannelBeforePost: schedule.clear_channel_before_post === true,
-          followupPoPost: !signupOnlyRaid && schedule.create_po_signup ? {
-            postKey: `scheduled-${schedule.id}-${nextDateIso}`,
-            title: `${displayRaidName(schedule.raid_type)} P0-Anmelder`,
-            raid: schedule.raid_type,
-            raidDate: nextDateIso,
-            raidTime: schedule.raid_time,
-            mode: "signup",
-            note: "Wähle unten dein Item aus und trage danach deinen Charakter ein.",
-            sourceChannelId: schedule.discord_channel_id,
-            targetChannelId: schedule.discord_channel_id,
-            discordChannelId: schedule.discord_channel_id,
-            lichtlootRaidId: externalRaidId,
-            lichtlootPlayerPin: created.playerPin || created.raidPin || "",
-            lichtlootLeadPin: created.leadPin || "",
-            restoreArchived: "true"
-          } : null,
-          postMode: "raid_p0",
-          raidSignupEnabled: "true",
-          raidSnapshot: createdRaid,
-          source: "raid_helper_schedule"
-        }
-      }).catch(error => console.warn("Geplanter Raid-Anmelder konnte nicht queued werden:", error.message || error));
-    }
-
-    processed.push({
-      scheduleId: schedule.id,
-      raidId: externalRaidId,
-      raidUuid: created.id || "",
-      nextRaidDate: nextDateIso,
-      nextPostDate: nextPostDateIso,
-      postTime: schedule.post_time || "",
-      queued: Boolean(shouldQueuePost),
-      advanced: dateChanged
-    });
-  }
-
-  return processed;
+  return weeklyScheduler(params);
 }
 
 async function getRaidHelperSchedules({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  await processRaidHelperSchedules({ guildId });
   const result = await query(
-    `select *
-     from raid_helper_schedules
-     where guild_id = $1
-     order by enabled desc, next_raid_date nulls last, raid_time, lower(title)`,
+    `select s.*,r.external_raid_id as current_raid_id,r.discord_message_id as current_message_id,
+       q.status as delivery_status,q.payload->>'failureReason' as delivery_error
+     from raid_helper_schedules s
+     left join raids r on r.id=s.last_raid_id and r.guild_id=s.guild_id
+     left join lateral (select status,payload from bot_update_queue where guild_id=s.guild_id
+       and payload->>'scheduleId'=s.id::text order by created_at desc limit 1) q on true
+     where s.guild_id = $1
+     order by s.enabled desc, s.next_raid_date nulls last, s.raid_time, lower(s.title)`,
     [guildId]
   );
   return { success: true, schedules: result.rows.map(normalizeRaidHelperScheduleRow) };
@@ -25479,8 +25291,22 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
   }
 }
 
+async function archiveDeletedP0Mirrors(client, guildId, raid, character, discordUserId) {
+  return client.query(`update po_post_entries set archived_at=now(),updated_at=now()
+    where guild_id=$1 and archived_at is null and coalesce(config_only,false)=false
+      and lower(player_name)=lower($2)
+      and (discord_user_id=$3 or (coalesce(discord_user_id,'')='' and
+        1=(select count(*) from characters c join players p on p.id=c.player_id where p.guild_id=$1 and lower(c.name)=lower($2))))
+      and (raid_id=any($4::text[]) or (coalesce(raid_id,'')='' and
+        (post_key=any($4::text[]) or (raid_pin<>'' and raid_pin=any($5::text[])))))
+    returning id`,[guildId,character.name,discordUserId,
+    [raid.id,raid.external_raid_id,raid.external_p0_id].filter(Boolean),
+    [raid.raid_pin,raid.player_link,raid.player_pin].filter(Boolean)]);
+}
+
 async function deleteP0DiscordSignup({ guildId, query: params }) {
   await ensureRaidSchema();
+  await ensurePoPostEntriesSchema();
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender P0-Raid gefunden.");
@@ -25563,7 +25389,8 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
        returning id`,
       [raid.id, character.id]
     );
-    if (!deleted.rowCount && !deletedPrios.rowCount) {
+    const legacyDeleted = await archiveDeletedP0Mirrors(client, guildId, raid, character, discordUserId);
+    if (!deleted.rowCount && !deletedPrios.rowCount && !legacyDeleted.rowCount) {
       const error = new Error("Für dich wurde bei diesem Raid keine passende P0-Anmeldung gefunden.");
       error.statusCode = 404;
       throw error;
@@ -25573,6 +25400,7 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
       success: true,
       deleted: deleted.rowCount,
       deletedPrios: deletedPrios.rowCount,
+      archivedMirrors: legacyDeleted.rowCount,
       raid: normalizeRaidRow(raid)
     };
   } catch (error) {
