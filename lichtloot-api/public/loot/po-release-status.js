@@ -108,14 +108,14 @@
       const key=item[0],label=item[1];
       const approved=key==="recruit" ? Boolean(data&&data.recruitStatusLifted) : approvedKeys.has(normalizeRaidKey(key));
       const inReview=!approved && pending.has(key);
-      return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
+      return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+(currentPagePoReleaseKeys().includes(key)?' loot-release-current':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
     }).join("");
     const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(function(item){
       const key=item[0],label=item[1],attendance=data&&data.attendance16&&data.attendance16[key];
       const total=Number(attendance&&attendance.total||0),attended=Number(attendance&&attendance.attended||0),bench=Number(attendance&&attendance.bench||0);
       return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(attendance&&attendance.fetchedAt?'Stand: '+new Date(attendance.fetchedAt).toLocaleString('de-DE'):(bench?'davon '+bench+' Bank':'Noch nicht synchronisiert'))+'</small></span>';
     }).join("");
-    box.innerHTML=(data&&data.attendance16?'<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div>':'')+'<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
+    box.innerHTML=(data&&data.attendance16?'<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div>':'')+'<div class="loot-release-title">P0-Freigabe</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
   };
 
   let releaseLoadGeneration=0;
@@ -138,7 +138,7 @@
     if(!pin||!char||!char.name){box.textContent="Bitte einen Charakter auswählen.";return;}
     const isCurrent=()=>generation===releaseLoadGeneration;
     const guild=currentGuildSlug();
-    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
+    box.innerHTML='<div class="loot-release-title">P0-Freigabe</div><div class="loot-release-help">Status wird geladen …</div>';
     try{
       const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",releaseOnly:"1",guild,char:char.name,server:char.server||"",pin,t:Date.now()});
       const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild,t:Date.now()});
@@ -161,7 +161,7 @@
 
     }catch(error){
       if(!isCurrent())return;
-      box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span> <button type="button" data-release-retry>Erneut laden</button></div>';
+      box.innerHTML='<div class="loot-release-title">P0-Freigabe</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span> <button type="button" data-release-retry>Erneut laden</button></div>';
       box.querySelector("[data-release-retry]").onclick=()=>window.loadSelectedCharacterPoReleases(char);
     }
   };
