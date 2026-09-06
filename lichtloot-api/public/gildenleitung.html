@@ -13633,7 +13633,7 @@ function renderRaidHelperScheduleRules(){
         </div>
         <div class="raid-helper-current-card-actions">
           <button class="small-btn primary" type="button" onclick="editRaidHelperSchedule('${escapeAttr(scheduleId)}')">Öffnen / Bearbeiten</button>
-          <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(schedule.currentRaidId || ("schedule-" + scheduleId))}')">Jetzt posten</button>
+          <button class="small-btn primary" type="button" ${schedule.currentRaidId ? "" : "disabled"} onclick="queueRaidToDiscord('${escapeAttr(schedule.currentRaidId || "")}')">Post aktualisieren</button>
           <button class="small-btn danger" type="button" title="Rhythmus löschen" aria-label="${escapeAttr(raidName)} Rhythmus löschen" onclick="deleteRaidHelperSchedule('${escapeAttr(scheduleId)}')">✕</button>
         </div>
       </article>
