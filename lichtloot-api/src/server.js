@@ -1,3 +1,4 @@
+import { createDkpService, lootSystem } from "./dkp.js";
 import {createSupportNotices,SUPPORT_NOTICE_TEXT} from "./support-notices.js";
 import { createSupportInbox } from "./support-inbox.js";
 import { createGmailApi } from "./gmail-api.js";
@@ -27,6 +28,8 @@ const raidWorkbookService = createRaidWorkbookService({
   publicBaseUrl: process.env.GUILDLOOT_PUBLIC_URL || "https://lichtloot.de",
   apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
 });
+
+const dkpService = createDkpService({pool,query,authorize:(guild,params)=>requireRaidleadP0MasterCodeForGuild(guild,params.masterCode),authorizeMode:(guild,params)=>requireMasterCodeForGuild(guild,params.masterCode,"dkpSetMode",params)});
 
 const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,params)=>requireMasterCodeForGuild(guild,params.masterCode,'guildRaidTaskReview',params),authorizeWrite:(guild,params)=>requireRaidleadP0MasterCodeForGuild(guild,params.masterCode)});
 
@@ -1384,6 +1387,7 @@ const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.webp";
 
 function defaultGuildLayoutForSlug(slug) {
   return {
+    lootSystem: "prio",
     raidImages: {},
     onboarding: {
       status: "setup_required",
@@ -1442,6 +1446,7 @@ async function listGuilds() {
       backgroundUrl: row.background_url || "",
       discordGuildId: row.discord_guild_id || "",
       pointsLabel: row.points_label || "P0/P0+",
+      lootSystem: layout.lootSystem === "dkp" ? "dkp" : "prio",
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
       layout,
@@ -1757,6 +1762,16 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query("select id from guilds where id=$1 for update", [guild.id]);
+    const priorModeResult = await client.query("select layout_json from guild_settings where guild_id=$1", [guild.id]);
+    if (Object.prototype.hasOwnProperty.call(layoutJson, "lootSystem")) {
+      lootSystem(layoutJson.lootSystem);
+      if (layoutJson.lootSystem !== (priorModeResult.rows[0]?.layout_json?.lootSystem || "prio")) {
+        await dkpService.validateMode(client, guild.id, layoutJson.lootSystem);
+      }
+    } else if (Object.keys(layoutJson).length) {
+      layoutJson.lootSystem = priorModeResult.rows[0]?.layout_json?.lootSystem || "prio";
+    }
     if (!trustedSetup) {
       const previousSettings = await client.query(
         `select coalesce(layout_json, '{}'::jsonb) as layout_json
@@ -2025,6 +2040,7 @@ async function ensureGuildApplicationSchema() {
   );
   await query(
     `alter table guild_applications
+       add column if not exists loot_system text not null default 'prio',
        add column if not exists setup_completed_at timestamptz,
        add column if not exists guild_slug text,
        add column if not exists guild_pin text,
@@ -2060,6 +2076,7 @@ function normalizeGuildApplicationRow(row, params = {}) {
     id: row.id,
     guildName: row.guild_name || "",
     lootName: row.loot_name || "",
+    lootSystem: row.loot_system || "prio",
     server: row.server || "",
     contactName: row.contact_name || "",
     contactDiscord: row.contact_discord || "",
@@ -2087,6 +2104,7 @@ function normalizeGuildApplicationRow(row, params = {}) {
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null
   };
+
 }
 
 async function submitGuildApplication({ query: params, body = {} }) {
@@ -2095,6 +2113,7 @@ async function submitGuildApplication({ query: params, body = {} }) {
   const guildName = clean(values.guildName || values.guild_name);
   const lootName = clean(values.lootName || values.loot_name);
   const server = clean(values.server);
+  const selectedLootSystem = lootSystem(values.lootSystem || "prio");
   const contactName = clean(values.contactName || values.contact_name);
   const contactDiscord = clean(values.contactDiscord || values.contact_discord);
   const contactEmail = clean(values.contactEmail || values.contact_email);
@@ -2115,10 +2134,10 @@ async function submitGuildApplication({ query: params, body = {} }) {
 
   const result = await query(
     `insert into guild_applications
-       (guild_name, loot_name, server, contact_name, contact_discord, contact_email, discord_guild_id, desired_guild_pin, notes)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       (guild_name, loot_name, server, contact_name, contact_discord, contact_email, discord_guild_id, desired_guild_pin, notes, loot_system)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
      returning *`,
-    [guildName, lootName, server, contactName, contactDiscord, contactEmail, discordGuildId, desiredGuildPin, notes]
+    [guildName, lootName, server, contactName, contactDiscord, contactEmail, discordGuildId, desiredGuildPin, notes, selectedLootSystem]
   );
 
   return {
@@ -2763,6 +2782,7 @@ async function completeGuildSetup({ query: params, body = {} }) {
     throw error;
   }
 
+  const selectedLootSystem = lootSystem(values.lootSystem || application.loot_system || "prio");
   const guildName = clean(values.guildName) || application.guild_name;
   const lootName = clean(values.lootName) || application.loot_name || guildName;
   const server = clean(values.server) || application.server;
@@ -2784,6 +2804,7 @@ async function completeGuildSetup({ query: params, body = {} }) {
 
   const created = await createGuild({ query: { guildName, lootName, server, guildPin } });
   const setupLayout = defaultGuildLayoutForSlug(created.guild.slug);
+  setupLayout.lootSystem = selectedLootSystem;
   const eraRules = defaultEraRulesForSlug(created.guild.slug);
   if (setupProfile === "casual") {
     eraRules.priorityLevels = eraRules.priorityLevels.map(level => ({ ...level, enabled: level.key !== "p3" }));
@@ -8143,6 +8164,7 @@ async function ensureRaidMissingPrioRemindersQueued() {
             r.discord_channel_id
      from raids r
      where r.deleted_at is null
+       and not exists (select 1 from guild_settings gs where gs.guild_id=r.guild_id and gs.layout_json->>'lootSystem'='dkp')
        and r.raidhelper_enabled = true
        and r.prio_enabled = true
        and coalesce(r.discord_channel_id, '') <> ''
@@ -12984,6 +13006,7 @@ async function resolvePrioP0Selection(guildId, raidType, params, context) {
 }
 
 async function savePrio({ guildId, query: params }) {
+  await dkpService.assertPrio(guildId);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
   // Schema work must finish before opening the save transaction. Running ALTER
@@ -13405,6 +13428,7 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
 }
 
 async function savePrioAsRaidlead({ guildId, query: params }) {
+  await dkpService.assertPrio(guildId);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
   await ensureGuildPoItemsSchema();
@@ -13504,6 +13528,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
 }
 
 async function importEmergencyPrios({ guild, query: params }) {
+  await dkpService.assertPrio(guild.id);
   requireMasterCodeForGuild(guild, params.masterCode);
   let entries = params.entries;
   if (typeof entries === "string") {
@@ -13560,6 +13585,7 @@ async function importEmergencyPrios({ guild, query: params }) {
 }
 
 async function savePoSignupPrioFromBot({ guildId, query: params }) {
+  await dkpService.assertPrio(guildId);
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
@@ -13770,6 +13796,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 }
 
 async function syncPoSignupPrios({ guildId, query: params }) {
+  await dkpService.assertPrio(guildId);
   requireMasterCode(params.masterCode);
   await ensurePoPostEntriesSchema();
   const postKey = clean(params.postKey || params.poPostKey || params.postId);
@@ -27855,6 +27882,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 }
 
 async function transferP0PlusPoints({ guildId, query: params }) {
+  await dkpService.assertPrio(guildId);
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -30574,6 +30602,19 @@ app.get('/api/gmail/callback',async(req,res)=>{
   res.clearCookie('gmail_oauth_binding',{httpOnly:true,secure:true,sameSite:'lax',path:'/api/gmail'});
   try{await gmailApi.callback({state:clean(req.query.state),code:clean(req.query.code),error:clean(req.query.error),binding});return res.type('html').send('<!doctype html><meta charset="utf-8"><title>Gmail verbunden</title><h1>Gmail ist verbunden.</h1><p>Du kannst dieses Fenster schließen und in der Administration „Verbindung prüfen“ klicken.</p>');}
   catch(e){return res.status(e.statusCode||503).type('text/plain').send(e.code?.startsWith('GMAIL_')?e.message:'Google-Verknüpfung fehlgeschlagen. Bitte erneut in der Administration starten.');}
+});
+
+app.post("/api/dkp", async (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    enforceSecurityRateLimit(req, "dkp", 120, 60 * 1000);
+    const params = req.body || {};
+    if (!clean(params.guild)) { const error = new Error("Bitte eine Gilde auswählen."); error.statusCode=400; throw error; }
+    if (clean(params.masterCode)) await loadMasterCodeOverrides();
+    const guild = await requireGuild(resolveGuildSlug(params.guild));
+    const result = params.action === "state" ? await dkpService.state(guild,params) : await dkpService.change(guild,params);
+    return res.json(result);
+  } catch(error) { next(error); }
 });
 
 app.get("/api/apps-script", async (req, res, next) => {

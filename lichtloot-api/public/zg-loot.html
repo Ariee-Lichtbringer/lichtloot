@@ -1734,6 +1734,8 @@ body.random-prio .tooltip-p0{
 </style>
 <link rel="stylesheet" href="raid-signup-mirror.css?v=20260809-1205">
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="loot-system.js?v=20260906-1"></script>
+<script src="server-selection.js?v=20260906-1"></script>
 </head>
 
 <body class="raid-zg p0-only">
@@ -1960,7 +1962,7 @@ function openRaidStartAction(action){
     <div class="player-hidden-fields">
       <input id="playerPin" type="hidden">
       <input id="playerName" type="hidden">
-      <select id="playerServer" class="hidden"><option value=""></option><option>Lakeshire</option><option>Everlook</option></select>
+      <input id="playerServer" class="hidden" type="hidden">
       <select id="playerClass" class="hidden">
         <option value=""></option>
         <option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option>
@@ -2123,11 +2125,7 @@ function openRaidStartAction(action){
 
       <div>
         <label>Server</label>
-        <select id="twinkServer">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="twinkServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -2239,6 +2237,8 @@ function applyGuildThemeColor(cssName,rgbName,value){
 }
 async function applyGuildBranding(){
   const guild=await fetchCurrentGuildInfo();
+  window.GuildLootMode.apply(guild);
+  window.GuildLootServers.setGuild(guild);
   const lootName=lootTitleFromGuild(guild);
   const guildName=displayGuildName(guild);
   document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);

@@ -46,8 +46,8 @@
     .form-head p{margin:7px 0 0}.required-note{color:#93c5fd;font-size:13px;font-weight:850}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     label{display:grid;gap:7px;color:var(--gold);font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.02em}
-    input,textarea{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
-    input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+    input,select,textarea{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
     textarea{min-height:110px;resize:vertical}
     .full{grid-column:1/-1}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
@@ -138,6 +138,7 @@
         <input name="lootName" placeholder="z. B. GuildLoot">
         <span class="field-help">Der sichtbare Name eures Lootbereichs, z.B. PanemLoot.</span>
       </label>
+<label>Lootsystem<select name="lootSystem"><option value="prio">Prio · Prioritäten / P0+</option><option value="dkp">DKP · Punkte, Loot-Kosten und optionale Gebote</option></select></label>
       <label>Server
         <input name="server" placeholder="z.B. Everlook">
       </label>

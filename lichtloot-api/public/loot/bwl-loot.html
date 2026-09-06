@@ -1758,6 +1758,8 @@ body.random-prio .random-prio-home{width:min(1600px,100%);margin:0 auto 18px;dis
 </style>
 <link rel="stylesheet" href="raid-signup-mirror.css?v=20260906-guild-popup">
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="../server-selection.js?v=20260906-1"></script>
+<script src="../loot-system.js?v=20260906-1"></script>
 </head>
 
 <body class="raid-bwl">
@@ -1984,7 +1986,7 @@ function openRaidStartAction(action){
     <div class="player-hidden-fields">
       <input id="playerPin" type="hidden">
       <input id="playerName" type="hidden">
-      <select id="playerServer" class="hidden"><option value=""></option><option>Lakeshire</option><option>Everlook</option></select>
+      <input id="playerServer" class="hidden" type="hidden">
       <select id="playerClass" class="hidden">
         <option value=""></option>
         <option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option>
@@ -2150,11 +2152,7 @@ function openRaidStartAction(action){
 
       <div>
         <label>Server</label>
-        <select id="twinkServer">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="twinkServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -2265,6 +2263,8 @@ function applyGuildThemeColor(cssName,rgbName,value){
 }
 async function applyGuildBranding(){
   const guild=await fetchCurrentGuildInfo();
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   const lootName=lootTitleFromGuild(guild);
   const guildName=displayGuildName(guild);
   document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);
@@ -4371,7 +4371,7 @@ function initializeRandomCharacterProfile(){
   let profile={};try{profile=JSON.parse(decodeURIComponent(randomCookieValue("guildloot_random_profile")||"%7B%7D"));}catch(error){}
   const name=document.getElementById("randomCharacterName"),server=document.getElementById("randomCharacterServer"),playerClass=document.getElementById("randomCharacterClass"),spec=document.getElementById("randomCharacterSpec");
   if(name)name.value=profile.name||"";if(server)server.value=profile.server||"";if(playerClass)playerClass.value=profile.playerClass||"";if(spec)spec.value=profile.spec||"";
-  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",playerClass:playerClass?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField){let option=Array.from(serverField.options).find(entry=>entry.value===values.server);if(!option&&values.server){option=new Option(values.server,values.server);serverField.add(option);}serverField.value=values.server;}const classField=document.getElementById("playerClass");if(classField){let option=Array.from(classField.options).find(entry=>entry.value===values.playerClass);if(!option&&values.playerClass){option=new Option(values.playerClass,values.playerClass);classField.add(option);}classField.value=values.playerClass;}};[name,server,playerClass,spec].forEach(field=>field?.addEventListener("input",sync));sync();
+  const sync=()=>{const values={name:name?.value.trim()||"",server:server?.value.trim()||"",playerClass:playerClass?.value.trim()||"",spec:spec?.value.trim()||""};document.cookie="guildloot_random_profile="+encodeURIComponent(JSON.stringify(values))+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";document.getElementById("playerName").value=values.name;const serverField=document.getElementById("playerServer");if(serverField) serverField.value=values.server;const classField=document.getElementById("playerClass");if(classField){let option=Array.from(classField.options).find(entry=>entry.value===values.playerClass);if(!option&&values.playerClass){option=new Option(values.playerClass,values.playerClass);classField.add(option);}classField.value=values.playerClass;}};[name,server,playerClass,spec].forEach(field=>field?.addEventListener("input",sync));sync();
 }
 
 if(pinFromUrl){

@@ -1353,6 +1353,8 @@ body.random-raidlead .internal-nav-link{
 }
 </style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="server-selection.js?v=20260906-1"></script>
+<script src="loot-system.js?v=20260906-1"></script>
 </head>
 
 <body>
@@ -1509,6 +1511,8 @@ function applyGuildThemeColor(cssName,rgbName,value){
 }
 async function applyGuildBranding(){
   const guild=await fetchCurrentGuildInfo();
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   const lootName=lootTitleFromGuild(guild);
   const guildName=displayGuildName(guild);
   document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);
@@ -2171,6 +2175,7 @@ function renderRaidView(){
     </section>
   `;
 
+  window.GuildLootServers.refresh();
   loadRaidleadItemOptions();
 }
 
@@ -2200,11 +2205,7 @@ function renderRaidleadPrioForm(){
           </div>
           <div>
             <label for="raidleadPrioServer">Server</label>
-            <select id="raidleadPrioServer">
-              <option value="">Server wählen</option>
-              <option>Everlook</option>
-              <option>Lakeshire</option>
-            </select>
+            <input id="raidleadPrioServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
           </div>
           <div>
             <label for="raidleadPrioClass">Klasse</label>

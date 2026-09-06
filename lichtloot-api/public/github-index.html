@@ -1438,6 +1438,8 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 
 
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="server-selection.js?v=20260906-1"></script>
+<script src="loot-system.js?v=20260906-1"></script>
 </head>
 <body>
 <div class="overlay">
@@ -1678,11 +1680,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 
       <div>
         <label>Server</label>
-        <select id="pinServer" onchange="loadFixedPlayerPinForChar()">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="pinServer" onchange="loadFixedPlayerPinForChar()" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -1756,11 +1754,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 
       <div>
         <label>Server</label>
-        <select id="twinkServer">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="twinkServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -1802,11 +1796,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 
         <div>
           <label>Server</label>
-          <select id="resetServer">
-            <option value="">Server wählen</option>
-            <option>Everlook</option>
-            <option>Lakeshire</option>
-          </select>
+          <input id="resetServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
         </div>
 
         <div class="full">
@@ -2119,6 +2109,7 @@ function syncGuildInputs(value, force){
 
 function selectGuildForLogin(value){
   syncGuildInputs(value, true);
+  window.GuildLootServers.setGuild(loginGuilds.find(guild=>displayGuildName(guild)===value));
 }
 
 async function resolveGuildInputValue(value){
@@ -2353,6 +2344,8 @@ async function fetchCurrentGuildInfo(){
 }
 
 function applyGuildBrand(guild){
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
   const logo=guildLogoUrl(guild);
@@ -4841,6 +4834,8 @@ document.addEventListener('DOMContentLoaded',async function(){
     return;
   }
   const guild=await fetchCurrentGuildInfo();
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   if(isGuildConfigMode()){
     setupGuildConfig(guild);
     return;

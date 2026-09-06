@@ -4262,6 +4262,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 }
 </style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="dkp-widget.js?v=20260906-1"></script>
+<script src="loot-system.js?v=20260906-1"></script>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -5358,6 +5360,7 @@ function lootTitleFromGuild(guild){
 function applyGuildBrand(){
   document.body.classList.toggle("guild-lichtloot", CURRENT_GUILD_SLUG === "lichtloot");
   const guild = currentGuildInfo;
+  window.GuildLootMode.apply(guild);
   const brand = guild ? {
     guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
     lootName: lootTitleFromGuild(guild),
@@ -11829,6 +11832,7 @@ function toggleP0PlusPanel(){
 }
 
 async function loadP0PlusPanel(){
+  if(window.GuildLootDKP.isDkp()) return window.GuildLootDKP.mount("p0PlusPanelContent",{guild:CURRENT_GUILD_SLUG,manager:true,credentials:()=>({masterCode:document.getElementById("masterCode")?.value.trim() || ""})});
   document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
 
   try{

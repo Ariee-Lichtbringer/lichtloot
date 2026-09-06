@@ -1527,6 +1527,8 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
 
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<script src="server-selection.js?v=20260906-1"></script>
+<script src="loot-system.js?v=20260906-1"></script>
 </head>
 <body>
 <div class="overlay">
@@ -1775,11 +1777,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
       <div>
         <label>Dein Server *</label>
-        <select id="pinServer" onchange="updateCreateLoginGuide(); loadFixedPlayerPinForChar()">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="pinServer" onchange="updateCreateLoginGuide(); loadFixedPlayerPinForChar()" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -1871,11 +1869,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
       <div>
         <label>Server</label>
-        <select id="twinkServer">
-          <option value="">Server wählen</option>
-          <option>Everlook</option>
-          <option>Lakeshire</option>
-        </select>
+        <input id="twinkServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
       </div>
 
       <div>
@@ -1917,11 +1911,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
         <div>
           <label>Server</label>
-          <select id="resetServer">
-            <option value="">Server wählen</option>
-            <option>Everlook</option>
-            <option>Lakeshire</option>
-          </select>
+          <input id="resetServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off">
         </div>
 
         <div class="full">
@@ -2164,6 +2154,7 @@ function syncGuildInputs(value, force){
 
 function selectGuildForLogin(value){
   syncGuildInputs(value, true);
+  window.GuildLootServers.setGuild(loginGuilds.find(guild=>displayGuildName(guild)===value));
 }
 
 async function loadGuildDropdowns(){
@@ -2438,6 +2429,8 @@ async function fetchCurrentGuildInfo(){
 }
 
 function applyGuildBrand(guild){
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
   const logo="images/guildloot-logo-concept.webp";
@@ -3079,7 +3072,7 @@ async function createPlayerPinFromSheet(){
 
   if(!input){
     const charName=document.getElementById("pinCharName")?.value.trim();
-    showCreateLoginError(charName ? "pinServer" : "pinCharName",charName ? "Bitte wähle deinen Server aus." : "Bitte gib zuerst deinen Charakternamen ein.");
+    showCreateLoginError(charName ? "pinServer" : "pinCharName",charName ? "Bitte gib deinen Server ein." : "Bitte gib zuerst deinen Charakternamen ein.");
     return;
   }
 
@@ -5147,6 +5140,8 @@ document.addEventListener('DOMContentLoaded',async function(){
     return;
   }
   const guild=await fetchCurrentGuildInfo();
+  window.GuildLootServers.setGuild(guild);
+  window.GuildLootMode.apply(guild);
   if(isGuildConfigMode()){
     setupGuildConfig(guild);
     return;
@@ -5180,7 +5175,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     </div>
     <div class="player-reset-modal-form">
       <div><label for="modalResetCharName">Charaktername</label><input id="modalResetCharName" type="text" placeholder="z. B. Ariee" autocomplete="off"></div>
-      <div><label for="modalResetServer">Server</label><select id="modalResetServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select></div>
+      <div><label for="modalResetServer">Server</label><input id="modalResetServer" type="text" list="guildlootServerSuggestions" placeholder="Server eingeben oder auswählen" data-guildloot-server autocomplete="off"></div>
       <div class="full"><label for="modalResetSecurityQuestion">Sicherheitsfrage</label><select id="modalResetSecurityQuestion"><option value="">Sicherheitsfrage auswählen</option><option value="pet">Wie hieß dein erstes Haustier?</option><option value="city">In welcher Stadt wurdest du geboren?</option><option value="teacher">Wie hieß dein erster Klassenlehrer?</option><option value="food">Was ist dein Lieblingsessen?</option></select></div>
       <div class="full"><label for="modalResetSecurityAnswer">Antwort</label><input id="modalResetSecurityAnswer" type="text" placeholder="Antwort auf deine Sicherheitsfrage" autocomplete="off"></div>
       <div class="full"><label for="modalResetNewPlayerPin">Neuer SpielerLogin</label><input id="modalResetNewPlayerPin" type="text" minlength="4" maxlength="8" placeholder="4–8 Zeichen, z. B. ARIEE25" autocomplete="new-password" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"></div>

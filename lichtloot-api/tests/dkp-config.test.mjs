@@ -1,0 +1,31 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {createDkpService,lootSystem} from '../src/dkp.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db=new PGlite(),id=randomUUID();
+await db.exec(`create table guilds(id uuid primary key,slug text,name text,server text,logo_url text,background_url text,discord_guild_id text,created_at timestamptz default now(),updated_at timestamptz default now());
+create table guild_settings(guild_id uuid primary key,points_label text default 'P0/P0+',primary_color text,accent_color text,layout_json jsonb,updated_at timestamptz default now());
+create table players(id uuid primary key,guild_id uuid,player_pin text);create table characters(id uuid primary key,player_id uuid,name text,server text,class_name text);`);
+await db.query("insert into guilds(id,slug,name,server) values($1,'test','Test','Testrealm')",[id]);await db.query(`insert into guild_settings(guild_id,layout_json) values($1,'{"lootSystem":"dkp","onboarding":{"channelsSynced":true}}')`,[id]);
+const pool={connect:async()=>({query:(s,a)=>db.query(s,a),release(){}})},query=(s,a)=>a?db.query(s,a):db.exec(s);
+const dkpService=createDkpService({pool,query,authorize(){},authorizeMode(){}});await dkpService.ensure();
+const src=fs.readFileSync(new URL('../src/server.js',import.meta.url),'utf8');
+function fn(name){const start=src.search(new RegExp('(?:async )?function '+name+'\\('));assert(start>=0);const tail=src.slice(start);const end=tail.slice(1).search(/\n(?:async )?function /);return end<0?tail:tail.slice(0,end+1);}
+const context=vm.createContext({pool,query:(s,a)=>db.query(s,a),dkpService,lootSystem,clean:v=>String(v??'').trim(),normalizePin:v=>String(v??'').trim(),resolveGuildSlug:v=>v,
+ ensureGuildLayoutSchema:async()=>{},ensureGuildDiscordConfigSchema:async()=>{},requireGuild:async()=>({id,slug:'test'}),requireMasterCodeForGuild:(g,c)=>{if(c!=='MASTER')throw Object.assign(Error('Denied'),{statusCode:403});},guildLogoUrlForSlug:(slug,url)=>url||'',mergeGuildLayoutDefaults:(slug,layout)=>layout,normalizeGuildApplicationRow:r=>r});
+vm.runInContext(['ensureGuildApplicationSchema','submitGuildApplication','updateGuildConfig'].map(fn).join('\n'),context);
+const application=await context.submitGuildApplication({query:{guildName:'Neue Gilde',contactName:'Kontakt',contactEmail:'test@example.test',server:'Neuer Realm',lootSystem:'dkp'}});
+assert.equal(application.application.loot_system,'dkp');
+const fallback=await context.submitGuildApplication({query:{guildName:'Standard',contactName:'Kontakt',contactEmail:'test@example.test'}});assert.equal(fallback.application.loot_system,'prio');
+await assert.rejects(()=>context.submitGuildApplication({query:{lootSystem:'invalid'}}),e=>e.statusCode===400);
+const saved=await context.updateGuildConfig({query:{guild:'test',masterCode:'MASTER'},body:{layout:{custom:'keep'}}});assert.equal(saved.guild.layout.lootSystem,'dkp');assert.equal(saved.guild.layout.custom,'keep');
+await assert.rejects(()=>context.updateGuildConfig({query:{guild:'test',masterCode:'BAD'},body:{layout:{lootSystem:'prio'}}}),e=>e.statusCode===403);
+const auction=randomUUID();await db.query("insert into dkp_auctions(id,guild_id,item,min_bid) values($1,$2,'Item',1)",[auction,id]);
+await assert.rejects(()=>context.updateGuildConfig({query:{guild:'test',masterCode:'MASTER'},body:{layout:{lootSystem:'prio'}}}),e=>e.statusCode===409);
+assert.equal((await db.query('select layout_json from guild_settings where guild_id=$1',[id])).rows[0].layout_json.lootSystem,'dkp');
+await db.query("update dkp_auctions set status='cancelled' where id=$1",[auction]);
+const switched=await context.updateGuildConfig({query:{guild:'test',masterCode:'MASTER'},body:{layout:{lootSystem:'prio'}}});assert.equal(switched.guild.layout.lootSystem,'prio');
+await assert.rejects(()=>context.updateGuildConfig({query:{guild:'test',masterCode:'MASTER'},body:{layout:{lootSystem:'invalid'}}}),e=>e.statusCode===400);
+await db.close();console.log('DKP application and existing configuration integration passed: persisted choice, Prio default, permission checks, legacy layout preservation and open-auction guard.');

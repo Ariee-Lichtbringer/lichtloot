@@ -9,6 +9,7 @@
     "sheet:read": "node scripts/read-log-sheet.mjs",
     "db:migrate:contracts": "node scripts/run-sql-file.mjs migrations/014_foerderverein_contract_files.sql",
     "db:import:contracts": "node scripts/import-foerderverein-contracts.mjs",
+    "test:dkp": "node tests/dkp.test.mjs && node tests/dkp-config.test.mjs",
     "test:raid-completion": "node tests/raid-completion.test.cjs",
     "test:raid-loading": "node tests/raid-loading.test.cjs",
     "test:support": "node tests/support.test.cjs",
