@@ -1,3 +1,4 @@
+import {createSupportNotices,SUPPORT_NOTICE_TEXT} from "./support-notices.js";
 import { createSupportInbox } from "./support-inbox.js";
 import { createGmailApi } from "./gmail-api.js";
 import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
@@ -2431,8 +2432,19 @@ function normalizeSupportTicketRow(row, internal = false) {
   };
 }
 
+const supportNotices=createSupportNotices({query});
+async function supportBroadcastTargets(){
+ await ensureDiscordChannelSchema();await ensurePoPostEntriesSchema();
+ const posts=(await query(`select guild_id,discord_channel_id as channel_id,discord_message_id as message_id from raids where coalesce(discord_channel_id,'')<>'' and coalesce(discord_message_id,'')<>''
+ union select guild_id,coalesce(nullif(target_channel_id,''),source_channel_id),discord_message_id from po_post_entries where archived_at is null and coalesce(discord_message_id,'')<>''`)).rows;
+ if(p0Pool){await ensureP0OnlySchema();posts.push(...(await p0Query(`select guild_id,discord_channel_id as channel_id,discord_message_id as message_id from p0_only_events where deleted_at is null and coalesce(discord_channel_id,'')<>'' and coalesce(discord_message_id,'')<>''`)).rows);}
+ const guilds=(await query(`select id,slug,discord_guild_id from guilds`)).rows,channels=(await query(`select distinct channel_id,discord_guild_id from discord_bot_channels`)).rows,targets=new Map();
+ for(const post of posts){const g=guilds.find(g=>g.id===post.guild_id),known=channels.find(c=>c.channel_id===post.channel_id);const discordGuildId=clean(g?.discord_guild_id||known?.discord_guild_id);if(!g||!/^\d{15,22}$/.test(post.channel_id||'')||!/^\d{15,22}$/.test(post.message_id||'')||!discordGuildId)continue;if(known?.discord_guild_id&&known.discord_guild_id!==discordGuildId)continue;if(!targets.has(post.channel_id))targets.set(post.channel_id,{guildId:g.id,guildSlug:g.slug,channelId:post.channel_id,discordGuildId,proofMessageId:post.message_id,proofMessageIds:[]});const target=targets.get(post.channel_id);if(!target.proofMessageIds.includes(post.message_id))target.proofMessageIds.push(post.message_id);target.proofMessageIds.sort((a,b)=>BigInt(a)>BigInt(b)?-1:1);target.proofMessageIds=target.proofMessageIds.slice(0,10);}
+ return [...targets.values()];
+}
+
 async function submitSupportTicket({ query: params = {}, body = {} }) {
-  await ensureSupportTicketSchema();
+  await ensureSupportTicketSchema();await supportNotices.ensure();
   const values = { ...params, ...body };
   const guild = await requireGuild(resolveGuildSlug(values.guild || values.guildSlug || defaultGuildSlug));
   const contactName = clean(values.contactName).slice(0, 120);
@@ -2460,12 +2472,13 @@ async function submitSupportTicket({ query: params = {}, body = {} }) {
   const screenshotName=screenshotData?clean(values.screenshotName).slice(0,180):'';
   const result = await query(
     `insert into platform_support_tickets
-       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,screenshot_data,screenshot_name,notification_status)
-     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending')
+       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,screenshot_data,screenshot_name,notification_status,discord_notice_pending)
+     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending',true)
      returning *`,
     [guild.id, guild.slug, guild.name, contactName, contactEmail, contactDiscord, category, subject, message, supportPageUrl(values.pageUrl), screenshotData, screenshotName]
   );
   void sendSupportNotification(result.rows[0].id).catch(()=>{});
+  void supportNotices.queueDMs().catch(()=>{});
   return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
 }
 
@@ -31784,6 +31797,24 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(saved);
     }
 
+    if(action==='playerClaimSupportNews'){
+      enforceSecurityRateLimit(req,'support-news',60,15*60*1000);
+      const newsGuild=await requireGuild(resolveGuildSlug(req.body.guild||defaultGuildSlug));
+      const player=await findPlayerByPin(newsGuild.id,normalizePin(req.body.playerPin));
+      if(!player||player.is_blocked||player.approval_status==='rejected')return res.status(403).json({success:false,error:'Bitte mit einem gültigen SpielerLogin anmelden.'});
+      await ensureSupportTicketSchema();return res.json(await supportNotices.claimNews(player.id));
+    }
+    if(['platformPreviewSupportBroadcast','platformQueueSupportBroadcast','platformSupportDiscordStatus'].includes(action)){
+      requirePlatformMasterCode(req.body.masterCode);await ensureSupportTicketSchema();await supportNotices.ensure();
+      if(action==='platformSupportDiscordStatus'){const rows=await query(`select payload->>'kind' as kind,coalesce(payload->>'deliveryState',status) as state,count(*)::int as count from bot_update_queue where type='po_support_notice' group by 1,2`);return res.json({success:true,configured:/^\d{15,22}$/.test(process.env.SUPPORT_DISCORD_USER_ID||''),deliveries:rows.rows});}
+      const targets=await supportBroadcastTargets();if(action==='platformPreviewSupportBroadcast')return res.json({success:true,targets,content:SUPPORT_NOTICE_TEXT});
+      return res.json(await supportNotices.queueBroadcast(targets));
+    }
+    if(['botClaimSupportNotice','botFinishSupportNotice'].includes(action)){
+      requireMasterOrQueueToken(req.body);if(!isUuid(req.body.id))return res.status(400).json({success:false,error:'Ungültiger Auftrag'});
+      return res.json(action==='botClaimSupportNotice'?await supportNotices.claimDelivery(req.body.id):await supportNotices.finishDelivery(req.body.id,req.body.state,req.body.messageId,req.body.error));
+    }
+
     if (action === "submitSupportTicket") {
       enforceSecurityRateLimit(req, "support-ticket", 8, 60 * 60 * 1000);
       const ticket = await submitSupportTicket({ query: req.query, body: req.body });
@@ -32842,6 +32873,8 @@ async function runMissingPrioReminderTick() {
 app.listen(port, () => {
   const inboxTick=()=>supportInbox.tick().catch(()=>console.error('Support inbox check failed'));
   setTimeout(inboxTick,15000).unref();setInterval(inboxTick,60000).unref();
+  const discordSupportTick=async()=>{await ensureSupportTicketSchema();await supportNotices.queueDMs();};
+  setTimeout(()=>discordSupportTick().catch(()=>console.error('Support Discord worker failed')),12000).unref();setInterval(()=>discordSupportTick().catch(()=>console.error('Support Discord worker failed')),60000).unref();
   const supportTick=()=>runSupportNotificationTick().catch(()=>console.error('Support notification worker failed'));
   setTimeout(supportTick,10000).unref();setInterval(supportTick,60000).unref();
   console.log(`LichtLoot API listening on port ${port}`);

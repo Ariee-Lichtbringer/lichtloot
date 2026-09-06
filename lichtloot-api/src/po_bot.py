@@ -1,3 +1,4 @@
+from support_notice import deliver_support_notice
 from bot_offline_notice import send_offline_notice
 from copyright_notice import copyright_text, without_copyright
 import asyncio
@@ -6055,14 +6056,14 @@ async def po_queue_loop():
                 "action": "lichtbotGetQueueAllGuilds",
                 "queueToken": QUEUE_TOKEN,
                 "limit": "50",
-                "types": "po_offline_notice,player_login_approval_notice,player_login_granted_notice,po_post,p0_post_refresh,raid_announcement,raid_announcement_refresh,raid_announcement_role_notice,raid_status_staff_notice,loot_master_leadpin_notice,po_release_request_notice,po_release_granted_notice,po_rejection_notice,po_approval_notice,po_post_delete,free_discord_embed,raid_calendar",
+                "types": "po_support_notice,po_offline_notice,player_login_approval_notice,player_login_granted_notice,po_post,p0_post_refresh,raid_announcement,raid_announcement_refresh,raid_announcement_role_notice,raid_status_staff_notice,loot_master_leadpin_notice,po_release_request_notice,po_release_granted_notice,po_rejection_notice,po_approval_notice,po_post_delete,free_discord_embed,raid_calendar",
                 "t": int(time.time()),
             })
             if result.get("success"):
                 items = result.get("items") or []
                 po_items = [
                     item for item in items
-                    if clean(item.get("type")) in {"po_offline_notice", "player_login_approval_notice", "player_login_granted_notice", "po_post", "p0_post_refresh"}
+                    if clean(item.get("type")) in {"po_support_notice", "po_offline_notice", "player_login_approval_notice", "player_login_granted_notice", "po_post", "p0_post_refresh"}
                     or clean(item.get("type")) in {
                         "raid_announcement",
                         "raid_announcement_refresh",
@@ -6101,6 +6102,23 @@ async def po_queue_loop():
                     mode = clean(payload.get("mode")).lower() or "signup"
                     try:
                         item_type = clean(item.get("type"))
+                        if item_type == "po_support_notice":
+                            notice_id = item.get("rowNumber")
+                            claim = await asyncio.to_thread(api_post, {"action":"botClaimSupportNotice","queueToken":QUEUE_TOKEN,"id":notice_id})
+                            if not claim.get("success"):
+                                raise RuntimeError("Supporthinweis konnte nicht beansprucht werden")
+                            if not claim.get("claimed"):
+                                await resolve_queue_item(notice_id)
+                                continue
+                            try:
+                                message_id = await deliver_support_notice(client, claim["payload"], discord)
+                                state, delivery_error = "sent", ""
+                            except Exception as error:
+                                message_id, state, delivery_error = "", "failed", type(error).__name__
+                            finished = await asyncio.to_thread(api_post, {"action":"botFinishSupportNotice","queueToken":QUEUE_TOKEN,"id":notice_id,"state":state,"messageId":message_id,"error":delivery_error})
+                            if not finished.get("success"):
+                                raise RuntimeError("Support-Zustellstatus konnte nicht gespeichert werden")
+                            continue
                         if not await claim_queue_item(item.get("rowNumber")):
                             print(
                                 "Queue-Auftrag bereits von einer anderen Bot-Instanz übernommen: "

@@ -9937,6 +9937,7 @@ async function submitMobileLootLogin(event){
 
 const LICHTLOOT_NEWS_VERSION="2026-08-31-guildloot-random-priolists";
 const LICHTLOOT_NEWS_ENTRIES=[
+  {date:"2026-09-06",title:"Fehler oder Probleme? Bitte den Support nutzen",text:"Nutze den Button „Support · Fehler melden“ unten auf der jeweiligen Seite. Beschreibe kurz das Problem und hänge bei Bedarf einen Screenshot an. Gib deine E-Mail-Adresse oder deinen Discord-Namen für eine Rückmeldung an. So erreicht deine Meldung direkt die GuildLoot-Administration.",linkLabel:"Support öffnen",action:"support"},
   {
     date:"2026-08-31",
     title:"Random-Raids und unabhängige Priolisten",
@@ -9985,6 +9986,7 @@ function openLichtlootNews(){
 }
 
 function openLichtlootNewsFeature(action){
+  if(action==="support"){closeLichtlootNews();document.querySelector("[data-guild-support]")?.click();return;}
   if(action==="random-create"){
     closeLichtlootNews();
     const target=new URL("index.html",window.location.href);
@@ -10026,7 +10028,7 @@ function installLichtlootNews(){
   }
   let lastSeen="";
   try{ lastSeen=localStorage.getItem(lichtlootNewsStorageKey())||""; }catch(error){}
-  if(lastSeen!==LICHTLOOT_NEWS_VERSION) window.setTimeout(openLichtlootNews,350);
+  // Automatic support news is handled by the shared support script, once per player account.
 }
 
 document.addEventListener("DOMContentLoaded",async ()=>{
