@@ -5318,6 +5318,30 @@ body.worldbuff-only .master-only{display:none!important}
 </style>
 <link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
 <script src="raid-closeout.js?v=20260906-1"></script>
+<style id="leadership-workflow-style">
+.leadership-tasks{margin:18px 0;padding:18px 20px 14px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(115deg,var(--panel),var(--panel2));box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.leadership-tasks .leadership-tasks-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding:0 2px}
+.leadership-tasks h2{margin:0;color:var(--text);font-size:15px;font-weight:650;letter-spacing:.01em;line-height:1.4}
+.leadership-task-refresh{display:inline-flex;align-items:center;gap:7px;padding:5px 0 5px 8px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.leadership-task-refresh svg{width:14px;height:14px}.leadership-task-refresh:hover{color:var(--text)}
+.leadership-task-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.leadership-task{position:relative;display:flex;align-items:center;gap:12px;min-width:0;min-height:76px;padding:13px 16px;border:0;border-radius:8px;text-align:left;background:transparent;color:var(--muted);font:inherit;cursor:pointer;transition:background .15s ease}
+.leadership-task:not(:last-child)::after{content:'';position:absolute;right:-2px;top:17px;bottom:17px;width:1px;background:var(--line)}
+.leadership-task-icon{display:grid;place-items:center;flex:0 0 32px;height:32px;border-radius:9px;background:color-mix(in srgb,var(--soft) 40%,transparent);color:var(--muted)}
+.leadership-task-icon svg{width:17px;height:17px}.leadership-task-copy{display:grid;gap:5px;flex:1;min-width:0}
+.leadership-task-label{font-size:13px;font-weight:550;line-height:1.35;color:var(--text)}
+.leadership-task small{display:block;font-size:11px;font-weight:400;color:var(--muted);line-height:1.4}
+.leadership-task strong{flex:0 0 auto;min-width:30px;text-align:center;color:color-mix(in srgb,var(--muted) 75%,transparent);font-size:23px;font-weight:500;line-height:1.3;font-variant-numeric:tabular-nums}
+.leadership-task.has-tasks{background:rgba(var(--gold-rgb),.055)}
+.leadership-task.has-tasks .leadership-task-icon{background:rgba(var(--gold-rgb),.10);color:var(--gold)}
+.leadership-task.has-tasks strong{color:var(--gold);font-weight:650}
+.leadership-task.has-tasks small{color:color-mix(in srgb,var(--gold) 65%,var(--text))}
+.leadership-task:hover{background:color-mix(in srgb,var(--soft) 50%,transparent)}.leadership-task.has-tasks:hover{background:rgba(var(--gold-rgb),.10)}
+.leadership-task:focus-visible,.leadership-task-refresh:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media(max-width:1100px){.leadership-task-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.leadership-task:nth-child(2)::after{display:none}}
+@media(max-width:560px){.leadership-tasks{padding:15px 12px 10px}.leadership-tasks .leadership-tasks-head{margin-bottom:8px;padding:0 8px}.leadership-task-grid{grid-template-columns:1fr;gap:2px}.leadership-task{min-height:64px;padding:10px}.leadership-task::after{display:none}}
+@media(prefers-reduced-motion:reduce){.leadership-task{transition:none}}
+</style>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -5449,6 +5473,10 @@ body.worldbuff-only .master-only{display:none!important}
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
   </section>
 
+  <section class="leadership-tasks" id="leadershipTasks" aria-labelledby="leadershipTasksTitle">
+    <div class="leadership-tasks-head"><h2 id="leadershipTasksTitle">Offene Aufgaben</h2><button class="leadership-task-refresh" type="button" onclick="loadLeadershipTasks()" aria-label="Aufgaben aktualisieren"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 19.5 10M4.5 14a8 8 0 0 0 13.4 3.9"/></svg><span>Aktualisieren</span></button></div>
+    <div class="leadership-task-grid" id="leadershipTaskGrid" aria-live="polite">Nach dem Freischalten werden deine Aufgaben geladen.</div>
+  </section>
   <details class="panel">
     <summary>🚨 Notfall-Prio CSV importieren</summary>
     <div style="display:grid;gap:12px;padding-top:14px">
@@ -6997,6 +7025,8 @@ function setStatusHtml(html, type){
 
 function setGuildLocked(locked){
   document.body.classList.toggle("guild-locked", Boolean(locked));
+  if(locked){leadershipTaskState.generation++;leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.loading=false;}
+  renderLeadershipTasks();
 }
 
 function setWorldbuffOnlyMode(enabled){
@@ -7567,6 +7597,7 @@ async function loadOverview(options){
     if(document.getElementById("raidHelperPanel")?.open) hideRaidDashboard();
     else showRaidDashboard();
     renderAll();
+    loadLeadershipTasks();
     handleRaidHelperDeepLink();
     handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
@@ -7586,6 +7617,63 @@ async function loadOverview(options){
     setGuildLocked(true);
     setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
   }
+}
+
+// Task counters keep unknown/error states distinct from a confirmed zero.
+let leadershipTaskState={requests:null,messages:null,loading:false,generation:0};
+function leadershipPendingTransfers(){
+  return (guildData.raids||[]).filter(raid=>{
+    const status=normalize(raid.status||'');
+    return !raid.deletedAt&&!['archiviert','archive','gelöscht','geloescht','deleted'].includes(status)
+      && /^\d{4}-\d{2}-\d{2}$/.test(String(raid.raidDate||''))
+      && raid.raidDate<todayIsoDate()&&needsP0PlusTransferBeforeArchive(raid);
+  });
+}
+function renderLeadershipTasks(){
+  const box=document.getElementById('leadershipTaskGrid');
+  if(!box)return;
+  const ready=Boolean(lastOverviewLoadedAt)&&!document.body.classList.contains('guild-locked');
+  const pending=ready?groupPlayersByMain(guildData.players||[]).filter(group=>String(group.approvalStatus||'approved').toLowerCase()!=='approved').length:null;
+  const rows=[
+    ['P0-Freigaben',ready?leadershipTaskState.requests:null,'Anträge prüfen','openP0ReleasePanel()'],
+    ['Spielerzugänge',pending,'Zugänge freigeben','openPendingLoginReview()'],
+    ['Postfach',ready?leadershipTaskState.messages:null,'Postfach öffnen','openIssueInboxPanel()'],
+    ['Punkteübertragung',ready?leadershipPendingTransfers().length:null,'Vergangene Raids prüfen','openLeadershipPendingTransfers()']
+  ];
+  const icons=[
+    '<path d="M9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M9 3h6v4H9zM8 14l3 3 5-6"/>',
+    '<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"/>',
+    '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 7 9 6 9-6"/>',
+    '<path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/>'
+  ];
+  box.innerHTML=rows.map(([label,count,hint,action],index)=>{
+    const detail=count===null?(leadershipTaskState.loading?'Wird geladen …':'Noch nicht geladen'):count===0?'Keine offenen Einträge':hint+' →';
+    return `<button class="leadership-task ${count>0?'has-tasks':count===0?'is-clear':'is-unknown'}" type="button" onclick="${action}" aria-label="${label}: ${count===null?'Status unbekannt':count+' offen'}. ${hint}"><span class="leadership-task-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${icons[index]}</svg></span><span class="leadership-task-copy"><span class="leadership-task-label">${label}</span><small>${detail}</small></span><strong>${count===null?'—':count}</strong></button>`;
+  }).join('');
+}
+async function loadLeadershipTasks(){
+  const code=document.getElementById('masterCode')?.value.trim();
+  if(!code||document.body.classList.contains('guild-locked'))return;
+  const generation=++leadershipTaskState.generation;
+  leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.loading=true;renderLeadershipTasks();
+  await Promise.allSettled([
+    ['requests','guildGetPoReleaseRequests'],['messages','guildGetIssueReports']
+  ].map(async([key,action])=>{
+    const result=await railwayApi({action,masterCode:code},15000);
+    if(generation!==leadershipTaskState.generation||!result?.success)return;
+    const entries=key==='requests'?result.entries:result.reports;
+    if(Array.isArray(entries)){leadershipTaskState[key]=key==='requests'?entries.filter(row=>row.status==='pending').length:entries.length;if(key==='messages')issueReports=entries;}
+  }));
+  if(generation===leadershipTaskState.generation){leadershipTaskState.loading=false;renderLeadershipTasks();}
+}
+function openLeadershipPendingTransfers(){
+  const raids=leadershipPendingTransfers();
+  document.getElementById('prioModalTitle').textContent='Ausstehende Punkteübertragungen';
+  document.getElementById('prioModalSubline').textContent='Vergangene, nicht archivierte Raids. Teilnahme und Item-Erhalt vor der Übertragung prüfen.';
+  const content=document.getElementById('prioModalContent');
+  content.innerHTML=raids.length?raids.map((raid,i)=>`<div class="status"><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong> · ${escapeHtml(formatRaidDate(raid.raidDate))} <button class="small-btn primary" type="button" data-task-raid="${i}">Raid prüfen</button></div>`).join(''):'<div class="status good">Keine ausstehenden Punkteübertragungen für vergangene Raids.</div>';
+  content.querySelectorAll('[data-task-raid]').forEach(button=>button.onclick=()=>{closePrioModal();openRaidInUnifiedOverview(raids[Number(button.dataset.taskRaid)].raidId||raids[Number(button.dataset.taskRaid)].id);});
+  document.getElementById('prioModal').classList.remove('hidden');
 }
 
 let deferredRenderGeneration=0;
@@ -9022,6 +9110,7 @@ function renderRaidListFilters(){
 }
 
 function renderSummary(){
+  renderLeadershipTasks();
   const raids = (guildData.raids || []).filter(raid => {
     const status = normalize(raid.status || "");
     return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt;
@@ -9037,6 +9126,7 @@ function renderSummary(){
   if(linkedCounter) linkedCounter.textContent = linked;
   const issueCounter = document.getElementById("issueCount");
   if(issueCounter) issueCounter.textContent = issueReports.length;
+  if(leadershipTaskState.messages!==null){leadershipTaskState.messages=issueReports.length;renderLeadershipTasks();}
   const pendingGroups=groupPlayersByMain(players).filter(group=>String(group.approvalStatus||"approved").toLowerCase()!=="approved");
   const pendingCard=document.getElementById("pendingLoginCard");
   const pendingCount=document.getElementById("pendingLoginCount");
@@ -18681,6 +18771,7 @@ async function loadP0ReleasePanel(){
       15000
     ).then(result=>{
       poReleaseRequests = result?.success && Array.isArray(result.entries) ? result.entries : [];
+      leadershipTaskState.requests=result?.success&&Array.isArray(result.entries)?poReleaseRequests.filter(row=>row.status==="pending").length:null;renderLeadershipTasks();
       renderP0ReleasePanelContent();
     });
     const displayTask = railwayApi({ action:"guildGetPoReleaseDisplaySettings",masterCode }, 10000).then(async result=>{
@@ -19945,6 +20036,7 @@ async function loadIssueInboxPanel(){
     }
 
     issueReports = Array.isArray(result.reports) ? result.reports : [];
+    leadershipTaskState.messages=issueReports.length;renderLeadershipTasks();
     try{
       const sentResult = await railwayApi({ action:"guildGetSentPlayerMessages", masterCode });
       guildSentMessages = sentResult && sentResult.success && Array.isArray(sentResult.messages) ? sentResult.messages : [];
