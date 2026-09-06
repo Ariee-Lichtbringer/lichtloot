@@ -12054,7 +12054,7 @@ async function savePoPostEntry({ guildId, query: params }) {
 
   const releaseRaid = normalizePoReleaseRaid(raidKey);
   const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-  await requireGuildPoPlusItem(guildId, itemGameId, itemName, raidKey);
+  await requireGuildPoItem(guildId, itemGameId, itemName, raidKey);
   const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, itemGameId, itemName, raidKey);
   if (itemRequiresRelease && releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
@@ -13571,7 +13571,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
-    await requireGuildPoPlusItem(guildId, item.id, item.name, raidType);
+    await requireGuildPoItem(guildId, item.id, item.name, raidType);
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
 
@@ -24786,6 +24786,8 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     ? await resolveLinkedRegularRaidForP0Event(guildId, raid, { persist: true })
     : null;
 
+  // Discord accepts every configured P0 item. P0+ controls points and
+  // release classification at save time, not whether a P0 item is selectable.
   const itemResult = await query(
     `select
        i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
@@ -24804,7 +24806,6 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
          and gpi.item_id = i.id
          and lower(gpi.raid_type) = any($3)
          and gpi.enabled = true
-         and gpi.po_plus_enabled = true
      )
      group by i.id
      order by i.name asc`,
@@ -25240,7 +25241,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       throw error;
     }
 
-    await requireGuildPoPlusItem(guildId, item.id, item.name, raid.raid_type);
+    await requireGuildPoItem(guildId, item.id, item.name, raid.raid_type);
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
