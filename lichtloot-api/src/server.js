@@ -1,3 +1,4 @@
+import {createPrioReminderPosts} from "./prio-reminder-posts.js";
 import { createDkpService, lootSystem } from "./dkp.js";
 import {createSupportNotices,SUPPORT_NOTICE_TEXT} from "./support-notices.js";
 import { createSupportInbox } from "./support-inbox.js";
@@ -28,6 +29,8 @@ const raidWorkbookService = createRaidWorkbookService({
   publicBaseUrl: process.env.GUILDLOOT_PUBLIC_URL || "https://lichtloot.de",
   apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
 });
+
+const reminderPosts=createPrioReminderPosts({pool,query,activeRaidSql:activePrioReminderRaidSql,raidTypes:raidTypeSearchValues});
 
 const dkpService = createDkpService({pool,query,authorize:(guild,params)=>requireRaidleadP0MasterCodeForGuild(guild,params.masterCode),authorizeMode:(guild,params)=>requireMasterCodeForGuild(guild,params.masterCode,"dkpSetMode",params)});
 
@@ -8158,99 +8161,7 @@ async function isCurrentRaidForPrioReminder(guildId, raidId) {
 }
 
 async function ensureRaidMissingPrioRemindersQueued() {
-  await ensureRaidSchema();
-  const upcomingRaids = await query(
-    `select r.id, r.guild_id, r.external_raid_id, r.raid_type, r.name,
-            r.raid_date, r.raid_time, r.raid_pin, r.player_link,
-            r.discord_channel_id
-     from raids r
-     where r.deleted_at is null
-       and not exists (select 1 from guild_settings gs where gs.guild_id=r.guild_id and gs.layout_json->>'lootSystem'='dkp')
-       and r.raidhelper_enabled = true
-       and r.prio_enabled = true
-       and coalesce(r.discord_channel_id, '') <> ''
-       and coalesce(r.external_raid_id, '') !~* '^P0-'
-       and lower(coalesce(r.status, '')) not in
-         ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
-       and coalesce(r.raid_time, '') ~ '^[0-9]{1,2}:[0-9]{2}'
-       and ((r.raid_date::timestamp + substring(r.raid_time from '([0-9]{1,2}:[0-9]{2})')::time)
-              at time zone 'Europe/Berlin')
-           between now() + interval '29 minutes' and now() + interval '31 minutes'
-       and not exists (
-         select 1
-         from bot_update_queue q
-         where q.guild_id = r.guild_id
-           and q.type = 'raid_missing_prio_reminder'
-           and coalesce(q.payload->>'source', 'automatic') = 'automatic'
-           and q.payload->>'raidId' = coalesce(nullif(r.external_raid_id, ''), r.id::text)
-           and q.payload->>'raidDate' = r.raid_date::text
-       )
-     order by r.raid_date, r.raid_time
-     limit 50`
-  );
-
-  const attendingStatuses = ['signed', 'registered', 'angemeldet', 'confirmed', 'fest'];
-  for (const raid of upcomingRaids.rows) {
-    const internalMissing = await query(
-      `select c.name as player_name
-       from raid_signups rs
-       join characters c on c.id = rs.character_id
-       join players signup_player on signup_player.id = c.player_id
-       where rs.raid_id = $1
-         and lower(coalesce(rs.status, 'signed')) = any($2)
-         and not exists (
-           select 1
-           from prios pr
-           join characters prio_character on prio_character.id = pr.character_id
-           where pr.raid_id = $1
-             and prio_character.player_id = signup_player.id
-             and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
-         )
-       order by lower(c.name)`,
-      [raid.id, attendingStatuses]
-    );
-    const externalMissing = await query(
-      `select res.player_name
-       from raid_external_signups res
-       where res.guild_id = $1 and res.raid_id = $2
-         and lower(coalesce(res.status, 'signed')) = any($3)
-         and not exists (
-           select 1
-           from prios pr
-           join characters c on c.id = pr.character_id
-           join players p on p.id = c.player_id
-           where pr.raid_id = $2 and p.guild_id = $1
-             and lower(c.name) = lower(res.player_name)
-             and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
-         )
-       order by lower(res.player_name)`,
-      [raid.guild_id, raid.id, attendingStatuses]
-    );
-    const missingCharacters = Array.from(new Map(
-      [...internalMissing.rows, ...externalMissing.rows]
-        .map(row => clean(row.player_name))
-        .filter(Boolean)
-        .map(name => [name.toLocaleLowerCase('de-DE'), name])
-    ).values());
-    if (!missingCharacters.length) continue;
-
-    await enqueueBotUpdate({
-      guildId: raid.guild_id,
-      type: 'raid_missing_prio_reminder',
-      payload: {
-        raidId: raidPublicId(raid),
-        raid: normalizeRaidType(raid.raid_type),
-        raidName: raid.name || displayRaidName(raid.raid_type),
-        raidDate: raid.raid_date instanceof Date ? raid.raid_date.toISOString().slice(0, 10) : clean(raid.raid_date),
-        raidTime: clean(raid.raid_time),
-        prioPin: clean(raid.raid_pin || raid.player_link),
-        channelId: clean(raid.discord_channel_id),
-        discordChannelId: clean(raid.discord_channel_id),
-        source: 'automatic',
-        missingCharacters
-      }
-    });
-  }
+  return queueDueMissingPrioReminders();
 }
 
 async function queueRaidMissingPrioReminder({ guildId, query: params }) {
@@ -8348,54 +8259,12 @@ async function queueRaidMissingPrioReminder({ guildId, query: params }) {
 }
 
 async function enqueueRaidMissingPrioReminderRefresh(guildId, raid, characterName) {
-  if (!raid?.id || !await isCurrentRaidForPrioReminder(guildId, raid.id)) {
-    return { success:true, skipped:true, reason:"raid_reminder_expired_or_changed" };
-  }
-  const raidId = raidPublicId(raid);
-  const previous = await query(
-    `select payload
-     from bot_update_queue q
-     where guild_id = $1
-       and type = 'raid_missing_prio_reminder'
-       and payload->>'raidId' = $2
-       and coalesce(payload->>'messageId', '') <> ''
-       and ${currentPrioReminderQueueSql()}
-     order by created_at desc
-     limit 1`,
-    [guildId, raidId]
-  );
-  const payload = previous.rows[0]?.payload;
-  if (!payload) return { success: true, skipped: true, reason: "missing_prio_reminder_not_posted" };
-
-  if ((payload.completedCharacters || []).some(name => clean(name).toLocaleLowerCase('de-DE') === clean(characterName).toLocaleLowerCase('de-DE'))) {
-    return { success:true, skipped:true, reason:"character_already_completed" };
-  }
-  const trackedCharacters = Array.from(new Map(
-    [...(payload.trackedCharacters || payload.missingCharacters || [])]
-      .map(clean)
-      .filter(Boolean)
-      .map(name => [name.toLocaleLowerCase('de-DE'), name])
-  ).values());
-  const completedCharacters = Array.from(new Map(
-    [...(payload.completedCharacters || []), characterName]
-      .map(clean)
-      .filter(name => trackedCharacters.some(tracked => tracked.toLocaleLowerCase('de-DE') === name.toLocaleLowerCase('de-DE')))
-      .map(name => [name.toLocaleLowerCase('de-DE'), name])
-  ).values());
-  if (!completedCharacters.length) {
-    return { success: true, skipped: true, reason: "saved_character_not_in_reminder" };
-  }
-  return enqueueBotUpdate({
-    guildId,
-    type: 'raid_missing_prio_reminder',
-    payload: {
-      ...payload,
-      source: 'prio_saved_refresh',
-      editOnly: true,
-      trackedCharacters,
-      completedCharacters
-    }
-  });
+  if(!raid?.id || !await isCurrentRaidForPrioReminder(guildId,raid.id)) return {success:true,skipped:true};
+  const previous=await query(`select payload from bot_update_queue q where guild_id=$1 and type='raid_missing_prio_reminder'
+    and payload->>'raidId'=any($2::text[]) and payload->>'messageId' ~ '^[0-9]{1,22}$'
+    and ${currentPrioReminderQueueSql()} order by (payload->>'messageId')::numeric asc limit 1`,[guildId,[raid.id,raidPublicId(raid)]]);
+  if(!previous.rows.length)return {success:true,skipped:true};
+  return enqueueBotUpdate({guildId,type:'raid_missing_prio_reminder',payload:{...previous.rows[0].payload,source:'prio_saved_refresh',editOnly:true}});
 }
 
 async function getBotQueue({ guildId, query: params }) {
@@ -14388,6 +14257,9 @@ async function queueDueMissingPrioReminders() {
   const dueRaids = await query(
     `select r.* from raids r
      where r.deleted_at is null
+       and coalesce(r.raidhelper_enabled,true)=true
+       and coalesce(r.external_raid_id,'') !~* '^P0-'
+       and not exists(select 1 from guild_settings gs where gs.guild_id=r.guild_id and gs.layout_json->>'lootSystem'='dkp')
        and coalesce(r.prio_enabled, true) = true
        and coalesce(r.discord_channel_id, '') <> ''
        and lower(coalesce(r.status, '')) not in ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
@@ -14404,10 +14276,10 @@ async function queueDueMissingPrioReminders() {
     const existing = await query(
       `select id from bot_update_queue
        where guild_id=$1 and type='raid_missing_prio_reminder'
-         and payload->>'reminderKey'=$2 limit 1`,
-      [raid.guild_id, reminderKey]
+         and (payload->>'reminderKey'=$2 or (payload->>'raidId'=any($3::text[]) and payload->>'raidDate'=$4)) limit 1`,
+      [raid.guild_id, reminderKey,[raid.id,raidPublicId(raid)],scheduleDateIso(raid.raid_date)]
     );
-    if (existing.rowCount) continue;
+    if (existing.rows.length) continue;
 
     const related = await query(
       `select id from raids
@@ -14479,6 +14351,7 @@ async function queueDueMissingPrioReminders() {
 
 async function enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, source) {
   if (!raid) return { success: true, skipped: true, reason: "raid_not_found" };
+  await enqueueRaidMissingPrioReminderRefresh(guildId,raid).catch(error=>console.warn("Prio-Erinnerung konnte nicht aktualisiert werden:",error.message));
   const channelId = clean(raid.discord_channel_id || raid.discordChannelId);
   const messageId = clean(raid.discord_message_id || raid.discordMessageId);
   if (!channelId || !messageId) {
@@ -32583,6 +32456,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildQueueLogAnalysisPost") {
       const queued = await queueLogAnalysisDiscordPost({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if(action==='lichtbotPreparePrioReminder' || action==='lichtbotCompletePrioReminder'){
+      requireMasterOrQueueToken(postParams);
+      return res.json(action==='lichtbotPreparePrioReminder'?await reminderPosts.prepare(guild.id,postParams.rowNumber):await reminderPosts.complete(guild.id,postParams));
     }
 
     if (action === "lichtbotResolveQueue") {

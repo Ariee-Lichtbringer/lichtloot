@@ -188,7 +188,7 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
         if(!description || description.length>3800) fail('Discord-Text muss 1–3800 Zeichen enthalten.');
         const allowed=await client.query('select channel_id from discord_bot_channels where guild_id=$1 and channel_id=$2 and can_send=true',[guild.id,channel]);
         if(!allowed.rows.length) fail('Bitte einen verfügbaren Discord-Kanal dieser Gilde wählen.',403);
-        await client.query(`insert into bot_update_queue(id,guild_id,type,status,payload) values($1,$2,'free_discord_embed','open',$3)`,[randomUUID(),guild.id,JSON.stringify({embedType:'custom',title:'GuildLoot · DKP',description,channelId:channel,color:'gold'})]);
+        await client.query(`insert into bot_update_queue(id,guild_id,type,status,payload) values($1,$2,'dkp_discord_post','open',$3)`,[randomUUID(),guild.id,JSON.stringify({embedType:'custom',title:'GuildLoot · DKP',description,channelId:channel,color:'gold'})]);
         result.queued=true;
       } else if(action==='setBalance'){
         await character(params.characterId);

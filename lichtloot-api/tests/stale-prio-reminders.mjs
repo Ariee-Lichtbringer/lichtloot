@@ -27,6 +27,6 @@ assert.deepEqual(remaining,[id(117),id(500),id(501)]);
 assert.equal((await db.query('select payload from bot_update_queue where id=$1',[id(110)])).rows[0].payload.skipReason,'raid_reminder_expired_or_changed');
 await ctx.enqueueRaidMissingPrioReminderRefresh(guild,{id:id(17),external_raid_id:'raid17'},'Player');assert.equal(queued.length,1);assert.equal(queued[0].payload.editOnly,true);
 await db.query("update bot_update_queue set payload=jsonb_set(payload,'{completedCharacters}','[\"Player\"]') where id=$1",[id(117)]);
-const done=await ctx.enqueueRaidMissingPrioReminderRefresh(guild,{id:id(17),external_raid_id:'raid17'},'Player');assert.equal(done.reason,'character_already_completed');assert.equal(queued.length,1);
+const done=await ctx.enqueueRaidMissingPrioReminderRefresh(guild,{id:id(17),external_raid_id:'raid17'},'Player');assert.equal(done.success,true);assert.equal(queued.length,2);assert.equal(queued[1].payload.editOnly,true); // Re-read current state at delivery, including removed priorities.
 await ctx.expireStalePrioReminders();assert.equal((await db.query('select status from bot_update_queue where id=$1',[id(501)])).rows[0].status,'done');
-await db.close();console.log('Stale reminder tests: past/archived/deleted raids, invalid times, changed date/PIN/channel, processing retries, guild isolation, edit-only refresh and completed-character deduplication passed.');
+await db.close();console.log('Stale reminder tests: past/archived/deleted raids, invalid times, changed date/PIN/channel, processing retries, guild isolation, edit-only refresh and reverse updates without stale completion flags passed.');

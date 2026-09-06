@@ -10,7 +10,7 @@ await db.exec(`create table items(id text, item_id text, name text);
  insert into items values ('unconfigured','22637','Götze'),('prime','22637','Götze'),('late','22637','Götze'),('bag','19914','Pantherbalgsack');
  insert into guild_po_items values ('guild','prime','zg-prime',true,true),('guild','late','zg-late',true,false),('guild','bag','zg-prime',true,false);`);
 let layout={};let outsideReads=0;const client={query:(...args)=>db.query(...args)};
-const ctx=vm.createContext({clean:v=>String(v??'').trim(),normalizeRaidType:v=>v,
+const ctx=vm.createContext({dkpService:{assertPrio:async()=>{}},clean:v=>String(v??'').trim(),normalizeRaidType:v=>v,
  query:(...args)=>{outsideReads++;return db.query(...args);},
  ensureGuildPoItemsSchema:async()=>{outsideReads++;},getGuildEraConfiguration:async()=>{outsideReads++;return {layout};}});
 for(const n of ['lootSourceRaidType','raidP0PlusEnabled','requireRaidP0PlusEnabled','poItemSettingsRaidTypes','guildPoItemRequiresRelease','requireGuildPoItem','resolvePrioP0Selection'])vm.runInContext(extract(n),ctx);

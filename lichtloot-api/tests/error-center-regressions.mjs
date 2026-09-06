@@ -17,6 +17,7 @@ for (const prefix of ['loot/', 'lichtloot-api/public/loot/', 'lichtloot-api/publ
     for (const script of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
       new vm.Script(script[1], {filename: page});
     }
+    if(prefix==='lichtloot-api/public/'){assert.ok(source.includes('location.replace'));assert.ok(source.includes('loot/'+raid+'-loot.html'));continue;}
     const context = vm.createContext({});
     vm.runInContext(extract(source, 'jsonAttribute'), context);
     vm.runInContext(extract(source, 'reportButtonHtml'), context);
