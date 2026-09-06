@@ -32,7 +32,7 @@ const client={query:async(sql,args)=>{
  if(sql.includes('from characters')||sql.includes('from p0_discord_signups'))return {rows:[]};
  throw Error('Unexpected SQL: '+sql);
 },release(){}};
-Object.assign(ctx,{ensureRaidSchema:async()=>{},ensurePoPostEntriesSchema:async()=>{},findP0DiscordRaid:async()=>({id:'raid',raid_type:raidType}),
+Object.assign(ctx,{p0Deletions:{ensure:async()=>{assert.equal(inTransaction,false,"Deletion schema must be ready before saving");}},ensureRaidSchema:async()=>{},ensurePoPostEntriesSchema:async()=>{},findP0DiscordRaid:async()=>({id:'raid',raid_type:raidType}),
  getPoReleaseDisplaySettings:async()=>({}),poReleaseDisplaySettingsFromLayout:()=>({}),pool:{connect:async()=>client},findOrCreateDiscordP0Character:async()=>({id:'character',name:'Modric',server:'Everlook',player_id:'player'}),normalizePoReleaseRaid:v=>v,
  poReleasesRequiredForRaid:()=>releaseRequired,removeDuplicatePriosForCharacterName:async()=>{},removeDuplicatePriosForPlayerLogin:async()=>{},normalizeRaidRow:v=>v,normalizeP0SignupRow:v=>v});
 vm.runInContext(extract('saveP0DiscordSignup'),ctx);
