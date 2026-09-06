@@ -135,7 +135,7 @@
     try{return String(sessionStorage.getItem(key)||localStorage.getItem(key)||"").trim();}catch(error){return "";}
   }
   function lootGuildName(guild){const slug=String(guild?.slug||"").toLowerCase();return slug==="lichtloot"?"Lichtbringer":String(guild?.name||guild?.lootName||guild?.slug||"LootGilde");}
-  function lootGuildLogo(guild){if(typeof guildLogoUrl==="function")return guildLogoUrl(guild);return String(guild?.logoUrl||"../images/guild-defaults/default-logo.png");}
+  function lootGuildLogo(guild){if(typeof guildLogoUrl==="function")return guildLogoUrl(guild);return String(guild?.logoUrl||"../images/guild-defaults/default-logo.webp");}
   function lootGuildTriggerMarkup(){const guild=typeof currentGuildInfo!=="undefined"?currentGuildInfo:null;return `<img src="${esc(lootGuildLogo(guild))}" alt=""><span><small>Aktive LootGilde · wechseln</small><strong>${esc(lootGuildName(guild||{slug:typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot"}))}</strong></span><i aria-hidden="true">●<b>⌄</b></i>`;}
   function closeLootGuildSwitchPopup(){const root=document.getElementById("lootGuildSwitcher"),menu=document.getElementById("lootGuildSwitchMenu"),button=document.getElementById("lootGuildSwitchButton");root?.classList.remove("is-open");menu?.classList.add("hidden");button?.setAttribute("aria-expanded","false");}
   function positionLootGuildSwitchPopup(){

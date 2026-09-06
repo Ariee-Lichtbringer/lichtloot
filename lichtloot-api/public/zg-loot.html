@@ -2192,7 +2192,7 @@ function guildLogoUrl(guild){
     return prefix + clean;
   };
   if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.webp";
   return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
@@ -10043,7 +10043,7 @@ function reportIconFallback(img){
   if(!img) return;
   if(!img.dataset.fallbackTried){
     img.dataset.fallbackTried = "1";
-    img.src = "images/Brief.png";
+    img.src = "images/Brief.webp";
     return;
   }
   img.classList.add("hidden");
@@ -10055,7 +10055,7 @@ function reportButtonHtml(payload){
   const json = safeAttr(JSON.stringify(payload || {}));
   return `
     <button class="report-btn" title="Fehler melden" onclick='openReportModal(${json})'>
-      <img src="../images/Brief.png" alt="" onerror="reportIconFallback(this)">
+      <img src="../images/Brief.webp" alt="" onerror="reportIconFallback(this)">
       <span class="report-icon-fallback hidden">✉</span>
     </button>
   `;

@@ -3743,7 +3743,7 @@ function applyGuildBrand(){
 function guildLogoUrl(guild){
   const logo=String(guild?.logoUrl || "").trim();
   if(CURRENT_GUILD_SLUG === "lichtloot") return logo || "images/content.png";
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.webp";
   return logo;
 }
 
@@ -8479,7 +8479,7 @@ function renderMyPrios(data){
         </button>
         <div class="myprio-card-actions">
           <button class="report-btn icon-action-btn" title="Fehler melden" onclick='openReportModal(${reportPayload})'>
-            <img src="images/Brief.png" alt="" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+            <img src="images/Brief.webp" alt="" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
             <span class="icon-action-fallback hidden">✉</span>
           </button>
           <button class="delete-prio-btn icon-action-btn" title="Prio löschen" onclick='deleteOwnPrio(${deletePayload})'>🗑</button>
@@ -10008,7 +10008,7 @@ function installLichtlootNews(){
   backdrop.id="lichtlootNewsBackdrop";
   backdrop.className="nachtloot-news-backdrop hidden";
   backdrop.setAttribute("role","presentation");
-  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="lichtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">GuildLoot · Update</div><div class="nachtloot-news-brand"><h2 id="lichtlootNewsTitle">Neu in</h2><img src="images/guildloot-logo-concept.png" alt="GuildLoot"></div></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
+  backdrop.innerHTML=`<section class="nachtloot-news-modal" role="dialog" aria-labelledby="lichtlootNewsTitle"><header class="nachtloot-news-head"><div><div class="nachtloot-news-eyebrow">GuildLoot · Update</div><div class="nachtloot-news-brand"><h2 id="lichtlootNewsTitle">Neu in</h2><img src="images/guildloot-logo-concept.webp" alt="GuildLoot"></div></div><button class="nachtloot-news-close" type="button" aria-label="Neuigkeiten schließen">×</button></header><div class="nachtloot-news-list">${entries}</div><footer class="nachtloot-news-foot"><span>Neu seit deinem letzten Besuch</span><button class="nachtloot-news-done" type="button">Gelesen</button></footer></section>`;
   document.body.appendChild(backdrop);
   backdrop.querySelector(".nachtloot-news-close")?.addEventListener("click",closeLichtlootNews);
   backdrop.querySelector(".nachtloot-news-done")?.addEventListener("click",closeLichtlootNews);

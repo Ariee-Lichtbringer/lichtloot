@@ -1049,7 +1049,7 @@ body.random-raidlead .internal-nav-link{
 body.random-raidlead{
   background:
     linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.92)),
-    url('./images/guildloot-index-background-v2.png') center top/cover fixed;
+    url('./images/guildloot-index-background-v2.webp') center top/cover fixed;
 }
 
 body.random-raidlead .overlay{padding-left:clamp(18px,4vw,56px);padding-right:clamp(18px,4vw,56px)}
@@ -1504,7 +1504,7 @@ function guildLogoUrl(guild){
     return prefix + clean;
   };
   if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.webp";
   return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
@@ -1551,7 +1551,7 @@ function applyGuildThemeColor(cssName,rgbName,value){
 async function applyGuildBranding(){
   if(RANDOM_RAIDLEAD_MODE){
     document.title="GuildLoot – Random-Raidlead";
-    document.querySelectorAll(".logo-banner-mini,.brand-logo,.top-profile img").forEach(el=>{el.src="images/guildloot-logo-concept.png";el.alt="GuildLoot";});
+    document.querySelectorAll(".logo-banner-mini,.brand-logo,.top-profile img").forEach(el=>{el.src="images/guildloot-logo-concept.webp";el.alt="GuildLoot";});
     const profile=document.querySelector(".top-profile div");
     if(profile) profile.innerHTML="<strong>GuildLoot</strong><span>Random-Raidlead</span>";
     const brandTitle=document.querySelector(".brand h1");

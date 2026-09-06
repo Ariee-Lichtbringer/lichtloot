@@ -1171,7 +1171,7 @@ const defaultNewGuildRaidImages = {
   "zg-prime": "images/raid-templates/zg.jpg",
   "zg-late": "images/raid-templates/zg.jpg"
 };
-const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
+const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.webp";
 
 function defaultGuildLayoutForSlug(slug) {
   return {

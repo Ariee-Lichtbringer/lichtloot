@@ -2387,7 +2387,7 @@ function applyGuildBrand(guild){
 function guildLogoUrl(guild){
   const logo=String(guild?.logoUrl || "").trim();
   if(currentActiveGuildSlug() === "lichtloot") return logo || "images/content.png";
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.webp";
   return logo;
 }
 

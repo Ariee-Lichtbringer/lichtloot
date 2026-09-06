@@ -3657,7 +3657,7 @@ function applyGuildBrand(){
 function guildLogoUrl(guild){
   const logo=String(guild?.logoUrl || "").trim();
   if(CURRENT_GUILD_SLUG === "lichtloot") return logo || "images/content.png";
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.webp";
   return logo;
 }
 
@@ -8236,7 +8236,7 @@ function renderMyPrios(data){
         </button>
         <div class="myprio-card-actions">
           <button class="report-btn icon-action-btn" title="Fehler melden" onclick='openReportModal(${reportPayload})'>
-            <img src="images/Brief.png" alt="" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+            <img src="images/Brief.webp" alt="" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
             <span class="icon-action-fallback hidden">✉</span>
           </button>
           <button class="delete-prio-btn icon-action-btn" title="Prio löschen" onclick='deleteOwnPrio(${deletePayload})'>🗑</button>

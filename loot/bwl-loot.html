@@ -269,7 +269,7 @@ body.random-prio .tooltip-p0{
 }
 
 body.random-prio{
-  background:linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.93)),url('../images/guildloot-index-background-v2.png') center top/cover fixed!important;
+  background:linear-gradient(rgba(3,8,23,.76),rgba(3,8,23,.93)),url('../images/guildloot-index-background-v2.webp') center top/cover fixed!important;
 }
 body.random-prio>.overlay{padding-left:22px!important}
 body.random-prio .loot-side-shell,
@@ -2219,7 +2219,7 @@ function guildLogoUrl(guild){
     return prefix + clean;
   };
   if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.webp";
   return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
@@ -4356,7 +4356,7 @@ if(isRandomPrioLink){
   document.body.classList.add("random-prio");
   document.title=document.title.replace(/Lichtloot|LichtLoot/g,"GuildLoot Random Raid");
   const overlay=document.querySelector("body > .overlay");
-  if(overlay){const home=document.createElement("div");home.className="random-prio-home";home.innerHTML='<img src="../images/guildloot-logo-concept.png" alt="GuildLoot"><a href="../index.html">GuildLoot-Startseite</a>';overlay.prepend(home);}
+  if(overlay){const home=document.createElement("div");home.className="random-prio-home";home.innerHTML='<img src="../images/guildloot-logo-concept.webp" alt="GuildLoot"><a href="../index.html">GuildLoot-Startseite</a>';overlay.prepend(home);}
   const playerCard=document.getElementById("playerCard");
   if(playerCard){playerCard.insertAdjacentHTML("afterbegin",'<div class="random-character-profile"><input id="randomCharacterName"><input id="randomCharacterServer"><input id="randomCharacterClass"><input id="randomCharacterSpec"></div>');initializeRandomCharacterProfile();}
   const randomLeadInput=document.getElementById("raidleadPin");
@@ -10194,7 +10194,7 @@ function reportIconFallback(img){
   if(!img) return;
   if(!img.dataset.fallbackTried){
     img.dataset.fallbackTried = "1";
-    img.src = "images/Brief.png";
+    img.src = "images/Brief.webp";
     return;
   }
   img.classList.add("hidden");
@@ -10216,7 +10216,7 @@ function reportButtonHtml(payload){
   const json = jsonAttribute(JSON.stringify(payload || {}));
   return `
     <button class="report-btn" title="Fehler melden" onclick='openReportModal(${json})'>
-      <img src="../images/Brief.png" alt="" onerror="reportIconFallback(this)">
+      <img src="../images/Brief.webp" alt="" onerror="reportIconFallback(this)">
       <span class="report-icon-fallback hidden">✉</span>
     </button>
   `;

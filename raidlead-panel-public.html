@@ -1462,7 +1462,7 @@ function guildLogoUrl(guild){
     return prefix + clean;
   };
   if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.webp";
   return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }

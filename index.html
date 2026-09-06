@@ -25,7 +25,7 @@ body{
   min-height:100vh;
   font-family:Arial, Helvetica, sans-serif;
   color:var(--text);
-  background:linear-gradient(rgba(8,17,31,.68), rgba(8,17,31,.88)),url('./images/guildloot-index-background-v2.png');
+  background:linear-gradient(rgba(8,17,31,.68), rgba(8,17,31,.88)),url('./images/guildloot-index-background-v2.webp');
   background-size:cover;
   background-position:center top;
   background-repeat:no-repeat;
@@ -1228,7 +1228,7 @@ body.guild-gate-active .logo-banner{
 </style>
 <style>
 /* === Neue schlanke Startseite: nur Erklärung, SpielerLogin und Mein LichtLoot === */
-body{background:linear-gradient(rgba(8,17,31,.70),rgba(8,17,31,.91)),url('./images/guildloot-index-background-v2.png');background-size:cover;background-position:center top;background-attachment:fixed;}
+body{background:linear-gradient(rgba(8,17,31,.70),rgba(8,17,31,.91)),url('./images/guildloot-index-background-v2.webp');background-size:cover;background-position:center top;background-attachment:fixed;}
 .overlay{padding:26px 24px 44px;}
 .header{margin-bottom:18px;}
 .logo-banner{width:min(760px,92vw);max-height:210px;}
@@ -1350,7 +1350,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-panel-actions .big-btn.subtle{color:#f8fafc}
 .random-raid-disabled{opacity:.45!important;filter:grayscale(1);cursor:not-allowed!important;box-shadow:none!important}
 .random-raid-disabled-note{color:#fca5a5!important;font-weight:900!important;margin-top:8px!important}
-.random-raid-modal{position:fixed;inset:0;z-index:70000;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(rgba(2,6,23,.68),rgba(2,6,23,.82)),url('images/guildloot-index-background-v2.png') center/cover;backdrop-filter:blur(10px)}
+.random-raid-modal{position:fixed;inset:0;z-index:70000;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(rgba(2,6,23,.68),rgba(2,6,23,.82)),url('images/guildloot-index-background-v2.webp') center/cover;backdrop-filter:blur(10px)}
 .random-raid-modal.hidden{display:none!important}
 .random-raid-modal-box{width:min(1140px,calc(100vw - 36px));max-height:calc(100vh - 36px);overflow:auto;border-radius:24px;border:1px solid rgba(245,199,91,.62);background:linear-gradient(145deg,rgba(10,18,34,.985),rgba(3,8,20,.98));box-shadow:0 34px 110px rgba(0,0,0,.76),inset 0 1px rgba(255,255,255,.07);padding:0}
 .random-raid-brand{height:104px;padding:18px 30px;border-bottom:1px solid rgba(245,199,91,.25);display:flex;align-items:center}.random-raid-brand img{width:210px;max-height:70px;object-fit:contain;object-position:left center}
@@ -1452,7 +1452,7 @@ body{
     radial-gradient(circle at 24% 12%,rgba(26,112,170,.28),transparent 34%),
     radial-gradient(circle at 82% 38%,rgba(140,92,18,.18),transparent 30%),
     linear-gradient(rgba(1,8,19,.72),rgba(1,7,17,.94)),
-    url('./images/guildloot-index-background-v2.png') center top/cover fixed no-repeat;
+    url('./images/guildloot-index-background-v2.webp') center top/cover fixed no-repeat;
 }
 .overlay{padding:0 0 24px;backdrop-filter:none}
 .header{
@@ -1531,7 +1531,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 <body>
 <div class="overlay">
   <div class="header">
-    <img src="images/guildloot-logo-concept.png" alt="GuildLoot" class="logo-banner">
+    <img src="images/guildloot-logo-concept.webp" alt="GuildLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
       <a href="javascript:void(0)" onclick="openSupportForm()">Support</a>
     </nav>
@@ -1687,7 +1687,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
           <p><span class="ok">✓ SpielerLogin aktiv</span><br>Dein Login ist gespeichert. Du kannst dich jetzt für mehrere Raids eintragen.</p>
           <div class="dashboard-guild-picker">
           <button id="dashboardGuildButton" class="dashboard-guild" type="button" aria-expanded="false" onclick="toggleDashboardGuildMenu()">
-            <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.png" alt="">
+            <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.webp" alt="">
             <span class="dashboard-guild-copy"><span>Aktive Lootgilde · wechseln</span><strong id="dashboardGuildName">Lootgilde</strong></span>
             <span class="dashboard-guild-arrow">⌄</span>
           </button>
@@ -2004,7 +2004,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     <section class="random-raid-panel" id="guildSignupPanel">
       <div class="random-panel-head">
         <div>
-          <h2 class="guild-signup-title"><img src="images/guildloot-logo-concept.png" alt="GuildLoot"><span>Gilde werden</span></h2>
+          <h2 class="guild-signup-title"><img src="images/guildloot-logo-concept.webp" alt="GuildLoot"><span>Gilde werden</span></h2>
           <p>Für Gilden, die GuildLoot mit eigener Startseite, SpielerLogins und Raidverwaltung nutzen möchten.</p>
         </div>
         <div class="random-panel-actions">
@@ -2032,7 +2032,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
   <div id="raidCreateBox" class="hidden"></div>
   <div id="randomRaidModal" class="random-raid-modal hidden" onclick="closeRandomRaidModalOnBackdrop(event)">
     <div class="random-raid-modal-box" role="dialog" aria-modal="true" aria-labelledby="randomRaidModalTitle">
-      <div class="random-raid-brand"><img src="images/guildloot-logo-concept.png" alt="GuildLoot"></div>
+      <div class="random-raid-brand"><img src="images/guildloot-logo-concept.webp" alt="GuildLoot"></div>
       <div class="random-raid-modal-content">
       <div class="random-raid-modal-head">
         <div>
@@ -2451,7 +2451,7 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo="images/guildloot-logo-concept.png";
+  const logo="images/guildloot-logo-concept.webp";
   const background=guild?.backgroundUrl || "";
   if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
   if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
@@ -2489,7 +2489,7 @@ function guildLogoUrl(guild){
   const logo=String(guild?.logoUrl || "").trim();
   const slug=String(guild?.slug || currentActiveGuildSlug() || "").trim().toLowerCase();
   if(slug === "lichtloot") return logo || "images/content.png";
-  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.webp";
   return logo;
 }
 
