@@ -9046,6 +9046,7 @@ function p0V9Normalize(obj){
   if(p0V9Key(item) === "item" || p0V9Key(player) === "spieler") return null;
 
   return {
+    ...obj, // Preserve realm and guild/API provenance across repeated normalization.
     item, Item:item, Itemname:item,
     player, Player:player, Spieler:player,
     points, Points:points, Punkte:points, count:points, Count:points,
