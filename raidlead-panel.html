@@ -1407,7 +1407,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
       <a class="side-link" href="start.html" onclick="event.preventDefault(); window.location.href=guildUrl('start.html')"><span class="side-icon">⌂</span><span>Startseite</span></a>
       <a class="side-link" id="navPrioPage" href="start.html#mein-lichtloot" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#mein-lichtloot')"><span class="side-icon">✦</span><span>Prioseite</span></a>
       <a class="side-link" href="start.html#mein-lichtloot" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#mein-lichtloot')"><span class="side-icon">☷</span><span>Mein LichtLoot</span></a>
-      <button class="side-link" id="navP0PlusOverview" type="button" onclick="openP0PlusOverviewModal()"><span class="side-icon">★</span><span>P0+ Übersicht</span></button>
+      <button class="side-link hidden" id="navP0PlusOverview" type="button" onclick="openP0PlusOverviewModal()"><span class="side-icon">★</span><span>P0+ Übersicht</span></button>
       <a class="side-link" href="start.html#raid-erstellen" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#raid-erstellen')"><span class="side-icon">＋</span><span>Raid erstellen</span></a>
       <button class="side-link" type="button" onclick="document.getElementById('entriesPanel')?.scrollIntoView({behavior:'smooth',block:'start'})"><span class="side-icon">≡</span><span>Einträge</span></button>
       <button class="side-link active" type="button"><span class="side-icon">⚑</span><span>Raidlead</span></button>
@@ -1428,6 +1428,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
       </div>
       <div class="nav" aria-label="Navigation">
         <button class="btn ghost internal-nav-link" type="button" onclick="window.location.href=guildUrl('start.html')">Startseite</button>
+        <button class="btn ghost internal-nav-link" type="button" onclick="window.location.href=guildUrl('gildenleitung.html')">Gildenleitung</button>
         <button class="btn ghost random-home-link" type="button" onclick="window.location.href='index.html'">GuildLoot-Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
@@ -1462,7 +1463,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
         <div id="p0OverviewContent" class="p0-overview-grid">P0+ Übersicht wird geladen ...</div>
       </div>
     </div>
-  <aside class="p0-received-legend" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte werden bei der P0+-Übertragung gelöscht. Der Button zeigt, ob die Löschung noch aussteht oder abgeschlossen ist.</aside>
+  <aside class="p0-received-legend hidden" aria-label="Legende zur Itemfarbe"><strong>Legende:</strong> <span>Gold eingefärbtes Item</span> = P0+-Item erhalten. Die zugehörigen P0+-Punkte werden bei der P0+-Übertragung gelöscht. Der Button zeigt, ob die Löschung noch aussteht oder abgeschlossen ist.</aside>
 </main>
 </div>
 
@@ -1509,9 +1510,9 @@ function guildLogoUrl(guild){
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
 async function fetchCurrentGuildInfo(){
   const slug=currentGuildSlug();
-  if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
   try{
     const response=await fetch(RAID_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
+    if(!response.ok)throw new Error("Gildeneinstellungen konnten nicht geladen werden.");
     const data=await response.json();
     currentGuildInfo=(data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === slug) || {slug,name:titleFromSlug(slug)};
   }catch(error){
@@ -1753,6 +1754,8 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
+  const layoutKey=String(currentRaidKey||'').startsWith('zg-')?'zg':currentRaidKey;
+  if(!currentGuildInfo?.layout || currentGuildInfo.layout.lootPageSectionsByRaid?.[layoutKey]?.p0Plus===false)return false;
   return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey) || (currentGuildSlug() === "nachtloot" && currentRaidKey === "zg");
 }
 
@@ -1886,6 +1889,7 @@ async function tryLoadRaidByPin(pin, raidKey){
 }
 
 async function loadPriosFromRailway(leadPin, raidKey = ""){
+  if(!RANDOM_RAIDLEAD_MODE) await fetchCurrentGuildInfo();
   const params = new URLSearchParams({
     guild: currentGuildSlug(),
     action: "getPublishedPrios",
@@ -1915,6 +1919,7 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
     const returnedRaidKey = String(result.raid || result.raidType || "").trim().toLowerCase();
     if(returnedRaidKey && raids[returnedRaidKey]) currentRaidKey = returnedRaidKey;
 
+    currentRaidData.p0Completion = result.p0Completion || '';
     currentRaidData.raidId = result.raidId || currentRaidData.raidId;
     if(currentRaidData.raidId){
       sessionStorage.setItem(raidleadStorageKey("raidId"), currentRaidData.raidId);
@@ -1962,11 +1967,8 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
     const publishedValue = result.published ?? result.status ?? result.Status ?? result.open ?? result.Offen ?? false;
     const apiReleased = isActiveFlag(publishedValue) || String(publishedValue || "").toLowerCase() === "published";
 
-    const stickyKey = "raidOpen_" + (currentRaidData.raidId || result.raidId || "");
-    const stickyOpen =
-      sessionStorage.getItem(stickyKey) === "true" ||
-      localStorage.getItem(stickyKey) === "true";
-    currentReleased = apiReleased || stickyOpen;
+    // Only the confirmed server value controls visibility; old browser flags are ignored.
+    currentReleased = apiReleased;
 
 
     currentPrios = (result.prios || []).map(p => ({
@@ -2166,6 +2168,7 @@ function updateRaidNavigation(){
       "start.html#mein-lichtloot";
   }
 
+  document.querySelector(".p0-received-legend")?.classList.toggle("hidden", !isAllowedP0Raid());
   if(p0OverviewLink){
     p0OverviewLink.classList.toggle("hidden", !isAllowedP0Raid());
   }
@@ -2223,8 +2226,8 @@ function renderRaidStatCards(){
   const transferCard = !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? `
       <div class="raid-stat-card">
         <div class="raid-stat-head"><span class="raid-stat-icon">★</span><span>P0+ Transfer</span></div>
-        <strong>${getTransferableP0Count()}</strong>
-        <small>Spieler übertragbar</small>
+        <strong>${currentRaidData?.p0Completion==='manual'?'Manuell erledigt':getTransferableP0Count()}</strong>
+        <small>${currentRaidData?.p0Completion==='manual'?'Keine weitere Punktevergabe nötig':'Spieler übertragbar'}</small>
       </div>
   ` : "";
 
@@ -2266,17 +2269,19 @@ function renderRaidView(){
   updateRaidNavigation();
 
   const transferButton =
-    !RANDOM_RAIDLEAD_MODE && !["abgesagt","cancelled","canceled"].includes(String(currentRaidData.status||"").toLowerCase()) && isAllowedP0Raid()
+    !RANDOM_RAIDLEAD_MODE && !["manual","cancelled"].includes(currentRaidData.p0Completion) && !["abgesagt","cancelled","canceled"].includes(String(currentRaidData.status||"").toLowerCase()) && isAllowedP0Raid()
       ? currentReleased
         ? `<button class="btn action-transfer" onclick="transferP0PlusPoints()"><span class="star">★</span>P0+ übertragen</button>`
         : `<button class="btn action-transfer" disabled style="opacity:.45;cursor:not-allowed"><span class="star">★</span>P0+ übertragen</button>`
       : "";
-  const openStatusText = currentReleased
+  const openStatusText = currentRaidData.p0Completion==='manual'
+    ? 'P0+ wurde manuell erledigt. Für eine erneute Vergabe zuerst die Aufgabe in der Gildenleitung wieder öffnen.'
+    : currentReleased
     ? !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()
-      ? "Die Prioliste ist geöffnet. Mit „P0+ übertragen“ erhalten alle gesetzten P0+ Einträge +1 Punkt."
+      ? "Die Prioliste ist geöffnet. „P0+ übertragen“ öffnet die Vorschau mit den Punkten nach Gildenregel."
       : hasP0Control()
         ? "Die Prioliste ist geöffnet. P0 kann geprüft werden."
-        : "Die Prioliste ist geöffnet. Ony nutzt nur P1."
+        : "Die Prioliste ist geöffnet. Prios können geprüft werden."
     : releaseBlocked
       ? prioAccess.message
       : `Die Prioliste ist geschlossen. Es wird nur angezeigt, ob ${prioLabelText()} gesetzt wurde.`;
@@ -2294,11 +2299,12 @@ function renderRaidView(){
       </div>
     </div>
 
+    ${!RANDOM_RAIDLEAD_MODE&&!currentGuildInfo?.layout?'<p class="warn" role="status">Gildeneinstellungen konnten nicht geladen werden. P0+-Aktionen bleiben bis zum erneuten Aktualisieren ausgeblendet.</p>':''}
     ${renderRaidStatCards()}
     ${!RANDOM_RAIDLEAD_MODE?`<div style="margin:12px 0">${['abgesagt','cancelled','canceled'].includes(String(currentRaidData.status||'').toLowerCase())?'<strong>Raid abgesagt · keine P0+-Vergabe nötig</strong>':'<button class="btn ghost" type="button" onclick="openRaidCancellation()">Raid abgesagt</button>'}</div>`:''}
 
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0"><button class="btn action-soft" type="button" onclick="showAllRaidPrios()">Alle ${currentPrios.length} Prio-Einträge dieses Raids anzeigen ↓</button><span class="subtitle">${currentPrios.length} gespeicherte Einträge · Anmeldung und Prio-Eintrag sind getrennt.</span></div>
-    ${!RANDOM_RAIDLEAD_MODE ? '<div id="raidCloseoutCheck"></div>' : ""}
+    ${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? '<div id="raidCloseoutCheck"></div>' : ""}
 
     <div class="raid-control-bar">
       <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${["abgesagt","cancelled","canceled"].includes(String(currentRaidData.status||"").toLowerCase())?'disabled title="Raid abgesagt – keine Freigabe möglich"':releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
@@ -2340,7 +2346,7 @@ function renderRaidView(){
   `;
 
   loadRaidleadItemOptions();
-  if(!RANDOM_RAIDLEAD_MODE) window.GuildLootCloseout?.mount(document.getElementById("raidCloseoutCheck"), {
+  if(!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()) window.GuildLootCloseout?.mount(document.getElementById("raidCloseoutCheck"), {
     api: RAID_API_URL, guild: currentGuildSlug(), raidId: currentRaidData.raidId,
     credentials: () => ({leadPin:document.getElementById("raidPinInput").value.trim()}),
     onApplied: () => reloadCurrentRaid()
@@ -2948,7 +2954,7 @@ function renderRows(){
     const isPo = isActiveP0Entry(entry);
     const isP0Plus = isActiveP0PlusEntry(entry);
 
-    const clearButton = entry.p0ItemReceived===true
+    const clearButton = !isAllowedP0Raid() ? "" : entry.p0ItemReceived===true
       ? `<button class="btn small-btn p0-received-button" type="button" disabled>${entry.p0PointsCleared?'✓ P0+-Punkte wurden gelöscht':'◷ P0+-Punkte werden mit Übertragung gelöscht'}</button>`
       : currentReleased && isP0Plus && isAllowedP0Raid()
         ? `<button class="btn warning small-btn"
@@ -3000,7 +3006,7 @@ function renderRows(){
           <td>${index + 1}</td>
           <td>${renderBenchName(entry)}</td>
           <td>${renderClass(entry.class)}</td>
-          <td class="${entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
+          <td class="${isAllowedP0Raid() && entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -3011,9 +3017,9 @@ function renderRows(){
         <td>${index + 1}</td>
         <td>${renderBenchName(entry)}</td>
         <td>${renderClass(entry.class)}</td>
-        <td class="${entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
-        <td class="${entry.p0ItemReceived===true && String(entry.p2||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p2)}</td>
-        <td class="${entry.p0ItemReceived===true && String(entry.p3||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p3)}</td>
+        <td class="${isAllowedP0Raid() && entry.p0ItemReceived===true?"p0-item-received":""}">${renderItem(entry.p1)}</td>
+        <td class="${isAllowedP0Raid() && entry.p0ItemReceived===true && String(entry.p2||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p2)}</td>
+        <td class="${isAllowedP0Raid() && entry.p0ItemReceived===true && String(entry.p3||" ").trim().toLowerCase()===String(entry.p1||"").trim().toLowerCase()?"p0-item-received":""}">${renderItem(entry.p3)}</td>
         <td>${!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid() ? (isPo&&!isP0Plus?renderSelectedPlainP0(entry):renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
@@ -3176,13 +3182,6 @@ async function sendRaidStatus(status){
       return false;
     }
 
-    if(status === "geöffnet"){
-      sessionStorage.setItem("raidOpen_" + raidId, "true");
-      localStorage.setItem("raidOpen_" + raidId, "true");
-    }else{
-      sessionStorage.removeItem("raidOpen_" + raidId);
-      localStorage.removeItem("raidOpen_" + raidId);
-    }
 
     return true;
   }catch(error){
@@ -3203,10 +3202,7 @@ async function releaseList(){
   const ok = await sendRaidStatus("geöffnet");
   if(!ok) return;
 
-  currentReleased = true;
-  sessionStorage.setItem("raidOpen_" + currentRaidData.raidId, "true");
-  localStorage.setItem("raidOpen_" + currentRaidData.raidId, "true");
-  renderRaidView();
+  await reloadCurrentRaid();
 }
 
 async function closeList(){
@@ -3218,10 +3214,7 @@ async function closeList(){
   const ok = await sendRaidStatus("geschlossen");
   if(!ok) return;
 
-  currentReleased = false;
-  sessionStorage.removeItem("raidOpen_" + currentRaidData.raidId);
-  localStorage.removeItem("raidOpen_" + currentRaidData.raidId);
-  renderRaidView();
+  await reloadCurrentRaid();
 }
 
 function raidleadPrioValue(id){

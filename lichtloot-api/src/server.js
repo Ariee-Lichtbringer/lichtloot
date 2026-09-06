@@ -1,3 +1,4 @@
+import { loadRaidCompletion } from "./raid-completion.js";
 import { createRaidTaskReviewService } from "./raid-task-review.js";
 import { queueActiveSignupRefresh, mergeP0PostIdentity } from "./active-signup-refresh.js";
 import { noticeContent, collectOfflineTargets, queueOfflineNotice, onlineNoticeContent, recoveryTargets, queueOnlineNotice } from "./bot-offline-notice.js";
@@ -24297,6 +24298,7 @@ async function getPublishedPrios({ guildId, query: params }) {
     ...normalizedRaid,
     p0PlusTransferred: Boolean(raid.p0plus_transferred_at) || p0PlusTransferCount > 0,
     p0PlusTransferCount,
+    p0Completion:await loadRaidCompletion({query},guildId,raid,{enabled:raidP0PlusEnabled((await getGuildEraConfiguration(guildId)).layout,raid.raid_type)}),
     prioListDisplay,
     published,
     open: raidStatus !== "geöffnet" && !published,
@@ -26229,25 +26231,10 @@ async function setRaidStatus({ guildId, query: params }) {
   const archiveRequested = ["archiviert", "archive"].includes(status);
   const raidType = normalizeRaidType(raid.raid_type || raid.raid || params.raid);
 
-  if (archiveRequested && ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType) && raidP0PlusEnabled((await getGuildEraConfiguration(guildId)).layout, raidType)) {
-    const transferNotes = Array.from(new Set([
-      `RaidID: ${raidPublicId(raid)}`,
-      `RaidID: ${raid.id}`,
-      raid.raid_pin ? `RaidID: ${raid.raid_pin}` : ""
-    ].filter(Boolean)));
-    const transferResult = await query(
-      `select count(*)::int as count
-       from p0plus_points
-       where guild_id = $1
-         and source = 'Raidlead Transfer'
-         and note = any($2::text[])`,
-      [guildId, transferNotes]
-    );
-    if (Number(transferResult.rows[0]?.count || 0) < 1) {
-      const error = new Error("Raid kann erst archiviert werden, wenn PO+ übertragen wurde.");
-      error.statusCode = 409;
-      throw error;
-    }
+  if (archiveRequested && ["mc", "bwl", "aq40", "aq20", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
+    const enabled=raidP0PlusEnabled((await getGuildEraConfiguration(guildId)).layout,raidType);
+    const completion=await loadRaidCompletion({query},guildId,raid,{enabled});
+    if(completion==='open')throw Object.assign(new Error("P0+ ist noch offen. Bitte übertragen oder die Aufgabe als manuell erledigt beziehungsweise den Raid als abgesagt markieren."),{statusCode:409});
   }
 
   const result = await query(
@@ -27789,6 +27776,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   }
   if(['abgesagt','cancelled','canceled'].includes(clean(raid.status).toLowerCase()))throw Object.assign(new Error('Für abgesagte Raids werden keine P0+-Punkte übertragen.'),{statusCode:409});
   requireRaidP0PlusEnabled(eraConfig.layout, raid.raid_type);
+  const completion=await loadRaidCompletion(client,guildId,raid);
+  if(completion==='manual')throw Object.assign(new Error('P0+ wurde für diesen Raid als manuell erledigt markiert. Bitte die Aufgabe in der Gildenleitung zuerst wieder öffnen.'),{statusCode:409});
+  if(completion==='cancelled')throw Object.assign(new Error('Für abgesagte Raids werden keine P0+-Punkte übertragen.'),{statusCode:409});
   const sourceRaidType = normalizeRaidType(raid.raid_type);
   const isGenericZgSource = sourceRaidType === "zg";
   targetRaidType = await resolveZgPointTarget(client, guildId, raid, targetRaidType);

@@ -1,3 +1,4 @@
+import { loadRaidCompletion } from './raid-completion.js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const yes = value => ['ja','true','1','p0','po','p0+'].includes(String(value ?? '').trim().toLowerCase());
@@ -19,8 +20,9 @@ export function createRaidCloseoutService({pool, secret, authorize, configuratio
     if(!raid) throw fail('Raid wurde in dieser Gilde nicht gefunden.',404);
     await authorize(guild,params,raid,write);
     const config=await configuration(client,guild);
-    const raidActive=!raid.deleted_at && !inactive.has(String(raid.status||'').toLowerCase());
     const enabled=plusEnabled(config.layout,raid.raid_type);
+    const completion=await loadRaidCompletion(client,guild.id,raid,{enabled});
+    const raidActive=completion!=='cancelled' && !raid.deleted_at && !inactive.has(String(raid.status||'').toLowerCase());
     let targetRaid=raid.raid_type,targetError='';
     try { targetRaid=await resolveTarget(client,guild.id,raid,params.targetRaid||''); }
     catch(error) { targetRaid='';targetError=error.message; }
@@ -76,7 +78,7 @@ export function createRaidCloseoutService({pool, secret, authorize, configuratio
         if(raid.has_started&&raidActive)actions.push({...base,id,type:'flag',label:`${row.player}: P0 → P0+`,points:0});
       }
       const absent=['absent','declined','rejected','abgemeldet','abwesend','nein'].includes(String(row.signup_status||'').toLowerCase());
-      if(!absent && Number(config.rules.p0Plus.raidTransferPoints||0)>0 && (plus||configured) && enabled && raid.has_started && raidActive && !receipt && !awarded.length && !historical.length) {
+      if(completion!=='manual' && !absent && Number(config.rules.p0Plus.raidTransferPoints||0)>0 && (plus||configured) && enabled && raid.has_started && raidActive && !receipt && !awarded.length && !historical.length) {
         const points=Number(config.rules.p0Plus.raidTransferPoints||0),id=`points:${row.character_id}`;
         const canCorrect=Boolean(target) && points>0 && !absent && (plus||configured);
         add('missing_points',row.character_id,'P0+-Übertragung fehlt',`${row.player} · ${row.item}: Für diesen Raid ist keine Punktebuchung vorhanden.`,
@@ -101,7 +103,7 @@ export function createRaidCloseoutService({pool, secret, authorize, configuratio
       duplicates:findings.filter(f=>f.kind==='duplicate_points').length,reminders:findings.filter(f=>f.kind==='stale_reminder').length,pendingReceipts:pending.length};
     const snapshot={guildId:guild.id,raidId:raid.id,targetRaid,raidActive,hasStarted:raid.has_started,findings,actions,ledger,audits};
     return {raid,actions,report:{success:true,raid:{id:raid.id,name:raid.name,type:raid.raid_type,date:raid.date_text,time:raid.raid_time},targetRaid,targetError,
-      hasStarted:raid.has_started,canApply:raidActive||actions.some(a=>a.type==='reminder'),status:!raidActive?'inactive':targetError?'attention':!raid.has_started?'upcoming':findings.length?'attention':'clear',
+      completion,hasStarted:raid.has_started,canApply:raidActive||actions.some(a=>a.type==='reminder'),status:!raidActive?'inactive':targetError?'attention':!raid.has_started?'upcoming':findings.length?'attention':'clear',
       checkedAt:new Date().toISOString(),counts,findings,actions:actions.map(({comments,payload,...a})=>a),reviewToken:token(snapshot)}};
   }
 

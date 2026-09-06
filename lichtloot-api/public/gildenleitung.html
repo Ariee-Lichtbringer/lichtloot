@@ -9335,7 +9335,9 @@ function hasP0PlusTransfer(raidOrResult){
 }
 
 function needsP0PlusTransferBeforeArchive(raid){
-  return isAllowedP0RaidForRaid(raid) && !hasP0PlusTransfer(raid);
+  const review=leadershipReviewForRaid(raid);
+  const cancelled=['abgesagt','cancelled','canceled'].includes(String(raid?.status||'').toLowerCase());
+  return canTransferP0PlusFromRaid(raid) && !cancelled && !['manual','cancel'].includes(review?.state) && !hasP0PlusTransfer(raid);
 }
 
 function p0PlusArchiveBlockMessage(raid){
