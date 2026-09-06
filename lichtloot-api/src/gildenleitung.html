@@ -7647,7 +7647,7 @@ function openLeadershipPendingTransfers(){
   document.getElementById('prioModalSubline').textContent='Vergangene, nicht archivierte Raids. Teilnahme und Item-Erhalt vor der Übertragung prüfen.';
   const content=document.getElementById('prioModalContent');
   content.innerHTML=raids.length?raids.map((raid,i)=>`<div class="status"><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong> · ${escapeHtml(formatRaidDate(raid.raidDate))} <button class="small-btn primary" type="button" data-task-raid="${i}">Raid prüfen</button></div>`).join(''):'<div class="status good">Keine ausstehenden Punkteübertragungen für vergangene Raids.</div>';
-  content.querySelectorAll('[data-task-raid]').forEach(button=>button.onclick=()=>{closePrioModal();openRaidInUnifiedOverview(raids[Number(button.dataset.taskRaid)].raidId||raids[Number(button.dataset.taskRaid)].id);});
+  content.querySelectorAll('[data-task-raid]').forEach(button=>button.onclick=()=>{closePrioModal();openRaidleadPanelDirect(raids[Number(button.dataset.taskRaid)].raidId||raids[Number(button.dataset.taskRaid)].id);});
   document.getElementById('prioModal').classList.remove('hidden');
 }
 
