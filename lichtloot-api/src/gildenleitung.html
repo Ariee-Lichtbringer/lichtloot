@@ -5358,6 +5358,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 @container(max-width:680px){.raid-signups-popup .raid-unified-pane .raid-helper-loot-grid{column-count:1}.raid-signups-popup .raid-helper-loot-inactive{grid-template-columns:1fr}}
 .raid-signups-popup-head h3{overflow-wrap:anywhere}
 
+
+.raid-overview-card button.rc-hint-action{display:block;width:100%;padding:6px 0;background:none;border:0;font:inherit;font-size:11px;text-align:left;cursor:pointer;letter-spacing:normal;text-transform:none;white-space:normal;box-shadow:none}
+.raid-overview-card button.rc-hint-action:hover{text-decoration:underline;text-underline-offset:3px;background:rgba(var(--gold-rgb),.06)}
+.raid-signups-popup-filters{display:flex;flex-wrap:wrap;gap:8px;padding:10px 18px;border-bottom:1px solid var(--line)}
+.raid-signups-popup-filters button[aria-pressed="true"]{color:var(--gold);border-color:var(--gold);background:rgba(var(--gold-rgb),.12)}
+
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -9352,7 +9358,16 @@ function yesterdayIsoDate(){
 }
 
 let raidSignupPopupState=null;
-async function openRaidSignupPopup(raidId){
+function raidSignupMissingPrio(row){
+  return row.hasPrio===false&&!['absent','declined','cancelled','canceled','abgemeldet'].includes(String(row.status||'').toLowerCase());
+}
+function setRaidSignupPopupFilter(filter){
+  const state=raidSignupPopupState;if(!state)return;
+  state.filter=filter==='missing'?'missing':'all';
+  state.backdrop.querySelectorAll('[data-popup-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.popupFilter===state.filter)));
+  return renderRaidHelperCurrentDetail(state.raidId,{signupsOnly:true});
+}
+async function openRaidSignupPopup(raidId, filter='all'){
   const raid=findRaidByAnyId(raidId);
   if(!raid||raid.p0Only||raid.raidHelperEnabled===false)return;
   if(raidSignupPopupState)closeRaidSignupPopup(false);
@@ -9360,12 +9375,13 @@ async function openRaidSignupPopup(raidId){
   if(!source){setStatus('Die Anmeldeansicht konnte nicht geöffnet werden.','bad');return;}
   const parked=document.createDocumentFragment();
   while(source.firstChild)parked.appendChild(source.firstChild);
-  const state={raidId:String(raid.raidId||raid.id),source,parked,selected:raidHelperCurrentSelectedRaidId,editing:raidHelperEditingData,editId:document.getElementById('raidHelperEditRaidId')?.value||'',editChannel:document.getElementById('raidHelperEditChannel')?.value||'',unified:document.body.classList.contains('raid-unified-open'),focus:document.activeElement,overflow:document.body.style.overflow};
+  const state={raidId:String(raid.raidId||raid.id),filter:filter==='missing'&&raid.prioEnabled!==false?'missing':'all',source,parked,selected:raidHelperCurrentSelectedRaidId,editing:raidHelperEditingData,editId:document.getElementById('raidHelperEditRaidId')?.value||'',editChannel:document.getElementById('raidHelperEditChannel')?.value||'',unified:document.body.classList.contains('raid-unified-open'),focus:document.activeElement,overflow:document.body.style.overflow};
   raidSignupPopupState=state;
   const backdrop=document.createElement('div');state.backdrop=backdrop;backdrop.className='raid-signups-backdrop';
-  backdrop.innerHTML=`<section class="raid-signups-popup" role="dialog" aria-modal="true" aria-labelledby="raidSignupPopupTitle"><header class="raid-signups-popup-head"><div><h3 id="raidSignupPopupTitle">${escapeHtml(raid.raidName||raid.raid||'Raid')} · Anmeldungen &amp; Aufstellung</h3><small>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime||'')} Uhr</small></div><div><button type="button" class="small-btn ghost" data-popup-refresh>Neu laden</button><button type="button" class="small-btn ghost" data-popup-max aria-pressed="false">Maximieren</button><button type="button" class="small-btn danger" data-popup-close>Schließen</button></div></header><div class="raid-signups-popup-body"><div id="raidHelperCurrentDetail" class="raid-helper-current-detail"></div></div><footer>Größe an der unteren rechten Ecke ändern ◢</footer></section>`;
+  backdrop.innerHTML=`<section class="raid-signups-popup" role="dialog" aria-modal="true" aria-labelledby="raidSignupPopupTitle"><header class="raid-signups-popup-head"><div><h3 id="raidSignupPopupTitle">${escapeHtml(raid.raidName||raid.raid||'Raid')} · Anmeldungen &amp; Aufstellung</h3><small>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime||'')} Uhr</small></div><div><button type="button" class="small-btn ghost" data-popup-refresh>Neu laden</button><button type="button" class="small-btn ghost" data-popup-max aria-pressed="false">Maximieren</button><button type="button" class="small-btn danger" data-popup-close>Schließen</button></div></header>${!isSignupOnlyRaid(raid)&&raid.prioEnabled!==false?`<nav class="raid-signups-popup-filters" aria-label="Anmeldungen filtern"><button type="button" class="small-btn ghost" data-popup-filter="all" aria-pressed="${state.filter==='all'}">Alle Anmeldungen</button><button type="button" class="small-btn ghost" data-popup-filter="missing" aria-pressed="${state.filter==='missing'}">Ohne Prio</button></nav>`:''}<div class="raid-signups-popup-body"><div id="raidHelperCurrentDetail" class="raid-helper-current-detail"></div></div><footer>Größe an der unteren rechten Ecke ändern ◢</footer></section>`;
   document.body.appendChild(backdrop);document.body.style.overflow='hidden';raidHelperCurrentSelectedRaidId=state.raidId;
   const dialog=backdrop.querySelector('.raid-signups-popup'),max=backdrop.querySelector('[data-popup-max]');
+  backdrop.querySelectorAll('[data-popup-filter]').forEach(button=>button.onclick=()=>setRaidSignupPopupFilter(button.dataset.popupFilter));
   backdrop.querySelector('[data-popup-refresh]').onclick=()=>renderRaidHelperCurrentDetail(state.raidId,{signupsOnly:true});
   max.onclick=()=>{const full=dialog.classList.toggle('is-maximized');max.textContent=full?'Verkleinern':'Maximieren';max.setAttribute('aria-pressed',String(full));};
   backdrop.querySelector('[data-popup-close]').onclick=()=>closeRaidSignupPopup();
@@ -9432,7 +9448,7 @@ function renderDashboardRaidCard(raid){
     <div class="rc-states"><span>${stage}</span>${!signupOnly&&!p0Only?`<span>Prioliste ${isOpenStatus(raid.status)?'sichtbar':'verborgen'}</span>`:''}</div>
     ${transferBadge}
     <${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'} class="rc-metrics" ${!p0Only&&raid.raidHelperEnabled!==false?`type="button" onclick="openRaidSignupPopup(${arg})" aria-label="Anmeldungen und Aufstellung für ${escapeAttr(raid.raidName||raid.raid||'diesen Raid')} öffnen"`:''}><span><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></span><span><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></span><span><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></span>${!p0Only&&raid.raidHelperEnabled!==false?'<span class="rc-metrics-open">Anmeldungen &amp; Aufstellung öffnen ↗</span>':''}</${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'}>
-    <div class="rc-hint">${escapeHtml(hint)}</div>
+    ${!p0Only&&!signupOnly&&raid.raidHelperEnabled!==false&&stats.missing>0?`<button type="button" class="rc-hint rc-hint-action" onclick="openRaidSignupPopup(${arg},'missing')" aria-label="${escapeAttr(hint)}. Betroffene Spieler anzeigen">${escapeHtml(hint)} <span aria-hidden="true">→</span></button>`:`<div class="rc-hint">${escapeHtml(hint)}</div>`}
     ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM senden',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`,'','aria-label="DC-Nachricht kopieren"')}</div>`:''}
     <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
     ${pointsEnabled?`<div class="rc-points"><div><strong>P0+</strong><span>${pointsLabel}</span></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}</div></div>`:''}
@@ -11774,15 +11790,17 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
     if(!box.isConnected||box!==document.getElementById('raidHelperCurrentSignups'))return;
     if(!helper?.success)throw new Error(helper?.error||'Anmeldungen konnten nicht geladen werden.');
     raidHelperEditingData = { raid:helper.raid || raid || findRaidByAnyId(raidId), helper };
-    const rows = [...(helper.signups || []), ...(helper.externalSignups || [])];
+    const allRows = [...(helper.signups || []), ...(helper.externalSignups || [])];
+    const missingOnly=raidSignupPopupState?.raidId===String(raidId)&&raidSignupPopupState.filter==='missing';
+    const rows=missingOnly?allRows.filter(raidSignupMissingPrio):allRows;
     const count = rows.length;
     if(!rows.length){
-      box.innerHTML = '<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
-      setRaidHelperCurrentStatus("Keine Anmeldungen gespeichert.", "");
+      box.innerHTML = missingOnly?'<div class="status good">Keinem angemeldeten Spieler fehlt eine Prio.</div>':'<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
+      setRaidHelperCurrentStatus(missingOnly?"Keine fehlenden Prios gefunden.":"Keine Anmeldungen gespeichert.", "");
       return;
     }
     box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
-    setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
+    setRaidHelperCurrentStatus(missingOnly?`${count} ${count===1?"angemeldeter Spieler ohne Prio":"angemeldete Spieler ohne Prio"} · gefilterte Ansicht`:`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
   }catch(error){
     if(!box.isConnected||box!==document.getElementById('raidHelperCurrentSignups'))return;
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
