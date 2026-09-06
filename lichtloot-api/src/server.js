@@ -1,3 +1,5 @@
+import { queueActiveSignupRefresh } from "./active-signup-refresh.js";
+import { noticeContent, collectOfflineTargets, queueOfflineNotice, onlineNoticeContent, recoveryTargets, queueOnlineNotice } from "./bot-offline-notice.js";
 import { createRaidCloseoutService } from "./raid-closeout.js";
 import "dotenv/config";
 import { getStoredPlayerAnalysis } from "./player-analysis/service.js";
@@ -31691,6 +31693,51 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
+
+    if (action === "guildRefreshActiveSignups") {
+      const refreshGuild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
+      requireMatchingGuildId(refreshGuild, postParams);
+      await loadWorldbuffAccessCode(refreshGuild.id);
+      requireMasterCodeForGuild(refreshGuild, postParams.masterCode, action, postParams);
+      return res.json(await queueActiveSignupRefresh(pool, refreshGuild));
+    }
+
+    if (["guildPreviewBotOfflineNotice", "guildQueueBotOfflineNotice", "guildPreviewBotOnlineNotice", "guildQueueBotOnlineNotice"].includes(action)) {
+      const noticeGuild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
+      requireMatchingGuildId(noticeGuild, postParams);
+      await loadWorldbuffAccessCode(noticeGuild.id);
+      requireMasterCodeForGuild(noticeGuild, postParams.masterCode, action, postParams);
+      const kind = clean(postParams.noticeKind) || "bot";
+      if (action === "guildPreviewBotOnlineNotice") {
+        const state = await recoveryTargets({query}, noticeGuild.id, kind);
+        return res.json({success:true,...state,content:onlineNoticeContent(kind),guildName:noticeGuild.name,channelCount:state.targets.length});
+      }
+      if (action === "guildQueueBotOnlineNotice") return res.json(await queueOnlineNotice(pool, noticeGuild.id, kind));
+      const content = noticeContent(kind);
+      await ensureGuildLayoutSchema();
+      await ensureDiscordChannelSchema();
+      await ensurePoPostEntriesSchema();
+      const settings = await query("select layout_json from guild_settings where guild_id=$1", [noticeGuild.id]);
+      const posts = await query(`select guild_id, discord_channel_id as channel_id, 'po' as bot from raids where guild_id=$1 and coalesce(discord_channel_id,'') <> ''
+        union select guild_id, coalesce(nullif(target_channel_id,''),source_channel_id), 'po' from po_post_entries where guild_id=$1 and archived_at is null
+        union select guild_id, coalesce(nullif(payload->>'targetChannelId',''),nullif(payload->>'channelId',''),payload->>'discordChannelId'),
+          case when type in ('worldbuff_update','hordenbuff_update','worldbuff_replacement','boss_token_notice','worldbuff_backup_export','log_analysis_post') then 'lichtbuff' else 'po' end
+        from bot_update_queue where guild_id=$1 and status='done' and type in ('worldbuff_update','hordenbuff_update','worldbuff_replacement','boss_token_notice','worldbuff_backup_export','log_analysis_post','raid_announcement','po_post','p0plus_backup_export','raid_workbook_post')`, [noticeGuild.id]);
+      const channels = await query("select guild_id,discord_guild_id,channel_id,channel_name from discord_bot_channels where guild_id=$1 order by updated_at desc", [noticeGuild.id]);
+      // Legacy defaults are included only when this guild's registry contains them.
+      const legacyIds = ['1283706980103356448','1281152286772695071','1510764309062615220','1279032487628242995','1118795108968574987','1529393614247952434','1531288515994718318'];
+      for (const channel of channels.rows) if (legacyIds.includes(channel.channel_id)) posts.rows.push({...channel,bot:'lichtbuff'});
+      const targets = collectOfflineTargets([{
+        guildId:noticeGuild.id, slug:noticeGuild.slug,
+        discordGuildId:clean(noticeGuild.discord_guild_id) || channels.rows.find(c=>clean(c.discord_guild_id))?.discord_guild_id || "",
+        layout:settings.rows[0]?.layout_json || {}
+      }], posts.rows, channels.rows);
+      if (action === "guildPreviewBotOfflineNotice") return res.json({success:true,content,noticeKind:kind,guildName:noticeGuild.name,targets,channelCount:targets.length});
+      return res.json(await queueOfflineNotice(pool, targets, noticeGuild.id, kind));
+    }
+
+
+
 
     if (action === "lichtbotListGuilds") {
       const guilds = await listGuildsForBot({ query: postParams });
