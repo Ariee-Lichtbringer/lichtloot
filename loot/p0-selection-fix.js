@@ -116,10 +116,31 @@
     if(prio?.P0Item || prio?.p0Item) return true;
     return typeof originalPrioIsP0 === "function" ? originalPrioIsP0(prio) : false;
   };
+  window.getPrioSaveStatus=function(){
+    let status=document.getElementById("prioSaveStatus");
+    if(!status){
+      status=document.createElement("div");status.id="prioSaveStatus";
+      status.setAttribute("role","status");status.setAttribute("aria-live","polite");
+      status.style.cssText="margin:10px 0;line-height:1.5;overflow-wrap:anywhere";
+      const button=document.querySelector('button[onclick="savePrio()"]');
+      if(button)button.insertAdjacentElement("afterend",status);else document.body.appendChild(status);
+    }
+    return status;
+  };
+  let savingPrio=false;
   const originalSavePrio=window.savePrio;
   if(typeof originalSavePrio === "function") window.savePrio=async function(){
-    if(window.p0PlusWasClicked && !requireP0PlusEnabled()) return;
-    return originalSavePrio.apply(this,arguments);
+    if(savingPrio)return;
+    savingPrio=true;
+    const status=window.getPrioSaveStatus();status.textContent="Auswahl wird geprüft …";
+    try{
+      if(window.p0PlusWasClicked && !p0PlusEnabled()){
+        window.p0PlusWasClicked=false;window.p0WasClicked=true;
+      }
+      return await originalSavePrio.apply(this,arguments);
+    }catch(error){
+      status.textContent="Speichern fehlgeschlagen: "+(error.message||"Bitte erneut versuchen.");
+    }finally{savingPrio=false;}
   };
   const originalRenderLootList=window.renderLootList;
   if(typeof originalRenderLootList === "function") window.renderLootList=function(){

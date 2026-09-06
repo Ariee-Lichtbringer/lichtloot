@@ -16,3 +16,6 @@ assert.equal(ui.poReleasesEnabledForCurrentPage(true,[],true,{zg:{poReleases:tru
 assert.equal(ui.poReleasesEnabledForCurrentPage(true,['zg-prime'],true,{zg:{poReleases:false}}),false);
 assert.equal(ui.poReleasesEnabledForCurrentPage(false,['zg-prime'],true,{}),false);
 console.log('PASS: staff column visibility is independent of loot-page requirements; global and per-page layout switches control backend and browser.');
+
+vm.runInContext('let currentGuildInfo={layout:{lootPageSectionsByRaid:{zg:{poReleases:false}}}}',ui);
+assert.equal(ui.poReleasesEnabledForCurrentPage(true,[],false),false,'Read the page lexical guild variable, not only window properties');

@@ -12848,13 +12848,13 @@ async function resolvePrioP0Selection(guildId, raidType, params, context) {
     || ["ja", "true", "1", "p0", "po"].includes(clean(params.p0Selected || params.p0 || params.po).toLowerCase());
   const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
   const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
-  if (requestedPlus) requireRaidP0PlusEnabled(context.layout, raidType);
+  // Stale browser flags cannot override the current guild/item settings.
   // A stale browser or the plain P0 button must not downgrade a configured
   // P0+ item. Classify before release/recruit checks, using this transaction.
   const configuredPlus = p0Selected && await guildPoItemRequiresRelease(
     guildId, p0ItemId, p0ItemName, raidType, context
   );
-  return { p0Selected, p0PlusSelected: requestedPlus || configuredPlus, p0ItemName, p0ItemId };
+  return { p0Selected, p0PlusSelected: Boolean(configuredPlus), p0ItemName, p0ItemId };
 }
 
 async function savePrio({ guildId, query: params }) {
@@ -13184,6 +13184,7 @@ async function savePrio({ guildId, query: params }) {
       playerPin: normalizePin(pin),
       tempPin: normalizePin(pin),
       prioId: prioResult.rows[0].id,
+      p0Plus: Boolean(p0PlusSelected),
       raidId: savedRaid.external_raid_id || savedRaid.id,
       p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
       p0PostRefresh,

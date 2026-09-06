@@ -3884,7 +3884,7 @@ async function savePrio(){
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
-  const status=document.getElementById("playerStatus");
+  const status=window.getPrioSaveStatus();
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
 
   // Die sichtbare LichtLoot-Auswahl ist die verlässliche Quelle, falls ein
@@ -3901,7 +3901,7 @@ async function savePrio(){
     document.getElementById("playerClass").value=playerClass;
   }
 
-  const isP0Plus =
+  let isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
     p1 &&
     p1 === p2 &&
@@ -3938,14 +3938,14 @@ async function savePrio(){
     return;
   }
 
-  await loadPublishedPrios();
-  if(!currentRaidId){
-    status.innerHTML=`<span class="bad">Raid wurde zu diesem Prio-PIN nicht gefunden. Bitte Seite neu laden oder Prio-PIN prüfen.</span>`;
-    return;
-  }
   if(saveButton) saveButton.disabled=true;
-
+  status.textContent="Prüfe Raid und speichere Prios …";
   try{
+    await Promise.race([
+      loadPublishedPrios(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Die Prioliste konnte nicht rechtzeitig geladen werden. Bitte erneut versuchen.")),15000))
+    ]);
+    if(!currentRaidId) throw new Error("Raid wurde zu diesem Prio-PIN nicht gefunden. Bitte den Raid-Link prüfen.");
     const pinInfo = new URLSearchParams(window.location.search).get("random") === "1"
       ? {success:true,pin:getRandomParticipantToken(),generated:false}
       : await Promise.race([
@@ -3968,6 +3968,9 @@ async function savePrio(){
       throw new Error(result.error);
     }
 
+    if(typeof result.p0Plus === "boolean"){
+      isP0Plus=result.p0Plus;window.p0PlusWasClicked=result.p0Plus;
+    }
     autoSaveDraft();
     saveCharacterProfile();
     updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,isP0Plus ? "ja" : "nein");
@@ -10849,10 +10852,10 @@ function lichtlootFilterCurrentGuildP0Stores(){
 })();
 </script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
-<script src="po-release-status.js?v=20260905-layout"></script>
+<script src="po-release-status.js?v=20260906-settings"></script>
 <script src="raid-signup-mirror.js?v=20260831-1934"></script>
 <script src="../pin-visibility.js"></script>
-<script src="p0-selection-fix.js?v=20260905-2105"></script>
+<script src="p0-selection-fix.js?v=20260906-save"></script>
 <script src="player-gear-popup.js?v=20260830-1750"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>

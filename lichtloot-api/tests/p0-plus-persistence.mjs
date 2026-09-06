@@ -11,7 +11,7 @@ for (const folder of ['loot', 'lichtloot-api/public/loot']) {
   for (const raid of ['mc','bwl','aq40','naxx','zg','aq20','ony']) {
     const src = fs.readFileSync(new URL(`${folder}/${raid}-loot.html`,root),'utf8');
     const fields = Object.fromEntries(Object.entries({raidPin:'W3B',playerName:'Juksi',playerServer:'Everlook',playerClass:'Paladin',p1:'Götze',p2:'Götze',p3:'Götze'}).map(([k,value])=>[k,{value}]));
-    fields.playerStatus={innerHTML:''};
+    fields.playerStatus={innerHTML:''};fields.prioSaveStatus={textContent:''};
     let request;
     const ctx=vm.createContext({URL,URLSearchParams,document:{getElementById:id=>fields[id],querySelectorAll:()=>[]},
       location:{pathname:`/loot/${raid}-loot.html`,search:''}, currentGuildInfo:{layout:{}},
@@ -44,7 +44,7 @@ for (const folder of ['loot', 'lichtloot-api/public/loot']) {
     await ctx.setP0Plus('Götze');assert.equal(selected,true);assert.equal(ctx.p0WasClicked,true);
     ctx.currentGuildInfo.layout={lootPageSectionsByRaid:{[raid]:{p0Plus:false,poReleases:false}}};
     selected=false;await ctx.setP0Plus('Götze');await ctx.savePrio();
-    assert.equal(selected,false);assert.equal(saved,false);
+    assert.equal(selected,false);assert.equal(saved,true);assert.equal(ctx.p0PlusWasClicked,false);assert.equal(ctx.p0WasClicked,true);
   }
 }
 const server=fs.readFileSync(new URL('lichtloot-api/src/server.js',root),'utf8');

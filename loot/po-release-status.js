@@ -13,7 +13,7 @@
   }
   function poReleasesEnabledForCurrentPage(apiEnabled,visibleRaids,configured,sectionsByRaid){
     if(apiEnabled===false)return false;
-    const layout=window.currentGuildInfo&&currentGuildInfo.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{};
+    const layout=typeof currentGuildInfo!=="undefined"&&currentGuildInfo?.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{};
     if(layout.lootPageSections?.poReleases===false)return false;
     const file=String(location.pathname||"").split("/").pop().toLowerCase();
     const pageKey=file.replace(/-loot\.html$/,"").replace(/^zg.*$/,"zg");

@@ -31,8 +31,9 @@ assert.equal((await resolve({p1:'Pantherbalgsack',p2:'Pantherbalgsack',p3:'Panth
 assert.equal(outsideReads,0);
 layout={lootPageSectionsByRaid:{zg:{p0Plus:false}}};
 assert.equal((await resolve(triple)).p0PlusSelected,false);
-await assert.rejects(resolve({...triple,p0Plus:'ja'}),/deaktiviert/);
-layout={};await db.exec("update guild_po_items set enabled=false where item_id='prime'");
+assert.equal((await resolve({...triple,p0Plus:'ja'})).p0PlusSelected,false);
+layout={};assert.equal((await resolve({...triple,p0Plus:'ja'},'zg-late')).p0PlusSelected,false);
+await db.exec("update guild_po_items set enabled=false where item_id='prime'");
 assert.equal((await resolve(triple)).p0PlusSelected,false);
 await db.exec("update guild_po_items set enabled=true where item_id='prime'");
 // Discord still uses the same raid-scoped configuration lookup.
