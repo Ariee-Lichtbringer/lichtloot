@@ -1,3 +1,4 @@
+import {createP0Deletions} from "./p0-deletions.js";
 import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-schedules.js";
 import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
 import {createPrioReminderPosts} from "./prio-reminder-posts.js";
@@ -24,6 +25,8 @@ import nodemailer from "nodemailer";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { inTransaction, pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
+
+const p0Deletions=createP0Deletions({query,transaction:inTransaction,p0Query});
 
 const raidWorkbookService = createRaidWorkbookService({
   prepareWeb: (web,ctx)=>prepareRaidWorkbookWeb(web,ctx,{getReport:getWorkbookParticipantReport,getSpellMetadata:getRpbSpellMetadata}),
@@ -24592,7 +24595,7 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
 
   return {
     success: true,
-    entries: [...result.rows, ...p0OnlyResult.rows].map(normalizeP0SignupRow)
+    entries: [...result.rows, ...await p0Deletions.visibleRows(guildId,p0OnlyResult.rows)].map(normalizeP0SignupRow)
   };
 }
 
@@ -24727,6 +24730,9 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by p0s.item_name asc, p0s.player_name asc`,
     [guildId, raid.id]
   );
+  if(raid.p0_only){
+    signupResult.rows=await p0Deletions.visibleRows(guildId,signupResult.rows);
+  }
   const linkedRegularSignupResult = linkedRegularRaid
     ? await query(
       `select p0s.*
@@ -24766,6 +24772,9 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       [guildId, linkedP0OnlyEvent.id]
     )
     : { rows: [] };
+  if(linkedP0OnlyEvent){
+    linkedP0OnlySignupResult.rows=await p0Deletions.visibleRows(guildId,linkedP0OnlySignupResult.rows);
+  }
   // Wenn der Bot den normalen Raid zuerst findet, liegen dessen Discord-P0-
   // Anmeldungen weiterhin im verknüpften separaten Datensatz. Vor dem Lesen
   // der Prioliste werden auch diese offenen und freigegebenen Einträge
@@ -25347,23 +25356,9 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
     throw error;
   }
   if (raid.p0_only) {
-    const deleted = await p0Query(
-      `delete from p0_only_signups
-       where guild_id=$1 and event_id=$2 and character_id=$3 and discord_user_id=$4
-       returning id`,
-      [guildId, raid.id, character.id, discordUserId]
-    );
-    if (!deleted.rowCount) {
-      const error = new Error("Für dich wurde bei diesem P0-Anmelder keine passende Anmeldung gefunden.");
-      error.statusCode = 404;
-      throw error;
-    }
-    return {
-      success: true,
-      deleted: deleted.rowCount,
-      raid: normalizeRaidRow(raid),
-      storage: "separate-p0-database"
-    };
+    const linkedRaid=await resolveLinkedRegularRaidForP0Event(guildId,raid,{persist:true});
+    const result=await p0Deletions.remove({guildId,event:raid,character,discordUserId,linkedRaid,archiveMirrors:archiveDeletedP0Mirrors});
+    return {...result,raid:normalizeRaidRow(raid),storage:"separate-p0-database"};
   }
   const client = await pool.connect();
   try {
@@ -25426,9 +25421,14 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
   if (!linkedRaid) {
     return { success: true, skipped: true, reason: "linked_raid_missing" };
   }
+  await p0Deletions.ensure();
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query('select pg_advisory_xact_lock(hashtext($1))',[guildId+':'+p0Event.id+':'+signup.character_id]);
+    if((await client.query('select 1 from p0_signup_deletions where guild_id=$1 and signup_id=$2',[guildId,signup.id])).rows.length){
+      await client.query('commit');return {success:true,skipped:true,reason:'signup_deleted'};
+    }
     const character = (await client.query(
       `select c.*
        from characters c
@@ -25647,7 +25647,7 @@ async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
   }
   if (p0OnlyRequested) {
     const deleted = await p0Query(
-      `delete from p0_only_signups where guild_id=$1 and id=$2 returning *`,
+      `select * from p0_only_signups where guild_id=$1 and id=$2`,
       [guildId, signupId]
     );
     if (!deleted.rows[0]) {
@@ -25659,10 +25659,12 @@ async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
       `select * from p0_only_events where guild_id=$1 and id=$2 limit 1`,
       [guildId, deleted.rows[0].event_id]
     );
-    const event = eventResult.rows[0] || {};
-    const linkedRaid = clean(event.external_p0_id)
-      ? await findRaid(guildId, { raidId: event.external_p0_id })
-      : null;
+    const event = normalizeP0OnlyEventRow(eventResult.rows[0]);
+    const linkedRaid = await resolveLinkedRegularRaidForP0Event(guildId,event,{persist:true});
+    const row=deleted.rows[0];
+    const character=(await query('select c.* from characters c join players p on p.id=c.player_id where p.guild_id=$1 and c.id=$2',[guildId,row.character_id])).rows[0];
+    if(!character)throw new Error('Verknüpfter Charakter fehlt; Löschung benötigt eine eindeutige Zuordnung.');
+    await p0Deletions.remove({guildId,event,character,discordUserId:row.discord_user_id,linkedRaid,archiveMirrors:archiveDeletedP0Mirrors,signupId});
     const refresh = await (linkedRaid
       ? enqueueP0PostRefreshForRaid(guildId, linkedRaid, "p0_management_delete")
       : enqueueBotUpdate({
@@ -32301,6 +32303,14 @@ app.post("/api/apps-script", async (req, res, next) => {
     if(action === 'lichtbotFailQueue'){
       requireMasterOrQueueToken(postParams);
       return res.json(await failBotQueue(query,guild.id,postParams.rowNumber,postParams.reason));
+    }
+
+    if (action === "lichtbotRecordNoticeDelivery") {
+      requireMasterOrQueueToken(postParams);
+      const row=clean(postParams.rowNumber),target=clean(postParams.targetId),message=clean(postParams.messageId);
+      if(!isUuid(row)||!/^\d{17,20}$/.test(target)||!/^\d{17,20}$/.test(message))return res.status(400).json({success:false,error:"Ungültiger Zustellnachweis"});
+      const saved=await query(`update bot_update_queue set payload=jsonb_set(payload,'{deliveryReceipts}',coalesce(payload->'deliveryReceipts','{}'::jsonb)||jsonb_build_object($3::text,$4::text)) where guild_id=$1 and id=$2 returning id`,[guild.id,row,target,message]);
+      return res.json({success:saved.rowCount===1});
     }
 
     if (action === "lichtbotResolveQueue") {
