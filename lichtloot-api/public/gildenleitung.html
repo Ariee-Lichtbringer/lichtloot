@@ -5300,8 +5300,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .raid-clear-date{display:grid;gap:4px;font-size:17px;font-weight:900;color:#e2e8f0}.raid-clear-date strong{color:#67e8f9;font-size:15px}.raid-overview-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.raid-summary-popup{position:fixed;z-index:100100;box-sizing:border-box;width:min(460px,calc(100vw - 24px));max-height:min(420px,calc(100dvh - 24px));overflow:auto;background:#0b1425;border:1px solid #64748b;border-radius:10px;padding:14px;color:#e2e8f0;box-shadow:0 16px 40px #0009;font-size:13px}.raid-summary-popup h4{margin:0 0 10px;color:#f5c451}.raid-summary-popup p{border-bottom:1px solid #334155;padding-bottom:8px}.raid-summary-popup small{color:#94a3b8}
 /* Guild-themed raid cards: separate registration, priority and transfer state. */
-#activeRaidCards .active-raid-group-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px;align-items:start}
-.raid-overview-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);font-size:13px;box-shadow:none}
+#activeRaidCards .active-raid-group-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:20px;align-items:start}
+.raid-overview-card{min-width:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--soft));border-top:3px solid color-mix(in srgb,var(--gold) 65%,var(--soft));border-radius:11px;background:color-mix(in srgb,var(--panel) 94%,var(--text) 6%);color:var(--text);font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.26)}
 .raid-overview-card *{box-sizing:border-box}
 .raid-overview-card .rc-content{padding:16px}
 .raid-overview-card .rc-header{display:flex;align-items:center;gap:12px;min-height:64px}
@@ -5323,15 +5323,21 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .raid-overview-card .rc-button:hover{background:rgba(var(--gold-rgb),.1);border-color:var(--gold)}
 .raid-overview-card .rc-button:disabled{opacity:.45;cursor:not-allowed}
 .raid-overview-card .rc-primary{color:var(--raid-action-ink,#0b1320);background:var(--gold);border-color:var(--gold)}
-.raid-overview-card .rc-discord{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 13px}
-.raid-overview-card .rc-discord .rc-button{background:none;border:0;padding:4px 0;font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;min-height:30px}
+.raid-overview-card .rc-discord{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:12px 0 14px}
+.raid-overview-card .rc-discord .rc-button{background:var(--panel2);border:1px solid var(--soft);padding:9px 11px;font-size:12px;color:var(--text);display:flex;gap:8px;align-items:center;justify-content:flex-start;min-height:40px;text-align:left}
+.raid-overview-card .rc-discord .rc-button:first-child{border-color:color-mix(in srgb,var(--gold) 38%,var(--soft));background:rgba(var(--gold-rgb),.08)}
+.raid-overview-card .rc-discord .rc-button:hover{border-color:var(--gold);background:rgba(var(--gold-rgb),.17)}
+.raid-overview-card .rc-discord .rc-button:last-child::before{content:"⧉";display:inline-block;flex:0 0 16px;font-size:18px;line-height:1;color:var(--gold)}
 .raid-overview-card .rc-discord img{width:16px;height:16px}
 .raid-overview-card .rc-main-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:8px}
 .raid-overview-card .rc-points{padding:12px 16px;background:var(--panel2);border-top:1px solid var(--line)}
 .raid-overview-card .rc-points>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}
 .raid-overview-card .rc-points strong{color:var(--text);font-weight:650}
-.raid-overview-card .rc-points-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px}
-.raid-overview-card .rc-points-actions .rc-button{padding:4px 0;min-height:30px;border:0;background:none;font-size:11px;color:var(--gold)}
+.raid-overview-card .rc-points-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.raid-overview-card .rc-points-actions .rc-button{padding:9px 8px;min-height:38px;border:1px solid var(--soft);background:var(--panel);font-size:12px;color:var(--text)}
+.raid-overview-card .rc-points-actions .rc-button:first-child{color:var(--gold);border-color:rgba(var(--gold-rgb),.4);background:rgba(var(--gold-rgb),.12)}
+.raid-overview-card .rc-points-actions .rc-button:last-child:nth-child(odd){grid-column:1/-1}
+.raid-overview-card .rc-points-actions .rc-button:hover{border-color:var(--gold);background:rgba(var(--gold-rgb),.18)}
 .raid-overview-card .rc-details{border-top:1px solid var(--line);padding:0 16px}
 .raid-overview-card .rc-details summary{padding:12px 0;cursor:pointer;color:var(--muted);font-size:11px;font-weight:500;letter-spacing:normal;text-transform:none}
 .raid-overview-card .rc-details>div{display:grid;gap:5px;font-size:11px;color:var(--muted);padding-bottom:12px;overflow-wrap:anywhere}
@@ -9440,7 +9446,7 @@ function renderDashboardRaidCard(raid){
     <div class="rc-states"><span>${stage}</span>${!signupOnly&&!p0Only?`<span>Prioliste ${isOpenStatus(raid.status)?'sichtbar':'verborgen'}</span>`:''}</div>
     <div class="rc-metrics"><div><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></div><div><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></div><div><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></div></div>
     <div class="rc-hint">${escapeHtml(hint)}</div>
-    ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`)}</div>`:''}
+    ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM senden',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`,'','aria-label="DC-Nachricht kopieren"')}</div>`:''}
     <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
     ${pointsEnabled?`<div class="rc-points"><div><strong>P0+</strong><span>${pointsLabel}</span></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}${!cancelled?button('P0+ öffnen',`openP0OnlySignupFromDashboard(${arg})`):''}</div></div>`:''}
     <details class="rc-details"><summary>Raidinformationen</summary><div><span>Gilde · <strong>${escapeHtml(displayGuildNameForRaid(raid.guild||raid.gilde))}</strong></span><span>Erstellt von · <strong>${escapeHtml(getRaidCreatorName(raid))}</strong></span>${!signupOnly?`<span>Prio-PIN · <strong>${escapeHtml(raid.playerPin||'—')}</strong></span>`:''}<span>Raid-ID · ${escapeHtml(id)}</span><span>${cancelled?'Teilnahme entfällt':'Anmeldungen sind keine bestätigte Teilnahme.'}</span></div></details>
