@@ -113,7 +113,7 @@
     const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(function(item){
       const key=item[0],label=item[1],attendance=data&&data.attendance16&&data.attendance16[key];
       const total=Number(attendance&&attendance.total||0),attended=Number(attendance&&attendance.attended||0),bench=Number(attendance&&attendance.bench||0);
-      return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';
+      return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(attendance&&attendance.fetchedAt?'Stand: '+new Date(attendance.fetchedAt).toLocaleString('de-DE'):(bench?'davon '+bench+' Bank':'Noch nicht synchronisiert'))+'</small></span>';
     }).join("");
     box.innerHTML=(data&&data.attendance16?'<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div>':'')+'<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
   };
@@ -158,8 +158,7 @@
         const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild,character:char.name,server:char.server||"",pin,t:Date.now()});
         releaseJson(requestQuery).then(data=>{requests=Array.isArray(data.entries)?data.entries:[];render();}).catch(()=>{});
       }
-      historyQuery.delete("releaseOnly");
-      releaseJson(historyQuery,30000).then(data=>{history.attendance16=data.attendance16;render();}).catch(()=>{});
+
     }catch(error){
       if(!isCurrent())return;
       box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span> <button type="button" data-release-retry>Erneut laden</button></div>';

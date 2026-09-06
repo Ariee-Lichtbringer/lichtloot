@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {createWclAttendanceStore} from '../src/wcl-attendance-store.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE||'/tmp/guildloot-audit-deps/package/dist/index.js');
+const db=new PGlite();const query=(sql,params)=>db.query(sql,params);let calls=0,fail=false;
+const fetchAttendance=async()=>{calls++;if(fail)throw Error('WCL unavailable');return {total:1,players:{fixture:{attended:1,bench:0}},reports:[{code:'report-one',startTime:1000,players:[{name:'fixture',presence:1}]}]}};
+const store=createWclAttendanceStore({query,fetchAttendance});
+assert.equal(await store.read('mc',123),null);assert.equal(calls,0);
+await Promise.all([store.refresh('mc',123),store.refresh('mc',123)]);assert.equal(calls,1);
+const saved=await store.read('mc',123);assert.equal(saved.total,1);assert.equal(saved.players.fixture.attended,1);assert(saved.fetchedAt);
+assert.equal((await query('select count(*) as n from wcl_attendance_reports')).rows[0].n,1);
+assert.equal((await store.readReports('mc',123,'1970-01-01')).length,1);assert.equal((await store.readReports('mc',123,'1970-01-02')).length,0);
+const restarted=createWclAttendanceStore({query,fetchAttendance});assert.equal((await restarted.read('mc',123)).total,1);assert.equal(calls,1);
+await restarted.refresh('mc',123);assert.equal(calls,1);assert.equal(await restarted.read('mc',999),null);assert.equal(await restarted.read('bwl',123),null);assert.equal(await restarted.read('mc',123,32),null);
+await query("update wcl_attendance_snapshots set fetched_at=now()-interval '2 days',attempted_at=now()-interval '1 hour'");fail=true;await assert.rejects(restarted.refresh('mc',123),/unavailable/);assert.equal((await restarted.read('mc',123)).total,1);await restarted.refresh('mc',123);assert.equal(calls,2);
+const src=await import('node:fs');const server=src.readFileSync(new URL('../src/server.js',import.meta.url),'utf8');const a=server.indexOf('async function getPlayerPrioHistory('),b=server.indexOf('\nasync function deletePrio(',a);assert(!server.slice(a,b).includes('getWclPoAttendance'));const ui=src.readFileSync(new URL('../../loot/po-release-status.js',import.meta.url),'utf8');assert(!ui.includes('historyQuery.delete("releaseOnly")'));
+await db.close();console.log('PASS persistent snapshots and per-report rosters survive service restart; reads never fetch WCL; tenant/window isolation; deduplication; stale data survives outage with retry backoff; loot endpoint has no WCL lookup.');

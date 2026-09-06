@@ -1,3 +1,4 @@
+import {createWclAttendanceStore} from "./wcl-attendance-store.js";
 import {createCalendarPosts} from "./calendar-posts.js";
 import {createP0Deletions} from "./p0-deletions.js";
 import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-schedules.js";
@@ -950,6 +951,7 @@ async function getWarcraftLogsAccessToken() {
 
   const request = (async()=>{
     const response = await fetch(`${baseUrl}/oauth/token`, {
+      signal: AbortSignal.timeout(20000),
       method: "POST",
       headers: {
         Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
@@ -988,6 +990,7 @@ async function warcraftLogsGraphql(token, gqlQuery, variables = {}) {
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     await waitForWarcraftLogsSlot();
     const response = await fetch(`${baseUrl}/api/v2/client`, {
+      signal: AbortSignal.timeout(20000),
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -5769,10 +5772,9 @@ const WCL_PO_ATTENDANCE_ZONES = { mc:2000, bwl:2002, aq40:2005, naxx:2006 };
 const WCL_RAID_PARTICIPATION_ZONES = { mc:2000, ony:2001, bwl:2002, zg:2003, "zg-mittwoch":2003, "zg-prime":2003, "zg-late":2003, aq20:2004, aq40:2005, naxx:2006 };
 const wclPoAttendanceCache = new Map();
 const wclPoAttendancePending = new Map();
-const wclRaidParticipationCache = new Map();
 function normalizeAttendanceName(value) { return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 async function getWclPoAttendance(raid,wclGuildId,requestedLimit=16) {
-  const zoneId=WCL_PO_ATTENDANCE_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
+  const zoneId=WCL_RAID_PARTICIPATION_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
   const limit=Math.min(50,Math.max(1,Math.round(Number(requestedLimit)||16)));
   const cacheKey=`${wclGuildId}:${raid}:${limit}`; const cached=wclPoAttendanceCache.get(cacheKey); if(cached&&cached.expiresAt>Date.now())return cached.value;
   if(wclPoAttendancePending.has(cacheKey))return wclPoAttendancePending.get(cacheKey);
@@ -5780,13 +5782,52 @@ async function getWclPoAttendance(raid,wclGuildId,requestedLimit=16) {
   const token=await getWarcraftLogsAccessToken();
   const gqlQuery="query($guildID:Int!,$zoneID:Int!,$limit:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:$limit,page:1){data{code startTime players{name type presence}}}}}}";
   const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId,limit});
-  const raids=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[]; const players={};
+  if(!Array.isArray(data?.guildData?.guild?.attendance?.data))throw new Error("Warcraft Logs lieferte keine gültige Attendance-Antwort.");
+  const raids=data.guildData.guild.attendance.data; const players={};
   raids.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;if(!players[key])players[key]={attended:0,bench:0};if(Number(player?.presence)===1)players[key].attended+=1;if(Number(player?.presence)===2)players[key].bench+=1;}));
-  const value={total:Math.min(limit,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
+  const value={total:Math.min(limit,raids.length),players,reports:raids}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
   })();
   wclPoAttendancePending.set(cacheKey,pending);
   try{return await pending;}finally{wclPoAttendancePending.delete(cacheKey);}
 
+}
+
+const wclAttendanceStore=createWclAttendanceStore({query,fetchAttendance:getWclPoAttendance});
+let wclAttendanceSyncRunning=false;
+async function runWclAttendanceSync(){
+  if(wclAttendanceSyncRunning)return;
+  wclAttendanceSyncRunning=true;
+  try{
+    await ensureGuildLayoutSchema();
+    const guilds=await query("select id from guilds");
+    for(const guild of guilds.rows){
+      const config=await getGuildEraConfiguration(guild.id);
+      if(!config.warcraftLogsGuildId)continue;
+      const recent=await query(`select distinct lower(raid_type) as raid_type from raids
+        where guild_id=$1 and raid_date between current_date-2 and current_date
+          and lower(coalesce(status,'')) not in ('abgesagt','cancelled','canceled','deleted','gelöscht')
+          and ((raid_date + case when raid_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]' then left(raid_time,5)::time else time '23:59' end)
+            at time zone 'Europe/Berlin') + interval '3 hours' <= now()`,[guild.id]);
+      const recentTypes=new Set(recent.rows.map(row=>lootSourceRaidType(row.raid_type)));
+      for(const raid of new Set(config.rules.supportedRaids.map(lootSourceRaidType).filter(raid=>WCL_RAID_PARTICIPATION_ZONES[raid]))){
+        try{
+          await wclAttendanceStore.refresh(raid,config.warcraftLogsGuildId,config.rules.poRelease.attendanceWindow,recentTypes.has(raid)?15*60*1000:24*60*60*1000);
+        }catch(error){console.warn(`Attendance-Synchronisierung ${raid} fehlgeschlagen:`,error.message||error);}
+      }
+    }
+  }finally{wclAttendanceSyncRunning=false;}
+}
+async function storedCharacterAttendance(guildId,character){
+  const config=await getGuildEraConfiguration(guildId),attendance16={};
+  if(config.warcraftLogsGuildId){
+    await Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>{
+      const stats=await wclAttendanceStore.read(raid,config.warcraftLogsGuildId,config.rules.poRelease.attendanceWindow);
+      if(!stats)return;
+      const player=stats.players[normalizeAttendanceName(character.name)]||{attended:0,bench:0};
+      attendance16[raid]={attended:Number(player.attended||0)+Number(player.bench||0),bench:Number(player.bench||0),total:Number(stats.total||0),fetchedAt:stats.fetchedAt};
+    }));
+  }
+  return attendance16;
 }
 
 function wclRaidDateInBerlin(value) {
@@ -5812,24 +5853,12 @@ async function getWclRaidParticipationForRaidView(raid,guildId,date) {
 }
 
 async function getWclRaidParticipation(raid,wclGuildId,raidDate) {
-  const raidKey=normalizePoReleaseRaid(raid)||normalizeRaidType(raid),zoneId=WCL_RAID_PARTICIPATION_ZONES[raidKey],targetDate=clean(raidDate).slice(0,10);
-  if(!zoneId||!wclGuildId||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return {available:false,players:{},reports:[]};
-  const cacheKey=`${wclGuildId}:${zoneId}:${targetDate}`,cached=wclRaidParticipationCache.get(cacheKey);
-  if(cached&&cached.expiresAt>Date.now())return cached.value;
-  const token=await getWarcraftLogsAccessToken(),reports=[];
-  const gqlQuery="query($guildID:Int!,$zoneID:Int!,$page:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:16,page:$page){data{code startTime players{name type presence}}}}}}";
-  for(let page=1;page<=20;page+=1){
-    const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId,page});
-    const entries=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[];
-    if(!entries.length)break;
-    entries.forEach(entry=>{if(wclRaidDateInBerlin(entry?.startTime)===targetDate)reports.push(entry);});
-    const dated=entries.map(entry=>wclRaidDateInBerlin(entry?.startTime)).filter(Boolean);
-    if(reports.length||entries.length<16||(dated.length&&dated.every(value=>value<targetDate)))break;
-  }
+  const raidKey=lootSourceRaidType(raid),targetDate=clean(raidDate).slice(0,10);
+  if(!WCL_RAID_PARTICIPATION_ZONES[raidKey]||!wclGuildId||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return {available:false,players:{},reports:[]};
+  const reports=await wclAttendanceStore.readReports(raidKey,wclGuildId,targetDate);
   const players={};
   reports.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;const presence=Number(player?.presence||0);if(presence===1||presence===2)players[key]={participated:true,bench:presence===2};}));
   const value={available:reports.length>0,players,reports:reports.map(entry=>({code:clean(entry.code),url:clean(entry.code)?`https://vanilla.warcraftlogs.com/reports/${clean(entry.code)}`:"",date:targetDate}))};
-  wclRaidParticipationCache.set(cacheKey,{value,expiresAt:Date.now()+10*60*1000});
   return value;
 }
 
@@ -5937,7 +5966,7 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
       try {
         let raidTimer;
         const stats=await Promise.race([
-          getWclPoAttendance(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow),
+          wclAttendanceStore.read(raid,wclGuildId,eraConfig.rules.poRelease.attendanceWindow),
           new Promise((_,reject)=>{raidTimer=setTimeout(()=>reject(new Error("Zeitüberschreitung nach 20 Sekunden")),20000);})
         ]).finally(()=>clearTimeout(raidTimer));
         return [raid,stats];
@@ -13686,6 +13715,7 @@ async function getPlayerPrioHistory(guildId, params) {
   // Loot pages need persisted approvals immediately, independent of external attendance.
   if (String(params.releaseOnly) === "1") {
     return {
+      attendance16: await storedCharacterAttendance(guildId,character),
       success: true, player: character.name, server: character.server,
       characterId: character.id, poReleases, recruitReleases,
       recruitStatusLifted: Boolean(character.recruit_status_lifted),
@@ -13758,26 +13788,7 @@ async function getPlayerPrioHistory(guildId, params) {
     pointsParams
   );
 
-  let attendance16 = {};
-  try {
-    const eraConfig = await getGuildEraConfiguration(guildId);
-    const wclGuildId = eraConfig.warcraftLogsGuildId;
-    if (!wclGuildId) throw new Error("Warcraft-Logs-Gilden-ID fehlt.");
-    const attendance = Object.fromEntries(await Promise.all(
-      Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid => [raid, await getWclPoAttendance(raid, wclGuildId, eraConfig.rules.poRelease.attendanceWindow)])
-    ));
-    const characterKey = normalizeAttendanceName(character.name);
-    Object.entries(attendance).forEach(([raid, stats]) => {
-      const player = stats.players[characterKey] || { attended: 0, bench: 0 };
-      attendance16[raid] = {
-        attended: Number(player.attended || 0) + Number(player.bench || 0),
-        bench: Number(player.bench || 0),
-        total: Number(stats.total || 0)
-      };
-    });
-  } catch (error) {
-    console.warn("Warcraft-Logs-Attendance für Mein LichtLoot konnte nicht geladen werden:", error.message || error);
-  }
+  const attendance16 = await storedCharacterAttendance(guildId,character);
 
   const zgCharacter = {id:character.id, attendance16};
   await attachZgPrioAttendance(guildId, [zgCharacter]);
@@ -32700,6 +32711,8 @@ async function runMissingPrioReminderTick() {
 }
 
 app.listen(port, () => {
+  const attendanceTick=()=>runWclAttendanceSync().catch(error=>console.warn("Attendance-Synchronisierung fehlgeschlagen:",error.message||error));
+  setTimeout(attendanceTick,20000).unref();setInterval(attendanceTick,5*60*1000).unref();
   const inboxTick=()=>supportInbox.tick().catch(()=>console.error('Support inbox check failed'));
   setTimeout(inboxTick,15000).unref();setInterval(inboxTick,60000).unref();
   const discordSupportTick=async()=>{await ensureSupportTicketSchema();await supportNotices.queueDMs();};
