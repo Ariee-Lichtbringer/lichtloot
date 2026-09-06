@@ -1,0 +1,6 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../src/server.js',import.meta.url),'utf8');const start=source.indexOf('async function setRaidDiscordMessage(');const fn=source.slice(start,source.indexOf('\nasync function ',start+20));
+let writes=[];const event={id:'event',p0_only:true,external_raid_id:'P0-TEST',discord_message_id:'old'};
+const ctx=vm.createContext({clean:x=>String(x||''),requireMasterOrQueueToken:()=>{},findP0DiscordRaid:async()=>({id:'regular',raidhelper_enabled:false,external_raid_id:'P0-TEST'}),findP0OnlyEvent:async()=>event,p0Query:async(sql,args)=>{writes.push(args);return {rows:[{...event,discord_message_id:args[3]}]};},normalizeRaidRow:x=>x,normalizeP0OnlyEventRow:x=>x,query:()=>{throw Error('Must update the post-owning P0 event');}});
+vm.runInContext(fn,ctx);const result=await ctx.setRaidDiscordMessage({guildId:'guild',query:{discordMessageId:'original-post',discordChannelId:'channel',claimOnly:'false'}});
+assert.equal(writes[0][1],'event');assert.equal(result.raid.discord_message_id,'original-post');assert.equal(result.raid.p0_only,true);console.log('P0 post identity write follows the same event used for display; linked raid data stays separate.');

@@ -12524,7 +12524,12 @@ async function archivePoPostEntriesForRaid(client, guildId, raidType) {
 
 async function setRaidDiscordMessage({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  const raid = await findP0DiscordRaid(guildId, params);
+  let raid = await findP0DiscordRaid(guildId, params);
+  // Match the post identity shown by getRaidHelper for coupled P0-only events.
+  if(raid && !raid.p0_only && raid.raidhelper_enabled===false && /^P0-/.test(clean(raid.external_raid_id))){
+    const event=await findP0OnlyEvent(guildId,{raidId:raid.external_raid_id});
+    if(event)raid=event;
+  }
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
