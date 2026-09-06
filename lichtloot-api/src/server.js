@@ -12764,6 +12764,24 @@ async function removeDuplicatePriosForPlayerLogin(client, raidId, character) {
   return deleted.rowCount || 0;
 }
 
+async function resolvePrioP0Selection(guildId, raidType, params, context) {
+  const requestedPlus = ["ja", "true", "1"].includes(clean(params.p0Plus).toLowerCase());
+  const submittedPrios = [params.p1, params.p2, params.p3].map(value => clean(value));
+  const sameItemInAllThreePrios = submittedPrios.every(Boolean)
+    && new Set(submittedPrios.map(value => value.toLocaleLowerCase("de-DE"))).size === 1;
+  const p0Selected = requestedPlus || sameItemInAllThreePrios
+    || ["ja", "true", "1", "p0", "po"].includes(clean(params.p0Selected || params.p0 || params.po).toLowerCase());
+  const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
+  const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
+  if (requestedPlus) requireRaidP0PlusEnabled(context.layout, raidType);
+  // A stale browser or the plain P0 button must not downgrade a configured
+  // P0+ item. Classify before release/recruit checks, using this transaction.
+  const configuredPlus = p0Selected && await guildPoItemRequiresRelease(
+    guildId, p0ItemId, p0ItemName, raidType, context
+  );
+  return { p0Selected, p0PlusSelected: requestedPlus || configuredPlus, p0ItemName, p0ItemId };
+}
+
 async function savePrio({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
@@ -12771,6 +12789,7 @@ async function savePrio({ guildId, query: params }) {
   // statements through the pool while this transaction already holds raid locks
   // makes the request wait on itself until PostgreSQL cancels it.
   await ensureCharacterPoReleaseSchema();
+  await ensureGuildPoItemsSchema();
   const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
   const player = params.player || params.char || params.spieler;
   const server = params.server;
@@ -12785,8 +12804,6 @@ async function savePrio({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID);
   const prioPin = clean(params.raidPin || params.prioPin || params.PrioPIN || params.playerLinkPin);
-  const p0Plus = clean(params.p0Plus).toLowerCase();
-  const p0Requested = clean(params.p0Selected || params.p0 || params.po).toLowerCase();
   const client = await pool.connect();
 
   try {
@@ -12940,14 +12957,9 @@ async function savePrio({ guildId, query: params }) {
       }
     }
 
-    const p0PlusSelected = ["ja", "true", "1"].includes(p0Plus);
-    if (p0PlusSelected) requireRaidP0PlusEnabled(guildLayout, savedRaidForSignupCheck.raid_type);
-    const submittedPrios = [params.p1, params.p2, params.p3].map(value => clean(value));
-    const sameItemInAllThreePrios = submittedPrios.every(Boolean)
-      && new Set(submittedPrios.map(value => value.toLocaleLowerCase("de-DE"))).size === 1;
-    const p0Selected = p0PlusSelected
-      || sameItemInAllThreePrios
-      || ["ja", "true", "1", "p0", "po"].includes(p0Requested);
+    const { p0Selected, p0PlusSelected, p0ItemName, p0ItemId } = await resolvePrioP0Selection(
+      guildId, savedRaidForSignupCheck.raid_type, params, { client, layout: guildLayout }
+    );
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let recruitRestricted = false;
     if (eraRules.recruit.enabled && eraRules.recruit.raids.includes(releaseRaid)) {
@@ -13004,8 +13016,6 @@ async function savePrio({ guildId, query: params }) {
         const error = new Error(`${label} ist für diese Gilde deaktiviert.`); error.statusCode = 400; throw error;
       }
     }
-    const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
-    const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
     const p1 = await upsertItem(
       client,
       raidType,
@@ -13194,6 +13204,7 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
 async function savePrioAsRaidlead({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
+  await ensureGuildPoItemsSchema();
   const raid = await findRaid(guildId, params);
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
@@ -13215,10 +13226,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     throw error;
   }
 
-  if (["ja", "true", "1"].includes(clean(params.p0Plus).toLowerCase())) {
-    const config = await getGuildEraConfiguration(guildId);
-    requireRaidP0PlusEnabled(config.layout, raidType);
-  }
+  const config = await getGuildEraConfiguration(guildId);
 
   const client = await pool.connect();
 
@@ -13226,14 +13234,18 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     await client.query("begin");
 
     const character = await findOrCreateRaidleadCharacter(client, guildId, params);
-    const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
-    const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
-    const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
+    const { p0Selected, p0PlusSelected, p0ItemName, p0ItemId } = await resolvePrioP0Selection(
+      guildId, raidType, params, { client, layout: config.layout }
+    );
+    const p1 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p1, p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID));
+    const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
+    const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
     const comment = JSON.stringify({
-      p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
-      p0Item: clean(params.p0Plus).toLowerCase() === "ja" ? (p1?.name || "") : "",
+      p0Selected: p0Selected ? "ja" : "nein",
+      p0Plus: p0PlusSelected ? "ja" : "nein",
+      p0Item: p0Selected ? (p1?.name || "") : "",
       raidTime: clean(params.raidTime || params.uhrzeit) || raid.raid_time || "",
       source: "raidlead"
     });
@@ -13251,7 +13263,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
       [raid.id, character.id, p1?.id || null, p2?.id || null, p3?.id || null, comment]
     );
 
-    const poPostRefreshPayloads = clean(params.p0Plus).toLowerCase() === "ja" && p1
+    const poPostRefreshPayloads = p0Selected && p1
       ? await syncPoPostEntryFromPrio(client, guildId, {
           raid,
           character,
@@ -30077,13 +30089,14 @@ async function requireGuildPoPlusItem(guildId, itemId, itemName = "", raidType =
   return result.rows[0];
 }
 
-async function guildPoItemRequiresRelease(guildId, itemId, itemName = "", raidType = "") {
-  await ensureGuildPoItemsSchema();
+async function guildPoItemRequiresRelease(guildId, itemId, itemName = "", raidType = "", context = null) {
+  if (!context) await ensureGuildPoItemsSchema();
+  const runQuery = context ? (...args) => context.client.query(...args) : query;
   const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
   // The same game item has several rows (ZG Prime/Late/Wednesday and other
   // raids). An unscoped LEFT JOIN + LIMIT 1 could pick the wrong row and
   // silently turn a saved P0+ into P0 during Discord synchronization.
-  const result = await query(
+  const result = await runQuery(
     `select exists (
        select 1 from items i
        join guild_po_items gpi on gpi.item_id = i.id
@@ -30096,7 +30109,7 @@ async function guildPoItemRequiresRelease(guildId, itemId, itemName = "", raidTy
      ) as po_plus_enabled`,
     [guildId, clean(itemId), clean(itemName), settingsRaidTypes]
   );
-  const config = await getGuildEraConfiguration(guildId);
+  const config = context || await getGuildEraConfiguration(guildId);
   return Boolean(result.rows[0]?.po_plus_enabled)
     && raidP0PlusEnabled(config.layout, raidType);
 }
