@@ -7258,8 +7258,8 @@ async function openBotOfflineNotice(noticeKind="bot",editOnly=false){
       <div style="padding:18px;background:#27272b;color:#eee;border-radius:10px;white-space:pre-wrap">${escapeHtml(preview.content||"").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</div>
       <details style="margin-top:12px"><summary>Zielchannels anzeigen</summary><ul>${(preview.targets||[]).map(t=>`<li>${escapeHtml(t.guildSlug)} · #${escapeHtml(t.channelName)}</li>`).join("")}</ul></details>
       <p class="muted">${editOnly?"Die bestehende Nachricht wird bearbeitet. Es wird keine neue Nachricht gepostet.":"Die Bots müssen noch laufen, um den Hinweis zu versenden. Der Button schaltet sie nicht ab."}</p>
-      <div data-status role="status" aria-live="polite">${editOnly?(preview.pending?"Der Offline-Hinweis wird noch zugestellt. Bitte später erneut öffnen.":!preview.channelCount?(preview.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":"Keine gespeicherte Offline-Nachricht zum Bearbeiten vorhanden."):""):""}</div>
-      <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button><button class="small-btn good" data-send ${preview.channelCount&&!preview.pending?"":"disabled"}>${editOnly?"Vorhandene Nachrichten bearbeiten":"Hinweis an Gildenchannels senden"}</button></div></div>`;
+      <div data-status role="status" aria-live="polite">${editOnly?(preview.pending?`${Number(preview.pendingCount)||0} weitere Zustellungen sind noch offen. Bereits zugestellte Nachrichten können jetzt bearbeitet werden. Für die übrigen später erneut öffnen.`:!preview.channelCount?(preview.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":"Keine gespeicherte Offline-Nachricht zum Bearbeiten vorhanden."):""):""}</div>
+      <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button><button class="small-btn good" data-send ${preview.channelCount?"":"disabled"}>${editOnly?"Vorhandene Nachrichten bearbeiten":"Hinweis an Gildenchannels senden"}</button></div></div>`;
     backdrop.querySelector("[data-close]").onclick=()=>backdrop.remove();
     backdrop.querySelector("[data-send]").onclick=async()=>{
       const button=backdrop.querySelector("[data-send]"),status=backdrop.querySelector("[data-status]");
@@ -7267,7 +7267,7 @@ async function openBotOfflineNotice(noticeKind="bot",editOnly=false){
       try{
         const result=await railwayWrite({action:editOnly?"guildQueueBotOnlineNotice":"guildQueueBotOfflineNotice",masterCode,noticeKind});
         if(!result.success)throw new Error(result.error||"Versand fehlgeschlagen.");
-        status.textContent=editOnly?(result.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":`Bearbeitung für ${result.channelCount} Channels beauftragt.`):result.alreadyQueued?"Der Hinweis wurde bereits beauftragt. Kein erneuter Versand.":`Versand für ${result.channelCount} Channels beauftragt. Die Bots arbeiten die Warteschlange ab.`;
+        status.textContent=editOnly?(result.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":`Bearbeitung für ${result.channelCount} Channels beauftragt.${result.pendingCount?` ${result.pendingCount} Zustellungen sind noch offen.`:""}`):result.alreadyQueued?"Der Hinweis wurde bereits beauftragt. Kein erneuter Versand.":`Versand für ${result.channelCount} Channels beauftragt. Die Bots arbeiten die Warteschlange ab.`;
         button.textContent=editOnly?"Bearbeitung beauftragt":"Versand beauftragt";
       }catch(error){status.textContent=error.message;button.disabled=false;}
     };

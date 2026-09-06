@@ -68,9 +68,15 @@ const originalRows=(await db.query('select * from bot_update_queue')).rows;
 const resolverSource=server.slice(server.indexOf('async function resolveBotQueue('),server.indexOf('async function claimBotQueue('));
 const resolver=vm.createContext({clean:v=>String(v||'').trim(),isUuid:()=>true,requireMasterOrQueueToken:()=>{},query:(sql,args)=>db.query(sql,args)});
 vm.runInContext(resolverSource,resolver);
+await resolver.resolveBotQueue({guildId,query:{rowNumber:originalRows[0].id,messageId:'9000'}});
+const partialState=await recoveryTargets({query:(sql,args)=>db.query(sql,args)},guildId,'bot');
+assert.equal(partialState.pendingCount,2);assert.equal(partialState.targets.length,1);
+const partial=await queueOnlineNotice(pool,guildId,'bot');
+assert.equal(partial.channelCount,1);assert.equal(partial.pendingCount,2);
+assert.equal((await queueOnlineNotice(pool,guildId,'bot')).alreadyQueued,true);
 for (const [index,row] of originalRows.entries()) await resolver.resolveBotQueue({guildId,query:{rowNumber:row.id,messageId:String(9000+index)}});
 const restored=await queueOnlineNotice(pool,guildId,'bot');
-assert.equal(restored.channelCount,3);
+assert.equal(restored.channelCount,2);
 const edits=(await db.query("select * from bot_update_queue where payload->>'editOnly'='true'")).rows;
 assert.equal(edits.length,3);
 for (const row of edits) {

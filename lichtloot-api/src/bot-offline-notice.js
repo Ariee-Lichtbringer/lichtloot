@@ -71,10 +71,11 @@ export async function recoveryTargets(db, guildId, kind) {
       and edits.type=latest.type and edits.payload->>'sourceQueueId'=latest.id::text
       and edits.payload->>'editOnly'='true'
   ) as edit_queued from latest`, [guildId, kind]);
-  const pending = result.rows.some(row=>['open','processing'].includes(row.status));
+  const pendingCount = result.rows.filter(row=>['open','processing'].includes(row.status)).length;
+  const pending = pendingCount > 0;
   const targets = result.rows.filter(row=>row.status==='done' && /^\d+$/.test(row.payload.messageId||'') && !row.edit_queued)
     .map(row=>({...row.payload, guildId, sourceQueueId:row.id, editOnly:true, content:onlineNoticeContent(kind)}));
-  return {targets,pending,alreadyQueued:result.rows.some(row=>row.edit_queued)};
+  return {targets,pending,pendingCount,alreadyQueued:result.rows.some(row=>row.edit_queued)};
 }
 
 export async function queueOnlineNotice(pool, guildId, kind) {
@@ -83,13 +84,13 @@ export async function queueOnlineNotice(pool, guildId, kind) {
     await client.query("begin");
     await client.query("select pg_advisory_xact_lock(73924061)");
     const state = await recoveryTargets(client, guildId, kind);
-    if (state.pending) throw new Error("Der Offline-Hinweis wird noch zugestellt. Bitte kurz warten und erneut versuchen.");
+    if (state.pending && !state.targets.length && !state.alreadyQueued) throw new Error("Der Offline-Hinweis wird noch zugestellt. Bitte kurz warten und erneut versuchen.");
     if (!state.targets.length && !state.alreadyQueued) throw new Error("Keine gespeicherte Offline-Nachricht zum Bearbeiten vorhanden.");
     for (const target of state.targets) {
       await client.query(`insert into bot_update_queue(guild_id,type,payload,status) values($1,$2,$3::jsonb,'open')`, [guildId, target.bot+"_offline_notice", JSON.stringify(target)]);
     }
     await client.query("commit");
-    return {success:true,queued:state.targets.length>0,alreadyQueued:!state.targets.length,channelCount:state.targets.length};
+    return {success:true,queued:state.targets.length>0,alreadyQueued:!state.targets.length,channelCount:state.targets.length,pendingCount:state.pendingCount};
   } catch (error) {
     await client.query("rollback");
     throw error;
