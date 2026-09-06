@@ -5299,6 +5299,48 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 
 .raid-clear-date{display:grid;gap:4px;font-size:17px;font-weight:900;color:#e2e8f0}.raid-clear-date strong{color:#67e8f9;font-size:15px}.raid-overview-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.raid-summary-popup{position:fixed;z-index:100100;box-sizing:border-box;width:min(460px,calc(100vw - 24px));max-height:min(420px,calc(100dvh - 24px));overflow:auto;background:#0b1425;border:1px solid #64748b;border-radius:10px;padding:14px;color:#e2e8f0;box-shadow:0 16px 40px #0009;font-size:13px}.raid-summary-popup h4{margin:0 0 10px;color:#f5c451}.raid-summary-popup p{border-bottom:1px solid #334155;padding-bottom:8px}.raid-summary-popup small{color:#94a3b8}
+/* Guild-themed raid cards: separate registration, priority and transfer state. */
+#activeRaidCards .active-raid-group-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px;align-items:start}
+.raid-overview-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);font-size:13px;box-shadow:none}
+.raid-overview-card *{box-sizing:border-box}
+.raid-overview-card .rc-content{padding:16px}
+.raid-overview-card .rc-header{display:flex;align-items:center;gap:12px;min-height:64px}
+.raid-overview-card .rc-header>div{min-width:0}
+.raid-overview-card .rc-image{width:58px;height:64px;flex:0 0 58px;object-fit:contain;border:1px solid var(--soft);background:var(--panel2);border-radius:7px}
+.raid-overview-card h4{margin:0 0 5px;color:var(--text);font-size:16px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.raid-overview-card .rc-date{display:block;padding:0;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;line-height:1.4;text-align:left;cursor:pointer}
+.raid-overview-card .rc-states{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;font-size:11px}
+.raid-overview-card .rc-states span{background:var(--panel2);color:var(--muted);padding:4px 7px;border-radius:5px}
+.raid-overview-card .rc-states span:first-child{color:var(--gold);background:rgba(var(--gold-rgb),.08)}
+.raid-overview-card .rc-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border-block:1px solid var(--line);padding:15px 0;margin-top:14px}
+.raid-overview-card .rc-metrics strong{display:block;font-size:25px;line-height:1.2;font-weight:650;font-variant-numeric:tabular-nums;color:var(--text)}
+.raid-overview-card .rc-metrics span{display:block;font-size:11px;color:var(--muted);margin-top:4px}
+.raid-overview-card .rc-hint{color:var(--gold);font-size:11px;margin-top:10px;min-height:32px}
+.raid-overview-card .rc-pin{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.raid-overview-card .rc-pin small{display:block;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.raid-overview-card .rc-pin strong{color:var(--gold);font-size:22px;letter-spacing:.12em;overflow-wrap:anywhere}
+.raid-overview-card .rc-button{font-family:inherit;font-size:12px;font-weight:650;line-height:1.3;color:var(--text);border:1px solid var(--soft);background:var(--panel2);border-radius:6px;min-height:36px;padding:8px;cursor:pointer;text-align:center;white-space:normal;box-shadow:none;letter-spacing:normal;text-transform:none}
+.raid-overview-card .rc-button:hover{background:rgba(var(--gold-rgb),.1);border-color:var(--gold)}
+.raid-overview-card .rc-button:disabled{opacity:.45;cursor:not-allowed}
+.raid-overview-card .rc-primary{color:var(--raid-action-ink,#0b1320);background:var(--gold);border-color:var(--gold)}
+.raid-overview-card .rc-discord{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 13px}
+.raid-overview-card .rc-discord .rc-button{background:none;border:0;padding:4px 0;font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;min-height:30px}
+.raid-overview-card .rc-discord img{width:16px;height:16px}
+.raid-overview-card .rc-main-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:8px}
+.raid-overview-card .rc-points{padding:12px 16px;background:var(--panel2);border-top:1px solid var(--line)}
+.raid-overview-card .rc-points>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}
+.raid-overview-card .rc-points strong{color:var(--text);font-weight:650}
+.raid-overview-card .rc-points-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px}
+.raid-overview-card .rc-points-actions .rc-button{padding:4px 0;min-height:30px;border:0;background:none;font-size:11px;color:var(--gold)}
+.raid-overview-card .rc-details{border-top:1px solid var(--line);padding:0 16px}
+.raid-overview-card .rc-details summary{padding:12px 0;cursor:pointer;color:var(--muted);font-size:11px;font-weight:500;letter-spacing:normal;text-transform:none}
+.raid-overview-card .rc-details>div{display:grid;gap:5px;font-size:11px;color:var(--muted);padding-bottom:12px;overflow-wrap:anywhere}
+.raid-overview-card .rc-details strong{font-weight:500;color:var(--text)}
+.raid-overview-card .rc-admin{display:flex;justify-content:space-between;gap:8px;padding:0 16px 12px}
+.raid-overview-card .rc-admin .rc-button{background:none;border:0;padding:4px 0;min-height:30px;font-size:11px;color:var(--muted)}
+.raid-overview-card .rc-admin .rc-danger{color:#f0a6a6}
+@media(pointer:coarse){.raid-overview-card .rc-button,.raid-overview-card .rc-date,.raid-overview-card .rc-details summary{min-height:44px}}
+
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -7668,7 +7710,7 @@ async function loadLeadershipTasks(){
     const entries=key==='requests'?result.entries:result.reports;
     if(Array.isArray(entries)){leadershipTaskState[key]=key==='requests'?entries.filter(row=>row.status==='pending').length:entries.length;if(key==='messages')issueReports=entries;}
   }));
-  if(generation===leadershipTaskState.generation){leadershipTaskState.loading=false;renderLeadershipTasks();}
+  if(generation===leadershipTaskState.generation){leadershipTaskState.loading=false;renderLeadershipTasks();renderDashboardCards();}
 }
 async function openLeadershipPendingTransfers(){
   if(leadershipTaskState.reviews===null)await loadLeadershipTasks();
@@ -9361,6 +9403,51 @@ function yesterdayIsoDate(){
   ].join("-");
 }
 
+function dashboardRaidCapacity(raid){
+  if(Number(raid.maxPlayers)>0)return Number(raid.maxPlayers);
+  const key=getRaidKey(raid);
+  if(['zg','aq20','zg-mittwoch','zg-prime','zg-late'].includes(key))return 20;
+  if(['aq40','bwl','mc','naxx','ony'].includes(key))return 40;
+  return null;
+}
+function dashboardCardAction(raidId,action){
+  const raid=findRaidByAnyId(raidId);if(!raid)return;
+  if(action==='manual'||action==='reopen')return editLeadershipTaskReview(raid,action);
+  if(action==='pin'){
+    const pin=String(raid.leadPin||'');if(!pin)return;
+    navigator.clipboard.writeText(pin).then(()=>setStatus('LeadPIN kopiert.','good')).catch(()=>setStatus('Kopieren nicht möglich. Bitte den sichtbaren LeadPIN markieren und kopieren.','bad'));
+  }
+}
+function renderDashboardRaidCard(raid){
+  const rgb=getComputedStyle(document.documentElement).getPropertyValue('--gold-rgb').split(',').map(Number);
+  const light=rgb.length===3&&rgb.every(Number.isFinite)?rgb.reduce((sum,v,i)=>sum+(v/255<=.04045?v/255/12.92:Math.pow((v/255+.055)/1.055,2.4))*[.2126,.7152,.0722][i],0):1;
+  const ink=light>.179?'#0b1320':'#ffffff';
+  const key=getRaidKey(raid),id=String(raid.raidId||raid.id||''),arg=escapeAttr(JSON.stringify(id));
+  const button=(label,action,kind='',extra='')=>`<button class="rc-button ${kind}" type="button" onclick="${action}" ${extra}>${label}</button>`;
+  const signupOnly=isSignupOnlyRaid(raid)||raid.prioEnabled===false,p0Only=Boolean(raid.p0Only);
+  const stats=dashboardRaidStats[id]||{},capacity=dashboardRaidCapacity(raid),review=leadershipReviewForRaid(raid);
+  const cancelled=['abgesagt','cancelled','canceled'].includes(normalize(raid.status||'')),manual=review?.state==='manual',transferred=hasP0PlusTransfer(raid);
+  const number=value=>value===null||value===undefined?'—':escapeHtml(String(value));
+  const imageKey=key.startsWith('zg-')?'zg':key;
+  const image=raid.raidImageUrl||raid.imageUrl||RAID_IMAGES[imageKey]||RAID_IMAGES.other||'images/raid-templates/wow-other-raids.png';
+  const hint=p0Only?'Reiner P0-Anmelder':signupOnly?'Anmeldung ohne Prioliste':stats.error?'Zahlen konnten nicht geladen werden':stats.missing===undefined?'Anmeldungen werden geprüft …':stats.missing>0?`${stats.missing} Angemeldeten fehlt die Prio`:stats.signups>0?'Alle Angemeldeten haben eine Prio':'Noch keine Anmeldungen';
+  const openAction=p0Only?'openP0OnlySignupFromDashboard':signupOnly?'openSignupOnlyRaid':'openRaidInUnifiedOverview';
+  const pointsEnabled=!signupOnly&&!p0Only&&canTransferP0PlusFromRaid(raid);
+  const pointsLabel=cancelled?'Keine Vergabe nötig':manual?'Manuell erledigt':transferred?`Übertragen (${Number(raid.p0PlusTransferCount)||0})`:'Noch nicht übertragen';
+  const stage=cancelled?'Abgesagt':p0Only?'P0-Anmelder':raid.raidDate<todayIsoDate()?'Termin vergangen':'Geplant';
+  return `<article class="raid-overview-card" style="--raid-action-ink:${ink}" data-raid-id="${escapeAttr(id)}">
+    <div class="rc-content"><header class="rc-header"><img class="rc-image" src="${escapeAttr(image)}" alt="${escapeAttr(raid.raidName||key)}"><div><h4>${escapeHtml(raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||'Raid')}</h4><button type="button" class="rc-date" onclick="editRaidDateTimePopup(${arg})" title="Name, Datum und Uhrzeit ändern">${escapeHtml(formatRaidWeekday(raid.raidDate))} · ${escapeHtml(formatRaidDate(raid.raidDate))}<br>${escapeHtml(raid.raidTime||'—')} Uhr</button></div></header>
+    <div class="rc-states"><span>${stage}</span>${!signupOnly&&!p0Only?`<span>Prioliste ${isOpenStatus(raid.status)?'sichtbar':'verborgen'}</span>`:''}</div>
+    <div class="rc-metrics"><div><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></div><div><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></div><div><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></div></div>
+    <div class="rc-hint">${escapeHtml(hint)}</div>
+    ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`)}</div>`:''}
+    <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
+    ${pointsEnabled?`<div class="rc-points"><div><strong>P0+</strong><span>${pointsLabel}</span></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}${!cancelled?button('P0+ öffnen',`openP0OnlySignupFromDashboard(${arg})`):''}</div></div>`:''}
+    <details class="rc-details"><summary>Raidinformationen</summary><div><span>Gilde · <strong>${escapeHtml(displayGuildNameForRaid(raid.guild||raid.gilde))}</strong></span><span>Erstellt von · <strong>${escapeHtml(getRaidCreatorName(raid))}</strong></span>${!signupOnly?`<span>Prio-PIN · <strong>${escapeHtml(raid.playerPin||'—')}</strong></span>`:''}<span>Raid-ID · ${escapeHtml(id)}</span><span>${cancelled?'Teilnahme entfällt':'Anmeldungen sind keine bestätigte Teilnahme.'}</span></div></details>
+    <footer class="rc-admin">${button(cancelled?'Absage zurücknehmen':'Raid abgesagt',cancelled?`dashboardCardAction(${arg},'reopen')`:`markLeadershipRaidCancelled(${arg})`,'rc-danger')}${button('Archivieren',`deleteRaidFromDashboard(${arg})`,'',needsP0PlusTransferBeforeArchive(raid)?`disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}"`:'')}</footer>
+  </article>`;
+}
+
 function renderDashboardCards(){
   const box = document.getElementById("activeRaidCards");
   if(!box) return;
@@ -9372,107 +9459,7 @@ function renderDashboardCards(){
     return;
   }
 
-  const renderRaidCard = raid => {
-    const key = getRaidKey(raid);
-    const createdBy = getRaidCreatorName(raid);
-    if(raid.p0Only) return `
-      <article class="active-raid-card active-raid-p0-only-card">
-        <div class="active-raid-visual">
-          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
-          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
-          <button class="active-raid-pm-send active-raid-copy" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">DC-Nachricht kopieren</button>
-        </div>
-        <div class="active-raid-body">
-          <div>
-            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")} P0-Anmelder</div>
-            <div class="active-raid-topline">
-              <div class="active-raid-meta">
-                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
-                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
-                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
-              </div>
-              <div class="active-raid-info">${statusBadge(raid.status || "geschlossen")}<span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
-            </div>
-          </div>
-          <div class="active-raid-side">
-            <div class="active-raid-lead-card">
-              <span class="active-raid-lead-label">LeadPIN</span>
-              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
-              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
-            </div>
-            <div class="active-raid-actions">
-              <button class="small-btn primary" type="button" onclick="openP0OnlySignupFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">P0-Anmelder öffnen</button>
-              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
-            </div>
-          </div>
-        </div>
-      </article>`;
-    if(isSignupOnlyRaid(raid)) return `
-      <article class="active-raid-card active-raid-signup-only-card">
-        <div class="active-raid-visual">
-          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
-        </div>
-        <div class="active-raid-body">
-          <div>
-            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-            <div class="active-raid-topline">
-              <div class="active-raid-meta" role="button" tabindex="0" title="Name, Datum und Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')">
-                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
-                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
-                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
-              </div>
-              <div class="active-raid-info">${statusBadge(raid.status || "geschlossen")}<div class="active-raid-stats"><span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span></div></div>
-            </div>
-          </div>
-          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openSignupOnlyRaid('${escapeAttr(raid.raidId || raid.id)}')">Anmelder bearbeiten</button><button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button></div></div>
-        </div>
-      </article>`;
-    return `
-      <article class="active-raid-card">
-        <div class="active-raid-visual">
-          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
-          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
-          <button class="active-raid-pm-send active-raid-copy" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">DC-Nachricht kopieren</button>
-        </div>
-        <div class="active-raid-body">
-          <div>
-            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-            <div class="active-raid-topline">
-              <div class="active-raid-meta" role="button" tabindex="0" title="Name, Datum und Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
-                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
-                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
-                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
-              </div>
-              <div class="active-raid-info">
-                ${statusBadge(raid.status || "geschlossen")}
-                <div class="active-raid-stats">
-                  <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
-                  <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
-                  <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="active-raid-side">
-            <div class="active-raid-lead-card">
-              <span class="active-raid-lead-label">LeadPIN</span>
-              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
-              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
-              ${renderP0TransferState(raid)}
-            </div>
-            <div class="active-raid-actions">
-              <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
-              <button class="small-btn danger" type="button" onclick="markLeadershipRaidCancelled('${escapeAttr(raid.raidId || raid.id)}')">Raid abgesagt</button>
-              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              ${canTransferP0PlusFromRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="${isZgRaidForP0Transfer(raid) ? `openP0PlusTransferDialog('${escapeAttr(raid.raidId)}')` : `transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')`}">P0+ übertragen</button>` : ""}
-              ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
-            </div>
-          </div>
-        </div>
-      </article>
-    `;
-  };
+  const renderRaidCard = renderDashboardRaidCard;
 
   const raidGroups = [
     {
@@ -9508,18 +9495,30 @@ function getDashboardActiveRaids(){
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
+let dashboardRaidStatsGeneration=0;
 async function loadDashboardRaidStats(){
-  const raids = getDashboardActiveRaids();
-  if(!raids.length) return;
-
-  raids.forEach(raid => {
-    const raidId = String(raid.raidId || "");
-    if(!raidId) return;
-    dashboardRaidStats[raidId] = { prios:null, signups:null };
-  });
-
-  renderDashboardCards();
+  const generation=++dashboardRaidStatsGeneration,raids=getDashboardActiveRaids();
+  dashboardRaidStats={};renderDashboardCards();
+  let index=0;
+  await Promise.all(Array.from({length:Math.min(3,raids.length)},async()=>{
+    while(index<raids.length){
+      if(generation!==dashboardRaidStatsGeneration)return;
+      const raid=raids[index++],id=String(raid.raidId||raid.id||'');
+      if(!id)continue;
+      if(raid.p0Only){dashboardRaidStats[id]={prios:null,signups:null};continue;}
+      try{
+        const result=await railwayApi({action:'getRaidHelper',raidId:id},15000);
+        if(generation!==dashboardRaidStatsGeneration)return;
+        if(!result?.success||!Array.isArray(result.signups)||!Array.isArray(result.externalSignups))throw Error('Keine Raidstatistik');
+        const rows=[...result.signups,...result.externalSignups].filter(row=>!['absent','declined','cancelled','canceled','abgemeldet'].includes(String(row.status||'').toLowerCase()));
+        const count=result.prioCount??result.raid?.prioCount;
+        dashboardRaidStats[id]={signups:rows.length,prios:count!==null&&count!==undefined&&Number.isFinite(Number(count))?Number(count):null,missing:rows.every(row=>typeof row.hasPrio==='boolean')?rows.filter(row=>!row.hasPrio).length:undefined};
+      }catch(error){if(generation!==dashboardRaidStatsGeneration)return;dashboardRaidStats[id]={prios:null,signups:null,error:true};}
+    }
+  }));
+  if(generation===dashboardRaidStatsGeneration)renderDashboardCards();
 }
+
 
 function renderGuildTrafficChart(rows){
   const chart=document.getElementById("guildTrafficChart");
