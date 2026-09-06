@@ -8,6 +8,7 @@
   </style>
   <style>.ticket-list{display:grid;gap:12px}.ticket{padding:16px;border:1px solid var(--line);border-radius:10px;background:#081222}.ticket.new{border-color:#a17d12}.ticket-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.ticket-head h3{color:var(--text);margin:4px 0}.ticket-meta{color:var(--muted);font-size:12px}.ticket-message{margin:13px 0;padding:12px;border-left:3px solid var(--blue);background:#07111f;color:var(--text);white-space:pre-wrap;line-height:1.55}.ticket-contact{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px}.ticket-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}@media(max-width:680px){.ticket-head{display:block}.ticket-actions{justify-content:stretch}.ticket-actions button{width:100%}}</style>
   <style>.metric-docs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.metric-doc{padding:12px;border:1px solid #273449;border-radius:9px;background:#081222}.metric-doc strong{display:block;color:var(--text);margin-bottom:4px}.metric-doc small{color:var(--muted);line-height:1.45}.campaign-form{display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1fr 1fr auto;gap:9px;align-items:end;margin:14px 0 18px}.campaign-form label{font-size:12px}.campaign-form input{width:100%}.report-actions{display:flex;justify-content:flex-end;margin-bottom:8px}@media(max-width:1050px){.campaign-form{grid-template-columns:1fr 1fr}.metric-docs{grid-template-columns:1fr 1fr}}@media(max-width:680px){.campaign-form,.metric-docs{grid-template-columns:1fr}}</style>
+<link rel="stylesheet" href="/support-form.css?v=20260906-2">
 </head>
 <body><main>
   <header><div><h1>LichtLoot Plattform-Administration</h1><p>Statistik, Gildenverwaltung und Anträge – unabhängig von allen Gildenbereichen.</p></div><a href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldeseite öffnen ↗</a></header>
@@ -53,4 +54,5 @@ document.getElementById("modal").addEventListener("click",event=>{if(event.targe
 document.querySelectorAll(".metric-doc small").forEach(element=>{if(element.textContent.startsWith("Einzeldaten werden nach "))element.textContent="Einzeldaten werden nach 365 Tagen gelöscht; CSV-Berichte können vorher gesichert werden.";});
 </script>
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
+<script src="/support-form.js?v=20260906-2" defer></script>
 </body></html>

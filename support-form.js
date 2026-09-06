@@ -1,5 +1,7 @@
 (()=>{
 'use strict';
+if(window.__guildLootSupportLoaded)return;
+window.__guildLootSupportLoaded=true;
 const API='https://lichtloot-production.up.railway.app/api/apps-script',MAX=5*1024*1024;
 let dialog,form,previewUrl='',sending=false,trigger;
 function guild(){return (typeof window.currentActiveGuildSlug==='function'&&window.currentActiveGuildSlug())||(typeof window.getCurrentGuildSlug==='function'&&window.getCurrentGuildSlug())||new URLSearchParams(location.search).get('guild')||'lichtloot';}
@@ -36,5 +38,23 @@ function build(){
  };
 }
 function open(button){if(!dialog)build();trigger=button;if(!dialog.open){if(dialog.querySelector('[data-send]').dataset.sent){delete dialog.querySelector('[data-send]').dataset.sent;dialog.querySelector('[data-send]').disabled=false;dialog.querySelector('[data-send]').textContent='Meldung senden';status('Bitte E-Mail oder Discord-Namen für eine Rückmeldung angeben.');}dialog.showModal();form.elements.contactName.focus();}}
+
+function installSupportAccess(){
+ document.querySelectorAll('a').forEach(link=>{
+  if(link.textContent.trim()!=='Support'&&!link.hasAttribute('data-guild-support'))return;
+  link.setAttribute('data-guild-support','');link.setAttribute('href','#support');link.removeAttribute('onclick');link.removeAttribute('target');
+ });
+ const footerLink=[...document.querySelectorAll('footer [data-guild-support]')].some(link=>!link.closest('dialog,[role="dialog"]')&&link.getClientRects().length>0);
+ const existing=document.querySelector('.gl-support-access');
+ if(existing){existing.hidden=footerLink;return;}
+ if(footerLink)return;
+ const access=document.createElement('div');access.className='gl-support-access';
+ const link=document.createElement('a');link.href='#support';link.setAttribute('data-guild-support','');link.textContent='Support · Fehler melden';access.append(link);
+ const copyright=document.querySelector('[data-ariee-copyright]');
+ if(copyright)copyright.before(access);else document.body.append(access);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSupportAccess,{once:true});else installSupportAccess();
+window.addEventListener('resize',installSupportAccess);
+window.addEventListener('load',installSupportAccess,{once:true});
 document.addEventListener('click',event=>{const link=event.target.closest('[data-guild-support]');if(!link)return;event.preventDefault();open(link);});
 })();

@@ -2,7 +2,8 @@
 <title>LichtLoot Notfall – Plündermeister</title>
 <style>
 body{margin:0;background:radial-gradient(circle at top,#152341,#050b18 55%);color:#eef4ff;font-family:Arial,sans-serif}main{width:min(1200px,94%);margin:30px auto}.card{background:rgba(12,21,39,.95);border:1px solid #66551b;border-radius:15px;padding:20px;margin:15px 0;box-shadow:0 15px 45px #0007}h1,h2{color:#facc15}input,select,button{width:100%;padding:11px;margin:5px 0 12px;border-radius:8px;border:1px solid #42506a;background:#060d1c;color:white;box-sizing:border-box}button{font-weight:900;cursor:pointer}.green{background:#166534}.red{background:#991b1b}.gold{background:linear-gradient(90deg,#b1840a,#2458d8)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.status{padding:12px;background:#071022;border-radius:9px}.ok{color:#4ade80}.bad{color:#fb7185}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left}th{color:#facc15;background:#071022}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar input{flex:1;min-width:240px}.toolbar button{width:auto}.count{color:#4ade80}.empty{text-align:center;color:#9eabc0;padding:28px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
-</style></head><body><main>
+</style><link rel="stylesheet" href="/support-form.css?v=20260906-2">
+</head><body><main>
 <h1>🚨 Notfall-Plündermeister</h1>
 <section class="card"><h2>Bestehenden Notfall-Raid öffnen</h2><input id="leadPin" type="password" placeholder="Lead-PIN"><button class="gold" onclick="loadRaid()">Raid laden</button><div id="raidStatus" class="status">Lead-PIN eingeben.</div></section>
 <section id="controls" class="card" hidden><h2 id="raidTitle">Raid</h2><div class="grid">
@@ -26,4 +27,5 @@ async function createRaid(){try{const data=await api({action:"emergencyCreateRai
 $("newDate").value=new Date().toISOString().slice(0,10);
 </script>
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
+<script src="/support-form.js?v=20260906-2" defer></script>
 </body></html>
