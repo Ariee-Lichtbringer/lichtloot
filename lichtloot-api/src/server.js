@@ -7949,6 +7949,43 @@ async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
   }
 }
 
+function activePrioReminderRaidSql(alias = "r") {
+  return `${alias}.deleted_at is null
+    and coalesce(${alias}.prio_enabled, true)
+    and lower(coalesce(${alias}.status, '')) not in
+      ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+    and case when coalesce(${alias}.raid_time, '') ~ '^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$'
+      then ((${alias}.raid_date + ${alias}.raid_time::time) at time zone 'Europe/Berlin') > now()
+      else false end`;
+}
+
+function currentPrioReminderQueueSql(alias = "q") {
+  return `exists(select 1 from raids reminder_raid
+    where reminder_raid.guild_id=${alias}.guild_id
+      and (reminder_raid.id::text=${alias}.payload->>'raidId'
+        or reminder_raid.external_raid_id=${alias}.payload->>'raidId')
+      and ${activePrioReminderRaidSql("reminder_raid")}
+      and reminder_raid.raid_date::text=${alias}.payload->>'raidDate'
+      and substring(reminder_raid.raid_time from 1 for 5)=substring(${alias}.payload->>'raidTime' from 1 for 5)
+      and coalesce(${alias}.payload->>'prioPin','')=coalesce(nullif(reminder_raid.raid_pin,''),reminder_raid.player_link,'')
+      and coalesce(${alias}.payload->>'channelId',${alias}.payload->>'discordChannelId','')=reminder_raid.discord_channel_id)`;
+}
+
+async function expireStalePrioReminders(guildId = null) {
+  return query(`update bot_update_queue q
+    set status='done',resolved_at=now(),
+        payload=q.payload || jsonb_build_object('skipReason','raid_reminder_expired_or_changed')
+    where q.type='raid_missing_prio_reminder' and q.status in ('open','processing')
+      and ($1::uuid is null or q.guild_id=$1)
+      and not (${currentPrioReminderQueueSql()})`,[guildId]);
+}
+
+async function isCurrentRaidForPrioReminder(guildId, raidId) {
+  const result=await query(`select 1 from raids r where r.guild_id=$1 and r.id=$2
+    and ${activePrioReminderRaidSql()} limit 1`,[guildId,raidId]);
+  return Boolean(result.rows[0]);
+}
+
 async function ensureRaidMissingPrioRemindersQueued() {
   await ensureRaidSchema();
   const upcomingRaids = await query(
@@ -8069,6 +8106,10 @@ async function queueRaidMissingPrioReminder({ guildId, query: params }) {
     throw error;
   }
 
+  if (!await isCurrentRaidForPrioReminder(guildId, raid.id)) {
+    throw Object.assign(new Error("Für vergangene oder abgesagte Raids werden keine Prio-Erinnerungen gesendet."), {statusCode:409});
+  }
+
   const attendingStatuses = ['signed', 'registered', 'angemeldet', 'confirmed', 'fest'];
   const internalMissing = await query(
     `select c.name as player_name
@@ -8135,14 +8176,18 @@ async function queueRaidMissingPrioReminder({ guildId, query: params }) {
 }
 
 async function enqueueRaidMissingPrioReminderRefresh(guildId, raid, characterName) {
+  if (!raid?.id || !await isCurrentRaidForPrioReminder(guildId, raid.id)) {
+    return { success:true, skipped:true, reason:"raid_reminder_expired_or_changed" };
+  }
   const raidId = raidPublicId(raid);
   const previous = await query(
     `select payload
-     from bot_update_queue
+     from bot_update_queue q
      where guild_id = $1
        and type = 'raid_missing_prio_reminder'
        and payload->>'raidId' = $2
        and coalesce(payload->>'messageId', '') <> ''
+       and ${currentPrioReminderQueueSql()}
      order by created_at desc
      limit 1`,
     [guildId, raidId]
@@ -8150,6 +8195,9 @@ async function enqueueRaidMissingPrioReminderRefresh(guildId, raid, characterNam
   const payload = previous.rows[0]?.payload;
   if (!payload) return { success: true, skipped: true, reason: "missing_prio_reminder_not_posted" };
 
+  if ((payload.completedCharacters || []).some(name => clean(name).toLocaleLowerCase('de-DE') === clean(characterName).toLocaleLowerCase('de-DE'))) {
+    return { success:true, skipped:true, reason:"character_already_completed" };
+  }
   const trackedCharacters = Array.from(new Map(
     [...(payload.trackedCharacters || payload.missingCharacters || [])]
       .map(clean)
@@ -8171,6 +8219,7 @@ async function enqueueRaidMissingPrioReminderRefresh(guildId, raid, characterNam
     payload: {
       ...payload,
       source: 'prio_saved_refresh',
+      editOnly: true,
       trackedCharacters,
       completedCharacters
     }
@@ -8197,10 +8246,12 @@ async function getBotQueue({ guildId, query: params }) {
        )`,
     [guildId]
   );
+  await expireStalePrioReminders(guildId);
   const result = await query(
     `select id, type, payload, created_at
-     from bot_update_queue
+     from bot_update_queue q
      where guild_id = $1 and status = 'open'
+       and (q.type <> 'raid_missing_prio_reminder' or ${currentPrioReminderQueueSql()})
      order by case
        when type = 'player_login_approval_notice' then 0
        when type in ('po_release_request_notice', 'raid_status_staff_notice', 'loot_master_leadpin_notice') then 1
@@ -8272,6 +8323,7 @@ async function getBotQueueAllGuilds({ query: params }) {
            and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
        )`
   );
+  await expireStalePrioReminders();
   const requestedTypes = clean(params.types || params.typeFilter)
     .split(",")
     .map(clean)
@@ -8282,6 +8334,7 @@ async function getBotQueueAllGuilds({ query: params }) {
        select q.id
        from bot_update_queue q
        where q.status = 'open'
+         and (q.type <> 'raid_missing_prio_reminder' or ${currentPrioReminderQueueSql()})
          and ($1::text[] is null or q.type = any($1::text[]))
        order by case
          when q.type = 'player_login_approval_notice' then 0
