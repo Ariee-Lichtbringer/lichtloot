@@ -2852,6 +2852,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .start-discord-link:hover{border-color:#8b9cff;background:linear-gradient(135deg,rgba(88,101,242,.48),rgba(35,39,95,.68));transform:translateY(-1px)}
 .start-discord-link img{width:28px;height:28px;object-fit:contain}.start-discord-link span{display:grid;gap:1px}.start-discord-link small{color:#c7d2fe;font-size:11px;font-weight:750}
 </style>
+<link rel="stylesheet" href="/support-form.css?v=20260906-1">
 </head>
 
 <body class="start-dashboard-body">
@@ -3296,7 +3297,7 @@ html,body{max-width:100%;overflow-x:hidden}
         </div>
       </section>
 </div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="">Gilden werden geladen …</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
-    <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
+    <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#support" data-guild-support>Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
 
@@ -9738,5 +9739,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <script src="pin-visibility.js"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
+<script src="/support-form.js?v=20260906-1" defer></script>
 </body>
 </html>

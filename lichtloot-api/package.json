@@ -10,7 +10,8 @@
     "db:migrate:contracts": "node scripts/run-sql-file.mjs migrations/014_foerderverein_contract_files.sql",
     "db:import:contracts": "node scripts/import-foerderverein-contracts.mjs",
     "test:raid-completion": "node tests/raid-completion.test.cjs",
-    "test:raid-loading": "node tests/raid-loading.test.cjs"
+    "test:raid-loading": "node tests/raid-loading.test.cjs",
+    "test:support": "node tests/support.test.cjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

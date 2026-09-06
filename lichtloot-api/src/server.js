@@ -1,3 +1,4 @@
+import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
 import { loadRaidCompletion } from "./raid-completion.js";
 import { createRaidTaskReviewService } from "./raid-task-review.js";
 import { queueActiveSignupRefresh, mergeP0PostIdentity } from "./active-signup-refresh.js";
@@ -2410,11 +2411,15 @@ async function ensureSupportTicketSchema() {
        resolved_at timestamptz
      )`
   );
+  await query(`alter table platform_support_tickets add column if not exists screenshot_data text not null default '', add column if not exists screenshot_name text not null default ''`);
   await query(`create index if not exists idx_platform_support_tickets_status_created on platform_support_tickets(status, created_at desc)`);
 }
 
 function normalizeSupportTicketRow(row) {
   return {
+    hasScreenshot: Boolean(row.has_screenshot || row.screenshot_data),
+    screenshotName: row.screenshot_name || "",
+
     id: row.id,
     guildSlug: row.guild_slug || "",
     guildName: row.guild_name || "",
@@ -2457,12 +2462,14 @@ async function submitSupportTicket({ query: params = {}, body = {} }) {
     error.statusCode = 400;
     throw error;
   }
+  const screenshotData=validateSupportScreenshot(values.screenshotData);
+  const screenshotName=screenshotData?clean(values.screenshotName).slice(0,180):'';
   const result = await query(
     `insert into platform_support_tickets
-       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url)
-     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,screenshot_data,screenshot_name)
+     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      returning *`,
-    [guild.id, guild.slug, guild.name, contactName, contactEmail, contactDiscord, category, subject, message, clean(values.pageUrl).slice(0, 500)]
+    [guild.id, guild.slug, guild.name, contactName, contactEmail, contactDiscord, category, subject, message, supportPageUrl(values.pageUrl), screenshotData, screenshotName]
   );
   return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
 }
@@ -2470,7 +2477,7 @@ async function submitSupportTicket({ query: params = {}, body = {} }) {
 async function getPlatformSupportTickets({ query: params = {} }) {
   requirePlatformMasterCode(params.masterCode);
   await ensureSupportTicketSchema();
-  const result = await query(`select * from platform_support_tickets order by case when status='new' then 0 else 1 end, created_at desc limit 250`);
+  const result = await query(`select id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,status,created_at,updated_at,resolved_at,screenshot_name,(screenshot_data <> '') as has_screenshot from platform_support_tickets order by case when status='new' then 0 else 1 end, created_at desc limit 250`);
   return { success: true, tickets: result.rows.map(normalizeSupportTicketRow) };
 }
 
@@ -31689,6 +31696,18 @@ app.post("/api/apps-script", async (req, res, next) => {
       enforceSecurityRateLimit(req, "platform-admin-sensitive", 10, 60 * 60 * 1000);
       const deleted = await platformDeleteGuild({ query: req.query, body: req.body });
       return res.json(deleted);
+    }
+
+    if (action === "platformGetSupportScreenshot") {
+      enforceSecurityRateLimit(req, 'platform-admin', 30, 15 * 60 * 1000);
+      requirePlatformMasterCode(req.body.masterCode || req.query.masterCode);
+      const screenshotTicketId=clean(req.body.id || req.query.id);
+      if(!isUuid(screenshotTicketId))return res.status(400).json({success:false,error:'Ungültige Meldung.'});
+      await ensureSupportTicketSchema();
+      const result=await query('select screenshot_data,screenshot_name from platform_support_tickets where id=$1',[screenshotTicketId]);
+      if(!result.rows[0]?.screenshot_data)return res.status(404).json({success:false,error:'Kein Screenshot vorhanden.'});
+      res.set('Cache-Control','no-store');
+      return res.json({success:true,screenshotData:result.rows[0].screenshot_data,screenshotName:result.rows[0].screenshot_name});
     }
 
     if (action === "platformUpdateSupportTicket") {
