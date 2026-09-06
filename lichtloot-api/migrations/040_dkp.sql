@@ -23,3 +23,12 @@ create table if not exists dkp_requests (
  guild_id uuid not null references guilds(id),request_id uuid not null,fingerprint text not null,result jsonb not null,
  created_at timestamptz not null default now(),primary key(guild_id,request_id)
 );
+
+create table if not exists dkp_rules (
+ guild_id uuid primary key references guilds(id), revision integer not null default 0,
+ rules jsonb not null default '{}'::jsonb
+);
+create table if not exists dkp_awards (
+ guild_id uuid not null references guilds(id), award_key text not null,
+ details jsonb not null, created_at timestamptz not null default now(), primary key(guild_id,award_key)
+);
