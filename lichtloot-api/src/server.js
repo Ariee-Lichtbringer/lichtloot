@@ -5298,15 +5298,20 @@ function normalizeClassicArmoryGearItem(item,index){
 async function getPublicClassicArmoryGear({guildId,query:params={}}){
   const playerName=clean(params.playerName||params.player||params.character);
   if(!playerName){const error=new Error("Spielername fehlt.");error.statusCode=400;throw error;}
+  const requestedServer=clean(params.server||params.realm);
   const found=await query(
     `select c.name,c.server,c.class_name
        from characters c join players p on p.id=c.player_id
       where p.guild_id=$1 and lower(c.name)=lower($2)
-      order by c.is_main desc,c.created_at asc limit 1`,
-    [guildId,playerName]
+        and ($3='' or lower(trim(c.server))=lower($3))
+      order by c.is_main desc,c.created_at asc`,
+    [guildId,playerName,requestedServer]
   );
+  if(new Set(found.rows.map(row=>clean(row.server).toLowerCase())).size>1){
+    const error=new Error("Mehrere Charaktere mit diesem Namen gefunden. Bitte den Server auswählen.");error.statusCode=409;throw error;
+  }
   const stored=found.rows[0];
-  if(!stored?.server){const error=new Error("Für diesen Spieler ist kein Server hinterlegt.");error.statusCode=404;throw error;}
+  if(!stored?.server){const error=new Error("Für diesen Namen und Server ist kein Charakter in dieser Gilde hinterlegt.");error.statusCode=404;throw error;}
   const requestParams={region:clean(params.region||"eu").toLowerCase(),flavor:"classic-era",realm:clean(stored.server).toLowerCase(),name:stored.name};
   const cacheKey=`${requestParams.region}:${requestParams.realm}:${requestParams.name.toLowerCase()}`;
   const cached=publicClassicArmoryGearCache.get(cacheKey);
@@ -18960,16 +18965,25 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
     [guildId]
   );
   const wanted = playerName.toLowerCase();
+  const requestedServer = clean(params.server || params.realm).toLowerCase();
+  const matchesName = entry => clean(entry?.name).toLowerCase() === wanted;
+  const realms = new Set(result.rows.flatMap(row => (Array.isArray(row.payload?.players) ? row.payload.players : []).filter(matchesName).map(entry => clean(entry.server).toLowerCase())).filter(Boolean));
+  if (!requestedServer && realms.size > 1) {
+    const error = new Error("Mehrere Charaktere mit diesem Namen gefunden. Bitte den Server auswählen.");
+    error.statusCode = 409;
+    throw error;
+  }
+  const matchesCharacter = entry => matchesName(entry) && (!requestedServer || clean(entry.server).toLowerCase() === requestedServer);
   const profileGearIds = result.rows.flatMap(row => {
     const payloadPlayers = Array.isArray(row.payload?.players) ? row.payload.players : [];
-    const payloadPlayer = payloadPlayers.find(entry => clean(entry?.name).toLowerCase() === wanted);
+    const payloadPlayer = payloadPlayers.find(matchesCharacter);
     return (Array.isArray(payloadPlayer?.gear) ? payloadPlayer.gear : []).map(item => Number(item.itemId || item.id || 0));
   }).filter(id => id > 0);
   const germanItemMeta = await getWowheadGermanItemMetadataByIds(profileGearIds);
   const history = [];
   for (const row of result.rows) {
     const payload = row.payload || {};
-    const player = (Array.isArray(payload.players) ? payload.players : []).find(entry => clean(entry?.name).toLowerCase() === wanted);
+    const player = (Array.isArray(payload.players) ? payload.players : []).find(matchesCharacter);
     if (!player) continue;
     const durationMs = Math.max(1, Number(payload.report?.performanceDurationMs || payload.report?.durationMs || 0));
     const seconds = Math.max(1, durationMs / 1000);

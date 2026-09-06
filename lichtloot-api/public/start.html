@@ -6085,7 +6085,7 @@ function openOwnCharacterGear(){
   if(!name){if(status)status.innerHTML='<span class="bad">Der ausgewählte Charakter konnte nicht gelesen werden.</span>';return;}
   if(typeof window.apiJsonp!=="function")window.apiJsonp=requestDashboardGearData;
   if(typeof window.openPrioPlayerGear!=="function"){if(status)status.innerHTML='<span class="bad">Die Ausrüstungsansicht ist noch nicht geladen.</span>';return;}
-  window.openPrioPlayerGear(name);
+  window.openPrioPlayerGear(name,character.server||character.Server||"");
 }
 
 async function dashboardLoadMyPrios(){
@@ -10069,7 +10069,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 
 </script>
 
-<script src="loot/player-gear-popup.js?v=20260830-1750"></script>
+<script src="loot/player-gear-popup.js?v=20260906-realm"></script>
 <script src="pin-visibility.js"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
