@@ -2938,6 +2938,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="server-selection.js?v=20260906-1"></script>
 <script src="dkp-widget.js?v=20260906-1"></script>
 <script src="loot-system.js?v=20260906-2"></script>
+<link rel="stylesheet" href="start-raid-cards.css?v=20260906-1">
 </head>
 
 <body class="start-dashboard-body">
@@ -4731,19 +4732,20 @@ function renderUpcomingRaidCards(list){
     const guild=activeRaidGuild(entry) || CURRENT_GUILD_BRAND.guildName;
     const isOther=raidSize(raidKey)==="other";
     const ownSignup=dashboardOwnRaidSignup(entry);
-    const buttonLabel=isOther?"Zum Anmelder":"Zur Prio";
-
-    return '<article class="dash-panel instance-card">'+
-      '<div class="raid-card-image-actions"><img src="'+safeAttr(raidImagePath(raidKey))+'" alt=""><button type="button" onclick="openRaidLootMasterLogin('+index+')">Plündermeister</button></div>'+
-      '<div>'+
-        '<h3>'+safeHtml(name)+'</h3>'+
-        '<p class="raid-card-date">⌚ '+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
-        '<p>Gilde: '+safeHtml(guild)+'</p>'+
-        (ownSignup?'<p class="instance-status">Angemeldet mit: '+safeHtml(ownSignup.character)+'</p>':'')+
-        (isOther?'':'<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p><p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>')+
-      '</div>'+
-      renderStartRaidSignupSummary(entry)+
-      '<button class="raid-btn loot-btn" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button>'+
+    const isDkp=Boolean(window.GuildLootDKP?.isDkp?.());
+    const buttonLabel=isOther?"Zum Anmelder →":isDkp?"Loot ansehen →":"Prio eintragen →";
+    const seats=Number(entry.maxPlayers || entry.max_players) || (raidKey==="ony"?40:isOther?0:Number(raidSize(raidKey)));
+    const signupCount=Number(entry.signupCounts?.signed ?? entry.signupCount ?? 0);
+    const countLabel=entry.prioCount!=null?"Prios gespeichert":"P0-Einträge";
+    const count=Number(entry.prioCount ?? entry.p0SignupCount ?? 0);
+    return '<article class="user-raid-card">'+
+      '<div class="ur-content"><header class="ur-header"><img src="'+safeAttr(raidImagePath(raidKey))+'" alt=""><div><h3>'+safeHtml(name)+'</h3><p>'+safeHtml(date)+'<br>'+safeHtml(time)+' Uhr</p></div></header>'+
+      '<div class="ur-states"><span>'+safeHtml(raidIsInProgress(entry)?"Raid läuft":"Geplant")+'</span><span>'+safeHtml(isOther?"Raidanmeldung":isDkp?"DKP":prioIsOpen(entry)?"Prioliste sichtbar":"Prioliste verborgen")+'</span></div>'+
+      '<div class="ur-metrics"><div><strong>'+safeHtml(seats?String(seats):"–")+'</strong><span>Plätze</span></div><div><strong>'+safeHtml(String(signupCount))+'</strong><span>Angemeldet</span></div>'+(!isDkp&&!isOther?'<div><strong>'+safeHtml(String(count))+'</strong><span>'+countLabel+'</span></div>':'')+'</div>'+
+      (ownSignup?'<p class="ur-own">✓ Angemeldet mit '+safeHtml(ownSignup.character)+'</p>':'<p class="ur-hint">'+safeHtml(isOther?"Anmeldung und Aufstellung im Raid öffnen.":isDkp?"Loot und Vergaben für diesen Raid ansehen.":dashboardPrioHint(entry))+'</p>')+
+      (!isOther&&!isDkp?'<div class="ur-pin"><div><small>PRIOPIN</small><strong>'+safeHtml(pin||"–")+'</strong></div><button type="button" onclick="copyUpcomingRaidPin('+index+',this)" '+(!pin?'disabled':'')+'>PIN kopieren</button></div>':'')+
+      '<div class="ur-actions"><button type="button" onclick="openRaidLootMasterLogin('+index+')">Plündermeister</button><button type="button" class="ur-primary" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button></div></div>'+
+      '<details class="ur-details"><summary>Raidinformationen</summary><div><p>'+safeHtml(guild)+'</p>'+renderStartRaidSignupSummary(entry)+'</div></details>'+
     '</article>';
   }).join("");
   const groups=[
@@ -4758,6 +4760,14 @@ function renderUpcomingRaidCards(list){
       '<div class="instance-grid">'+renderCards(group.entries)+'</div>'+
     '</div>'
   ).join("");
+}
+
+async function copyUpcomingRaidPin(index,button){
+  const entry=(window.dashboardUpcomingRaidCards||[])[Number(index)];
+  const pin=entry&&activeRaidPin(entry);
+  if(!pin)return;
+  try{await navigator.clipboard.writeText(pin);button.textContent="Kopiert ✓";}
+  catch(error){button.textContent="Bitte PIN markieren";}
 }
 
 function openUpcomingRaidCard(index){
