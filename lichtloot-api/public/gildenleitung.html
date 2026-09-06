@@ -5385,6 +5385,25 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .raid-signups-popup-filters{display:flex;flex-wrap:wrap;gap:8px;padding:10px 18px;border-bottom:1px solid var(--line)}
 .raid-signups-popup-filters button[aria-pressed="true"]{color:var(--gold);border-color:var(--gold);background:rgba(var(--gold-rgb),.12)}
 
+
+/* Share content rows across adjacent cards without truncating raid names. */
+@supports(grid-template-rows:subgrid){
+  #activeRaidCards .active-raid-group-grid{align-items:stretch}
+  #activeRaidCards .raid-overview-card{display:grid;grid-template-rows:subgrid;grid-row:span 11;row-gap:0}
+  #activeRaidCards .raid-overview-card .rc-content{display:grid;grid-template-rows:subgrid;grid-row:1/span 8;row-gap:0}
+  #activeRaidCards .raid-overview-card .rc-header{grid-row:1}
+  #activeRaidCards .raid-overview-card .rc-states{grid-row:2;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-transfer-status{grid-row:3;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-metrics{grid-row:4;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-hint{grid-row:5;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-pin{grid-row:6;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-discord{grid-row:7;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-main-actions{grid-row:8;align-self:stretch}
+  #activeRaidCards .raid-overview-card .rc-points{grid-row:9;align-self:stretch}
+  #activeRaidCards .raid-overview-card .rc-details{grid-row:10;align-self:start}
+  #activeRaidCards .raid-overview-card .rc-admin{grid-row:11;align-self:end}
+}
+
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -9548,7 +9567,7 @@ function renderDashboardRaidCard(raid){
     <div class="rc-hint">${escapeHtml(hint)}</div>
     ${!signupOnly?`<div class="rc-pin"><div><small>LEADPIN</small><strong>${escapeHtml(raid.leadPin||'—')}</strong></div>${button('PIN kopieren',`dashboardCardAction(${arg},'pin')`,'rc-quiet',raid.leadPin?'':'disabled')}</div><div class="rc-discord">${button('<img src="images/discord.svg" alt="">LeadPIN an PM senden',`openLootMasterTargetsDialog(${arg})`)}${button('DC-Nachricht kopieren',`copyRaidDiscordText(${arg})`,'','aria-label="DC-Nachricht kopieren"')}</div>`:''}
     <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
-    ${pointsEnabled?`<div class="rc-points"><div><strong>P0+</strong><span>${pointsLabel}</span></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}</div></div>`:''}
+    ${pointsEnabled?`<div class="rc-points"><div><strong>P0+-Aktionen</strong></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}</div></div>`:''}
     <details class="rc-details"><summary>Raidinformationen</summary><div><span>Gilde · <strong>${escapeHtml(displayGuildNameForRaid(raid.guild||raid.gilde))}</strong></span><span>Erstellt von · <strong>${escapeHtml(getRaidCreatorName(raid))}</strong></span>${!signupOnly?`<span>Prio-PIN · <strong>${escapeHtml(raid.playerPin||'—')}</strong></span>`:''}<span>Raid-ID · ${escapeHtml(id)}</span><span>${cancelled?'Teilnahme entfällt':'Anmeldungen sind keine bestätigte Teilnahme.'}</span></div></details>
     <footer class="rc-admin">${button(cancelled?'Absage zurücknehmen':'Raid abgesagt',cancelled?`dashboardCardAction(${arg},'reopen')`:`markLeadershipRaidCancelled(${arg})`,'rc-danger')}${button('Archivieren',`deleteRaidFromDashboard(${arg})`,'',needsP0PlusTransferBeforeArchive(raid)?`disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}"`:'')}</footer>
   </article>`;
