@@ -5768,18 +5768,25 @@ function poReleaseFlagsFromRows(rows) {
 const WCL_PO_ATTENDANCE_ZONES = { mc:2000, bwl:2002, aq40:2005, naxx:2006 };
 const WCL_RAID_PARTICIPATION_ZONES = { mc:2000, ony:2001, bwl:2002, zg:2003, "zg-mittwoch":2003, "zg-prime":2003, "zg-late":2003, aq20:2004, aq40:2005, naxx:2006 };
 const wclPoAttendanceCache = new Map();
+const wclPoAttendancePending = new Map();
 const wclRaidParticipationCache = new Map();
 function normalizeAttendanceName(value) { return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 async function getWclPoAttendance(raid,wclGuildId,requestedLimit=16) {
   const zoneId=WCL_PO_ATTENDANCE_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
   const limit=Math.min(50,Math.max(1,Math.round(Number(requestedLimit)||16)));
   const cacheKey=`${wclGuildId}:${raid}:${limit}`; const cached=wclPoAttendanceCache.get(cacheKey); if(cached&&cached.expiresAt>Date.now())return cached.value;
+  if(wclPoAttendancePending.has(cacheKey))return wclPoAttendancePending.get(cacheKey);
+  const pending=(async()=>{
   const token=await getWarcraftLogsAccessToken();
   const gqlQuery="query($guildID:Int!,$zoneID:Int!,$limit:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:$limit,page:1){data{code startTime players{name type presence}}}}}}";
   const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId,limit});
   const raids=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[]; const players={};
   raids.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;if(!players[key])players[key]={attended:0,bench:0};if(Number(player?.presence)===1)players[key].attended+=1;if(Number(player?.presence)===2)players[key].bench+=1;}));
   const value={total:Math.min(limit,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
+  })();
+  wclPoAttendancePending.set(cacheKey,pending);
+  try{return await pending;}finally{wclPoAttendancePending.delete(cacheKey);}
+
 }
 
 function wclRaidDateInBerlin(value) {
@@ -13664,6 +13671,34 @@ async function getPlayerPrioHistory(guildId, params) {
     throw error;
   }
 
+  await ensureCharacterPoReleaseSchema();
+  const releaseResult = await query(
+    `select raid_type, approved_by, approved_at
+     from character_po_releases
+     where guild_id = $1 and character_id = $2`,
+    [guildId, character.id]
+  );
+  const poReleases = poReleaseFlagsFromRows(releaseResult.rows);
+  const recruitReleaseResult=await query(`select raid_type,approved_by,approved_at from character_recruit_releases where guild_id=$1 and character_id=$2`,[guildId,character.id]);
+  const recruitReleases={mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false};
+  for(const row of recruitReleaseResult.rows){const raid=normalizePoReleaseRaid(row.raid_type);if(raid&&raid!=="p1p3")recruitReleases[raid]=true;}
+  const poReleaseDisplaySettings = await getPoReleaseDisplaySettings(guildId);
+  // Loot pages need persisted approvals immediately, independent of external attendance.
+  if (String(params.releaseOnly) === "1") {
+    return {
+      success: true, player: character.name, server: character.server,
+      characterId: character.id, poReleases, recruitReleases,
+      recruitStatusLifted: Boolean(character.recruit_status_lifted),
+      poReleasesEnabled: poReleaseDisplaySettings.poReleasesEnabled,
+      poReleaseDisplayConfigured: poReleaseDisplaySettings.configured,
+      visiblePoReleaseRaids: lootPoReleaseVisibleRaids(poReleaseDisplaySettings),
+      poReleaseDetails: releaseResult.rows.map(row => ({
+        raid: normalizePoReleaseRaid(row.raid_type),
+        approvedBy: row.approved_by || "", approvedAt: row.approved_at || ""
+      }))
+    };
+  }
+
   const historyParams = [guildId, character.player_id];
 
   const result = await query(
@@ -13723,18 +13758,6 @@ async function getPlayerPrioHistory(guildId, params) {
     pointsParams
   );
 
-  await ensureCharacterPoReleaseSchema();
-  const releaseResult = await query(
-    `select raid_type, approved_by, approved_at
-     from character_po_releases
-     where guild_id = $1 and character_id = $2`,
-    [guildId, character.id]
-  );
-  const poReleases = poReleaseFlagsFromRows(releaseResult.rows);
-  const recruitReleaseResult=await query(`select raid_type,approved_by,approved_at from character_recruit_releases where guild_id=$1 and character_id=$2`,[guildId,character.id]);
-  const recruitReleases={mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false};
-  for(const row of recruitReleaseResult.rows){const raid=normalizePoReleaseRaid(row.raid_type);if(raid&&raid!=="p1p3")recruitReleases[raid]=true;}
-  const poReleaseDisplaySettings = await getPoReleaseDisplaySettings(guildId);
   let attendance16 = {};
   try {
     const eraConfig = await getGuildEraConfiguration(guildId);

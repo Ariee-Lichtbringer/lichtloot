@@ -110,37 +110,60 @@
       const inReview=!approved && pending.has(key);
       return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
     }).join("");
-    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
+    const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(function(item){
+      const key=item[0],label=item[1],attendance=data&&data.attendance16&&data.attendance16[key];
+      const total=Number(attendance&&attendance.total||0),attended=Number(attendance&&attendance.attended||0),bench=Number(attendance&&attendance.bench||0);
+      return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';
+    }).join("");
+    box.innerHTML=(data&&data.attendance16?'<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div>':'')+'<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
   };
 
+  let releaseLoadGeneration=0;
+  async function releaseJson(query,timeout=12000){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeout);
+    try{
+      const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store",signal:controller.signal});
+      if(!response.ok)throw new Error("Freigabeabfrage fehlgeschlagen.");
+      const data=await response.json();
+      if(data.success===false)throw new Error(data.error||"Freigabeabfrage fehlgeschlagen.");
+      return data;
+    }finally{clearTimeout(timer);}
+  }
   window.loadSelectedCharacterPoReleases=async function(char){
+    const generation=++releaseLoadGeneration;
     const box=document.getElementById("selectedCharacterPoReleases");
     const pin=getStoredLichtLootPlayerPin();
-    if(!box || !pin || !char || !char.name) return;
+    if(!box)return;
+    if(!pin||!char||!char.name){box.textContent="Bitte einen Charakter auswählen.";return;}
+    const isCurrent=()=>generation===releaseLoadGeneration;
+    const guild=currentGuildSlug();
     box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
     try{
-      const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),char:char.name,server:char.server||"",pin:pin,t:Date.now()});
-      const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()});
-      const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
-      const history=await responses[0].json();
-      const display=await responses[1].json().catch(function(){return {};});
+      const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",releaseOnly:"1",guild,char:char.name,server:char.server||"",pin,t:Date.now()});
+      const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild,t:Date.now()});
+      const [history,display]=await Promise.all([releaseJson(historyQuery),releaseJson(displayQuery)]);
+      if(!isCurrent())return;
+      if(!history.success)throw new Error("Freigaben konnten nicht geladen werden.");
       showRaidMemberNotice(display.raidMemberNotice);
       window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
       history.poReleasesEnabled=poReleasesEnabledForCurrentPage(display.poReleasesEnabled!==false,display.visibleRaids,display.configured,display.poReleaseSectionsByRaid);
       history.poReleaseDisplayConfigured=display.configured===true;
-      if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(history.poReleasesEnabled);
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
-      if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
       let requests=[];
-      if(currentGuildSlug()==="nachtloot"){
-        const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild:currentGuildSlug(),character:char.name,server:char.server||"",pin:pin,t:Date.now()});
-        const requestResponse=await fetch(APPS_SCRIPT_URL+"?"+requestQuery.toString(),{cache:"no-store"});
-        const requestData=await requestResponse.json().catch(function(){return {};});
-        requests=Array.isArray(requestData.entries)?requestData.entries:[];
+      const render=()=>{if(isCurrent())window.renderSelectedCharacterPoReleases(history,requests);};
+      render();
+      // Optional details must never keep the approval status in its loading state.
+      if(guild==="nachtloot"){
+        const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild,character:char.name,server:char.server||"",pin,t:Date.now()});
+        releaseJson(requestQuery).then(data=>{requests=Array.isArray(data.entries)?data.entries:[];render();}).catch(()=>{});
       }
-      window.renderSelectedCharacterPoReleases(history,requests);
+      historyQuery.delete("releaseOnly");
+      releaseJson(historyQuery,30000).then(data=>{history.attendance16=data.attendance16;render();}).catch(()=>{});
     }catch(error){
-      box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
+      if(!isCurrent())return;
+      box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span> <button type="button" data-release-retry>Erneut laden</button></div>';
+      box.querySelector("[data-release-retry]").onclick=()=>window.loadSelectedCharacterPoReleases(char);
     }
   };
   const originalSavePrio=window.savePrio;
