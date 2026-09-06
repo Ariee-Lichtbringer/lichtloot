@@ -5326,11 +5326,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 
 /* Transfer completion must be visible without opening raid details. */
-.raid-overview-card .rc-transfer-status{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 11px;border:1px solid rgba(var(--gold-rgb),.36);border-radius:7px;background:rgba(var(--gold-rgb),.09);color:var(--gold)}
+.raid-overview-card .rc-transfer-status{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 11px;border:1px solid var(--soft);border-radius:7px;background:var(--panel2);color:var(--muted)}
 .raid-overview-card .rc-transfer-status strong{display:block;font-size:12px;font-weight:750;line-height:1.35}
 .raid-overview-card .rc-transfer-status small{display:block;margin-top:3px;font-size:11px;color:var(--muted)}
 .raid-overview-card .rc-transfer-symbol{flex:0 0 20px;font-size:19px;line-height:1;text-align:center}
 .raid-overview-card .rc-transfer-done,.raid-overview-card .rc-transfer-manual{color:#a4e5bb;background:rgba(52,168,103,.12);border-color:rgba(105,202,142,.48)}
+.raid-overview-card .rc-transfer-overdue{color:#fdba74;background:rgba(234,120,35,.12);border-color:rgba(251,146,60,.48)}
 .raid-overview-card .rc-transfer-cancelled,.raid-overview-card .rc-transfer-unknown{color:var(--muted);background:var(--panel2);border-color:var(--soft)}
 
 </style>
@@ -9357,9 +9358,10 @@ function renderDashboardRaidCard(raid){
   const openAction=p0Only?'openP0OnlySignupFromDashboard':signupOnly?'openSignupOnlyRaid':'openRaidInUnifiedOverview';
   const pointsEnabled=!signupOnly&&!p0Only&&canTransferP0PlusFromRaid(raid);
   const transferReviewPending=typeof leadershipTaskState!=='undefined'&&leadershipTaskState.reviews===null;
-  const transferState=cancelled?'cancelled':manual?'manual':transferred?'done':transferReviewPending?'unknown':'open';
-  const pointsLabel=cancelled?'Entfällt – abgesagt':manual?'Manuell erledigt':transferred?'Übertragen':transferReviewPending?'Wird geprüft …':'Noch nicht übertragen';
-  const transferBadge=pointsEnabled?`<div class="rc-transfer-status rc-transfer-${transferState}" role="status"><span class="rc-transfer-symbol" aria-hidden="true">${cancelled?'–':transferred||manual?'✓':transferReviewPending?'…':'○'}</span><span><strong>P0+ ${escapeHtml(pointsLabel)}</strong>${transferred&&Number(raid.p0PlusTransferCount)>0?`<small>${Number(raid.p0PlusTransferCount)} Buchungen für diesen Raid</small>`:''}</span></div>`:'';
+  const transferOverdue=/^\d{4}-\d{2}-\d{2}$/.test(String(raid.raidDate||''))&&raid.raidDate<todayIsoDate();
+  const transferState=cancelled?'cancelled':manual?'manual':transferred?'done':transferReviewPending?'unknown':transferOverdue?'overdue':'open';
+  const pointsLabel=cancelled?'Entfällt – abgesagt':manual?'Manuell erledigt':transferred?'Übertragen':transferReviewPending?'Wird geprüft …':transferOverdue?'Übertragung überfällig':'Noch nicht übertragen';
+  const transferBadge=pointsEnabled?`<div class="rc-transfer-status rc-transfer-${transferState}" role="status"><span class="rc-transfer-symbol" aria-hidden="true">${cancelled?'–':transferred||manual?'✓':transferReviewPending?'…':transferOverdue?'!':'○'}</span><span><strong>P0+ ${escapeHtml(pointsLabel)}</strong>${transferred&&Number(raid.p0PlusTransferCount)>0?`<small>${Number(raid.p0PlusTransferCount)} Buchungen für diesen Raid</small>`:''}</span></div>`:'';
   const stage=cancelled?'Abgesagt':p0Only?'P0-Anmelder':raid.raidDate<todayIsoDate()?'Termin vergangen':'Geplant';
   return `<article class="raid-overview-card" style="--raid-action-ink:${ink}" data-raid-id="${escapeAttr(id)}">
     <div class="rc-content"><header class="rc-header"><img class="rc-image" src="${escapeAttr(image)}" alt="${escapeAttr(raid.raidName||key)}"><div><h4>${escapeHtml(raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||'Raid')}</h4><button type="button" class="rc-date" onclick="editRaidDateTimePopup(${arg})" title="Name, Datum und Uhrzeit ändern">${escapeHtml(formatRaidWeekday(raid.raidDate))} · ${escapeHtml(formatRaidDate(raid.raidDate))}<br>${escapeHtml(raid.raidTime||'—')} Uhr</button></div></header>
