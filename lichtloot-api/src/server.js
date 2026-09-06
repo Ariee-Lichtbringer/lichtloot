@@ -1,3 +1,4 @@
+import {queueBossTokenNotice} from "./boss-token-notices.js";
 import {createWclAttendanceStore} from "./wcl-attendance-store.js";
 import {createCalendarPosts} from "./calendar-posts.js";
 import {createP0Deletions} from "./p0-deletions.js";
@@ -7886,6 +7887,7 @@ async function queueBotUpdate({ guildId, query: params }) {
 }
 
 async function enqueueBotUpdate({ guildId, type, payload }) {
+  if(type === "boss_token_notice")return queueBossTokenNotice(pool,guildId,payload);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
   if (type === "raid_announcement") {

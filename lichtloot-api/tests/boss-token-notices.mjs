@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {queueBossTokenNotice} from '../src/boss-token-notices.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();await db.exec(`create table bot_update_queue(id uuid default gen_random_uuid(),guild_id text,type text,status text,payload jsonb,created_at timestamptz default now());`);
+let calls=[];const pool={connect:async()=>({query:async(sql,args)=>{calls.push(sql);return sql.includes('pg_advisory_xact_lock')?{rows:[]}:db.query(sql,args)},release(){}})};
+const p={raidId:'ZG-2026-09-06',token:'Herz von Hakkar',player:'tabbi',server:'Everlook'};
+const first=await queueBossTokenNotice(pool,'guild-a',p);assert.equal(first.skipped,false);assert(calls[1].includes('pg_advisory_xact_lock'));assert(calls[2].includes('select id'));
+const duplicate=await queueBossTokenNotice(pool,'guild-a',{...p,player:' TABBI ',raidTime:'21:00'});assert.equal(duplicate.skipped,true);assert.equal(duplicate.rowNumber,first.rowNumber);
+await db.query("update bot_update_queue set status='done',payload=payload-'eventKey'");assert.equal((await queueBossTokenNotice(pool,'guild-a',p)).rowNumber,first.rowNumber);
+assert.equal((await queueBossTokenNotice(pool,'guild-b',p)).skipped,false);assert.equal((await queueBossTokenNotice(pool,'guild-a',{...p,raidId:'ZG-next-week'})).skipped,false);assert.equal((await queueBossTokenNotice(pool,'guild-a',{...p,player:'other'})).skipped,false);
+await assert.rejects(queueBossTokenNotice(pool,'guild-a',{...p,raidId:''}),/Unvollständig/);assert.equal((await db.query('select count(*)::int as n from bot_update_queue')).rows[0].n,4);
+await db.close();console.log('PASS repeated requests reuse first job including completed legacy rows; guild/raid/recipient isolation; lock acquired before lookup; missing identity rejected.');

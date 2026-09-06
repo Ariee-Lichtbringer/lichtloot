@@ -2873,7 +2873,7 @@ async function postBossTokenNotice(player,server){
       alert((result && result.error) || "Worldbuff-Hinweis konnte nicht vorgemerkt werden.");
       return;
     }
-    alert("Worldbuff-Hinweis wurde für den Bot vorgemerkt.");
+    alert(result.skipped ? "Dieser Worldbuff-Hinweis ist bereits vorgemerkt oder wurde schon gepostet. Es wird kein zweiter Post erstellt." : "Worldbuff-Hinweis wurde für den Bot vorgemerkt.");
   }catch(error){
     console.error(error);
     alert("Worldbuff-Hinweis konnte nicht vorgemerkt werden.");
