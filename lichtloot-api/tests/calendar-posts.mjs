@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {createCalendarPosts} from '../src/calendar-posts.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();let active=db;const id=n=>'00000000-0000-0000-0000-'+String(n).padStart(12,'0');
+await db.exec('create table guild_raid_calendar_configs(guild_id uuid,channel_id text,enabled boolean)');await db.query('insert into guild_raid_calendar_configs values($1,$2,true)',[id(1),'channel']);
+const service=createCalendarPosts({query:(...a)=>active.query(...a),transaction:fn=>db.transaction(async tx=>{active=tx;try{return await fn();}finally{active=db;}})});
+const first=await service.prepare(id(1),'channel');assert.equal(first.claimed,true);assert.equal((await service.prepare(id(1),'channel')).claimed,false);
+assert.equal((await service.complete(id(1),'channel',id(9),'original')).success,false);
+assert.equal((await service.complete(id(1),'channel',first.leaseToken,'original')).success,true);
+const second=await service.prepare(id(1),'channel');assert.equal(second.messageId,'original');assert.equal((await service.complete(id(1),'channel',second.leaseToken,'replacement')).success,false);
+await service.release(id(1),'channel',second.leaseToken);await assert.rejects(service.prepare(id(1),'other'),/konfiguriert/);await assert.rejects(service.prepare(id(2),'channel'),/konfiguriert/);
+await db.close();console.log('PASS: durable calendar ID, lease exclusion, stale-token rejection, first-post preservation, guild/channel isolation.');

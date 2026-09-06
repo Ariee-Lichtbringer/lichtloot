@@ -1,3 +1,4 @@
+import {createCalendarPosts} from "./calendar-posts.js";
 import {createP0Deletions} from "./p0-deletions.js";
 import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-schedules.js";
 import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
@@ -26,6 +27,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { inTransaction, pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
 
+const calendarPosts=createCalendarPosts({query,transaction:inTransaction});
 const p0Deletions=createP0Deletions({query,transaction:inTransaction,p0Query});
 
 const raidWorkbookService = createRaidWorkbookService({
@@ -32309,11 +32311,24 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(await failBotQueue(query,guild.id,postParams.rowNumber,postParams.reason));
     }
 
+    if (["lichtbotPrepareCalendarPost","lichtbotCompleteCalendarPost","lichtbotReleaseCalendarPost"].includes(action)) {
+      requireMasterOrQueueToken(postParams);
+      const channel=clean(postParams.channelId),token=clean(postParams.leaseToken),message=clean(postParams.messageId);
+      if(!/^\d{17,20}$/.test(channel))return res.status(400).json({success:false,error:"Ungültiger Kalenderkanal"});
+      if(action==="lichtbotPrepareCalendarPost")return res.json(await calendarPosts.prepare(guild.id,channel));
+      if(!isUuid(token))return res.status(400).json({success:false,error:"Ungültige Verarbeitungssperre"});
+      if(action==="lichtbotReleaseCalendarPost")return res.json(await calendarPosts.release(guild.id,channel,token));
+      if(!/^\d{17,20}$/.test(message))return res.status(400).json({success:false,error:"Ungültige Post-ID"});
+      return res.json(await calendarPosts.complete(guild.id,channel,token,message));
+    }
     if (action === "lichtbotRecordNoticeDelivery") {
       requireMasterOrQueueToken(postParams);
-      const row=clean(postParams.rowNumber),target=clean(postParams.targetId),message=clean(postParams.messageId);
-      if(!isUuid(row)||!/^\d{17,20}$/.test(target)||!/^\d{17,20}$/.test(message))return res.status(400).json({success:false,error:"Ungültiger Zustellnachweis"});
-      const saved=await query(`update bot_update_queue set payload=jsonb_set(payload,'{deliveryReceipts}',coalesce(payload->'deliveryReceipts','{}'::jsonb)||jsonb_build_object($3::text,$4::text)) where guild_id=$1 and id=$2 returning id`,[guild.id,row,target,message]);
+      const row=clean(postParams.rowNumber),target=clean(postParams.targetId),message=clean(postParams.messageId),error=clean(postParams.error).slice(0,500);
+      if(!isUuid(row)||!/^\d{17,20}$/.test(target)||(!error&&!/^\d{17,20}$/.test(message)))return res.status(400).json({success:false,error:"Ungültiger Zustellnachweis"});
+      const saved=await query(`update bot_update_queue set payload=case when $5::text<>'' then
+        jsonb_set(payload,'{deliveryErrors}',coalesce(payload->'deliveryErrors','{}'::jsonb)||jsonb_build_object($3::text,$5::text))
+        else jsonb_set(jsonb_set(payload,'{deliveryReceipts}',coalesce(payload->'deliveryReceipts','{}'::jsonb)||jsonb_build_object($3::text,$4::text)),'{deliveryErrors}',coalesce(payload->'deliveryErrors','{}'::jsonb)-$3::text) end
+        where guild_id=$1 and id=$2 returning id`,[guild.id,row,target,message,error]);
       return res.json({success:saved.rowCount===1});
     }
 
