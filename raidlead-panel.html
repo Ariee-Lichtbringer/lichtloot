@@ -1386,6 +1386,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
 </style>
 <link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
 <script src="raid-closeout.js?v=20260906-1"></script>
+<style>.glc-cancel-backdrop{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:grid;place-items:center;padding:20px}.glc-cancel-dialog{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel,#101622);color:var(--text,#f8fafc);border:1px solid var(--line,#334155);border-radius:14px;padding:24px}.glc-cancel-dialog p{line-height:1.5;margin:12px 0}.glc-cancel-dialog label{display:block;margin:14px 0}.glc-cancel-dialog input[type=password],.glc-cancel-dialog textarea{display:block;width:100%;margin-top:8px}.glc-cancel-actions{display:flex;gap:10px;justify-content:flex-end}</style>
 </head>
 
 <body>
@@ -2265,7 +2266,7 @@ function renderRaidView(){
   updateRaidNavigation();
 
   const transferButton =
-    !RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()
+    !RANDOM_RAIDLEAD_MODE && !["abgesagt","cancelled","canceled"].includes(String(currentRaidData.status||"").toLowerCase()) && isAllowedP0Raid()
       ? currentReleased
         ? `<button class="btn action-transfer" onclick="transferP0PlusPoints()"><span class="star">★</span>P0+ übertragen</button>`
         : `<button class="btn action-transfer" disabled style="opacity:.45;cursor:not-allowed"><span class="star">★</span>P0+ übertragen</button>`
@@ -2294,10 +2295,13 @@ function renderRaidView(){
     </div>
 
     ${renderRaidStatCards()}
+    ${!RANDOM_RAIDLEAD_MODE?`<div style="margin:12px 0">${['abgesagt','cancelled','canceled'].includes(String(currentRaidData.status||'').toLowerCase())?'<strong>Raid abgesagt · keine P0+-Vergabe nötig</strong>':'<button class="btn ghost" type="button" onclick="openRaidCancellation()">Raid abgesagt</button>'}</div>`:''}
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0"><button class="btn action-soft" type="button" onclick="showAllRaidPrios()">Alle ${currentPrios.length} Prio-Einträge dieses Raids anzeigen ↓</button><span class="subtitle">${currentPrios.length} gespeicherte Einträge · Anmeldung und Prio-Eintrag sind getrennt.</span></div>
     ${!RANDOM_RAIDLEAD_MODE ? '<div id="raidCloseoutCheck"></div>' : ""}
 
     <div class="raid-control-bar">
-      <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
+      <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${["abgesagt","cancelled","canceled"].includes(String(currentRaidData.status||"").toLowerCase())?'disabled title="Raid abgesagt – keine Freigabe möglich"':releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
         ${currentReleased ? "Prio schließen" : "Prio öffnen"}
       </button>
       <button class="btn action-soft" onclick="downloadPrio3ReforgedExport()" ${currentReleased ? "" : 'disabled title="Download erst verfügbar, wenn die Prioliste geöffnet ist." style="opacity:.45;cursor:not-allowed"'}>Prio3 Reforged Export</button>
@@ -2309,7 +2313,7 @@ function renderRaidView(){
 
       <div class="entry-status-line">
         <div class="entry-status-content">
-          <h3>Aktuelle Einträge</h3>
+          <h3>Prio-Einträge dieses Raids (${currentPrios.length})</h3>
           <span>${openStatusText}</span>
           ${renderEntryMetrics()}
         </div>
@@ -2571,6 +2575,19 @@ function selectRaidleadPrioItem(slot,optionKey){
 function selectRaidleadPrioItemFromButton(slot,button){
   selectRaidleadPrioItem(slot, button?.dataset?.itemKey || "");
 }
+
+function openRaidCancellation(){
+  const raidId=currentRaidData?.raidId;if(!raidId)return;
+  const backdrop=document.createElement('div');backdrop.className='glc-cancel-backdrop';
+  backdrop.innerHTML='<section class="glc-cancel-dialog" role="dialog" aria-modal="true" aria-labelledby="cancelRaidTitle"><h3 id="cancelRaidTitle">Raid abgesagt</h3><p data-raid-name></p><p>Der Raid wird als abgesagt markiert. Prios bleiben erhalten; es müssen keine P0+-Punkte vergeben werden. Bereits gebuchte Punkte werden hier nicht gelöscht.</p><label>Notiz<textarea data-note maxlength="500" rows="2">Raid ist ausgefallen</textarea></label><label>Mastercode oder Plündermeister-Passwort<input type="password" data-password autocomplete="current-password"></label><label><input type="checkbox" data-confirm> Dieser Raid hat nicht stattgefunden.</label><p role="status" data-status></p><div class="glc-cancel-actions"><button class="btn ghost" type="button" data-close>Abbrechen</button><button class="btn" type="button" data-save disabled>Als abgesagt speichern</button></div></section>';
+  backdrop.querySelector('[data-raid-name]').textContent=[currentRaidData.raidName||currentRaidKey,getRaidDateLabel(),getRaidTimeLabel()].join(' · ');
+  const save=backdrop.querySelector('[data-save]'),code=backdrop.querySelector('[data-password]'),note=backdrop.querySelector('[data-note]'),check=backdrop.querySelector('[data-confirm]');
+  const update=()=>save.disabled=!check.checked||!code.value.trim()||!note.value.trim();[code,note].forEach(el=>el.oninput=update);check.onchange=update;backdrop.querySelector('[data-close]').onclick=()=>backdrop.remove();
+  save.onclick=async()=>{save.disabled=true;const status=backdrop.querySelector('[data-status]');status.textContent='Wird gespeichert …';try{const response=await fetch(RAID_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guildSetRaidTaskReview',guild:currentGuildSlug(),raidId,state:'cancel',note:note.value.trim(),masterCode:code.value,confirmed:true})});const result=await response.json();if(!response.ok||!result.success)throw Error(result.error||'Absage konnte nicht gespeichert werden.');backdrop.remove();await reloadCurrentRaid();}catch(error){status.textContent=error.message;update();}};
+  document.body.appendChild(backdrop);code.focus();
+}
+
+function showAllRaidPrios(){const search=document.getElementById('prioSearch');if(search)search.value='';renderRaidRowsOnly();const panel=document.getElementById('entriesPanel');panel?.scrollIntoView({behavior:'smooth',block:'start'});if(panel){panel.tabIndex=-1;panel.focus({preventScroll:true});}}
 
 function renderRaidRowsOnly(){
   const tbody = document.getElementById("prioRows");

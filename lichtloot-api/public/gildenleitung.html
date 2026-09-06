@@ -5319,6 +5319,8 @@ body.worldbuff-only .master-only{display:none!important}
 <link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
 <script src="raid-closeout.js?v=20260906-1"></script>
 <style id="leadership-workflow-style">
+.leadership-review-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}.leadership-review-actions{display:flex;gap:8px;flex-wrap:wrap}.leadership-reviewed{margin-top:20px}.leadership-reviewed summary{cursor:pointer;color:var(--muted);padding:10px 0}
+
 .leadership-tasks{margin:18px 0;padding:18px 20px 14px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(115deg,var(--panel),var(--panel2));box-shadow:0 4px 18px rgba(0,0,0,.08)}
 .leadership-tasks .leadership-tasks-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding:0 2px}
 .leadership-tasks h2{margin:0;color:var(--text);font-size:15px;font-weight:650;letter-spacing:.01em;line-height:1.4}
@@ -7025,7 +7027,7 @@ function setStatusHtml(html, type){
 
 function setGuildLocked(locked){
   document.body.classList.toggle("guild-locked", Boolean(locked));
-  if(locked){leadershipTaskState.generation++;leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.loading=false;}
+  if(locked){leadershipTaskState.generation++;leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.reviews=null;leadershipTaskState.loading=false;}
   renderLeadershipTasks();
 }
 
@@ -7620,11 +7622,12 @@ async function loadOverview(options){
 }
 
 // Task counters keep unknown/error states distinct from a confirmed zero.
-let leadershipTaskState={requests:null,messages:null,loading:false,generation:0};
+let leadershipTaskState={requests:null,messages:null,reviews:null,loading:false,generation:0};
 function leadershipPendingTransfers(){
   return (guildData.raids||[]).filter(raid=>{
     const status=normalize(raid.status||'');
-    return !raid.deletedAt&&!['archiviert','archive','gelöscht','geloescht','deleted'].includes(status)
+    return !raid.deletedAt&&!['archiviert','archive','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled'].includes(status)
+      && !['manual','cancel'].includes(leadershipReviewForRaid(raid)?.state)
       && /^\d{4}-\d{2}-\d{2}$/.test(String(raid.raidDate||''))
       && raid.raidDate<todayIsoDate()&&needsP0PlusTransferBeforeArchive(raid);
   });
@@ -7638,7 +7641,7 @@ function renderLeadershipTasks(){
     ['P0-Freigaben',ready?leadershipTaskState.requests:null,'Anträge prüfen','openP0ReleasePanel()'],
     ['Spielerzugänge',pending,'Zugänge freigeben','openPendingLoginReview()'],
     ['Postfach',ready?leadershipTaskState.messages:null,'Postfach öffnen','openIssueInboxPanel()'],
-    ['Punkteübertragung',ready?leadershipPendingTransfers().length:null,'Vergangene Raids prüfen','openLeadershipPendingTransfers()']
+    ['Punkteübertragung',ready&&leadershipTaskState.reviews!==null?leadershipPendingTransfers().length:null,'Vergangene Raids prüfen','openLeadershipPendingTransfers()']
   ];
   const icons=[
     '<path d="M9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M9 3h6v4H9zM8 14l3 3 5-6"/>',
@@ -7655,26 +7658,51 @@ async function loadLeadershipTasks(){
   const code=document.getElementById('masterCode')?.value.trim();
   if(!code||document.body.classList.contains('guild-locked'))return;
   const generation=++leadershipTaskState.generation;
-  leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.loading=true;renderLeadershipTasks();
+  leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.reviews=null;leadershipTaskState.loading=true;renderLeadershipTasks();
   await Promise.allSettled([
-    ['requests','guildGetPoReleaseRequests'],['messages','guildGetIssueReports']
+    ['requests','guildGetPoReleaseRequests'],['messages','guildGetIssueReports'],['reviews','guildGetRaidTaskReviews']
   ].map(async([key,action])=>{
     const result=await railwayApi({action,masterCode:code},15000);
     if(generation!==leadershipTaskState.generation||!result?.success)return;
+    if(key==='reviews'){if(Array.isArray(result.reviews))leadershipTaskState.reviews=result.reviews;return;}
     const entries=key==='requests'?result.entries:result.reports;
     if(Array.isArray(entries)){leadershipTaskState[key]=key==='requests'?entries.filter(row=>row.status==='pending').length:entries.length;if(key==='messages')issueReports=entries;}
   }));
   if(generation===leadershipTaskState.generation){leadershipTaskState.loading=false;renderLeadershipTasks();}
 }
-function openLeadershipPendingTransfers(){
+async function openLeadershipPendingTransfers(){
+  if(leadershipTaskState.reviews===null)await loadLeadershipTasks();
+  if(leadershipTaskState.reviews===null){setStatus('Aufgabenstatus konnte nicht geladen werden. Bitte erneut versuchen.','bad');return;}
   const raids=leadershipPendingTransfers();
+  const reviewed=(guildData.raids||[]).filter(raid=>['manual','cancel'].includes(leadershipReviewForRaid(raid)?.state));
   document.getElementById('prioModalTitle').textContent='Ausstehende Punkteübertragungen';
-  document.getElementById('prioModalSubline').textContent='Vergangene, nicht archivierte Raids. Teilnahme und Item-Erhalt vor der Übertragung prüfen.';
+  document.getElementById('prioModalSubline').textContent='Raid prüfen, als abgesagt markieren oder bereits händisch vergebene Punkte bestätigen.';
   const content=document.getElementById('prioModalContent');
-  content.innerHTML=raids.length?raids.map((raid,i)=>`<div class="status"><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong> · ${escapeHtml(formatRaidDate(raid.raidDate))} <button class="small-btn primary" type="button" data-task-raid="${i}">Raid prüfen</button></div>`).join(''):'<div class="status good">Keine ausstehenden Punkteübertragungen für vergangene Raids.</div>';
-  content.querySelectorAll('[data-task-raid]').forEach(button=>button.onclick=()=>{closePrioModal();openRaidleadPanelDirect(raids[Number(button.dataset.taskRaid)].raidId||raids[Number(button.dataset.taskRaid)].id);});
+  content.innerHTML=raids.map((raid,i)=>`<div class="leadership-review-row"><div><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong><span class="muted"> · ${escapeHtml(formatRaidDate(raid.raidDate))}</span></div><div class="leadership-review-actions"><button class="small-btn primary" type="button" data-task-raid="${i}">Raid prüfen</button><button class="small-btn danger" type="button" data-task-cancel="${i}">Raid abgesagt</button><button class="small-btn ghost" type="button" data-task-manual="${i}">P0+ manuell erledigt</button></div></div>`).join('')||'<div class="status good">Keine offenen Punkteübertragungen.</div>';
+  if(reviewed.length)content.innerHTML+=`<details class="leadership-reviewed"><summary>Erledigte und abgesagte Raids (${reviewed.length})</summary>${reviewed.map((raid,i)=>{const review=leadershipReviewForRaid(raid);return `<div class="leadership-review-row"><div><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong> · ${escapeHtml(formatRaidDate(raid.raidDate))}<div class="muted">${review.state==='cancel'?'Abgesagt':'P0+ manuell erledigt'} · ${escapeHtml(review.note)}</div></div><button class="small-btn ghost" type="button" data-task-reopen="${i}">${review.state==='cancel'?'Absage zurücknehmen':'Aufgabe wieder öffnen'}</button></div>`;}).join('')}</details>`;
+  content.querySelectorAll('[data-task-raid]').forEach(b=>b.onclick=()=>{const r=raids[Number(b.dataset.taskRaid)];closePrioModal();openRaidleadPanelDirect(r.raidId||r.id);});
+  for(const state of ['cancel','manual','reopen'])content.querySelectorAll('[data-task-'+state+']').forEach(b=>b.onclick=()=>editLeadershipTaskReview((state==='reopen'?reviewed:raids)[Number(b.dataset['task'+state[0].toUpperCase()+state.slice(1)])],state));
   document.getElementById('prioModal').classList.remove('hidden');
 }
+function markLeadershipRaidCancelled(raidId){const raid=findRaidByAnyId(raidId);if(raid)editLeadershipTaskReview(raid,'cancel');}
+function leadershipReviewForRaid(raid){return (leadershipTaskState.reviews||[]).find(r=>String(r.raidId)===String(raid.raidId||raid.id)||String(r.internalRaidId)===String(raid.id));}
+function editLeadershipTaskReview(raid,state){
+  const title=state==='cancel'?'Raid als abgesagt markieren':state==='manual'?'P0+ bereits manuell erledigt':'Aufgabe wieder öffnen';
+  const explanation=state==='cancel'?'Der Raid wird als abgesagt markiert. Prios bleiben erhalten; es werden keine Punkte gebucht. Bereits vergebene Punkte werden durch diesen Button nicht gelöscht.':state==='manual'?'Bestätige, dass die P0+-Punkte bereits händisch vergeben wurden. Nur diese Aufgabe wird ausgeblendet; Punktestände bleiben unverändert.':'Die Aufgabe wird erneut geprüft. Eine Absage wird zurückgenommen; die Prioliste bleibt dabei geschlossen.';
+  const backdrop=document.createElement('div');backdrop.className='raid-helper-notify-backdrop';
+  backdrop.innerHTML=`<section class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-labelledby="taskDecisionTitle"><h3 id="taskDecisionTitle">${title}</h3><p><strong>${escapeHtml(raid.raidName||raid.raid)} · ${escapeHtml(formatRaidDate(raid.raidDate))}</strong></p><p>${explanation}</p><label>Notiz<textarea data-task-note maxlength="500" rows="3" style="width:100%">${state==='cancel'?'Raid ist ausgefallen':state==='manual'?'P0+ bereits händisch vergeben':'Aufgabe erneut prüfen'}</textarea></label><label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" data-task-confirm> Ich bestätige diese Entscheidung für diesen Raid.</label><p data-task-status role="status"></p><div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-task-close>Abbrechen</button><button class="small-btn primary" type="button" data-task-save disabled>${state==='cancel'?'Als abgesagt speichern':state==='manual'?'Als manuell erledigt speichern':'Wieder öffnen'}</button></div></section>`;
+  const save=backdrop.querySelector('[data-task-save]'),check=backdrop.querySelector('[data-task-confirm]'),note=backdrop.querySelector('[data-task-note]');
+  const update=()=>save.disabled=!check.checked||!note.value.trim();check.onchange=update;note.oninput=update;
+  backdrop.querySelector('[data-task-close]').onclick=()=>backdrop.remove();
+  save.onclick=async()=>{save.disabled=true;const status=backdrop.querySelector('[data-task-status]');status.textContent='Wird gespeichert …';try{
+    const result=await railwayWrite({action:'guildSetRaidTaskReview',masterCode:document.getElementById('masterCode').value.trim(),raidId:raid.raidId||raid.id,state,note:note.value.trim(),confirmed:true});
+    if(!result?.success)throw Error(result?.error||'Entscheidung konnte nicht gespeichert werden.');
+    if(state==='cancel')raid.status='abgesagt';if(state==='reopen'&&['abgesagt','cancelled','canceled'].includes(String(raid.status).toLowerCase()))raid.status='geschlossen';
+    backdrop.remove();await loadLeadershipTasks();renderDashboardCards();renderRaidArchive();renderRaids();await openLeadershipPendingTransfers();
+  }catch(error){status.textContent=error.message;update();}};
+  document.body.appendChild(backdrop);note.focus();
+}
+
 
 let deferredRenderGeneration=0;
 
@@ -9113,7 +9141,7 @@ function renderSummary(){
   renderLeadershipTasks();
   const raids = (guildData.raids || []).filter(raid => {
     const status = normalize(raid.status || "");
-    return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt;
+    return !["archiviert","archive","gelöscht","geloescht","abgesagt","cancelled","canceled"].includes(status) && !raid.deletedAt;
   });
   const players = guildData.players || [];
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
@@ -9435,6 +9463,7 @@ function renderDashboardCards(){
             </div>
             <div class="active-raid-actions">
               <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
+              <button class="small-btn danger" type="button" onclick="markLeadershipRaidCancelled('${escapeAttr(raid.raidId || raid.id)}')">Raid abgesagt</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${canTransferP0PlusFromRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="${isZgRaidForP0Transfer(raid) ? `openP0PlusTransferDialog('${escapeAttr(raid.raidId)}')` : `transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')`}">P0+ übertragen</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
@@ -9474,7 +9503,7 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt && isRaidInNextTwoWeeks(raid);
+      return !["archiviert","archive","gelöscht","geloescht","abgesagt","cancelled","canceled"].includes(status) && !raid.deletedAt && isRaidInNextTwoWeeks(raid);
     })
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
@@ -9832,6 +9861,7 @@ function renderRaidArchiveFilters(){
 }
 
 function renderRaidArchiveP0State(raid){
+  if(['abgesagt','cancelled','canceled'].includes(normalize(raid.status||'')))return '<span class="muted">Raid abgesagt · keine P0+-Vergabe nötig'+(Number(raid.p0PlusTransferCount||0)>0?' · bestehende Buchungen separat prüfen':'')+'</span>';
   if(!canTransferP0PlusFromRaid(raid))return '<span class="muted">–</span>';
   const done=hasP0PlusTransfer(raid);
   return `<span class="transfer-light ${done?"done":"open"}"><span class="transfer-dot"></span>${done?`P0+ übertragen (${escapeHtml(String(raid.p0PlusTransferCount||1))})`:"P0+ nicht übertragen"}</span>`;
@@ -9850,7 +9880,7 @@ function renderRaidArchive(){
     const isDeleted = ["gelöscht","geloescht","deleted"].includes(status) || Boolean(raid.deletedAt);
     const raidDate=String(raid.raidDate||raid.date||"").slice(0,10);
     const isFinishedPastRaid=/^\d{4}-\d{2}-\d{2}$/.test(raidDate) && raidDate<todayIsoDate();
-    const isArchived = ["archiviert","archive","archived"].includes(status) || (!isDeleted && (isFinishedPastRaid || hasP0PlusTransfer(raid)));
+    const isArchived = ["archiviert","archive","archived","abgesagt","cancelled","canceled"].includes(status) || (!isDeleted && (isFinishedPastRaid || hasP0PlusTransfer(raid)));
     if(!isArchived && !isDeleted) return;
     if(raidArchiveRaidFilter!=="all" && raidArchiveFilterKey(raid)!==raidArchiveRaidFilter) return;
     const haystack = normalize([
@@ -9875,10 +9905,10 @@ function renderRaidArchive(){
         <td>${renderRaidClearDate(raid)}</td>
         <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span>${renderRaidOverviewStats(raid)}</td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
-        <td>${statusBadge(deletedGroup ? "gelöscht" : "archiviert")}</td>
+        <td>${statusBadge(deletedGroup ? "gelöscht" : ["abgesagt","cancelled","canceled"].includes(normalize(raid.status||"")) ? "abgesagt" : "archiviert")}</td>
         <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
         <td>${renderRaidArchiveP0State(raid)}</td>
-        <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button></td>
+        <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button>${!deletedGroup&&!raid.p0Only&&!['abgesagt','cancelled','canceled'].includes(normalize(raid.status||''))?`<button class="small-btn danger" type="button" onclick="markLeadershipRaidCancelled('${escapeAttr(raid.raidId || raid.id)}')">Raid abgesagt</button>`:''}</td>
       </tr>
     `).join("");
   };
@@ -11010,7 +11040,7 @@ function renderRaidHelperCalendar(){
   const raidsByDate = new Map();
   (guildData.raids || []).filter(raid => {
     const status = normalize(raid.status || "");
-    return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt;
+    return !["archiviert","archive","gelöscht","geloescht","abgesagt","cancelled","canceled"].includes(status) && !raid.deletedAt;
   }).forEach(raid => {
     const date = String(raid.raidDate || "").trim();
     if(!date) return;

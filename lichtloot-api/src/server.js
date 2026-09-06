@@ -1,3 +1,4 @@
+import { createRaidTaskReviewService } from "./raid-task-review.js";
 import { queueActiveSignupRefresh, mergeP0PostIdentity } from "./active-signup-refresh.js";
 import { noticeContent, collectOfflineTargets, queueOfflineNotice, onlineNoticeContent, recoveryTargets, queueOnlineNotice } from "./bot-offline-notice.js";
 import { createRaidCloseoutService } from "./raid-closeout.js";
@@ -21,6 +22,8 @@ const raidWorkbookService = createRaidWorkbookService({
   publicBaseUrl: process.env.GUILDLOOT_PUBLIC_URL || "https://lichtloot.de",
   apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
 });
+
+const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,params)=>requireMasterCodeForGuild(guild,params.masterCode,'guildRaidTaskReview',params),authorizeWrite:(guild,params)=>requireRaidleadP0MasterCodeForGuild(guild,params.masterCode)});
 
 let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
@@ -26198,6 +26201,7 @@ async function setRaidStatus({ guildId, query: params }) {
       p0Only: true
     };
   }
+  if (status === 'geöffnet' && ['abgesagt','cancelled','canceled'].includes(clean(raid.status).toLowerCase()))throw Object.assign(new Error('Dieser Raid ist abgesagt. Bitte zuerst die Absage in der Gildenleitung zurücknehmen.'),{statusCode:409});
   if (status === "geöffnet") {
     const raidDateText = raid.raid_date instanceof Date
       ? raid.raid_date.toISOString().slice(0, 10)
@@ -27783,6 +27787,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  if(['abgesagt','cancelled','canceled'].includes(clean(raid.status).toLowerCase()))throw Object.assign(new Error('Für abgesagte Raids werden keine P0+-Punkte übertragen.'),{statusCode:409});
   requireRaidP0PlusEnabled(eraConfig.layout, raid.raid_type);
   const sourceRaidType = normalizeRaidType(raid.raid_type);
   const isGenericZgSource = sourceRaidType === "zg";
@@ -30810,6 +30815,8 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...report, guild: guild.slug });
     }
 
+    if(action === "guildGetRaidTaskReviews"){return res.json({...await raidTaskReviewService.list(guild,req.query),guild:guild.slug});}
+
     if (action === "guildGetIssueReports") {
       const reports = await getIssueReports({ guildId: guild.id, query: req.query });
       return res.json({ ...reports, guild: guild.slug });
@@ -31780,9 +31787,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     await loadWorldbuffAccessCode(guild.id);
     await loadLootMasterAccessCode(guild.id);
     if (clean(postParams.masterCode)) {
-      if (["transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout"].includes(action)) requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
+      if (["transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout","guildSetRaidTaskReview"].includes(action)) requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
     }
+
+    if(action === "guildSetRaidTaskReview"){return res.json({...await raidTaskReviewService.set(guild,postParams),guild:guild.slug});}
 
     if (action === "getRaidCloseout" || action === "applyRaidCloseout") {
       enforceSecurityRateLimit(req, "raid-closeout", 60, 60_000);
