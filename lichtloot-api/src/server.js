@@ -2501,6 +2501,66 @@ async function runSupportNotificationTick(){
   for(const ticket of pending.rows)await sendSupportNotification(ticket.id);
 }
 
+async function ensureSupportReplySchema() {
+  await ensureSupportTicketSchema();
+  await query(`create table if not exists platform_support_replies (
+    id uuid primary key, ticket_id uuid not null references platform_support_tickets(id) on delete cascade,
+    recipient text not null, sender text not null, subject text not null, message text not null,
+    status text not null default 'sending', error text not null default '',
+    created_at timestamptz not null default now(), sent_at timestamptz
+  )`);
+  await query('create index if not exists idx_support_replies_ticket on platform_support_replies(ticket_id,created_at)');
+}
+function normalizeSupportReply(row) {
+  return {id:row.id,ticketId:row.ticket_id,recipient:row.recipient,sender:row.sender,subject:row.subject,message:row.message,
+    status:row.status==='sending' && Date.now()-new Date(row.created_at).getTime()>300000?'unknown':row.status,
+    error:row.error,createdAt:new Date(row.created_at).toISOString(),sentAt:row.sent_at?new Date(row.sent_at).toISOString():''};
+}
+async function getPlatformSupportReplies({body={}}) {
+  requirePlatformMasterCode(body.masterCode);
+  const id=clean(body.id);if(!isUuid(id))throw Object.assign(Error('Ungültige Supportmeldung.'),{statusCode:400});
+  await ensureSupportReplySchema();
+  const ticket=(await query('select contact_email from platform_support_tickets where id=$1',[id])).rows[0];
+  if(!ticket)throw Object.assign(Error('Supportmeldung nicht gefunden.'),{statusCode:404});
+  const rows=await query('select * from platform_support_replies where ticket_id=$1 order by created_at,id',[id]);
+  return {success:true,recipient:ticket.contact_email,sender:clean(process.env.GMAIL_USER),replies:rows.rows.map(normalizeSupportReply)};
+}
+async function sendPlatformSupportReply({body={}}) {
+  requirePlatformMasterCode(body.masterCode);
+  const id=clean(body.id),requestId=clean(body.requestId),subject=clean(body.subject),message=clean(body.message);
+  if(!isUuid(id)||!isUuid(requestId)||!subject||subject.length>180||/[\r\n]/.test(subject)||!message||message.length>10000)
+    throw Object.assign(Error('Bitte einen Betreff (max. 180 Zeichen) und eine Antwort (max. 10.000 Zeichen) eingeben.'),{statusCode:400});
+  await ensureSupportReplySchema();
+  // A repeated HTTP request must never trigger a second SMTP submission.
+  const existing=(await query('select * from platform_support_replies where id=$1',[requestId])).rows[0];
+  if(existing){
+    if(existing.ticket_id!==id||existing.subject!==subject||existing.message!==message)throw Object.assign(Error('Dieser Versandvorgang gehört zu einer anderen Antwort. Bitte den Verlauf prüfen.'),{statusCode:409});
+    return {success:true,reply:normalizeSupportReply(existing)};
+  }
+  const ticket=(await query('select contact_email from platform_support_tickets where id=$1',[id])).rows[0];
+  if(!ticket)throw Object.assign(Error('Supportmeldung nicht gefunden.'),{statusCode:404});
+  // The recipient comes only from the original ticket, never from the request body.
+  const recipient=clean(ticket.contact_email),sender=clean(process.env.GMAIL_USER),pass=clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g,'');
+  if(!/^[^\s@<>;,]+@[^\s@<>;,]+\.[^\s@<>;,]+$/.test(recipient))throw Object.assign(Error('Für diese Meldung ist keine gültige E-Mail-Adresse hinterlegt.'),{statusCode:400});
+  if(!sender||!pass)throw Object.assign(Error('Der Gmail-Versand ist nicht eingerichtet.'),{statusCode:503});
+  const claimed=await query(`insert into platform_support_replies(id,ticket_id,recipient,sender,subject,message)
+    values($1,$2,$3,$4,$5,$6) on conflict(id) do nothing returning *`,[requestId,id,recipient,sender,subject,message]);
+  if(!claimed.rows.length)return sendPlatformSupportReply({body});
+  let status='sent',error='';
+  try{
+    const transporter=nodemailer.createTransport({service:'gmail',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user:sender,pass}});
+    const result=await transporter.sendMail({from:{name:'GuildLoot Support',address:sender},to:recipient,replyTo:sender,
+      messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message});
+    if(result.rejected?.length||!result.accepted?.length){status='failed';error='Der Mailserver hat die Empfängeradresse nicht angenommen.';}
+  }catch(e){
+    // Do not auto-retry replies after an ambiguous network failure: SMTP may have accepted them.
+    status=['EAUTH','EENVELOPE'].includes(e.code)?'failed':'unknown';
+    error=status==='failed'?'Gmail hat den Versand abgelehnt. Bitte die Verbindung und Empfängeradresse prüfen.':'Versand nicht bestätigt. Bitte zuerst im Gmail-Ordner „Gesendet“ prüfen; die Antwort wird nicht automatisch erneut gesendet.';
+  }
+  const saved=await query(`update platform_support_replies set status=$2,error=$3,sent_at=case when $2='sent' then now() else null end where id=$1 returning *`,[requestId,status,error]);
+  return {success:true,reply:normalizeSupportReply(saved.rows[0])};
+}
+
 async function getPlatformSupportTickets({ query: params = {} }) {
   requirePlatformMasterCode(params.masterCode);
   await ensureSupportTicketSchema();
@@ -31763,6 +31823,12 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "platformUpdateSystemError") {
       enforceSecurityRateLimit(req,"platform-admin-write",60,15*60*1000);
       return res.json(await updateSystemError({guildId:null,query:req.body}));
+    }
+
+    if (action === "platformGetSupportReplies" || action === "platformSendSupportReply") {
+      enforceSecurityRateLimit(req, 'platform-support-reply', 30, 15 * 60 * 1000);
+      res.set('Cache-Control','no-store');
+      return res.json(await (action === "platformGetSupportReplies" ? getPlatformSupportReplies : sendPlatformSupportReply)({body:req.body}));
     }
 
     if (action === "platformRetrySupportEmail") {
