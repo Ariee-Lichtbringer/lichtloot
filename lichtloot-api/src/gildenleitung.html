@@ -5582,6 +5582,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div id="trafficStatsContent" class="muted">Nach dem Freischalten werden die Aufrufe geladen.</div>
       </section>
       <section id="raidDashboardSection" class="dashboard-card">
+        <section id="raidAftercare" class="hidden" aria-label="Nachbereitung" style="padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid rgba(var(--gold-rgb),.25)"></section>
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -9453,7 +9454,7 @@ function renderDashboardRaidCard(raid){
   const number=value=>value===null||value===undefined?'—':escapeHtml(String(value));
   const imageKey=key.startsWith('zg-')?'zg':key;
   const image=raid.raidImageUrl||raid.imageUrl||RAID_IMAGES[imageKey]||RAID_IMAGES.other||'images/raid-templates/wow-other-raids.png';
-  const hint=p0Only?'Reiner P0-Anmelder':signupOnly?'Anmeldung ohne Prioliste':stats.error?'Zahlen konnten nicht geladen werden':stats.missing===undefined?'Anmeldungen werden geprüft …':stats.missing>0?`${stats.missing} Angemeldeten fehlt die Prio`:stats.signups>0?'Alle Angemeldeten haben eine Prio':'Noch keine Anmeldungen';
+  const hint=p0Only?'Reiner P0-Anmelder':signupOnly?'Anmeldung ohne Prioliste':stats.error?(stats.signups!==undefined?'Aktualisierung fehlgeschlagen · letzter geladener Stand':'Zahlen konnten nicht geladen werden'):stats.loading?'Zahlen werden aktualisiert …':stats.missing===undefined?'Anmeldungen werden geprüft …':stats.missing>0?`${stats.missing} Angemeldeten fehlt die Prio`:stats.signups>0?'Alle Angemeldeten haben eine Prio':'Noch keine Anmeldungen';
   const openAction=p0Only?'openP0OnlySignupFromDashboard':signupOnly?'openSignupOnlyRaid':'openRaidInUnifiedOverview';
   const pointsEnabled=!signupOnly&&!p0Only&&canTransferP0PlusFromRaid(raid);
   const transferReviewPending=typeof leadershipTaskState!=='undefined'&&leadershipTaskState.reviews===null;
@@ -9476,7 +9477,23 @@ function renderDashboardRaidCard(raid){
   </article>`;
 }
 
+function renderRaidAftercare(){
+  const box=document.getElementById('raidAftercare');
+  if(!box)return;
+  if(!lastOverviewLoadedAt||document.body.classList.contains('guild-locked')){box.classList.add('hidden');box.innerHTML='';return;}
+  if(leadershipTaskState.reviews===null){
+    box.classList.remove('hidden');
+    box.innerHTML='<div class="dashboard-card-head"><h2>Nachbereitung</h2><button type="button" onclick="loadLeadershipTasks()">Erneut prüfen</button></div><p class="muted" role="status">'+(leadershipTaskState.loading?'Aufgaben werden geprüft …':'Aufgabenstatus konnte nicht geladen werden.')+'</p>';
+    return;
+  }
+  const raids=leadershipPendingTransfers().slice().sort((a,b)=>String(a.raidDate).localeCompare(String(b.raidDate)));
+  box.classList.toggle('hidden',!raids.length);
+  if(!raids.length){box.innerHTML='';return;}
+  box.innerHTML=`<div class="dashboard-card-head"><div><h2>Nachbereitung · ${raids.length} offen</h2><p class="muted">Vergangene Raids mit noch offener Punkteübertragung.</p></div><button type="button" onclick="openLeadershipPendingTransfers()">Alle bearbeiten →</button></div>${raids.slice(0,5).map(raid=>`<div class="leadership-review-row"><div><strong>${escapeHtml(raid.raidName||raid.raid||'Raid')}</strong><span class="muted"> · ${escapeHtml(formatRaidDate(raid.raidDate))}</span><div class="muted">P0+ noch offen</div></div><button class="small-btn primary" type="button" onclick="openRaidleadPanelDirect(${escapeAttr(JSON.stringify(String(raid.raidId||raid.id)))})">Raid prüfen →</button></div>`).join('')}${raids.length>5?`<p class="muted">${raids.length-5} weitere Raids unter „Alle bearbeiten“.</p>`:''}`;
+}
+
 function renderDashboardCards(){
+  renderRaidAftercare();
   const box = document.getElementById("activeRaidCards");
   if(!box) return;
 
@@ -9526,7 +9543,9 @@ function getDashboardActiveRaids(){
 let dashboardRaidStatsGeneration=0;
 async function loadDashboardRaidStats(){
   const generation=++dashboardRaidStatsGeneration,raids=getDashboardActiveRaids();
-  dashboardRaidStats={};renderDashboardCards();
+  const activeIds=new Set(raids.map(raid=>String(raid.raidId||raid.id||'')));
+  dashboardRaidStats=Object.fromEntries(Object.entries(dashboardRaidStats).filter(([id])=>activeIds.has(id)).map(([id,stats])=>[id,{...stats,loading:true}]));
+  renderDashboardCards();
   let index=0;
   await Promise.all(Array.from({length:Math.min(3,raids.length)},async()=>{
     while(index<raids.length){
@@ -9541,7 +9560,8 @@ async function loadDashboardRaidStats(){
         const rows=[...result.signups,...result.externalSignups].filter(row=>!['absent','declined','cancelled','canceled','abgemeldet'].includes(String(row.status||'').toLowerCase()));
         const count=result.prioCount??result.raid?.prioCount;
         dashboardRaidStats[id]={signups:rows.length,prios:count!==null&&count!==undefined&&Number.isFinite(Number(count))?Number(count):null,missing:rows.every(row=>typeof row.hasPrio==='boolean')?rows.filter(row=>!row.hasPrio).length:undefined};
-      }catch(error){if(generation!==dashboardRaidStatsGeneration)return;dashboardRaidStats[id]={prios:null,signups:null,error:true};}
+      }catch(error){if(generation!==dashboardRaidStatsGeneration)return;dashboardRaidStats[id]={...dashboardRaidStats[id],loading:false,error:true};}
+      renderDashboardCards();
     }
   }));
   if(generation===dashboardRaidStatsGeneration)renderDashboardCards();

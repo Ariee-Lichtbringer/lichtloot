@@ -1637,6 +1637,8 @@ let currentRaidKey = null;
 let currentRaidData = null;
 let currentPrios = [];
 let currentReleased = false;
+let raidLoadError = '';
+let p0PointsLoadError = '';
 let itemIdMap = {};
 let itemVisualMap = {};
 let itemVisualList = [];
@@ -1836,6 +1838,8 @@ async function loadRaidByPin(){
   itemVisualMap = {};
   updateRaidBackground();
 
+  raidLoadError='';
+  p0PointsLoadError='';
   const found = await tryLoadRaidByPin(pin, "");
   if(found){
     sessionStorage.setItem(raidleadStorageKey("prioPin"), pin);
@@ -1854,7 +1858,7 @@ async function loadRaidByPin(){
 
   document.getElementById("raidView").classList.add("hidden");
   document.getElementById("controlStatus").innerHTML =
-    `<span class="bad">Kein Raid zu dieser Raidlead PIN gefunden.</span>`;
+    `<span class="bad">${safe(raidLoadError || "Kein Raid zu dieser Raidlead PIN gefunden.")}</span>`;
 }
 
 async function tryLoadRaidByPin(pin, raidKey){
@@ -1871,7 +1875,7 @@ async function tryLoadRaidByPin(pin, raidKey){
     status: ""
   };
 
-  await loadPriosFromRailway(pin, raidKey);
+  if(!await loadPriosFromRailway(pin, raidKey))return false;
 
   const realRaidKey = raidKeyFromRaidId(currentRaidData.raidId);
 
@@ -1907,14 +1911,9 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
   const url = RAID_API_URL + "?" + params.toString();
 
   try{
-    const response = await fetch(url);
+    const response = await fetch(url,{cache:"no-store"});
     const result = await response.json();
-
-    if(result.error){
-      currentPrios = [];
-      currentReleased = false;
-      return;
-    }
+    if(!response.ok||result.error||result.success===false||!Array.isArray(result.prios))throw new Error(result.error||"Prios konnten nicht geladen werden. Bitte erneut aktualisieren.");
 
     const returnedRaidKey = String(result.raid || result.raidType || "").trim().toLowerCase();
     if(returnedRaidKey && raids[returnedRaidKey]) currentRaidKey = returnedRaidKey;
@@ -1998,12 +1997,12 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
     currentPrioListDisplay=result.prioListDisplay&&typeof result.prioListDisplay==="object"?result.prioListDisplay:{};
-
+    raidLoadError='';
+    return true;
   }catch(error){
     console.error(error);
-    currentPrios = [];
-    currentReleased = false;
-    currentPrioCheck = null;
+    raidLoadError=error.message||'Prios konnten nicht geladen werden. Bitte erneut aktualisieren.';
+    return false;
   }
 }
 
@@ -2287,6 +2286,7 @@ function renderRaidView(){
       : `Die Prioliste ist geschlossen. Es wird nur angezeigt, ob ${prioLabelText()} gesetzt wurde.`;
 
   view.innerHTML = `
+    ${raidLoadError||(p0PointsLoadError&&isAllowedP0Raid())?`<div role="alert" style="padding:12px 14px;margin-bottom:16px;border:1px solid rgba(var(--gold-rgb),.35);border-radius:10px;line-height:1.5"><strong class="warn">Aktualisierung fehlgeschlagen</strong>${raidLoadError?`<div>Prios: ${safe(raidLoadError)}</div>`:''}${p0PointsLoadError&&isAllowedP0Raid()?`<div>Punkte: ${safe(p0PointsLoadError)}</div>`:''}<div class="muted">Angezeigt wird der letzte geladene Stand. Bitte oben „Aktualisieren“ verwenden.</div></div>`:""}
     <div class="raid-hero">
       <div>
         <h2>${safe(r.name)} Raidlead Panel</h2>
@@ -2755,6 +2755,7 @@ function normalizeP0Entry(entry){
 
 async function loadP0PlusPoints(){
   if(!isAllowedP0Raid()){
+    p0PointsLoadError='';
     currentP0PlusEntries = [];
     return [];
   }
@@ -2769,13 +2770,15 @@ async function loadP0PlusPoints(){
   try{
     const response = await fetch(url,{cache:"no-store"});
     const result = await response.json();
-    const raw = Array.isArray(result.entries) ? result.entries : [];
+    if(!response.ok||result.error||result.success===false||!Array.isArray(result.entries))throw new Error(result.error||'P0+-Punkte konnten nicht geladen werden.');
+    const raw = result.entries;
+    p0PointsLoadError='';
     currentP0PlusEntries = raw.map(normalizeP0Entry).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry));
     return currentP0PlusEntries;
   }catch(error){
     console.warn("P0+ Punkte konnten nicht geladen werden:", error);
-    currentP0PlusEntries = [];
-    return [];
+    p0PointsLoadError=error.message||'P0+-Punkte konnten nicht geladen werden.';
+    return currentP0PlusEntries;
   }
 }
 
@@ -2816,7 +2819,7 @@ function renderP0PlusPointsText(itemName){
 
 async function openP0PlusOverviewModal(){
   if(!isAllowedP0Raid()){
-    alert("Eine P0+ Übersicht gibt es nur für MC, BWL, AQ40 und Naxx.");
+    alert("P0+ ist für diesen Raid in der Gilde nicht aktiviert.");
     return;
   }
 
@@ -2842,7 +2845,7 @@ function renderP0PlusOverviewModal(){
   const entries = (currentP0PlusEntries || []).filter(entry => String(entry.item || "").trim() && String(entry.player || "").trim());
 
   if(!entries.length){
-    content.innerHTML = '<div class="status">Keine P0+ Einträge gefunden.</div>';
+    content.innerHTML = p0PointsLoadError?`<div class="status" role="alert">${safe(p0PointsLoadError)} Bitte die Übersicht erneut öffnen.</div>`:'<div class="status">Keine P0+ Einträge gefunden.</div>';
     return;
   }
 
@@ -2853,7 +2856,7 @@ function renderP0PlusOverviewModal(){
     grouped.get(raid).push(entry);
   });
 
-  content.innerHTML = Array.from(grouped.entries())
+  content.innerHTML = (p0PointsLoadError?`<p class="warn" role="alert">${safe(p0PointsLoadError)} Letzter geladener Stand.</p>`:'') + Array.from(grouped.entries())
     .sort(([a],[b]) => a.localeCompare(b,"de"))
     .map(([raid,raidEntries]) => `
       <section class="p0-overview-raid">
@@ -2882,7 +2885,7 @@ function renderP0PlusPoints(itemName,isActiveP0Plus,playerName){
     .filter(entry => !wantedPlayer || normalizeP0Text(entry.player) === wantedPlayer);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : ''}${selectedItem}<span class="empty">Bisher 0 Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>P0+ gespeichert</strong>' : ''}${selectedItem}<span class="empty">${p0PointsLoadError?"Punktestand nicht verfügbar":"Bisher 0 Punkte"}</span></div>`;
   }
 
   return `
@@ -3043,7 +3046,11 @@ async function reloadCurrentRaid(){
 
   document.getElementById("controlStatus").innerHTML = `<span class="warn">Raid wird aktualisiert …</span>`;
 
-  await loadPriosFromRailway(pin, currentRaidKey);
+  if(!await loadPriosFromRailway(pin, currentRaidKey)){
+    document.getElementById("controlStatus").innerHTML=`<span class="bad">${safe(raidLoadError)} Der bisherige Stand bleibt sichtbar.</span>`;
+    renderRaidView();
+    return;
+  }
   await loadItemVisualData();
   await loadP0PlusPoints();
   await loadRaidPrioCheck();
