@@ -33,17 +33,25 @@ export async function queueOfflineNotice(pool, targets, guildId, kind = "bot") {
   try {
     await client.query("begin");
     await client.query("select pg_advisory_xact_lock(73924061)");
-    const existing = await client.query(`select id from bot_update_queue where guild_id=$1 and coalesce(payload->>'noticeKind','bot')=$2 and type in ('po_offline_notice','lichtbuff_offline_notice') and (status in ('open','processing') or created_at > now() - interval '5 minutes') limit 1`, [guildId, kind]);
-    if (existing.rows.length) {
-      await client.query("commit");
-      return {success:true, alreadyQueued:true};
-    }
     if (!targets.length) throw new Error("Keine Bot-Postchannels gefunden.");
+    let queued=0;
     for (const target of targets) {
-      await client.query(`insert into bot_update_queue(guild_id,type,payload,status) values($1,$2,$3::jsonb,'open')`, [target.guildId, target.bot + "_offline_notice", JSON.stringify({...target, noticeKind:kind, content})]);
+      const history=await client.query(`select id,type,payload,status from bot_update_queue
+        where guild_id=$1 and coalesce(payload->>'noticeKind','bot')=$2
+          and type in ('po_offline_notice','lichtbuff_offline_notice') and payload->>'channelId'=$3
+        order by created_at desc,id desc`,[guildId,kind,target.channelId]);
+      const latest=history.rows[0];
+      const state=latest?.payload.noticeState || (latest?.payload.editOnly===true?'online':'offline');
+      if(latest && state==='offline' && ['open','processing','done'].includes(latest.status))continue;
+      if(latest && ['open','processing'].includes(latest.status))throw new Error("Die vorherige Hinweisänderung wird noch zugestellt. Bitte anschließend erneut versuchen.");
+      const saved=history.rows.find(row=>/^\d+$/.test(row.payload.messageId||''));
+      const payload={...target,noticeKind:kind,noticeState:'offline',content};
+      if(saved){Object.assign(payload,{bot:saved.payload.bot,messageId:saved.payload.messageId,editOnly:true,sourceQueueId:saved.id});}
+      await client.query(`insert into bot_update_queue(guild_id,type,payload,status) values($1,$2,$3::jsonb,'open')`,[guildId,payload.bot+"_offline_notice",JSON.stringify(payload)]);
+      queued++;
     }
     await client.query("commit");
-    return {success:true, queued:true, channelCount:targets.length};
+    return {success:true,queued:queued>0,alreadyQueued:queued===0,channelCount:queued};
   } catch (error) {
     await client.query("rollback");
     throw error;
@@ -59,23 +67,16 @@ export function onlineNoticeContent(kind = "bot") {
 
 export async function recoveryTargets(db, guildId, kind) {
   noticeContent(kind);
-  const result = await db.query(`with latest as (
-    select distinct on (payload->>'channelId') id, type, payload, status
+  const result = await db.query(`select distinct on (payload->>'channelId') id,type,payload,status
     from bot_update_queue where guild_id=$1
       and type in ('po_offline_notice','lichtbuff_offline_notice')
       and coalesce(payload->>'noticeKind','bot')=$2
-      and coalesce(payload->>'editOnly','false') <> 'true'
-    order by payload->>'channelId',created_at desc,id desc
-  ) select latest.*, exists (
-    select 1 from bot_update_queue edits where edits.guild_id=$1
-      and edits.type=latest.type and edits.payload->>'sourceQueueId'=latest.id::text
-      and edits.payload->>'editOnly'='true'
-  ) as edit_queued from latest`, [guildId, kind]);
-  const pendingCount = result.rows.filter(row=>['open','processing'].includes(row.status)).length;
-  const pending = pendingCount > 0;
-  const targets = result.rows.filter(row=>row.status==='done' && /^\d+$/.test(row.payload.messageId||'') && !row.edit_queued)
-    .map(row=>({...row.payload, guildId, sourceQueueId:row.id, editOnly:true, content:onlineNoticeContent(kind)}));
-  return {targets,pending,pendingCount,alreadyQueued:result.rows.some(row=>row.edit_queued)};
+    order by payload->>'channelId',created_at desc,id desc`,[guildId,kind]);
+  const state=row=>row.payload.noticeState||(row.payload.editOnly===true?'online':'offline');
+  const pendingCount=result.rows.filter(row=>['open','processing'].includes(row.status)).length;
+  const targets=result.rows.filter(row=>row.status==='done' && state(row)==='offline' && /^\d+$/.test(row.payload.messageId||''))
+    .map(row=>({...row.payload,guildId,sourceQueueId:row.id,editOnly:true,noticeState:'online',content:onlineNoticeContent(kind)}));
+  return {targets,pending:pendingCount>0,pendingCount,alreadyQueued:result.rows.some(row=>state(row)==='online')};
 }
 
 export async function queueOnlineNotice(pool, guildId, kind) {

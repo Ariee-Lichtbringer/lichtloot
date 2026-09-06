@@ -19,7 +19,7 @@ assert.equal(targets[0].bot,'lichtbuff');
 assert.equal((await queueOfflineNotice(pool,targets,guildId)).channelCount,3);
 assert.equal((await queueOfflineNotice(pool,targets,guildId)).alreadyQueued,true);
 assert.equal((await db.query('select * from bot_update_queue')).rows.length,3);
-await db.exec("update bot_update_queue set status='done',created_at=now()-interval '6 minutes'");
+await db.exec("update bot_update_queue set status='done',payload=payload || '{\"noticeState\":\"online\",\"messageId\":\"9000\"}'::jsonb,created_at=now()-interval '6 minutes'");
 fail=true;await assert.rejects(()=>queueOfflineNotice(pool,targets,guildId),/simulated/);
 assert.equal((await db.query('select * from bot_update_queue')).rows.length,3);
 fail=false;assert.equal((await queueOfflineNotice(pool,targets,guildId)).queued,true);
@@ -88,6 +88,14 @@ assert.equal((await queueOnlineNotice(pool,guildId,'bot')).alreadyQueued,true);
 await assert.rejects(()=>queueOnlineNotice(pool,otherGuildId,'bot'),/Keine gespeicherte/);
 await assert.rejects(()=>queueOnlineNotice(pool,guildId,'update'),/Keine gespeicherte/);
 assert.equal(onlineNoticeContent('update'),'✅ **GuildLoot ist wieder erreichbar.**');
+// A renewed outage reuses the same saved messages after recovery.
+await db.exec("update bot_update_queue set status='done' where payload->>'noticeState'='online'");
+const again=await queueOfflineNotice(pool,targets,guildId,'bot');assert.equal(again.channelCount,3);
+const repeated=(await db.query("select * from bot_update_queue where payload->>'noticeState'='offline' and payload->>'editOnly'='true'")).rows;
+assert.equal(repeated.length,3);assert(repeated.every(row=>/^900[0-2]$/.test(row.payload.messageId)));
+assert.equal((await queueOfflineNotice(pool,targets,guildId,'bot')).alreadyQueued,true);
+for(const row of repeated)await resolver.resolveBotQueue({guildId,query:{rowNumber:row.id,messageId:row.payload.messageId}});
+assert.equal((await queueOnlineNotice(pool,guildId,'bot')).channelCount,3);
 // Even a completed original job without a message ID must not create a post.
 await db.exec("delete from bot_update_queue");
 await queueOfflineNotice(pool,targets,guildId,'update');

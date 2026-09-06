@@ -6744,12 +6744,12 @@ async function openBotOfflineNotice(noticeKind="bot",editOnly=false){
     backdrop.className="raid-helper-notify-backdrop";
     backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-label="Bot-Offline-Hinweis" style="max-width:680px;max-height:90vh;overflow:auto">
       <h3>${editOnly?"✅ Wieder erreichbar":noticeKind==="update"?"🛠️ GuildLoot-Update-Hinweis":"⚠️ Bot-Offline-Hinweis"}</h3>
-      <p>${editOnly?"Bearbeitet die gespeicherte Nachricht in":"Sendet an"} <strong>${Number(preview.channelCount)||0} Channels der Gilde ${escapeHtml(preview.guildName||CURRENT_GUILD_SLUG)}</strong>, in denen PO-Bot oder Lichtbuffbot posten.</p>
+      <p>${editOnly?"Bearbeitet die gespeicherte Nachricht in":"Aktualisiert den Hinweis in"} <strong>${Number(preview.channelCount)||0} Channels der Gilde ${escapeHtml(preview.guildName||CURRENT_GUILD_SLUG)}</strong>, in denen PO-Bot oder Lichtbuffbot posten.</p>
       <div style="padding:18px;background:#27272b;color:#eee;border-radius:10px;white-space:pre-wrap">${escapeHtml(preview.content||"").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</div>
       <details style="margin-top:12px"><summary>Zielchannels anzeigen</summary><ul>${(preview.targets||[]).map(t=>`<li>${escapeHtml(t.guildSlug)} · #${escapeHtml(t.channelName)}</li>`).join("")}</ul></details>
-      <p class="muted">${editOnly?"Die bestehende Nachricht wird bearbeitet. Es wird keine neue Nachricht gepostet.":"Die Bots müssen noch laufen, um den Hinweis zu versenden. Der Button schaltet sie nicht ab."}</p>
+      <p class="muted">${editOnly?"Die bestehende Nachricht wird bearbeitet. Es wird keine neue Nachricht gepostet.":"Ein vorhandener Hinweis wird überschrieben – auch nach „wieder erreichbar“. Nur ohne gespeicherten Hinweis entsteht ein neuer Post. Die Bots müssen dafür laufen."}</p>
       <div data-status role="status" aria-live="polite">${editOnly?(preview.pending?`${Number(preview.pendingCount)||0} weitere Zustellungen sind noch offen. Bereits zugestellte Nachrichten können jetzt bearbeitet werden. Für die übrigen später erneut öffnen.`:!preview.channelCount?(preview.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":"Keine gespeicherte Offline-Nachricht zum Bearbeiten vorhanden."):""):""}</div>
-      <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button><button class="small-btn good" data-send ${preview.channelCount?"":"disabled"}>${editOnly?"Vorhandene Nachrichten bearbeiten":"Hinweis an Gildenchannels senden"}</button></div></div>`;
+      <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button><button class="small-btn good" data-send ${preview.channelCount?"":"disabled"}>${editOnly?"Vorhandene Nachrichten bearbeiten":"Hinweis aktualisieren"}</button></div></div>`;
     backdrop.querySelector("[data-close]").onclick=()=>backdrop.remove();
     backdrop.querySelector("[data-send]").onclick=async()=>{
       const button=backdrop.querySelector("[data-send]"),status=backdrop.querySelector("[data-status]");
