@@ -7,10 +7,10 @@ for(const folder of ['loot','lichtloot-api/public/loot'])for(const raid of ['mc'
  assert.match(extract(s,'savePrio'),/getPrioSaveStatus/);
 }
 const browser=await chromium.launch({headless:true});const page=await browser.newPage();
-await page.setContent('<div hidden id="old"><div id="playerStatus"></div></div><button onclick="savePrio()">Prios speichern</button>'+['raidPin','playerName','playerServer','playerClass','p1','p2','p3'].map(id=>`<input id="${id}">`).join(''));
+await page.setContent('<div hidden id="old"><div id="playerStatus"></div></div><div class="loot-save-area" style="display:flex"><button onclick="savePrio()">Prios speichern</button></div>'+['raidPin','playerName','playerServer','playerClass','p1','p2','p3'].map(id=>`<input id="${id}">`).join(''));
 await page.evaluate(()=>{Object.assign(window,{PRIO_COUNT:3,SUPPORTS_P0PLUS:true,lichtlootSelectedCharacter:null,getSelectedPrioItemId:()=> '22637',eraRequiredPriorityKeys:()=>['p1','p2','p3'],safe:v=>v,currentRaidId:'raid',isP0DeadlineClosed:()=>false,loadPublishedPrios:async()=>{throw Error('Test: Verbindung unterbrochen');}});});
 const source=fs.readFileSync(new URL('loot/zg-loot.html',root),'utf8');await page.addScriptTag({content:extract(source,'savePrio')});await page.addScriptTag({content:fs.readFileSync(new URL('loot/p0-selection-fix.js',root),'utf8')});
-await page.locator('button').click();assert.match(await page.locator('#prioSaveStatus').innerText(),/Prio-PIN/);assert(await page.locator('#prioSaveStatus').isVisible());
+await page.locator('button').click();assert.match(await page.locator('#prioSaveStatus').innerText(),/Prio-PIN/);assert(await page.locator('#prioSaveStatus').isVisible());assert(await page.evaluate(()=>document.querySelector('#prioSaveStatus').previousElementSibling.classList.contains('loot-save-area')));
 for(const [id,value]of Object.entries({raidPin:'TEST',playerName:'Juksi',playerServer:'Everlook',playerClass:'Paladin',p1:'Götze',p2:'Götze',p3:'Götze'}))await page.locator('#'+id).fill(value);
 await page.locator('button').click();await page.waitForFunction(()=>document.querySelector('#prioSaveStatus').textContent.includes('Verbindung unterbrochen'));assert(await page.locator('#prioSaveStatus').isVisible());
 await page.waitForFunction(()=>!document.querySelector('button').disabled);

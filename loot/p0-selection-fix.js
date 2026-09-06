@@ -123,7 +123,7 @@
       status.setAttribute("role","status");status.setAttribute("aria-live","polite");
       status.style.cssText="margin:10px 0;line-height:1.5;overflow-wrap:anywhere";
       const button=document.querySelector('button[onclick="savePrio()"]');
-      if(button)button.insertAdjacentElement("afterend",status);else document.body.appendChild(status);
+      if(button)(button.closest(".loot-save-area")||button).insertAdjacentElement("afterend",status);else document.body.appendChild(status);
     }
     return status;
   };

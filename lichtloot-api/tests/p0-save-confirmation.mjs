@@ -13,7 +13,7 @@ for (const folder of ['loot', 'lichtloot-api/public/loot']) {
     for (const script of src.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(script[1]);
     for (const mode of ['p0','p0plus','normal','failed','edited']) {
       const fields = Object.fromEntries(Object.entries({raidPin:'5AT',playerName:'Ariee',playerServer:'Everlook',playerClass:'Priester',p1:'Formel: Brust - Große Werte',p2:'Formel: Brust - Große Werte',p3:'Formel: Brust - Große Werte'}).map(([k,value])=>[k,{value}]));
-      fields.playerStatus={innerHTML:''};
+      fields.playerStatus={innerHTML:''};fields.prioSaveStatus=fields.playerStatus;
       let rendered;
       const noop=()=>{};
       const ctx=vm.createContext({

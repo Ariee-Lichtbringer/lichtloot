@@ -11,10 +11,11 @@ create table p0plus_points(id text,guild_id text,item_id text,points numeric);
 insert into items(id,raid_type,item_id,name) values ('idol','zg','22637','Götze'),('tiger','zg','19902','Tiger'),('disabled','zg','3','Disabled'),('other','mc','4','Other'),('prime','zg','5','Prime item'),('aq','aq20','6','AQ item');
 insert into guild_po_items values ('guild','idol','zg',true,false),('guild','tiger','zg',true,true),('guild','disabled','zg',false,true),('guild','other','mc',true,true),('foreign','disabled','zg',true,true),('foreign','idol','zg',true,true),('guild','prime','zg-prime',true,true),('guild','aq','aq20',true,false);
 insert into p0plus_points values ('point','guild','tiger',3),('foreign-point','foreign','tiger',99);`);
+let inTransaction=false;
 let layout={},raidType='zg',metadata,commits=0,rollbacks=0,releaseRequired=false,hasRelease=false;
 const clean=v=>String(v??'').trim();
-const ctx=vm.createContext({query:(...a)=>db.query(...a),clean,normalizeRaidType:v=>clean(v).toLowerCase(),raidTypeSearchValues:v=>[clean(v).toLowerCase()],
- ensureGuildPoItemsSchema:async()=>{},getGuildEraConfiguration:async()=>({layout})});
+const ctx=vm.createContext({query:(...a)=>{assert.equal(inTransaction,false,'No second pool connection while the save transaction holds locks');return db.query(...a);},clean,normalizeRaidType:v=>clean(v).toLowerCase(),raidTypeSearchValues:v=>[clean(v).toLowerCase()],
+ ensureGuildPoItemsSchema:async()=>{assert.equal(inTransaction,false,'No schema DDL inside save transaction');},getGuildEraConfiguration:async()=>({layout})});
 for(const name of ['lootSourceRaidType','poItemSettingsRaidTypes','raidP0PlusEnabled','requireGuildPoItem','requireGuildPoPlusItem','guildPoItemRequiresRelease'])vm.runInContext(extract(name),ctx);
 const context=extract('getP0DiscordSignupContext');const a=context.indexOf('  const itemResult = await query('),b=context.indexOf('\n  const signupResult',a);
 vm.runInContext('async function list(guildId,raid){'+context.slice(a,b)+'return itemResult.rows;}',ctx);
@@ -22,7 +23,8 @@ let rows=await ctx.list('guild',{raid_type:'zg'});assert.deepEqual(rows.map(r=>r
 assert.deepEqual((await ctx.list('guild',{raid_type:'zg-prime'})).map(r=>r.name),['Prime item']);assert.equal((await ctx.list('guild',{raid_type:'zg-late'})).length,0);
 assert.deepEqual((await ctx.list('guild',{raid_type:'aq20'})).map(r=>r.name),['AQ item']);assert.deepEqual((await ctx.list('foreign',{raid_type:'zg'})).map(r=>r.name).sort(),['Disabled','Götze']);
 const client={query:async(sql,args)=>{
- if(sql==='begin')return {rows:[]};if(sql==='commit'){commits++;return {rows:[]};}if(sql==='rollback'){rollbacks++;return {rows:[]};}
+ if(sql==='begin'){inTransaction=true;return {rows:[]};}if(sql==='commit'){inTransaction=false;commits++;return {rows:[]};}if(sql==='rollback'){inTransaction=false;rollbacks++;return {rows:[]};}
+ if(sql.includes('from items i')||sql.includes('select exists'))return db.query(sql,args);
  if(sql.includes('select id, name')&&sql.includes('from items'))return db.query(sql,args);
  if(sql.includes('from character_po_releases'))return {rows:hasRelease?[{exists:1}]:[]};
  if(sql.includes('insert into prios')){metadata=JSON.parse(args[3]);return {rows:[]};}
@@ -31,7 +33,7 @@ const client={query:async(sql,args)=>{
  throw Error('Unexpected SQL: '+sql);
 },release(){}};
 Object.assign(ctx,{ensureRaidSchema:async()=>{},ensurePoPostEntriesSchema:async()=>{},findP0DiscordRaid:async()=>({id:'raid',raid_type:raidType}),
- getPoReleaseDisplaySettings:async()=>({}),pool:{connect:async()=>client},findOrCreateDiscordP0Character:async()=>({id:'character',name:'Modric',server:'Everlook',player_id:'player'}),normalizePoReleaseRaid:v=>v,
+ getPoReleaseDisplaySettings:async()=>({}),poReleaseDisplaySettingsFromLayout:()=>({}),pool:{connect:async()=>client},findOrCreateDiscordP0Character:async()=>({id:'character',name:'Modric',server:'Everlook',player_id:'player'}),normalizePoReleaseRaid:v=>v,
  poReleasesRequiredForRaid:()=>releaseRequired,removeDuplicatePriosForCharacterName:async()=>{},removeDuplicatePriosForPlayerLogin:async()=>{},normalizeRaidRow:v=>v,normalizeP0SignupRow:v=>v});
 vm.runInContext(extract('saveP0DiscordSignup'),ctx);
 const save=(itemId,guildId='guild')=>ctx.saveP0DiscordSignup({guildId,query:{discordUserId:'discord',itemId}});

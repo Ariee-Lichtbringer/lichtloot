@@ -13,7 +13,7 @@ let layout={};let outsideReads=0;const client={query:(...args)=>db.query(...args
 const ctx=vm.createContext({clean:v=>String(v??'').trim(),normalizeRaidType:v=>v,
  query:(...args)=>{outsideReads++;return db.query(...args);},
  ensureGuildPoItemsSchema:async()=>{outsideReads++;},getGuildEraConfiguration:async()=>{outsideReads++;return {layout};}});
-for(const n of ['lootSourceRaidType','raidP0PlusEnabled','requireRaidP0PlusEnabled','poItemSettingsRaidTypes','guildPoItemRequiresRelease','resolvePrioP0Selection'])vm.runInContext(extract(n),ctx);
+for(const n of ['lootSourceRaidType','raidP0PlusEnabled','requireRaidP0PlusEnabled','poItemSettingsRaidTypes','guildPoItemRequiresRelease','requireGuildPoItem','resolvePrioP0Selection'])vm.runInContext(extract(n),ctx);
 const resolve=(params,raid='zg-prime',guild='guild')=>ctx.resolvePrioP0Selection(guild,raid,params,{client,layout});
 // Reproduce Cardiothorac: P0 selected but the browser explicitly sent Plus=no.
 const triple={p1:'Götze',p2:'Götze',p3:'Götze',p1ItemId:'unconfigured',p0Selected:'ja',p0Plus:'nein'};
@@ -28,7 +28,9 @@ assert.equal((await resolve(triple,'zg-late')).p0PlusSelected,false);
 assert.equal((await resolve(triple,'zg-prime','other-guild')).p0PlusSelected,false);
 assert.equal((await resolve({p1:'Pantherbalgsack',p2:'Pantherbalgsack',p3:'Pantherbalgsack',p0Plus:'nein'})).p0PlusSelected,false);
 // Do not issue pool queries or schema DDL while the save transaction holds locks.
+await ctx.requireGuildPoItem('guild','22637','Götze','zg-prime',{client});
 assert.equal(outsideReads,0);
+assert.match(extract('savePrio'),/savedRaidForSignupCheck\.raid_type \|\| raidType,\s*\{ client \}/);
 layout={lootPageSectionsByRaid:{zg:{p0Plus:false}}};
 assert.equal((await resolve(triple)).p0PlusSelected,false);
 assert.equal((await resolve({...triple,p0Plus:'ja'})).p0PlusSelected,false);
@@ -55,3 +57,8 @@ await ctx.savePrioAsRaidlead({guildId:'guild',query:{p1:'Pantherbalgsack',p2:'Pa
 assert.equal(savedMeta.p0Selected,'ja');assert.equal(savedMeta.p0Plus,'nein');assert.equal(savedMeta.p0Item,'Pantherbalgsack');
 await db.close();
 console.log('Server P0 classification: stale flags, duplicate items, raid/guild scope, normal priorities, disabled settings, transaction isolation and raidlead persistence passed.');
+
+for(const name of ['prioSchemaReadyPromise','poPostEntriesSchemaReadyPromise']){
+ const fn=name==='prioSchemaReadyPromise'?'ensurePrioSchema':'ensurePoPostEntriesSchema';
+ assert(source.indexOf('let '+name+' = null')<source.indexOf('await '+fn+'().catch'),'Schema state initialized before startup calls');
+}

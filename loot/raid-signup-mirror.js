@@ -114,6 +114,20 @@
       switcher.append(guildButton,menu);
       raids.appendChild(switcher);
     }
+    const guildSwitcher=document.getElementById("lootGuildSwitcher");
+    if(raids&&guildSwitcher&&raids.nextElementSibling!==guildSwitcher)raids.insertAdjacentElement("afterend",guildSwitcher);
+    const characterPanel=document.getElementById("lootActiveCharacterPanel");
+    if(raids&&characterPanel&&document.getElementById("lootGuildSwitcher")&&new URLSearchParams(location.search).get("random")!=="1"){
+      const mobile=window.matchMedia("(max-width: 1100px)").matches;
+      const grid=document.getElementById("mainGrid");
+      if(mobile&&grid){
+        if(characterPanel.parentElement!==grid)grid.insertBefore(characterPanel,grid.firstChild);
+      }else if(!mobile&&guildSwitcher.nextElementSibling!==characterPanel){
+        guildSwitcher.insertAdjacentElement("afterend",characterPanel);
+      }
+      document.body.classList.toggle("loot-character-in-sidebar",!mobile);
+    }
+
   }
 
   function storedLoginForGuild(slug){

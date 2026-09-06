@@ -22,6 +22,8 @@ const raidWorkbookService = createRaidWorkbookService({
   apiBaseUrl: process.env.PUBLIC_API_URL || process.env.LICHTLOOT_API_URL || "https://lichtloot-production.up.railway.app"
 });
 
+let prioSchemaReadyPromise = null;
+let poPostEntriesSchemaReadyPromise = null;
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -3955,7 +3957,6 @@ async function purgeExpiredDeletedRaids() {
   }
 }
 
-let prioSchemaReadyPromise = null;
 async function ensurePrioSchema() {
   if (!prioSchemaReadyPromise) {
     prioSchemaReadyPromise = ensurePrioSchemaNow().catch(error => {
@@ -10149,7 +10150,6 @@ async function queuePoPost({ guildId, query: params }) {
   return { ...queued, restoredEntries };
 }
 
-let poPostEntriesSchemaReadyPromise = null;
 async function ensurePoPostEntriesSchema() {
   if (!poPostEntriesSchemaReadyPromise) {
     poPostEntriesSchemaReadyPromise = ensurePoPostEntriesSchemaNow().catch(error => {
@@ -13106,7 +13106,8 @@ async function savePrio({ guildId, query: params }) {
         guildId,
         p1?.id || p0ItemId,
         p1?.name || p0ItemName,
-        savedRaidForSignupCheck.raid_type || raidType
+        savedRaidForSignupCheck.raid_type || raidType,
+        { client }
       );
     }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
@@ -13574,7 +13575,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
-    await requireGuildPoItem(guildId, item.id, item.name, raidType);
+    await requireGuildPoItem(guildId, item.id, item.name, raidType, { client });
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
 
@@ -25222,7 +25223,9 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
   // Dieselben Freigabeeinstellungen wie bei der Anmeldung auf der Webseite.
   // Schema/Layout vor der Transaktion laden, um Sperrkonflikte zu vermeiden.
-  const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
+  await ensureGuildPoItemsSchema();
+  const eraConfig = await getGuildEraConfiguration(guildId);
+  const poReleaseSettings = poReleaseDisplaySettingsFromLayout(eraConfig.layout);
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -25244,11 +25247,11 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       throw error;
     }
 
-    await requireGuildPoItem(guildId, item.id, item.name, raid.raid_type);
+    await requireGuildPoItem(guildId, item.id, item.name, raid.raid_type, { client });
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
-    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name, raid.raid_type);
+    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name, raid.raid_type, { client, layout: eraConfig.layout });
     // Wenn die Gilde Freigaben fuer diesen Raid verlangt, gilt die Pruefung
     // fuer jede P0-Eintragung, unabhaengig von po_plus_enabled des Items.
     if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
@@ -30111,15 +30114,16 @@ async function setGuildPoItemsBulk({ guild, query: params = {} }) {
   return {success:true,updated:result.rowCount,enabled,setting,raid:requestedRaidType};
 }
 
-async function requireGuildPoItem(guildId, itemId, itemName = "", raidType = "") {
-  await ensureGuildPoItemsSchema();
+async function requireGuildPoItem(guildId, itemId, itemName = "", raidType = "", context = null) {
+  if (!context) await ensureGuildPoItemsSchema();
+  const runQuery = context ? (...args) => context.client.query(...args) : query;
   const settingsRaidTypes = poItemSettingsRaidTypes(raidType).filter(Boolean);
   if (!settingsRaidTypes.length) {
     const error = new Error("Der Raidtyp des P0-Items konnte nicht bestimmt werden.");
     error.statusCode = 400;
     throw error;
   }
-  const result = await query(
+  const result = await runQuery(
     `select i.id, i.name
      from items i
      join guild_po_items gpi

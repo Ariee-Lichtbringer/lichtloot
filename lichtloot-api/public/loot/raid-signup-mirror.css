@@ -140,3 +140,15 @@ body:not(.raid-signup-only-page) .header-actions .btn{min-width:170px!important;
 /* Punktestände bleiben in Übersicht und Item-Tooltip erreichbar. In der
    Prio-Auswahl würden die nachgeladenen Zeilen die Itemkarten verschieben. */
 #prioCard .item-p0plus-line{display:none!important}
+
+/* Keep guild and character controls together; reserve the main grid for loot. */
+body.loot-character-in-sidebar .loot-side-shell{overflow-y:auto;overflow-x:hidden}
+body.loot-character-in-sidebar .loot-active-character-panel{position:static!important;left:auto!important;top:auto!important;width:100%!important;min-width:0!important;margin:12px 0 0!important;padding:12px!important;grid-column:auto!important;box-shadow:none;flex:none}
+body.loot-character-in-sidebar .loot-active-character-panel:before{display:none!important}
+body.loot-character-in-sidebar .loot-active-character-main{grid-template-columns:38px minmax(0,1fr) 24px;gap:7px}
+body.loot-character-in-sidebar .loot-active-character-main img{width:38px;height:38px}
+body.loot-character-in-sidebar .loot-active-character-main strong{font-size:17px}
+body.loot-character-in-sidebar .loot-active-character-main>b{width:24px;height:24px;font-size:16px}
+body.loot-character-in-sidebar .loot-sidebar-guild-menu{width:100%;z-index:10}
+@media(min-width:1301px){body.loot-character-in-sidebar #mainGrid.grid,body.loot-character-in-sidebar #mainGrid.grid.published-mode{grid-template-columns:minmax(320px,.8fr) minmax(0,2fr)!important}body.loot-character-in-sidebar #mainGrid>#lootCard{grid-column:1!important}body.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:2!important}}
+@media(max-width:1300px){body.loot-character-in-sidebar #mainGrid.grid,body.loot-character-in-sidebar #mainGrid.grid.published-mode{grid-template-columns:minmax(0,1fr)!important}body.loot-character-in-sidebar #mainGrid>#lootCard,body.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:1!important}}
