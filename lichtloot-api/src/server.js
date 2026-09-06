@@ -5787,6 +5787,23 @@ function wclRaidDateInBerlin(value) {
   return new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(timestamp));
 }
 
+const raidViewParticipationPending = new Map();
+async function getWclRaidParticipationForRaidView(raid,guildId,date) {
+  const key=JSON.stringify([raid,guildId,date]);
+  let pending=raidViewParticipationPending.get(key);
+  if(!pending){
+    pending=getWclRaidParticipation(raid,guildId,date);
+    raidViewParticipationPending.set(key,pending);
+    pending.finally(()=>{if(raidViewParticipationPending.get(key)===pending)raidViewParticipationPending.delete(key);}).catch(()=>{});
+  }
+  let timer;
+  try {
+    return await Promise.race([pending,new Promise(resolve=>{
+      timer=setTimeout(()=>resolve({available:false,players:{},reports:[]}),1500);
+    })]);
+  } finally {clearTimeout(timer);}
+}
+
 async function getWclRaidParticipation(raid,wclGuildId,raidDate) {
   const raidKey=normalizePoReleaseRaid(raid)||normalizeRaidType(raid),zoneId=WCL_RAID_PARTICIPATION_ZONES[raidKey],targetDate=clean(raidDate).slice(0,10);
   if(!zoneId||!wclGuildId||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return {available:false,players:{},reports:[]};
@@ -22535,7 +22552,7 @@ async function findRaid(guildId, params) {
   const raidId = clean(params.raidId || params.RaidID || params.raidID);
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
-  const raidType = normalizeRaidType(params.raid || params.raidName);
+  const raidType = clean(params.raid || params.raidName) ? normalizeRaidType(params.raid || params.raidName) : "";
   const raidDate = clean(params.raidDate || params.date || params.datum);
   const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
   const values = [guildId];
@@ -24131,7 +24148,7 @@ async function getPublishedPrios({ guildId, query: params }) {
     if (raidDate) {
       const eraConfig=await getGuildEraConfiguration(guildId),wclGuildId=eraConfig.warcraftLogsGuildId;
       if(!wclGuildId)throw new Error("Warcraft-Logs-Gilden-ID fehlt.");
-      wclParticipation=await getWclRaidParticipation(raid.raid_type,wclGuildId,raidDate);
+      wclParticipation=await getWclRaidParticipationForRaidView(raid.raid_type,wclGuildId,raidDate);
     }
   } catch (error) {
     console.warn("Direkte Warcraft-Logs-Teilnahme für Plündermeister konnte nicht geladen werden:", error.message || error);

@@ -1,0 +1,13 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../src/server.js',import.meta.url),'utf8');
+const extract=name=>{const start=source.indexOf('async function '+name+'(');return source.slice(start,source.indexOf('\n}\n',start)+2)};
+let sql,args;const ctx=vm.createContext({clean:v=>String(v||'').trim(),normalizeRaidType:v=>v||'raid',raidTypeSearchValues:v=>[v],isUuid:()=>false,query:async(s,p)=>{sql=s;args=p;return {rows:[{id:'zg'}]}}});
+vm.runInContext(extract('findRaid'),ctx);
+await ctx.findRaid('guild',{leadPin:'fixture'});assert(!sql.includes('lower(raid_type)'));assert.deepEqual([...args],['guild','fixture']);
+await ctx.findRaid('guild',{leadPin:'fixture',raid:'zg'});assert(sql.includes('lower(raid_type)'));
+await ctx.findRaid('guild',{leadPin:'fixture',raidId:'explicit'});assert(sql.includes('external_raid_id'));
+let resolve,calls=0;const scope=vm.createContext({raidViewParticipationPending:new Map(),setTimeout,clearTimeout,getWclRaidParticipation:()=>{calls++;return new Promise(r=>resolve=r)}});
+vm.runInContext(extract('getWclRaidParticipationForRaidView'),scope);
+const start=Date.now();const [a,b]=await Promise.all([scope.getWclRaidParticipationForRaidView('zg','g','date'),scope.getWclRaidParticipationForRaidView('zg','g','date')]);
+assert.equal(a.available,false);assert.equal(b.available,false);assert.equal(calls,1);assert(Date.now()-start<2500);resolve({available:true});await new Promise(r=>setTimeout(r,0));assert.equal(scope.raidViewParticipationPending.size,0);
+console.log('PASS LeadPIN without invented type filter; explicit raid identity; stalled WCL cannot block raid view; concurrent requests coalesced.');
