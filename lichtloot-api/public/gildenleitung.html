@@ -5501,7 +5501,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
           <button class="side-link master-only" type="button" onclick="refreshAllActiveSignups(this)" aria-label="Alle aktiven Anmelder aktualisieren"><span class="side-icon">↻</span><span class="side-label">Alle aktiven Anmelder aktualisieren</span></button>
-          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice()" aria-label="Bot-Offline-Hinweis"><span class="side-icon">⚠️</span><span class="side-label">Bot-Offline-Hinweis</span></button>
+          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice()" aria-label="Bot-Offline-Hinweis" title="Bot-Offline-Hinweis"><span class="side-icon">⚠️</span><span class="side-label">Bot-Offline-Hinweis</span></button>
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update')" aria-label="GuildLoot-Update-Hinweis"><span class="side-icon">🛠️</span><span class="side-label">GuildLoot-Update-Hinweis</span></button>
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('bot',true)" aria-label="PO Bot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">PO Bot wieder erreichbar</span></button>
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update',true)" aria-label="GuildLoot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">GuildLoot wieder erreichbar</span></button>
@@ -5515,7 +5515,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <div class="side-section-label">Verwaltung</div>
           <button class="side-link master-only" type="button" onclick="openTrafficStatsPanel()" aria-label="Aufrufstatistik" title="Aufrufstatistik"><span class="side-icon">↗</span><span class="side-label">Aufrufstatistik</span></button>
-          <button class="side-link master-only" type="button" onclick="openSystemErrorPanel()" aria-label="Fehlerzentrale" title="Fehlerzentrale"><span class="side-icon">⚠</span><span class="side-label">Fehlerzentrale</span><span id="systemErrorCount" class="side-count">0</span></button>
+          
           <button class="side-link master-only" type="button" onclick="openRaidArchivePanel()" aria-label="Raid-Archiv" title="Raid-Archiv"><span class="side-icon">🗄</span><span class="side-label">Raid-Archiv</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
@@ -6415,14 +6415,7 @@ body.worldbuff-only .master-only{display:none!important}
     </div>
   </details>
 
-  <details id="systemErrorPanel" class="panel issue-panel" ontoggle="if(this.open) loadSystemErrorPanel()">
-    <summary>Fehlerzentrale</summary>
-    <div class="issue-panel-body">
-      <div id="systemErrorPanelContent" class="create-result">Technische Fehler werden nach Eingabe des Master-Codes geladen.</div>
-    </div>
-  </details>
-
-  <details id="lootLayoutPanel" class="panel layout-panel" ontoggle="if(this.open) renderLootLayoutPanel()">
+<details id="lootLayoutPanel" class="panel layout-panel" ontoggle="if(this.open) renderLootLayoutPanel()">
     <summary>Layout bearbeiten</summary>
     <div class="layout-panel-body">
       <div class="section-head compact">
@@ -7045,7 +7038,7 @@ let raidListRaidFilter = "";
 let raidHelperPoSignupSelectedPostKey = "";
 const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
-let systemErrors = [];
+
 let guildApplications = [];
 let logAnalyses = [];
 const selectedLogAnalysisIds = new Set();
@@ -19987,52 +19980,6 @@ function formatPoints(value){
   const number = Number(value || 0);
   if(!isFinite(number)) return "0";
   return String(number).replace(".", ".");
-}
-
-function openSystemErrorPanel(){
-  openDetailsPanel("systemErrorPanel");
-}
-
-function systemErrorStatusLabel(status){
-  if(status==="checked") return "Geprüft";
-  if(status==="resolved") return "Erledigt";
-  return "Neu";
-}
-
-function renderSystemErrorBadge(){
-  const badge=document.getElementById("systemErrorCount");
-  if(badge) badge.textContent=String(systemErrors.filter(entry=>entry.status!=="resolved").length);
-}
-
-async function loadSystemErrorPanel(){
-  const masterCode=document.getElementById("masterCode").value.trim(),content=document.getElementById("systemErrorPanelContent");
-  if(!masterCode){content.innerHTML='<div class="status bad">Bitte Master-Code eingeben.</div>';return;}
-  content.innerHTML='<div class="status">Fehlerzentrale wird geladen …</div>';
-  try{
-    const result=await railwayApi({action:"guildGetSystemErrors",masterCode,t:Date.now()});
-    if(!result.success) throw new Error(result.error||"Fehlerzentrale konnte nicht geladen werden.");
-    systemErrors=Array.isArray(result.errors)?result.errors:[];
-    renderSystemErrorBadge();
-    renderSystemErrorPanel();
-  }catch(error){content.innerHTML=`<div class="status bad">${escapeHtml(error.message||"Fehlerzentrale konnte nicht geladen werden.")}</div>`;}
-}
-
-function renderSystemErrorPanel(){
-  const content=document.getElementById("systemErrorPanelContent");
-  const search=normalize(document.getElementById("systemErrorSearch")?.value||""),statusFilter=document.getElementById("systemErrorStatusFilter")?.value||"open";
-  const rows=systemErrors.filter(entry=>{const status=entry.status||"new",statusMatch=statusFilter==="all"||(statusFilter==="open"?status!=="resolved":status===statusFilter),haystack=normalize([entry.referenceId,entry.time,entry.actionName,entry.page,entry.raid,entry.player,entry.note,entry.technicalDetails,entry.httpStatus].join(" "));return statusMatch&&(!search||haystack.includes(search));});
-  content.innerHTML=`<div class="issue-toolbar"><input id="systemErrorSearch" type="search" value="${escapeAttr(document.getElementById("systemErrorSearch")?.value||"")}" placeholder="Vorgangs-ID, Seite, Aktion oder Fehler suchen …" oninput="renderSystemErrorPanel()"><select id="systemErrorStatusFilter" onchange="renderSystemErrorPanel()"><option value="open" ${statusFilter==="open"?"selected":""}>Offene Fehler</option><option value="new" ${statusFilter==="new"?"selected":""}>Neu</option><option value="checked" ${statusFilter==="checked"?"selected":""}>Geprüft</option><option value="resolved" ${statusFilter==="resolved"?"selected":""}>Erledigt</option><option value="all" ${statusFilter==="all"?"selected":""}>Alle</option></select><button class="small-btn ghost" type="button" onclick="loadSystemErrorPanel()">Neu laden</button></div><div style="display:grid;gap:10px">${rows.length?rows.map(renderSystemErrorCard).join(""):'<div class="status good">Keine passenden Systemfehler vorhanden.</div>'}</div>`;
-}
-
-function renderSystemErrorCard(entry){
-  const status=entry.status||"new",statusClass=status==="resolved"?"good":status==="checked"?"":"bad";
-  return `<article style="padding:13px;border:1px solid #334155;border-radius:11px;background:rgba(2,6,23,.58)"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><strong style="color:#fbbf24">${escapeHtml(entry.referenceId||"Ohne Vorgangs-ID")}</strong><div class="muted">${escapeHtml(formatDateTime(entry.time)||entry.time||"-")} · ${escapeHtml(entry.actionName||entry.source||"Website")}</div></div><span class="status ${statusClass}" style="margin:0">${escapeHtml(systemErrorStatusLabel(status))}</span></div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px"><div><strong>Seite</strong><div class="muted">${escapeHtml(entry.page||"-")}</div></div><div><strong>Kontext</strong><div class="muted">${escapeHtml([entry.raid,entry.player,entry.server].filter(Boolean).join(" · ")||"-")}</div></div><div><strong>HTTP-Status</strong><div class="muted">${escapeHtml(entry.httpStatus||"-")}</div></div><div><strong>Letzte Änderung</strong><div class="muted">${escapeHtml(formatDateTime(entry.updatedAt)||entry.updatedAt||"-")}</div></div></div><div class="status bad" style="margin-top:10px">${escapeHtml(entry.note||"Unbekannter Fehler")}</div><details style="margin-top:8px"><summary style="cursor:pointer;font-weight:900">Technische Details</summary><pre style="max-height:260px;overflow:auto;white-space:pre-wrap;padding:10px;border:1px solid #334155;border-radius:8px;background:#020617;color:#cbd5e1">${escapeHtml(entry.technicalDetails||"Keine zusätzlichen Details gespeichert.")}</pre></details><div class="issue-actions" style="margin-top:10px"><button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(entry.referenceId||"")}')">ID kopieren</button>${status!=="new"?'<button class="small-btn ghost" type="button" onclick="updateSystemErrorStatus(\''+escapeAttr(entry.id)+'\',\'new\')">Als neu markieren</button>':''}${status!=="checked"?'<button class="small-btn primary" type="button" onclick="updateSystemErrorStatus(\''+escapeAttr(entry.id)+'\',\'checked\')">Als geprüft markieren</button>':''}${status!=="resolved"?'<button class="small-btn good" type="button" onclick="updateSystemErrorStatus(\''+escapeAttr(entry.id)+'\',\'resolved\')">Erledigt</button>':''}</div></article>`;
-}
-
-async function updateSystemErrorStatus(id,status){
-  const masterCode=document.getElementById("masterCode").value.trim();
-  if(!masterCode||!id)return;
-  try{const result=await railwayApi({action:"guildUpdateSystemError",masterCode,id,status});if(!result.success)throw new Error(result.error||"Fehlerstatus konnte nicht gespeichert werden.");const index=systemErrors.findIndex(entry=>String(entry.id)===String(id));if(index>=0)systemErrors[index]=result.errorEntry;renderSystemErrorBadge();renderSystemErrorPanel();setStatus("Fehlerstatus gespeichert.","good");}catch(error){setStatus(error.message||"Fehlerstatus konnte nicht gespeichert werden.","bad");}
 }
 
 function toggleIssueInboxPanel(){

@@ -3212,6 +3212,12 @@ async function resetPlayerPinFromSheet(){
 }
 
 
+async function requestPlayerSecurityReset(charName,server,securityQuestion,securityAnswer,newPin){
+ const response=await fetch(LICHTLOOT_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'resetPlayerPinBySecurity',guild:currentActiveGuildSlug(),char:charName,server,securityQuestion,securityAnswer,customPin:newPin})});
+ const result=await response.json();if(!response.ok||!result.success)throw Error(result.error||'SpielerLogin konnte nicht zurückgesetzt werden.');return result;
+}
+function playerResetErrorText(error){return '<span class="bad">'+safeHtml(error.message||'Zurücksetzen fehlgeschlagen. Bitte erneut versuchen.')+'</span><br><a href="#support" data-guild-support>Support zur Wiederherstellung kontaktieren</a>';}
+
 async function resetPlayerLoginWithSecurity(){
   const charName=document.getElementById("resetCharName").value.trim();
   const server=document.getElementById("resetServer").value.trim();
@@ -3225,8 +3231,8 @@ async function resetPlayerLoginWithSecurity(){
     return;
   }
 
-  if(newPin.length < 4){
-    status.innerHTML='<span class="bad">Der neue SpielerLogin muss mindestens 4 Zeichen haben.</span>';
+  if(!/^[A-Z0-9]{4,8}$/.test(newPin)){
+    status.innerHTML='<span class="bad">Der neue SpielerLogin muss 4–8 Buchstaben oder Ziffern haben.</span>';
     return;
   }
 
@@ -3238,20 +3244,8 @@ async function resetPlayerLoginWithSecurity(){
     return;
   }
 
-  const url =
-    LICHTLOOT_API_URL +
-    "?action=resetPlayerPinBySecurity" +
-    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
-    "&char=" + encodeURIComponent(charName) +
-    "&server=" + encodeURIComponent(server) +
-    "&securityQuestion=" + encodeURIComponent(securityQuestion) +
-    "&securityAnswer=" + encodeURIComponent(securityAnswer) +
-    "&customPin=" + encodeURIComponent(newPin) +
-    "&t=" + Date.now();
-
   try{
-    const response=await fetch(url);
-    const result=await response.json();
+    const result=await requestPlayerSecurityReset(charName,server,securityQuestion,securityAnswer,newPin);
 
     if(!result.success){
       status.innerHTML='<span class="bad">' + safeHtml(result.error || "SpielerLogin konnte nicht zurückgesetzt werden.") + '</span>';
@@ -3266,10 +3260,7 @@ async function resetPlayerLoginWithSecurity(){
     document.getElementById("resetSecurityAnswer").value="";
     document.getElementById("resetNewPlayerPin").value="";
 
-  }catch(error){
-    console.error(error);
-    status.innerHTML='<span class="bad">Fehler beim Zurücksetzen des SpielerLogins.</span>';
-  }
+  }catch(error){status.innerHTML=playerResetErrorText(error);}
 }
 
 function normalizeLoose(value){
@@ -4938,33 +4929,22 @@ async function submitPlayerLoginResetModal(){
     status.innerHTML='<span class="bad">Bitte alle Felder vollständig ausfüllen.</span>';
     return;
   }
-  if(newPin.length < 4){
+  if(!/^[A-Z0-9]{4,8}$/.test(newPin)){
     status.className='player-reset-modal-status';
     status.innerHTML='<span class="bad">Der neue SpielerLogin muss 4–8 Zeichen haben.</span>';
     return;
   }
   status.innerHTML='<span class="warn">Sicherheitsfrage wird geprüft …</span>';
-  const url=LICHTLOOT_API_URL+'?action=resetPlayerPinBySecurity'
-    +'&guild='+encodeURIComponent(currentActiveGuildSlug())
-    +'&char='+encodeURIComponent(charName)
-    +'&server='+encodeURIComponent(server)
-    +'&securityQuestion='+encodeURIComponent(securityQuestion)
-    +'&securityAnswer='+encodeURIComponent(securityAnswer)
-    +'&customPin='+encodeURIComponent(newPin)
-    +'&t='+Date.now();
   try{
-    const response=await fetch(url);
-    const result=await response.json();
-    if(!response.ok || !result.success) throw new Error(result.error || 'SpielerLogin konnte nicht zurückgesetzt werden.');
+    const result=await requestPlayerSecurityReset(charName,server,securityQuestion,securityAnswer,newPin);
+    if(!result.success) throw new Error(result.error || 'SpielerLogin konnte nicht zurückgesetzt werden.');
     const savedPin=result.pin || newPin;
     localStorage.setItem(playerLoginStorageKey(),savedPin);
     sessionStorage.setItem(playerLoginStorageKey(),savedPin);
     document.getElementById('modalResetSecurityAnswer').value='';
     document.getElementById('modalResetNewPlayerPin').value='';
     status.innerHTML='<span class="ok">✓ SpielerLogin wurde zurückgesetzt.</span><br><strong>Neuer SpielerLogin: '+safeHtml(savedPin)+'</strong><br>Der neue Login wurde in diesem Browser gespeichert.';
-  }catch(error){
-    status.innerHTML='<span class="bad">'+safeHtml(error.message || 'Fehler beim Zurücksetzen des SpielerLogins.')+'</span>';
-  }
+  }catch(error){status.innerHTML=playerResetErrorText(error);}
 }
 function showAddCharacter(){
   const pin=getSavedPlayerLogin();

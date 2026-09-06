@@ -68,7 +68,7 @@ layout={lootPageSectionsByRaid:{zg:{p0Plus:true,poReleases:false}}};
 assert.equal(await ctx.guildPoItemRequiresRelease('guild','22637','Götze','zg-prime'),true);
 await db.close();
 const panel=fs.readFileSync(new URL('raidlead-panel.html',root),'utf8');
-const ui=vm.createContext({normalizeP0Text:v=>String(v||'').toLowerCase(),getP0PlusEntriesForItem:()=>[],renderItem:name=>`<span class="selected-item">${name}</span>`,safe:v=>String(v)});
+const ui=vm.createContext({p0PointsLoadError:"",normalizeP0Text:v=>String(v||'').toLowerCase(),getP0PlusEntriesForItem:()=>[],renderItem:name=>`<span class="selected-item">${name}</span>`,safe:v=>String(v)});
 for(const name of ['isActiveP0Value','isActiveP0Entry','isActiveP0PlusEntry','renderP0PlusPoints'])vm.runInContext(extract(panel,name),ui);
 assert.equal(ui.isActiveP0Entry({p0Selected:'nein',p0Plus:'nein'}),false);
 assert.equal(ui.isActiveP0PlusEntry({p0Selected:'ja',p0Plus:'nein'}),false);

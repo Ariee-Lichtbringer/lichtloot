@@ -2411,12 +2411,13 @@ async function ensureSupportTicketSchema() {
        resolved_at timestamptz
      )`
   );
-  await query(`alter table platform_support_tickets add column if not exists screenshot_data text not null default '', add column if not exists screenshot_name text not null default ''`);
+  await query(`alter table platform_support_tickets add column if not exists screenshot_data text not null default '', add column if not exists screenshot_name text not null default '', add column if not exists internal_note text not null default '', add column if not exists notification_status text not null default 'not_requested', add column if not exists notification_error text not null default '', add column if not exists notification_sent_at timestamptz, add column if not exists notification_attempted_at timestamptz, add column if not exists notification_attempts integer not null default 0`);
   await query(`create index if not exists idx_platform_support_tickets_status_created on platform_support_tickets(status, created_at desc)`);
 }
 
-function normalizeSupportTicketRow(row) {
+function normalizeSupportTicketRow(row, internal = false) {
   return {
+    ...(internal ? { internalNote: row.internal_note || "", notificationStatus:row.notification_status||"not_requested",notificationError:row.notification_error||"",notificationSentAt:row.notification_sent_at?row.notification_sent_at.toISOString():"" } : {}),
     hasScreenshot: Boolean(row.has_screenshot || row.screenshot_data),
     screenshotName: row.screenshot_name || "",
 
@@ -2466,38 +2467,77 @@ async function submitSupportTicket({ query: params = {}, body = {} }) {
   const screenshotName=screenshotData?clean(values.screenshotName).slice(0,180):'';
   const result = await query(
     `insert into platform_support_tickets
-       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,screenshot_data,screenshot_name)
-     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       (guild_id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,screenshot_data,screenshot_name,notification_status)
+     values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending')
      returning *`,
     [guild.id, guild.slug, guild.name, contactName, contactEmail, contactDiscord, category, subject, message, supportPageUrl(values.pageUrl), screenshotData, screenshotName]
   );
+  void sendSupportNotification(result.rows[0].id).catch(()=>{});
   return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
+}
+
+async function sendSupportNotification(id) {
+  const claimed=await query(`update platform_support_tickets set notification_status='sending',notification_attempts=notification_attempts+1,notification_attempted_at=now() where id=$1 and notification_status in ('pending','failed') and notification_attempts<3 returning *`,[id]);
+  const ticket=claimed.rows[0];if(!ticket)return {sent:false,skipped:true};
+  const user=clean(process.env.GMAIL_USER),pass=clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g,'');
+  try{
+    if(!user||!pass)throw Error('Gmail-Versand ist nicht eingerichtet.');
+    const transporter=nodemailer.createTransport({service:'gmail',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user,pass}});
+    const screenshot=validateSupportScreenshot(ticket.screenshot_data);
+    await transporter.sendMail({from:clean(process.env.GUILD_MAIL_FROM)||`GuildLoot <${user}>`,to:user,
+      ...(ticket.contact_email?{replyTo:ticket.contact_email}:{}),
+      messageId:`<support-${ticket.id}@lichtloot.de>`,
+      subject:`[GuildLoot Support] ${String(ticket.subject).replace(/[\r\n]/g,' ')}`,
+      text:[`Neue Supportmeldung · ${ticket.guild_name||ticket.guild_slug}`,`Vorgang: ${ticket.id}`,`Kategorie: ${ticket.category}`,`Name / Charakter: ${ticket.contact_name}`,`E-Mail: ${ticket.contact_email||'–'}`,`Discord: ${ticket.contact_discord||'–'}`,`Seite: ${supportPageUrl(ticket.page_url)||'–'}`,'',ticket.message,'','In der Administration bearbeiten: https://lichtloot.de/admin.html#supportPanel'].join('\n'),
+      attachments:screenshot?[{filename:ticket.screenshot_name||'screenshot.'+(screenshot.startsWith('data:image/jpeg')?'jpg':screenshot.startsWith('data:image/webp')?'webp':'png'),content:Buffer.from(screenshot.split(',')[1],'base64'),contentType:screenshot.slice(5,screenshot.indexOf(';'))}]:[]});
+    await query("update platform_support_tickets set notification_status='sent',notification_sent_at=now(),notification_error='' where id=$1",[id]);return {sent:true};
+  }catch(error){await query("update platform_support_tickets set notification_status='failed',notification_error=$2 where id=$1",[id,clean(error.message).slice(0,500)||'Gmail-Versand fehlgeschlagen.']);return {sent:false};}
+}
+async function runSupportNotificationTick(){
+  await ensureSupportTicketSchema();
+  // A process restart must not leave a notification permanently marked as sending.
+  await query("update platform_support_tickets set notification_status='failed',notification_error='Versand unterbrochen; erneuter Versuch.' where notification_status='sending' and notification_attempted_at<now()-interval '5 minutes'");
+  const pending=await query("select id from platform_support_tickets where notification_status in ('pending','failed') and notification_attempts<3 and (notification_attempted_at is null or notification_attempted_at<now()-interval '2 minutes') order by created_at limit 10");
+  for(const ticket of pending.rows)await sendSupportNotification(ticket.id);
 }
 
 async function getPlatformSupportTickets({ query: params = {} }) {
   requirePlatformMasterCode(params.masterCode);
   await ensureSupportTicketSchema();
-  const result = await query(`select id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,status,created_at,updated_at,resolved_at,screenshot_name,(screenshot_data <> '') as has_screenshot from platform_support_tickets order by case when status='new' then 0 else 1 end, created_at desc limit 250`);
-  return { success: true, tickets: result.rows.map(normalizeSupportTicketRow) };
+  const status = clean(params.status), guild = clean(params.guildFilter), category = clean(params.category);
+  if (status && !["new", "in_progress", "resolved"].includes(status)) {
+    const error = new Error("Ungültiger Supportstatus."); error.statusCode = 400; throw error;
+  }
+  const offset = Math.max(0, Math.min(1000000, parseInt(params.offset, 10) || 0));
+  const groups = await query(`select guild_slug,guild_name,category,status,count(*)::int as count from platform_support_tickets group by guild_slug,guild_name,category,status`);
+  const total = groups.rows.filter(row => (!status || row.status === status) && (!guild || row.guild_slug === guild) && (!category || row.category === category)).reduce((sum,row) => sum + Number(row.count), 0);
+  const result = await query(`select id,guild_slug,guild_name,contact_name,contact_email,contact_discord,category,subject,message,page_url,status,created_at,updated_at,resolved_at,internal_note,notification_status,notification_error,notification_sent_at,screenshot_name,(screenshot_data <> '') as has_screenshot from platform_support_tickets
+    where ($1='' or status=$1) and ($2='' or guild_slug=$2) and ($3='' or category=$3)
+    order by case status when 'new' then 0 when 'in_progress' then 1 else 2 end, created_at desc,id desc limit 100 offset $4`, [status,guild,category,offset]);
+  return { success: true, tickets: result.rows.map(row => normalizeSupportTicketRow(row, true)), groups: groups.rows, total, hasMore: offset + result.rows.length < total };
 }
 
 async function updatePlatformSupportTicket({ query: params = {}, body = {} }) {
   requirePlatformMasterCode(params.masterCode || body.masterCode);
   await ensureSupportTicketSchema();
   const values = { ...params, ...body }, id = clean(values.id), status = clean(values.status).toLowerCase();
-  if (!isUuid(id) || !["new", "resolved"].includes(status)) {
-    const error = new Error("Ungültige Supportanfrage oder Statusangabe.");
-    error.statusCode = 400;
-    throw error;
+  const note = values.internalNote === undefined ? null : String(values.internalNote);
+  const expected = values.expectedUpdatedAt || null;
+  if (!isUuid(id) || !["new", "in_progress", "resolved"].includes(status) || (note !== null && note.length > 6000) || (expected && !Number.isFinite(Date.parse(expected)))) {
+    const error = new Error("Ungültige Supportanfrage, Statusangabe oder Notiz (maximal 6000 Zeichen)."); error.statusCode = 400; throw error;
   }
   const result = await query(
     `update platform_support_tickets
-     set status=$2,resolved_at=case when $2='resolved' then now() else null end,updated_at=now()
-     where id=$1 returning *`,
-    [id,status]
+     set status=$2,internal_note=coalesce($3,internal_note),resolved_at=case when $2='resolved' then coalesce(resolved_at,now()) else null end,updated_at=now()
+     where id=$1 and ($4::timestamptz is null or date_trunc('milliseconds',updated_at)=$4::timestamptz) returning *`,
+    [id,status,note,expected]
   );
-  if (!result.rows[0]) { const error = new Error("Supportanfrage wurde nicht gefunden."); error.statusCode = 404; throw error; }
-  return { success: true, ticket: normalizeSupportTicketRow(result.rows[0]) };
+  if (!result.rows[0]) {
+    const exists = await query('select id from platform_support_tickets where id=$1',[id]);
+    const error = new Error(exists.rows[0] ? "Die Meldung wurde zwischenzeitlich geändert. Bitte aktualisieren und deine Notiz mit dem neuen Stand vergleichen." : "Supportanfrage wurde nicht gefunden.");
+    error.statusCode = exists.rows[0] ? 409 : 404; throw error;
+  }
+  return { success: true, ticket: normalizeSupportTicketRow(result.rows[0], true) };
 }
 
 async function platformResetGuildCode({ query: params = {}, body = {} }) {
@@ -21060,23 +21100,28 @@ async function getIssueReports({ guildId, query: params }) {
   return { success: true, reports: result.rows.map(normalizeIssueReportRow) };
 }
 
-async function getSystemErrors({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+async function getSystemErrors({ guildId = null, query: params }) {
+  requirePlatformMasterCode(params.masterCode);
+  const status = clean(params.status) || 'open', search = clean(params.search).slice(0,200), guildSlug = clean(params.guildFilter);
+  if(!['open','all','new','checked','resolved'].includes(status)){const error=new Error('Ungültiger Fehlerstatus.');error.statusCode=400;throw error;}
+  const offset=Math.max(0,Math.min(1000000,parseInt(params.offset,10)||0));
   const result = await query(
-    `select * from issue_reports
-     where guild_id = $1 and category = 'system_error'
-     order by created_at desc
-     limit 250`,
-    [guildId]
-  );
-  return { success: true, errors: result.rows.map(normalizeIssueReportRow) };
+    `select i.*,g.slug as guild_slug,g.name as guild_name from issue_reports i join guilds g on g.id=i.guild_id
+     where ($1::uuid is null or i.guild_id=$1) and i.category='system_error'
+       and ($2='' or g.slug=$2)
+       and ($3='all' or ($3='open' and i.resolved_at is null and i.status<>'resolved') or (case when i.resolved_at is not null then 'resolved' else i.status end)=$3)
+       and ($4='' or concat_ws(' ',i.reference_id,i.action_name,i.page,i.note,i.technical_details,i.player,i.raid) ilike '%' || $4 || '%')
+     order by i.created_at desc,i.id desc limit 101 offset $5`,
+    [guildId,guildSlug,status,search,offset]);
+  const count=await query("select count(*)::int as count from issue_reports where category='system_error' and resolved_at is null and status<>'resolved'");
+  return { success:true, errors:result.rows.slice(0,100).map((row,index)=>({...normalizeIssueReportRow(row,index),guildSlug:row.guild_slug,guildName:row.guild_name})),hasMore:result.rows.length>100,openCount:count.rows[0].count };
 }
 
 async function updateSystemError({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requirePlatformMasterCode(params.masterCode);
   const id = clean(params.id || params.rowNumber);
   const status = clean(params.status).toLowerCase();
-  if (!id || !["new", "checked", "resolved"].includes(status)) {
+  if (!isUuid(id) || !["new", "checked", "resolved"].includes(status)) {
     const error = new Error("Ungültiger Fehlerstatus.");
     error.statusCode = 400;
     throw error;
@@ -21086,7 +21131,7 @@ async function updateSystemError({ guildId, query: params }) {
      set status = $3,
          resolved_at = case when $3 = 'resolved' then coalesce(resolved_at, now()) else null end,
          updated_at = now()
-     where guild_id = $1 and id = $2 and category = 'system_error'
+     where ($1::uuid is null or guild_id = $1) and id = $2 and category = 'system_error'
      returning *`,
     [guildId, id, status]
   );
@@ -30421,40 +30466,30 @@ async function adminDeleteItem({ guildId, query: params }) {
   }
 }
 
-async function resetPlayerPinBySecurity({
-  guildId,
-  charName,
-  server,
-  securityQuestion,
-  securityAnswer,
-  newPin
-}) {
-  const result = await query(
-    `select p.id, p.security_question, p.security_answer
-     from players p
-     join characters c on c.player_id = p.id
-     where p.guild_id = $1 and lower(c.name) = lower($2) and lower(c.server) = lower($3)
-     limit 1`,
-    [guildId, clean(charName), clean(server)]
-  );
+function normalizePlayerSecurityQuestion(value) {
+  const normalized=clean(value).normalize('NFC').toLowerCase();
+  const questions={pet:'pet',city:'city',teacher:'teacher',food:'food',
+    'wie hieß dein erstes haustier?':'pet','in welcher stadt wurdest du geboren?':'city',
+    'wie hieß dein erster klassenlehrer?':'teacher','was ist dein lieblingsessen?':'food'};
+  return Object.hasOwn(questions,normalized)?questions[normalized]:'';
+}
 
-  const player = result.rows[0];
-  if (!player) {
-    const error = new Error("Dieser Charakter wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
+async function resetPlayerPinBySecurity({guildId,charName,server,securityQuestion,securityAnswer,newPin}) {
+  const pin=normalizePin(newPin),question=normalizePlayerSecurityQuestion(securityQuestion),answer=clean(securityAnswer).normalize('NFC').toLowerCase();
+  if(!clean(charName)||!clean(server)||!question||!answer||! /^[A-Z0-9]{4,8}$/.test(pin)){
+    const error=new Error('Bitte Charakter, Server und Sicherheitsfrage vollständig angeben. Der neue SpielerLogin muss aus 4–8 Buchstaben oder Ziffern bestehen.');error.statusCode=400;throw error;
   }
-
-  const questionMatches = clean(player.security_question) === clean(securityQuestion);
-  const answerMatches = clean(player.security_answer).toLowerCase() === clean(securityAnswer).toLowerCase();
-  if (!questionMatches || !answerMatches) {
-    const error = new Error("Sicherheitsfrage oder Antwort ist nicht korrekt.");
-    error.statusCode = 403;
-    throw error;
+  const result=await query(`select distinct p.id,p.security_question,p.security_answer from players p join characters c on c.player_id=p.id where p.guild_id=$1 and lower(c.name)=lower($2) and lower(c.server)=lower($3) limit 2`,[guildId,clean(charName),clean(server)]);
+  const player=result.rows[0];
+  if(!player){const error=new Error('Dieser Charakter wurde in der ausgewählten Gilde nicht gefunden. Bitte Gilde, Charaktername und Server prüfen.');error.statusCode=404;throw error;}
+  if(result.rows.length>1||!normalizePlayerSecurityQuestion(player.security_question)||!clean(player.security_answer)){
+    const error=new Error('Für dieses Konto ist keine persönliche Sicherheitsfrage für den Selbst-Reset hinterlegt oder die Zuordnung ist nicht eindeutig. Bitte wende dich an den Support. Ein durch die Raidleitung angelegter Eintrag kann so nicht zurückgesetzt werden.');error.statusCode=409;throw error;
   }
-
-  const pin = normalizePin(newPin);
-  await query("update players set player_pin = $1, updated_at = now() where id = $2", [pin, player.id]);
+  if(normalizePlayerSecurityQuestion(player.security_question)!==question||clean(player.security_answer).normalize('NFC').toLowerCase()!==answer){
+    const error=new Error('Sicherheitsfrage oder Antwort ist nicht korrekt. Verwende die Frage und Antwort, die du bei der Erstellung selbst gewählt hast.');error.statusCode=403;throw error;
+  }
+  try{await query('update players set player_pin=$1,updated_at=now() where id=$2 and guild_id=$3',[pin,player.id,guildId]);}
+  catch(error){if(error.code==='23505'){const conflict=new Error('Dieser neue SpielerLogin ist bereits vergeben. Bitte wähle einen anderen.');conflict.statusCode=409;throw conflict;}throw error;}
   return pin;
 }
 
@@ -30520,6 +30555,12 @@ app.get("/api/apps-script", async (req, res, next) => {
       enforceSecurityRateLimit(req, "platform-admin", 30, 15 * 60 * 1000);
       const overview = await getPlatformAdminOverview({ query: req.query });
       return res.json(overview);
+    }
+
+    if (action === "platformGetSystemErrors") {
+      enforceSecurityRateLimit(req,"platform-admin",120,15*60*1000);
+      res.set('Cache-Control','no-store');
+      return res.json(await getSystemErrors({query:req.query}));
     }
 
     if (action === "platformGetSupportTickets") {
@@ -31610,6 +31651,8 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "resetPlayerPinBySecurity") {
+      enforceSecurityRateLimit(req,"player-security-reset",10,15*60*1000);
+      res.set("Cache-Control","no-store");
       const pin = await resetPlayerPinBySecurity({
         guildId: guild.id,
         charName: req.query.char,
@@ -31646,6 +31689,13 @@ app.post("/api/apps-script", async (req, res, next) => {
     const action = clean(req.body?.action || req.query?.action);
     if (clean(req.body?.masterCode || req.query?.masterCode)) {
       await loadMasterCodeOverrides();
+    }
+
+    if (action === "resetPlayerPinBySecurity") {
+      enforceSecurityRateLimit(req,"player-security-reset",10,15*60*1000);
+      const guild=await requireGuild(requireExplicitGuildSlug(req.body.guild));
+      const pin=await resetPlayerPinBySecurity({guildId:guild.id,charName:req.body.char,server:req.body.server,securityQuestion:req.body.securityQuestion,securityAnswer:req.body.securityAnswer,newPin:req.body.customPin});
+      res.set('Cache-Control','no-store');return res.json({success:true,guild:guild.slug,pin});
     }
 
     if (action === "updateGuildConfig") {
@@ -31708,6 +31758,21 @@ app.post("/api/apps-script", async (req, res, next) => {
       if(!result.rows[0]?.screenshot_data)return res.status(404).json({success:false,error:'Kein Screenshot vorhanden.'});
       res.set('Cache-Control','no-store');
       return res.json({success:true,screenshotData:result.rows[0].screenshot_data,screenshotName:result.rows[0].screenshot_name});
+    }
+
+    if (action === "platformUpdateSystemError") {
+      enforceSecurityRateLimit(req,"platform-admin-write",60,15*60*1000);
+      return res.json(await updateSystemError({guildId:null,query:req.body}));
+    }
+
+    if (action === "platformRetrySupportEmail") {
+      enforceSecurityRateLimit(req,'platform-admin-write',30,15*60*1000);
+      requirePlatformMasterCode(req.body.masterCode);
+      const id=clean(req.body.id);if(!isUuid(id))return res.status(400).json({success:false,error:'Ungültige Supportmeldung.'});
+      await ensureSupportTicketSchema();
+      const retry=await query("update platform_support_tickets set notification_attempts=0,notification_attempted_at=null,notification_status='pending' where id=$1 and notification_status='failed' returning id",[id]);
+      if(!retry.rows.length)return res.status(409).json({success:false,error:'Nur fehlgeschlagene Benachrichtigungen können erneut gesendet werden.'});
+      const sent=await sendSupportNotification(id);return res.json({success:true,sent:sent.sent});
     }
 
     if (action === "platformUpdateSupportTicket") {
@@ -32684,6 +32749,8 @@ async function runMissingPrioReminderTick() {
 }
 
 app.listen(port, () => {
+  const supportTick=()=>runSupportNotificationTick().catch(()=>console.error('Support notification worker failed'));
+  setTimeout(supportTick,10000).unref();setInterval(supportTick,60000).unref();
   console.log(`LichtLoot API listening on port ${port}`);
   setTimeout(runRaidHelperScheduleTick, 5000).unref();
   setInterval(runRaidHelperScheduleTick, 60000).unref();
