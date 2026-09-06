@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {queueActiveSignupRefresh} from '../src/active-signup-refresh.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+await db.exec(`create table raids(id uuid,guild_id uuid,deleted_at timestamptz,prio_enabled boolean,raidhelper_enabled boolean,status text,discord_channel_id text,discord_message_id text,raid_time text,raid_date date);create table bot_update_queue(id uuid default gen_random_uuid(),guild_id uuid,type text,status text,payload jsonb,created_at timestamptz default now());`);
+const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
+for(let n=1;n<=9;n++)await db.query(`insert into raids values($1,$2,null,true,true,$3,'123',$4,$5,$6)`,[id(n),id(n===9?99:88),n===3?'geschlossen':n===4?'archiviert':'offen',n===5?'':'456',n===6?'bad':'22:00',n===2?'2000-01-01':'2099-01-01']);
+await db.query('update raids set deleted_at=now() where id=$1',[id(7)]);await db.query('update raids set prio_enabled=false,raidhelper_enabled=false where id=$1',[id(8)]);
+const pool={connect:async()=>({query:(sql,args)=>sql.includes('pg_advisory_xact_lock')?{rows:[]}:db.query(sql,args),release:()=>{}})};
+assert.deepEqual(await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'}),{success:true,activeCount:1,queuedCount:1,alreadyQueuedCount:0});
+assert.equal((await queueActiveSignupRefresh(pool,{id:id(88),slug:'test'})).alreadyQueuedCount,1);
+const rows=(await db.query('select * from bot_update_queue')).rows;assert.equal(rows.length,1);assert.equal(rows[0].payload.raidId,id(1));assert.equal(rows[0].payload.editOnly,true);
+await db.close();console.log('Active signup refresh: guild isolation, expired/closed/archived/deleted raids, missing posts, invalid dates, disabled signups and duplicate requests passed.');

@@ -4298,6 +4298,11 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
       <div class="side-group collapsed lichtloot-admin-only" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
+          <button class="side-link master-only" type="button" onclick="refreshAllActiveSignups(this)" aria-label="Alle aktiven Anmelder aktualisieren"><span class="side-icon">↻</span><span class="side-label">Alle aktiven Anmelder aktualisieren</span></button>
+          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice()" aria-label="Bot-Offline-Hinweis"><span class="side-icon">⚠️</span><span class="side-label">Bot-Offline-Hinweis</span></button>
+          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update')" aria-label="GuildLoot-Update-Hinweis"><span class="side-icon">🛠️</span><span class="side-label">GuildLoot-Update-Hinweis</span></button>
+          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('bot',true)" aria-label="PO Bot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">PO Bot wieder erreichbar</span></button>
+          <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update',true)" aria-label="GuildLoot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">GuildLoot wieder erreichbar</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
@@ -5548,6 +5553,50 @@ async function railwayApi(params){
     throw new Error("Railway API hat keine gültige Antwort geliefert.");
   });
   return result || {};
+}
+
+async function refreshAllActiveSignups(button){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){setStatus("Bitte den Leitungscode dieser Gilde eingeben.","bad");return;}
+  button.disabled=true;
+  try{
+    const result=await railwayWrite({action:"guildRefreshActiveSignups",masterCode});
+    if(!result.success)throw new Error(result.error||"Aktualisierung fehlgeschlagen.");
+    setStatus(result.activeCount?`${result.queuedCount} aktive Anmelder zur Aktualisierung vorgemerkt${result.alreadyQueuedCount?`; ${result.alreadyQueuedCount} bereits vorgemerkt`:""}.`:"Keine aktiven Discord-Anmelder vorhanden.","good");
+  }catch(error){setStatus(error.message||"Aktualisierung fehlgeschlagen.","bad");}
+  finally{button.disabled=false;}
+}
+
+async function openBotOfflineNotice(noticeKind="bot",editOnly=false){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){setStatus("Bitte den Leitungscode dieser Gilde eingeben.","bad");return;}
+  try{
+    const preview=await railwayWrite({action:editOnly?"guildPreviewBotOnlineNotice":"guildPreviewBotOfflineNotice",masterCode,noticeKind});
+    if(!preview.success)throw new Error(preview.error||"Vorschau konnte nicht geladen werden.");
+    const backdrop=document.createElement("div");
+    backdrop.className="raid-helper-notify-backdrop";
+    backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-label="Bot-Offline-Hinweis" style="max-width:680px;max-height:90vh;overflow:auto">
+      <h3>${editOnly?"✅ Wieder erreichbar":noticeKind==="update"?"🛠️ GuildLoot-Update-Hinweis":"⚠️ Bot-Offline-Hinweis"}</h3>
+      <p>${editOnly?"Bearbeitet die gespeicherte Nachricht in":"Sendet an"} <strong>${Number(preview.channelCount)||0} Channels der Gilde ${escapeHtml(preview.guildName||CURRENT_GUILD_SLUG)}</strong>, in denen PO-Bot oder Lichtbuffbot posten.</p>
+      <div style="padding:18px;background:#27272b;color:#eee;border-radius:10px;white-space:pre-wrap">${escapeHtml(preview.content||"").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</div>
+      <details style="margin-top:12px"><summary>Zielchannels anzeigen</summary><ul>${(preview.targets||[]).map(t=>`<li>${escapeHtml(t.guildSlug)} · #${escapeHtml(t.channelName)}</li>`).join("")}</ul></details>
+      <p class="muted">${editOnly?"Die bestehende Nachricht wird bearbeitet. Es wird keine neue Nachricht gepostet.":"Die Bots müssen noch laufen, um den Hinweis zu versenden. Der Button schaltet sie nicht ab."}</p>
+      <div data-status role="status" aria-live="polite">${editOnly?(preview.pending?"Der Offline-Hinweis wird noch zugestellt. Bitte später erneut öffnen.":!preview.channelCount?(preview.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":"Keine gespeicherte Offline-Nachricht zum Bearbeiten vorhanden."):""):""}</div>
+      <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button><button class="small-btn good" data-send ${preview.channelCount&&!preview.pending?"":"disabled"}>${editOnly?"Vorhandene Nachrichten bearbeiten":"Hinweis an Gildenchannels senden"}</button></div></div>`;
+    backdrop.querySelector("[data-close]").onclick=()=>backdrop.remove();
+    backdrop.querySelector("[data-send]").onclick=async()=>{
+      const button=backdrop.querySelector("[data-send]"),status=backdrop.querySelector("[data-status]");
+      button.disabled=true;status.textContent=editOnly?"Bearbeitung wird beauftragt …":"Versand wird beauftragt …";
+      try{
+        const result=await railwayWrite({action:editOnly?"guildQueueBotOnlineNotice":"guildQueueBotOfflineNotice",masterCode,noticeKind});
+        if(!result.success)throw new Error(result.error||"Versand fehlgeschlagen.");
+        status.textContent=editOnly?(result.alreadyQueued?"Die Bearbeitung wurde bereits beauftragt.":`Bearbeitung für ${result.channelCount} Channels beauftragt.`):result.alreadyQueued?"Der Hinweis wurde bereits beauftragt. Kein erneuter Versand.":`Versand für ${result.channelCount} Channels beauftragt. Die Bots arbeiten die Warteschlange ab.`;
+        button.textContent=editOnly?"Bearbeitung beauftragt":"Versand beauftragt";
+      }catch(error){status.textContent=error.message;button.disabled=false;}
+    };
+    document.body.appendChild(backdrop);
+    backdrop.querySelector("[data-close]").focus();
+  }catch(error){setStatus(error.message||"Offline-Hinweis konnte nicht geöffnet werden.","bad");}
 }
 
 async function railwayWrite(params){

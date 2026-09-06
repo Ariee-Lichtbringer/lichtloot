@@ -1,3 +1,4 @@
+from bot_offline_notice import send_offline_notice
 from copyright_notice import copyright_text, without_copyright
 import asyncio
 import contextvars
@@ -6005,13 +6006,14 @@ async def post_or_update_from_queue(client, payload):
     return normalized
 
 
-async def resolve_queue_item(row_number):
+async def resolve_queue_item(row_number, message_id=""):
     if not row_number:
         return
     await asyncio.to_thread(api_post, {
         "action": "lichtbotResolveQueue",
         "queueToken": QUEUE_TOKEN,
         "rowNumber": row_number,
+        "messageId": message_id,
     })
 
 
@@ -6053,14 +6055,14 @@ async def po_queue_loop():
                 "action": "lichtbotGetQueueAllGuilds",
                 "queueToken": QUEUE_TOKEN,
                 "limit": "50",
-                "types": "player_login_approval_notice,player_login_granted_notice,po_post,p0_post_refresh,raid_announcement,raid_announcement_refresh,raid_announcement_role_notice,raid_status_staff_notice,loot_master_leadpin_notice,po_release_request_notice,po_release_granted_notice,po_rejection_notice,po_approval_notice,po_post_delete,free_discord_embed,raid_calendar",
+                "types": "po_offline_notice,player_login_approval_notice,player_login_granted_notice,po_post,p0_post_refresh,raid_announcement,raid_announcement_refresh,raid_announcement_role_notice,raid_status_staff_notice,loot_master_leadpin_notice,po_release_request_notice,po_release_granted_notice,po_rejection_notice,po_approval_notice,po_post_delete,free_discord_embed,raid_calendar",
                 "t": int(time.time()),
             })
             if result.get("success"):
                 items = result.get("items") or []
                 po_items = [
                     item for item in items
-                    if clean(item.get("type")) in {"player_login_approval_notice", "player_login_granted_notice", "po_post", "p0_post_refresh"}
+                    if clean(item.get("type")) in {"po_offline_notice", "player_login_approval_notice", "player_login_granted_notice", "po_post", "p0_post_refresh"}
                     or clean(item.get("type")) in {
                         "raid_announcement",
                         "raid_announcement_refresh",
