@@ -101,7 +101,9 @@
       }
     });
     document.addEventListener('click',event=>{if(!section.contains(event.target))close();});
-    section.addEventListener('focusout',()=>setTimeout(()=>{if(!section.contains(document.activeElement))close();},0));
+    // Safari does not focus buttons on mouse-down. Closing on blur would remove
+    // the result before its click arrives. Only Tab navigation closes on focus exit.
+    section.addEventListener('keydown',event=>{if(event.key==='Tab')setTimeout(()=>{if(!section.contains(document.activeElement))close();},0);});
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
