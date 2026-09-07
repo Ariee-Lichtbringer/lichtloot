@@ -22,7 +22,7 @@
   const buffs=document.getElementById('sideGroupBuffs');if(buffs)buffs.querySelector('.side-group-toggle span').textContent='Worldbuffs';
   const overview=take('scrollToDashboard','Übersicht');[overview,raid,loot,members,buffs,analysis,settings].filter(Boolean).forEach(g=>nav.append(g));
   nav.addEventListener('click',event=>{const link=event.target.closest('.side-link');if(!link)return;nav.querySelectorAll('.side-link.active').forEach(el=>el.classList.remove('active'));link.classList.add('active');document.body.classList.remove('raid-unified-open');});
-  const quick=document.querySelector('.dashboard-quick-action-p0');if(quick)quick.hidden=true;
+  const quick=document.querySelector('.dashboard-quick-action-p0');if(quick)quick.hidden=false;
   const create=document.querySelector('.dashboard-quick-action-raid');if(create){create.querySelector('strong').textContent='RAID ERSTELLEN';create.querySelector('.dashboard-quick-action-copy>span').textContent='Termin, Teilnehmer und P0 gemeinsam anlegen';create.querySelector('.dashboard-quick-action-cta').textContent='Raid erstellen →';}
   const names={scheduledEvents:['Wochenrhythmen','Automatische Veröffentlichung'],poSignup:['P0-Anmeldungen','Raidübergreifende Übersicht'],poCreate:['P0 ohne Raid','Einzelnen Anmelder erstellen'],pastEvents:['Vergangene Raids','Nachbereitung'],currentEvents:['Aktuelle Raids','Teilnehmer und Loot verwalten']};
   Object.entries(names).forEach(([key,[title,description]])=>{const tab=document.querySelector(`[data-raid-helper-tab="${key}"]`);if(tab){tab.querySelector('strong').textContent=title;const sub=tab.querySelector('.raid-helper-tab-copy>span');if(sub)sub.textContent=description;}});

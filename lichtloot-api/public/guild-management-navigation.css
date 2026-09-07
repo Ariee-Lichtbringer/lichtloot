@@ -15,3 +15,6 @@
 @media(max-width:1200px){body.management-navigation:not(.guild-locked) .unlock{grid-template-columns:repeat(2,minmax(0,1fr))}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-raid{grid-column:2;grid-row:3}}
 
 html.guild-dkp .guild-prio-only{display:none!important}
+
+@media(min-width:1201px){body.management-navigation:not(.guild-locked) .unlock{grid-template-columns:repeat(5,minmax(0,1fr))}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-p0{grid-column:4;grid-row:1 / span 2}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-raid{grid-column:5;grid-row:1 / span 2}}
+@media(min-width:901px) and (max-width:1200px){body.management-navigation:not(.guild-locked) .unlock>.login-summary-card:nth-child(5){grid-column:1;grid-row:3}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-p0{grid-column:2;grid-row:3}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-raid{grid-column:1 / span 2;grid-row:4}}
