@@ -51,15 +51,24 @@
     const selected=typeof lichtlootSelectedCharacter!=="undefined"?lichtlootSelectedCharacter:null;
     return same(selected)?String(selected.server||"").trim():"";
   }
+  async function requestGearProfile(params){
+    if(typeof window.apiJsonp==="function")return window.apiJsonp(params);
+    const base="https://lichtloot-production.up.railway.app/api/apps-script";
+    const url=new URL(typeof withGuildUrl==="function"?withGuildUrl(base):base);
+    for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);
+    const response=await fetch(url,{cache:"no-store"});
+    const result=await response.json();
+    if(!response.ok||result?.error)throw new Error(result?.error||"Die Ausrüstung konnte nicht geladen werden.");
+    return result;
+  }
   async function loadProfile(name,server){
     server=characterServer(name,server);
-    if(typeof window.apiJsonp!=="function")throw new Error("Die LichtLoot-API ist auf dieser Seite nicht verfügbar.");
     let armory=null,armoryError=null;
-    try{const result=await window.apiJsonp({action:"getPublicClassicArmoryGear",playerName:name,server});if(result?.error)throw new Error(result.error);armory=result;}catch(error){armoryError=error;}
+    try{const result=await requestGearProfile({action:"getPublicClassicArmoryGear",playerName:name,server});if(result?.error)throw new Error(result.error);armory=result;}catch(error){armoryError=error;}
     if(/Mehrere Charaktere/.test(armoryError?.message||""))throw armoryError;
     server=server||armory?.character?.server||"";
     let storedProfile=null,profileError=null;
-    try{const result=await window.apiJsonp({action:"getPublicLogAnalysisPlayerProfile",playerName:name,server});if(result?.error)throw new Error(result.error);storedProfile=result?.profile;}catch(error){profileError=error;}
+    try{const result=await requestGearProfile({action:"getPublicLogAnalysisPlayerProfile",playerName:name,server});if(result?.error)throw new Error(result.error);storedProfile=result?.profile;}catch(error){profileError=error;}
     if(!armory&&!storedProfile)throw armoryError||profileError||new Error("Für diesen Spieler wurden keine Ausrüstungsdaten gefunden.");
     return profileFromResults(name,armory,storedProfile);
   }

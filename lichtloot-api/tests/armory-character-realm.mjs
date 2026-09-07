@@ -18,10 +18,18 @@ vm.runInContext(extract('getPublicLogAnalysisPlayerProfile'),context);
 await assert.rejects(context.getPublicLogAnalysisPlayerProfile({guildId:'light',query:{playerName:'Shadowsniper',server:'Lakeshire'}}),e=>e.statusCode===404);
 await db.close();console.log('PASS: realm selection, case/whitespace, ambiguous names, guild isolation, history excludes other realms.');
 const ui=fs.readFileSync(new URL('../../loot/player-gear-popup.js',import.meta.url),'utf8');
-const pick=name=>{const a=ui.indexOf('  '+(name==='loadProfile'?'async ':'')+'function '+name+'(');return ui.slice(a,ui.indexOf('\n  }',a)+4);};
+const pick=name=>{const a=ui.indexOf('  '+(['loadProfile','requestGearProfile'].includes(name)?'async ':'')+'function '+name+'(');return ui.slice(a,ui.indexOf('\n  }',a)+4);};
 const calls=[];const browser=vm.createContext({currentPublishedPrios:[{Spieler:'Shadowsniper',Server:'Lakeshire'}],window:{apiJsonp:async params=>{calls.push(params);return params.action==='getPublicClassicArmoryGear'?{success:true,character:{server:params.server}}:{profile:{server:params.server}};}},profileFromResults:(name,armory,profile)=>profile});
-vm.runInContext(pick('characterServer')+'\n'+pick('loadProfile'),browser);
+vm.runInContext(pick('characterServer')+'\n'+pick('requestGearProfile')+'\n'+pick('loadProfile'),browser);
 await browser.loadProfile('Shadowsniper');assert(calls.every(call=>call.server==='Lakeshire'));
 calls.length=0;await browser.loadProfile('Shadowsniper','Everlook');assert(calls.every(call=>call.server==='Everlook'));
 browser.window.apiJsonp=async()=>{throw Error('Mehrere Charaktere mit diesem Namen gefunden.');};await assert.rejects(browser.loadProfile('Shadowsniper'),/Mehrere Charaktere/);
 console.log('PASS: frontend forwards explicit/table realm to armory and history; ambiguity cannot fall back to another character.');
+
+// Start and management pages have no apiJsonp: exercise the actual fetch adapter.
+delete browser.window.apiJsonp;browser.URL=URL;browser.withGuildUrl=base=>base+'?guild=nachtloot';
+const fetched=[];browser.fetch=async url=>{fetched.push(new URL(url));return {ok:true,json:async()=>url.searchParams.get('action')==='getPublicClassicArmoryGear'?{success:true,character:{server:url.searchParams.get('server')}}:{profile:{server:url.searchParams.get('server')}}};};
+await browser.loadProfile('Ariee','Everlook');assert.equal(fetched.length,2);
+assert.ok(fetched.every(url=>url.searchParams.get('guild')==='nachtloot'&&url.searchParams.get('server')==='Everlook'&&url.searchParams.get('playerName')==='Ariee'));
+browser.fetch=async()=>({ok:false,json:async()=>({error:'Keine Ausrüstung vorhanden'})});await assert.rejects(browser.loadProfile('Ariee','Everlook'),/Keine Ausrüstung/);
+console.log('PASS: full gear loader works without apiJsonp, preserves guild/name/realm and reports API errors.');
