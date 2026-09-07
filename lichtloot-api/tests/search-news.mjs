@@ -13,3 +13,13 @@ const simultaneous=await Promise.all([notices.claimNews(b,SEARCH_NEWS_VERSION),o
 assert.equal(simultaneous.filter(r=>r.show).length,1,'Two tabs claim the announcement only once');
 assert.equal((await notices.claimNews(a)).show,false,'Old support acknowledgement remains intact');
 await db.close();console.log('PASS: new announcement, account separation, repeat login, cross-device persistence, concurrent tabs, old support version preserved.');
+// Exercise the shared login hook using the existing homepage popup, without a second dialog.
+const {readFileSync}=await import('node:fs');const {runInNewContext}=await import('node:vm');
+const script=readFileSync(new URL('../../support-form.js',import.meta.url),'utf8');
+const fn=script.slice(script.indexOf('async function checkSupportNews(){'),script.indexOf("window.addEventListener('load',checkSupportNews"));
+let opened=0,installed=0,claims=0;
+const context={newsBusy:false,newsAttempted:new Set(),supportNewsIdentity:()=>({guild:'lichtloot',playerPin:'test'}),document:{hidden:false,querySelectorAll:()=>[],createElement:()=>{throw Error('Must use the existing news popup');}},location:{pathname:'/start.html'},window:{installLichtlootNews:()=>installed++,openLichtlootNews:()=>opened++},API:'test',AbortSignal,fetch:async()=>{claims++;return {ok:true,json:async()=>({success:true,show:true})};}};
+await runInNewContext(fn+'checkSupportNews()',context);
+await runInNewContext('checkSupportNews()',context);
+assert.equal(opened,1);assert.equal(installed,1);assert.equal(claims,1);
+console.log('PASS: login opens existing GuildLoot news popup once; no separate dialog.');
