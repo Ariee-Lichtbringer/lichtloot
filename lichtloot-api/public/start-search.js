@@ -1,0 +1,65 @@
+/* Find dashboard functions without changing guild or account context. */
+(()=>{
+  const init=()=>{
+    const header=document.querySelector('.start-header');
+    if(!header||document.getElementById('startFunctionSearch'))return;
+    const account=(tile)=>{
+      openAccountManagementCenter();
+      showMeinLichtLootSection('chars');
+      if(tile){
+        initCharacterManagementTiles();
+        const button=document.querySelector(`[data-character-manage-tile="${tile}"]`);
+        button?.click();
+        button?.scrollIntoView({block:'center',behavior:'smooth'});
+      }
+    };
+    const entries=[
+      ['Charakter hinzufügen','Charaktere → Neuer Charakter','char charakter charaktere twink alt main hinzufügen hinzufuegen anlegen erstellen neu add',()=>account('add')],
+      ['Charakter löschen','Charaktere → Charakter entfernen','char charakter twink löschen loeschen entfernen delete',()=>account('remove')],
+      ['Meine Charaktere','Charakter wählen und verwalten','mein lichtloot nachtloot account profil charakter char twink wechseln verwalten',()=>account()],
+      ['Punkte & Prios','Deine P0+ Punkte und Priolisten','punkte prios prioritäten prioritaeten loot p0 p0+ historie',()=>account('history')],
+      ['Raidkalender','Deine Raidtermine im Kalender','raid kalender termine anmeldung raidanmeldung',()=>{account();openRaidCalendarModal();}],
+      ['Worldbuff eintragen','Eigene Buff-Termine verwalten','worldbuff buff eintragen hinzufügen planen verschieben',()=>{account();showMeinLichtLootSection('worldbuffs');}],
+      ['Worldbuffs ansehen','Alle kommenden Worldbuffs','worldbuff buffs termine ony nef rend',()=>showBuffOverview('worldbuff')],
+      ['Postfach öffnen','Deine Nachrichten','postfach nachrichten mail inbox',()=>{account();openPlayerMailbox();}],
+      ['Loganalyse','Raids und Kampflogs auswerten','logs loganalyse analyse auswertung',()=>showLogsDashboard()]
+    ];
+    const normal=value=>value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').replace(/[^a-z0-9+ ]/g,' ');
+    const section=document.createElement('section');
+    section.className='start-function-search';
+    section.setAttribute('aria-label','Funktionen suchen');
+    section.innerHTML='<form role="search"><label for="startFunctionSearch">Was möchtest du machen?</label><div class="start-search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="startFunctionSearch" type="search" autocomplete="off" placeholder="z. B. Charakter oder Twink hinzufügen" aria-controls="startSearchResults"><button type="submit">Suchen</button></div></form><div id="startSearchResults" class="start-search-results" hidden></div><p class="start-search-status" role="status" aria-live="polite"></p>';
+    header.after(section);
+    const back=document.createElement('button');back.type='button';back.className='start-search-back';back.textContent='← Zurück zu den Raids';section.append(back);back.addEventListener('click',()=>{document.body.classList.remove('start-search-open');goHomeView();});
+    const activate=entry=>{document.body.classList.add('start-search-open');entry[3]();};
+    const input=section.querySelector('input'),results=section.querySelector('#startSearchResults'),status=section.querySelector('[role="status"]');
+    let matches=[];
+    const close=()=>{results.hidden=true;status.textContent='';};
+    const render=()=>{
+      const tokens=normal(input.value).split(/\s+/).filter(word=>word&&!['ich','mochte','will','einen','ein','eine','meinen','wie','kann','man','und','oder','zu'].includes(word));
+      matches=tokens.length?entries.filter(entry=>tokens.every(token=>normal(entry.slice(0,3).join(' ')).includes(token))):entries.slice(0,4);
+      results.replaceChildren();
+      matches.forEach(entry=>{
+        const button=document.createElement('button');button.type='button';
+        const title=document.createElement('strong'),detail=document.createElement('span');
+        title.textContent=entry[0];detail.textContent=entry[1];button.append(title,detail);
+        button.addEventListener('click',()=>{close();activate(entry);});results.append(button);
+      });
+      results.hidden=false;
+      status.textContent=matches.length?`${matches.length} ${matches.length===1?'passende Funktion':'passende Funktionen'}`:'Keine passende Funktion. Versuche z. B. „Twink“, „Prios“ oder „Worldbuff“.';
+    };
+    input.addEventListener('input',render);input.addEventListener('focus',render);
+    section.querySelector('form').addEventListener('submit',event=>{event.preventDefault();render();if(matches.length){close();activate(matches[0]);}});
+    section.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){close();input.focus();close();event.preventDefault();}
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        if(results.hidden)render();const buttons=[...results.querySelectorAll('button')];if(!buttons.length)return;
+        const current=buttons.indexOf(document.activeElement),step=event.key==='ArrowDown'?1:-1;
+        buttons[(current+step+buttons.length)%buttons.length].focus();event.preventDefault();
+      }
+    });
+    document.addEventListener('click',event=>{if(!section.contains(event.target))close();});
+    section.addEventListener('focusout',()=>setTimeout(()=>{if(!section.contains(document.activeElement))close();},0));
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
