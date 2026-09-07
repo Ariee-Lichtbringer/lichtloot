@@ -7,3 +7,6 @@ assert.equal(requirementsFor(data,22467)[0].requirements.find(r=>r.itemId===1434
 assert.equal(requirementsFor(data,22478)[0].gold,75,'Rogue gold cost is preserved');
 assert.equal(requirementsFor(data,23061)[0].directDrop,true);assert.equal(requirementsFor(data,16920).length,0,'T2 is not T3');assert.equal(requirementsFor(data,22369).length,3,'Cloth token has three distinct class requirements');
 console.log('PASS: all 81 T3 items, 72 quests, nine direct-drop rings, exact priest requirements, shaman correction, rogue gold and token variants.');
+for(const item of Object.values(data.items)){if(item.directDrop)continue;assert.ok(item.questgiver.id);assert.ok(item.questgiver.name);assert.ok(item.location.includes('Pestländer'));assert.equal(item.minimumLevel,60);assert.equal(item.prerequisiteQuestId,9033);}
+assert.equal(data.items['22519'].questgiver.name,'Vater Inigo Montoy');assert.equal(data.items['22418'].questgiver.id,16112);
+console.log('PASS: quest giver, hand-in location, minimum level and prerequisite for all 72 exchanges.');
