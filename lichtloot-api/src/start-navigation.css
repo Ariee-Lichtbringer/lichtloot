@@ -95,3 +95,11 @@ body.start-dashboard-body .start-sidebar>*{flex-shrink:0}
 .management-navigation .sidebar-foot{margin-top:14px;padding-top:12px;border-top:1px solid #ffffff12}
 @media(max-width:1000px){.management-navigation .app-frame{grid-template-columns:1fr}.management-navigation .app-frame>.sidebar{position:relative;top:0;height:auto;margin:10px;overflow:visible}.management-navigation .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.management-navigation .side-nav{grid-template-columns:1fr}}
+
+#meinLichtLootCard .character-action-content:empty{display:none}
+#meinLichtLootCard .character-action-content{margin:12px 0}
+#meinLichtLootCard .character-action-content .dashboard-inline-results:empty{display:none}
+#meinLichtLootCard .character-action-content .is-add:not(.is-tile-hidden){display:grid!important;gap:10px;margin-top:12px;border:1px solid rgba(var(--gold-rgb),.3)}
+#meinLichtLootCard .dashboard-paperdoll-character>strong{margin-top:0}
+#meinLichtLootCard .dashboard-paperdoll-visual{height:350px;width:100%;position:relative;display:grid;justify-items:center;overflow:hidden}
+#meinLichtLootCard .dashboard-paperdoll-visual .dashboard-paperdoll-orbit{top:70px}

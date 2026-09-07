@@ -75,6 +75,7 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
   window.addEventListener('load',mount);
+  document.addEventListener('guild-navigation-ready',mount);
   // Guild branding and the news entry can arrive after the initial render.
   const observer=new MutationObserver(()=>{observer.disconnect();mount();observe();});
   function observe(){const side=document.querySelector('.start-sidebar');if(side)observer.observe(side,{childList:true,subtree:true});}

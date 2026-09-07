@@ -5454,6 +5454,8 @@ body.worldbuff-only .master-only{display:none!important}
 <script src="loot-system.js?v=20260906-2"></script>
 <link rel="stylesheet" href="start-navigation.css?v=20260907-4">
 <script defer src="start-navigation.js?v=20260907-4"></script>
+<link rel="stylesheet" href="guild-management-navigation.css?v=20260907-1">
+<script defer src="guild-management-navigation.js?v=20260907-1"></script>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -11841,6 +11843,7 @@ async function renderRaidHelperCurrentDetail(raidId, options={}){
     </section>`}
     </div>
   `;
+  window.mountGuildRaidWorkspace?.(raidId);
   await Promise.all([loadRaidHelperCurrentEventSignups(raidId),signupOnlyRaid ? Promise.resolve() : renderRaidHelperCurrentPoPanel(raid)]);
 }
 

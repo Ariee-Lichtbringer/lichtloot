@@ -1,0 +1,17 @@
+.management-navigation .dashboard-quick-action[hidden]{display:none!important}
+.management-navigation .side-group .side-group{margin:12px 0 0}
+.management-navigation.raid-unified-open .app-frame{display:grid;grid-template-columns:260px minmax(0,1fr)}
+.management-navigation.raid-unified-open .app-frame>.sidebar{display:block}
+.guild-raid-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:6px;margin:18px 0;border:1px solid #ffffff20;border-radius:10px;background:#101824}
+.guild-raid-tabs button{flex:1;min-width:130px;min-height:46px;background:transparent;color:#b8c3d2;border:0;border-bottom:3px solid transparent;border-radius:5px;cursor:pointer;font-weight:700}
+.guild-raid-tabs button[aria-selected=true]{color:var(--gold);border-bottom-color:var(--gold);background:rgba(var(--gold-rgb),.08)}
+.guild-raid-tabs button:focus-visible{outline:2px solid var(--gold)}
+#raidHelperCurrentDetail .raid-unified-columns{display:block}
+#raidHelperCurrentDetail [data-guild-raid-panel][hidden]{display:none!important}
+#raidHelperCurrentDetail [data-guild-raid-panel]{background:#101824;border-color:#ffffff20}
+#raidHelperCurrentDetail [data-guild-raid-panel]>.small-btn{margin:12px 10px 0 0}
+@media(max-width:1000px){.management-navigation.raid-unified-open .app-frame{grid-template-columns:1fr}}
+@media(min-width:1201px){body.management-navigation:not(.guild-locked) .unlock{grid-template-columns:repeat(4,minmax(0,1fr))}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-raid{grid-column:4}}
+@media(max-width:1200px){body.management-navigation:not(.guild-locked) .unlock{grid-template-columns:repeat(2,minmax(0,1fr))}body.management-navigation:not(.guild-locked) .unlock>.dashboard-quick-action-raid{grid-column:2;grid-row:3}}
+
+html.guild-dkp .guild-prio-only{display:none!important}
