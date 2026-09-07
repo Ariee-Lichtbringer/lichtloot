@@ -22,6 +22,18 @@
     return span;
   }
   function mount(){
+    document.body.classList.toggle('night-metal',new URLSearchParams(location.search).get('guild')==='nachtloot');
+    document.querySelectorAll('.mein-lichtloot-tile img').forEach(img=>img.replaceWith(icon({chars:'shield',raidcalendar:'create',worldbuffs:'worldbuff'}[img.parentElement.dataset.meinLichtlootTile])));
+    const loot=document.querySelector('.loot-side-shell');
+    if(loot){
+      loot.classList.toggle('night-metal',new URLSearchParams(location.search).get('guild')==='nachtloot');
+      loot.querySelectorAll('.raid-start-dashboard,.raid-start-group-items button').forEach(button=>{
+        if(button.querySelector('.fantasy-nav-icon'))return;
+        const action=(button.getAttribute('onclick')||'').match(/openRaidStartAction\('([^']+)'/);
+        const name=button.textContent.includes('Raidregeln')?'raidRules':button.textContent.includes('Prioseiten')?'prioPages':action?.[1]||'shield';
+        button.querySelector('img')?.remove();button.prepend(icon(name));
+      });
+    }
     const side=document.querySelector('.start-sidebar');if(!side)return;
     if(!side.dataset.fantasyNavigation){
       side.dataset.fantasyNavigation='ready';
@@ -36,7 +48,7 @@
       const old=button.querySelector('.start-side-icon-img,.start-side-icon');if(old)old.replaceWith(icon(button.dataset.startNav));
     });
     const leadership=side.querySelector('.sidebar-leadership-link .start-side-icon');if(leadership)leadership.replaceWith(icon('leadership'));
-    const trigger=side.querySelector('#globalGuildTrigger');if(trigger&&!trigger.querySelector('.fantasy-nav-icon'))trigger.prepend(icon('shield'));
+
     const news=side.querySelector('.nachtloot-news-button');if(news&&!news.querySelector('.fantasy-nav-icon'))news.prepend(icon('bell'));
     if(!side.querySelector('.sidebar-account-entry')){
       const entry=document.createElement('button');entry.type='button';entry.className='sidebar-account-entry';
