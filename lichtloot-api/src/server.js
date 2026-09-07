@@ -8,7 +8,7 @@ import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-sche
 import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
 import {createPrioReminderPosts} from "./prio-reminder-posts.js";
 import { createDkpService, lootSystem } from "./dkp.js";
-import {createSupportNotices,SUPPORT_NOTICE_TEXT} from "./support-notices.js";
+import {createSupportNotices,SUPPORT_NOTICE_TEXT,SEARCH_NEWS_VERSION} from "./support-notices.js";
 import { createSupportInbox } from "./support-inbox.js";
 import { createGmailApi } from "./gmail-api.js";
 import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
@@ -31612,12 +31612,12 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(saved);
     }
 
-    if(action==='playerClaimSupportNews'){
+    if(action==='playerClaimSupportNews'||action==='playerClaimSearchNews'){
       enforceSecurityRateLimit(req,'support-news',60,15*60*1000);
       const newsGuild=await requireGuild(resolveGuildSlug(req.body.guild||defaultGuildSlug));
       const player=await findPlayerByPin(newsGuild.id,normalizePin(req.body.playerPin));
       if(!player||player.is_blocked||player.approval_status==='rejected')return res.status(403).json({success:false,error:'Bitte mit einem gültigen SpielerLogin anmelden.'});
-      await ensureSupportTicketSchema();return res.json(await supportNotices.claimNews(player.id));
+      await ensureSupportTicketSchema();return res.json(await supportNotices.claimNews(player.id,action==='playerClaimSearchNews'?SEARCH_NEWS_VERSION:undefined));
     }
     if(['platformPreviewSupportBroadcast','platformQueueSupportBroadcast','platformSupportDiscordStatus'].includes(action)){
       requirePlatformMasterCode(req.body.masterCode);await ensureSupportTicketSchema();await supportNotices.ensure();

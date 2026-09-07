@@ -1,3 +1,4 @@
+export const SEARCH_NEWS_VERSION='2026-09-07-search';
 export const SUPPORT_NEWS_VERSION='2026-09-06-support';
 export const SUPPORT_NOTICE_TEXT='🛟 **Fehler oder Probleme mit GuildLoot?**\n\nBitte nutzt den Button **„Support · Fehler melden“** unten auf der jeweiligen GuildLoot-Seite. Beschreibt kurz, was ihr tun wolltet und was passiert ist. Einen Screenshot könnt ihr direkt anhängen. Gebt eine E-Mail-Adresse oder euren Discord-Namen an, damit wir euch antworten können.\n\nSo landet eure Meldung direkt beim Support und geht nicht im Channel unter. Danke!\nhttps://lichtloot.de';
 export function createSupportNotices({query,env=process.env}){
@@ -7,7 +8,7 @@ export function createSupportNotices({query,env=process.env}){
   await query(`alter table platform_support_tickets add column if not exists discord_notice_pending boolean not null default false`);
   await query(`create unique index if not exists support_notice_queue_unique on bot_update_queue((payload->>'noticeKey')) where type='po_support_notice'`);
  })().catch(e=>{schema=null;throw e});return schema;}
- async function claimNews(playerId){await ensure();const r=await query(`insert into player_support_news_seen(player_id,version) values($1,$2) on conflict do nothing returning player_id`,[playerId,SUPPORT_NEWS_VERSION]);return {success:true,show:r.rows.length>0,version:SUPPORT_NEWS_VERSION};}
+ async function claimNews(playerId,version=SUPPORT_NEWS_VERSION){await ensure();const r=await query(`insert into player_support_news_seen(player_id,version) values($1,$2) on conflict do nothing returning player_id`,[playerId,version]);return {success:true,show:r.rows.length>0,version};}
  async function queueDMs(){await ensure();const target=String(env.SUPPORT_DISCORD_USER_ID||'').trim();if(!/^\d{15,22}$/.test(target))return {configured:false,queued:0};
  const r=await query(`with candidates as (select id,guild_id from platform_support_tickets where discord_notice_pending=true order by created_at limit 50), inserted as (
  insert into bot_update_queue(guild_id,type,payload,status) select guild_id,'po_support_notice',jsonb_build_object('noticeKey','ticket:'||id::text,'kind','ticket','targetUserId',$1::text,'ticketId',id::text),'open' from candidates on conflict do nothing returning id)

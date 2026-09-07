@@ -9975,8 +9975,9 @@ async function submitMobileLootLogin(event){
   }
 }
 
-const LICHTLOOT_NEWS_VERSION="2026-08-31-guildloot-random-priolists";
+const LICHTLOOT_NEWS_VERSION="2026-09-07-search";
 const LICHTLOOT_NEWS_ENTRIES=[
+  {date:"2026-09-07",title:"Neu: Funktionen, Items und Spieler suchen",text:"Finde Funktionen, Items und Spieler direkt über die Suche „Was möchtest du machen?“. Du kannst nach Gegenstandsnamen oder Item-IDs in der gesamten Datenbank suchen und Tooltipkarten mit Icon und Qualitätsfarbe öffnen und verschieben. Bei Spielern siehst du Klassenicon, P0+-Punkte je Raid und Item sowie die verfügbare Ausrüstung / Paperdoll. Auch viele Tippfehler werden erkannt. Startseite und Gildenleitung zeigen die jeweils passenden Funktionen.",linkLabel:"Suche ausprobieren",action:"search"},
   {date:"2026-09-06",title:"Fehler oder Probleme? Bitte den Support nutzen",text:"Nutze den Button „Support · Fehler melden“ unten auf der jeweiligen Seite. Beschreibe kurz das Problem und hänge bei Bedarf einen Screenshot an. Gib deine E-Mail-Adresse oder deinen Discord-Namen für eine Rückmeldung an. So erreicht deine Meldung direkt die GuildLoot-Administration.",linkLabel:"Support öffnen",action:"support"},
   {
     date:"2026-08-31",
@@ -10026,6 +10027,7 @@ function openLichtlootNews(){
 }
 
 function openLichtlootNewsFeature(action){
+  if(action==="search"){closeLichtlootNews();const search=document.getElementById("startFunctionSearch");search?.scrollIntoView({behavior:"smooth",block:"center"});search?.focus();return;}
   if(action==="support"){closeLichtlootNews();document.querySelector("[data-guild-support]")?.click();return;}
   if(action==="random-create"){
     closeLichtlootNews();
@@ -10116,6 +10118,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <script src="pin-visibility.js"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
-<script src="/support-form.js?v=20260906-2" defer></script>
+<script src="/support-form.js?v=20260907-search-news" defer></script>
 </body>
 </html>

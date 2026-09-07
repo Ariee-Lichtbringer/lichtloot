@@ -65,17 +65,20 @@ function supportNewsIdentity(){
  return null;
 }
 async function checkSupportNews(){
- if(newsBusy||document.hidden||/\/(admin[^/]*|gildenleitung[^/]*)\.html$/.test(location.pathname))return;
+ if(newsBusy||document.hidden||/\/(admin[^/]*)\.html$/.test(location.pathname))return;
  if([...document.querySelectorAll('dialog[open],.nachtloot-news-backdrop:not(.hidden),[role="dialog"][aria-modal="true"]:not(.hidden)')].some(el=>el.getClientRects().length))return;
  const identity=supportNewsIdentity();if(!identity)return;const key=identity.guild+':'+identity.playerPin;if(newsAttempted.has(key))return;
  newsBusy=true;
  try{
-  const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'playerClaimSupportNews',...identity}),signal:AbortSignal.timeout(15000)});const result=await response.json();
+  const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'playerClaimSearchNews',...identity}),signal:AbortSignal.timeout(15000)});const result=await response.json();
   if(!response.ok||!result.success){if(response.status===403)newsAttempted.add(key);return;}
   newsAttempted.add(key);if(!result.show)return;
   const news=document.createElement('dialog');news.className='gl-support';news.id='guildSupportNews';news.setAttribute('aria-labelledby','guildSupportNewsTitle');
-  news.innerHTML='<header><div><p>GuildLoot · Neuigkeiten · 06.09.2026</p><h2 id="guildSupportNewsTitle">Fehler oder Probleme? Nutze den Support.</h2></div><button type="button" data-news-close aria-label="Neuigkeiten schließen">×</button></header><p>Bitte nutze bei Fehlern oder Problemen den Button <strong>„Support · Fehler melden“</strong> unten auf der jeweiligen Seite.</p><p>Beschreibe kurz, was du tun wolltest und was passiert ist. Du kannst einen <strong>Screenshot anhängen</strong>. Gib deine E-Mail-Adresse oder deinen Discord-Namen für eine Rückmeldung an.</p><p>So erreicht deine Meldung direkt die GuildLoot-Administration und geht nicht im Chat unter.</p><footer><button type="button" data-guild-support>Support öffnen</button><button type="button" data-news-close>Gelesen</button></footer>';
-  document.body.append(news);news.querySelectorAll('[data-news-close]').forEach(b=>b.onclick=()=>news.close());news.querySelector('[data-guild-support]').addEventListener('click',()=>news.close());news.addEventListener('close',()=>news.remove(),{once:true});news.showModal();
+  news.innerHTML='<header><div><p>GuildLoot · Neuigkeiten · 07.09.2026</p><h2 id="guildSupportNewsTitle">Neu: Funktionen, Items und Spieler suchen</h2></div><button type="button" data-news-close aria-label="Neuigkeiten schließen">×</button></header><p>Mit <strong>„Was möchtest du machen?“</strong> findest du jetzt schnell die passende Funktion – auf der Startseite und in der Gildenleitung. Auch viele Tippfehler werden erkannt.</p><ul><li><strong>Items:</strong> Suche in der gesamten Datenbank nach Namen oder Item-ID. Öffne verschiebbare Tooltipkarten mit Icon und passender Qualitätsfarbe.</li><li><strong>Spieler:</strong> Sieh Klassenicon, P0+-Punkte je Raid und Item sowie die verfügbare Ausrüstung / Paperdoll.</li><li><strong>Prio-Items:</strong> Öffne die Tooltipkarte direkt aus der Punkteliste.</li></ul><p>Du findest diesen Hinweis später auch unter <strong>GuildLoot-Neuigkeiten</strong>.</p><footer><button type="button" data-news-search>Suche ausprobieren</button><button type="button" data-news-close>Gelesen</button></footer>';
+  document.body.append(news);news.querySelectorAll('[data-news-close]').forEach(b=>b.onclick=()=>news.close());
+  news.querySelector('[data-news-search]').onclick=()=>{news.close();const search=document.getElementById('startFunctionSearch');if(search){search.scrollIntoView({behavior:'smooth',block:'center'});search.focus();}else{const target=new URL('/start.html',location.origin);target.searchParams.set('guild',identity.guild);target.hash='startFunctionSearch';location.href=target.href;}};
+  news.addEventListener('close',()=>news.remove(),{once:true});news.showModal();
+
  }catch{/* A transient failure is retried; no acknowledgement is stored locally. */}finally{newsBusy=false;}
 }
 window.addEventListener('load',checkSupportNews,{once:true});window.addEventListener('storage',checkSupportNews);setInterval(checkSupportNews,10000);setTimeout(checkSupportNews,1500);

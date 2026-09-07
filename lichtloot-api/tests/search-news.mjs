@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createSupportNotices,SEARCH_NEWS_VERSION} from '../src/support-notices.js';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+await db.exec(`create table players(id uuid primary key);create table platform_support_tickets(id uuid);create table bot_update_queue(type text,payload jsonb);insert into players values ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');`);
+const a='00000000-0000-0000-0000-000000000001',b='00000000-0000-0000-0000-000000000002';
+const notices=createSupportNotices({query:(sql,args)=>db.query(sql,args)});
+assert.equal((await notices.claimNews(a)).show,true,'Previous support notice remains separate');
+assert.equal((await notices.claimNews(a,SEARCH_NEWS_VERSION)).show,true,'Existing account sees the new search announcement');
+assert.equal((await notices.claimNews(a,SEARCH_NEWS_VERSION)).show,false,'Repeated login is suppressed');
+const otherDevice=createSupportNotices({query:(sql,args)=>db.query(sql,args)});
+assert.equal((await otherDevice.claimNews(a,SEARCH_NEWS_VERSION)).show,false,'Device/browser restart shares server acknowledgement');
+const simultaneous=await Promise.all([notices.claimNews(b,SEARCH_NEWS_VERSION),otherDevice.claimNews(b,SEARCH_NEWS_VERSION)]);
+assert.equal(simultaneous.filter(r=>r.show).length,1,'Two tabs claim the announcement only once');
+assert.equal((await notices.claimNews(a)).show,false,'Old support acknowledgement remains intact');
+await db.close();console.log('PASS: new announcement, account separation, repeat login, cross-device persistence, concurrent tabs, old support version preserved.');
