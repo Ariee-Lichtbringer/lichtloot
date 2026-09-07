@@ -18,6 +18,20 @@ export function publicPlayerPoints(entries,name,server){
  // Preserve accents in identity matching; fuzzy search must not merge different characters.
  const exact=v=>String(v||'').trim().normalize('NFC').toLowerCase();
  const points=entries.filter(r=>exact(r.player)===exact(name)&&exact(r.server)===exact(server))
- .map(r=>({raid:r.raid,item:r.item,points:Number(r.points)||0}));
+ .map(r=>({raid:r.raid,item:r.item,quality:r.quality||'',points:Number(r.points)||0}));
  return {success:true,name,server,entries:points,total:Math.round(points.reduce((sum,r)=>sum+r.points,0)*100)/100};
+}
+
+export async function attachPointItems(query,profile,normalize,sourceRaid){
+ if(!profile.entries.length)return profile;
+ const names=[...new Set(profile.entries.map(r=>r.item.toLowerCase()))];
+ const {rows}=await query(`select id, raid_type, item_id, name, quality, icon_url, slot, type, boss, bind, category, wowhead,
+ stats_text, tooltip, needed, equip, price, dropchance, token_group, token_name, token_item_id
+ from items where lower(name)=any($1::text[]) order by id`,[names]);
+ return {...profile,entries:profile.entries.map(entry=>{
+  const candidates=rows.filter(item=>item.name.toLowerCase()===entry.item.toLowerCase());
+  const item=candidates.find(item=>item.raid_type.toLowerCase()===entry.raid.toLowerCase())
+   ||candidates.find(item=>item.raid_type.toLowerCase()===sourceRaid(entry.raid));
+  return {...entry,quality:item?.quality||entry.quality,itemDetails:item?normalize(item):null};
+ })};
 }

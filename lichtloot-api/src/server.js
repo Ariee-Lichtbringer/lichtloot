@@ -1,4 +1,4 @@
-import { searchGuildPlayers, publicPlayerPoints } from "./player-search.js";
+import { searchGuildPlayers, publicPlayerPoints, attachPointItems } from "./player-search.js";
 import { searchLootCatalog } from "./item-search.js";
 import {queueBossTokenNotice} from "./boss-token-notices.js";
 import {createWclAttendanceStore} from "./wcl-attendance-store.js";
@@ -30937,7 +30937,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
     if (action === "getSearchPlayerPoints") {
       const points = await getP0Plus(guild.id);
-      return res.json(publicPlayerPoints(points.entries, clean(req.query.player), clean(req.query.server)));
+      return res.json(await attachPointItems(query, publicPlayerPoints(points.entries, clean(req.query.player), clean(req.query.server)), normalizeLootItemForApi, lootSourceRaidType));
     }
 
     if (action === "searchLootItems") {

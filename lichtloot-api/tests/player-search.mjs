@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {rankPlayerSearch,publicPlayerPoints,searchGuildPlayers} from '../src/player-search.js';
+import {rankPlayerSearch,publicPlayerPoints,searchGuildPlayers,attachPointItems} from '../src/player-search.js';
 const rows=[{name:'Ariee',server:'Everlook',class_name:'Priester'},{name:'Ariee',server:'Lakeshire',class_name:'Magier'},{name:'Áriee',server:'Everlook',class_name:'Priester'}];
 assert.equal(rankPlayerSearch(rows,'ariee').total,3,'Search tolerates accents but keeps identities separate');
 assert.equal(rankPlayerSearch(rows,'ariee lakeshire').players.length,1);
@@ -11,3 +11,11 @@ assert.equal(publicPlayerPoints([],'Zero','Everlook').total,0);
 let called=false;await searchGuildPlayers(()=>{called=true},'guild','a');assert.equal(called,false);
 await searchGuildPlayers(async(sql,args)=>{assert.deepEqual(args,['guild']);assert.equal((sql.match(/guild_id=\$1/g)||[]).length,2);return {rows:[{...rows[0],player_pin:'secret'}]};},'guild','ariee').then(r=>assert.ok(!JSON.stringify(r).includes('secret')));
 console.log('PASS: typo search, realm and accent identity separation, per-raid points, no credentials or notes, guild scoping, empty and short searches.');
+
+let lookups=0;
+const enriched=await attachPointItems(async(sql,args)=>{lookups++;assert.deepEqual(args,[['götze']]);return {rows:[{name:'Götze',raid_type:'mc',quality:'rare',item_id:1},{name:'Götze',raid_type:'zg',quality:'epic',item_id:2},{name:'Götze',raid_type:'zg-prime',quality:'uncommon',item_id:3}]};},result,r=>({itemId:r.item_id,quality:r.quality}),raid=>raid.startsWith('zg-')?'zg':raid);
+assert.equal(lookups,1);assert.equal(enriched.entries[0].itemDetails.itemId,3);assert.equal(enriched.entries[1].itemDetails.itemId,2);assert.equal(enriched.total,2.5);
+assert.equal(enriched.entries[0].quality,'uncommon');
+const missing=await attachPointItems(async()=>({rows:[]}),result,r=>r,r=>r);assert.equal(missing.entries[0].itemDetails,null);
+await attachPointItems(()=>{throw Error('Empty points must not query');},{entries:[]},r=>r,r=>r);
+console.log('PASS: batched tooltip metadata, exact raid before source raid, rarity, missing metadata and empty points.');

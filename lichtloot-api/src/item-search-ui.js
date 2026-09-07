@@ -3,6 +3,7 @@
  const labels={'mc':'MC','bwl':'BWL','aq40':'AQ40','aq20':'AQ20','naxx':'Naxxramas','ony':'Onyxia','zg':'ZG','zg-prime':'ZG Prime','zg-late':'ZG Late','zg-mittwoch':'ZG Mittwoch'};
  const origins=item=>(item.raids||[item.raid]).filter(Boolean).map(r=>labels[r]||r).join(' · ');
  const node=(tag,text,cls)=>{const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;return el;};
+ const qualityClass=value=>{const quality=String(value??'').trim().toLowerCase();return ({'0':'poor','1':'common','2':'uncommon','3':'rare','4':'epic','5':'legendary','episch':'epic','selten':'rare','ungewöhnlich':'uncommon','legendär':'legendary','gewöhnlich':'common','schlecht':'poor'}[quality]||(['poor','common','uncommon','rare','epic','legendary'].includes(quality)?quality:''));};
  const fallbackIcon='https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg';
  const iconUrl=item=>{
   const raw=String(item.icon||item.iconName||item.icon_url||'').trim();
@@ -49,8 +50,7 @@
 
   const close=node('button','✕','item-search-close');close.type='button';close.setAttribute('aria-label','Itemdetails schließen');close.addEventListener('click',()=>dialog.close());
   const title=node('h2',item.name);title.id='itemSearchTitle';
-  const quality=String(item.quality||'').toLowerCase();
-  title.className='item-search-title '+({'4':'epic','3':'rare','2':'uncommon','5':'legendary','episch':'epic','selten':'rare','ungewöhnlich':'uncommon','legendär':'legendary'}[quality]||(['epic','rare','uncommon','legendary'].includes(quality)?quality:''));
+  title.className='item-search-title '+qualityClass(item.quality);
   header.append(icon,title,close);makeDraggable(header);dialog.append(header);
   const card=node('div','','item-search-card');
   const tooltip=String(item.tooltip||'').split(/\||\n/).map(s=>s.trim()).filter(Boolean);
@@ -79,5 +79,5 @@
   if(!response.ok)throw new Error('Itemsuche derzeit nicht erreichbar.');
   const data=await response.json();if(data.success!==true)throw new Error('Itemsuche derzeit nicht erreichbar.');return data;
  }
- window.GuildLootItems={search,open,origins};
+ window.GuildLootItems={search,open,origins,iconUrl,qualityClass};
 })();
