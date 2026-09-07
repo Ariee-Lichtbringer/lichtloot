@@ -1,6 +1,8 @@
+import {aq40SearchAliases} from './aq40-search.js';
 import {t3SearchAliases} from './t3-search.js';
 // Shared public item search: no guild configuration or player data is exposed.
 export const normalizeItemSearch = value => String(value ?? '').toLowerCase()
+  .replace(/\b(?:tier|t)\s*2\s*[.,]\s*5\b/g,'t25').replace(/\btier\s*25\b/g,'t25')
   .replace(/ä|ae/g,'a').replace(/ö|oe/g,'o').replace(/ü|ue/g,'u').replace(/ß/g,'ss')
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 function distance(a,b){
@@ -17,7 +19,7 @@ export function rankItemSearch(rows,term,limit=25){
  if(q.length<2)return {items:[],total:0};
  const matches=[];
  for(const row of rows){
-  const name=normalizeItemSearch(row.name),fields=normalizeItemSearch([row.name,row.raid_type,row.boss,row.slot,row.type,t3SearchAliases(row.item_id)].join(' '));
+  const name=normalizeItemSearch(row.name),fields=normalizeItemSearch([row.name,row.raid_type,row.boss,row.slot,row.type,t3SearchAliases(row.item_id),aq40SearchAliases(row.item_id)].join(' '));
   const words=fields.split(' ');let score=0;
   if(/^\d+$/.test(q)){if(String(row.item_id)!==q)continue;}
   else {

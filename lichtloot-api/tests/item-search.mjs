@@ -34,3 +34,20 @@ const paladin=rankItemSearch(tierRows,'T3 Paladin').items.map(i=>i.item_id).sort
 assert.equal(rankItemSearch(tierRows,'tier 3 pala').total,9);assert.equal(rankItemSearch(tierRows,'T3 Paladni').total,9);assert.equal(rankItemSearch(tierRows,'T3 priest').total,9);assert.equal(rankItemSearch(tierRows,'T3 Paladin Head').total,1);
 assert.equal(rankItemSearch([{id:'x',item_id:'21604',name:'Armreifen der königlichen Erlösung',raid_type:'aq40'}],'T3 Paladin').total,0);
 console.log('PASS: all nine T3 classes, complete Paladin set including ring, tier aliases, typos, slot filters and exclusion of unrelated items.');
+const aq=JSON.parse(readFileSync(new URL('../../data/aq40-materials.json',import.meta.url),'utf8'));
+const aqRows=Object.entries(aq.items).map(([id,item])=>({id,item_id:id,name:item.name,raid_type:'aq40',slot:item.slot}));
+const mixed=[...tierRows,...aqRows,{id:'token',item_id:'20932',name:'Dominanzbindungen der Qiraji',raid_type:'aq40'}];
+for(const [cls,mask] of [['Krieger',1],['Paladin',2],['Jäger',4],['Schurke',8],['Priester',16],['Schamane',64],['Magier',128],['Hexenmeister',256],['Druide',1024]]){
+ const expected=Object.entries(aq.items).filter(([,e])=>e.classMask===mask).map(([id])=>id).sort();
+ for(const prefix of ['T 2,5','T2,5','T 2.5','T2.5','Tier 2,5','Tier2.5','T25']){
+  const result=rankItemSearch(mixed,`${prefix} ${cls}`);
+  assert.equal(result.total,5,`${prefix} ${cls}`);assert.deepEqual(result.items.map(i=>i.item_id).sort(),expected);
+ }
+ assert.equal(rankItemSearch(mixed,`T3 ${cls}`).total,9,'T3 remains separate');
+}
+assert.equal(rankItemSearch(mixed,'T 2,5 Paladni').total,5);
+assert.equal(rankItemSearch(mixed,'T2.5 pala').total,5);
+assert.equal(rankItemSearch(mixed,'T2,5 priest').total,5);
+assert.equal(rankItemSearch(mixed,'T2,5 Paladin Helm').total,1);
+assert.equal(rankItemSearch(mixed,'20932').total,1);
+console.log('PASS: T2.5/T 2,5/Tier aliases for all nine classes, exact five pieces, typos, slot filters, token exclusion and separation from T3.');
