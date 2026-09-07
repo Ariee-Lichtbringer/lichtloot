@@ -1,0 +1,29 @@
+/* Dashboard navigation uses the same material and accent as the raid cards. */
+.start-sidebar{--nav-metal-light:#f1d99d;--nav-metal-mid:#b78b40;--nav-metal-dark:#65502b;--nav-metal-fill:rgba(136,101,43,.13)}
+.start-sidebar.night-metal{--nav-metal-light:#e4efef;--nav-metal-mid:#9aaeb4;--nav-metal-dark:#4a676c;--nav-metal-fill:rgba(136,168,175,.12)}
+body.start-dashboard-body .start-shell{grid-template-columns:260px minmax(0,1fr)}
+body.start-dashboard-body .start-sidebar{top:12px;height:calc(100dvh - 24px);margin:12px 0 12px 12px;padding:20px 12px 16px;overflow-y:auto;overflow-x:hidden;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:linear-gradient(145deg,#1b2330,#101824 70%);box-shadow:inset 0 1px 0 #ffffff08;scrollbar-width:thin;scrollbar-color:#536171 transparent}
+body.start-dashboard-body .start-sidebar-logo{width:166px;max-height:94px;margin:0 auto 18px;filter:none}
+.start-sidebar .sidebar-account-entry{width:100%;min-height:44px;margin-bottom:18px;padding:10px;border:1px solid rgba(var(--gold-rgb),.38);border-radius:8px;background:linear-gradient(110deg,rgba(var(--gold-rgb),.16),#ffffff03);color:#f1f5f9;font-size:13px;font-weight:750;text-transform:uppercase;cursor:pointer}
+body.start-dashboard-body .start-side-nav{display:flex;flex-direction:column;gap:5px}
+body.start-dashboard-body .start-side-group{border:0!important;border-radius:0;background:transparent!important;box-shadow:none;margin-top:10px;overflow:visible}
+body.start-dashboard-body .start-side-group-toggle{padding:10px 12px 6px;background:transparent!important;border:0;color:#9ba8b9;font-size:10px;font-weight:650;letter-spacing:.09em;text-transform:uppercase}
+body.start-dashboard-body .start-side-group-items{padding:0;gap:3px;border-top:0}
+body.start-dashboard-body .start-side-link{position:relative;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;min-height:44px;padding:8px 10px!important;border:1px solid transparent;border-radius:8px;background:transparent;color:#e4e9f1;font-size:13px!important;font-weight:650;line-height:1.35;white-space:normal}
+body.start-dashboard-body .start-side-link.active{border-color:rgba(var(--gold-rgb),.15);background:linear-gradient(90deg,rgba(var(--gold-rgb),.14),rgba(var(--gold-rgb),.025))}
+.start-side-link.active:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--gold);border-radius:4px}
+body.start-dashboard-body .start-side-link:hover{background:#ffffff07;border-color:#ffffff12}
+.fantasy-nav-icon{display:inline-flex;width:28px;height:28px;flex:0 0 28px;align-items:center;justify-content:center;filter:drop-shadow(0 2px 1px #0008)}
+.fantasy-nav-icon svg{width:26px;height:26px;overflow:visible}.metal-light{stop-color:var(--nav-metal-light)}.metal-mid{stop-color:var(--nav-metal-mid)}.metal-dark{stop-color:var(--nav-metal-dark)}
+.start-side-link.active .fantasy-nav-icon{--nav-metal-mid:var(--gold);--nav-metal-light:#fff3c1}.night-metal .start-side-link.active .fantasy-nav-icon{--nav-metal-light:#d1fffa}
+.start-sidebar .start-sidebar-actions{margin-top:14px;padding-top:12px;border-top:1px solid #ffffff12;gap:8px}
+.start-sidebar .nachtloot-news-button{display:flex;align-items:center;gap:10px;padding:8px 10px!important;min-height:44px;border:0!important;background:transparent!important;color:#e4e9f1!important;box-shadow:none;font-size:12px!important}
+.start-sidebar #globalGuildTrigger{grid-template-columns:28px minmax(0,1fr) auto;gap:10px;min-height:52px;background:#0c142080;border:1px solid #ffffff18;border-radius:8px}
+.start-sidebar #globalGuildLogo{display:none}.start-sidebar .global-guild-trigger-copy small{color:#9ba8b9;letter-spacing:.04em}.start-sidebar .global-guild-trigger-copy strong{color:#e4e9f1!important}
+body.start-dashboard-body .start-discord-link{margin-top:10px;min-height:44px;padding:8px 10px;gap:10px;border:1px solid #ffffff18;border-radius:8px;background:#0c142080;color:#e4e9f1}
+.start-sidebar .start-discord-link img{width:26px;height:26px;filter:grayscale(1)}
+.start-sidebar .sidebar-leadership-link{margin-top:8px;border-color:#ffffff18!important;background:#0c142080!important}
+.start-sidebar :is(button,a):focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+body.start-dashboard-body #meinLichtLootRightEntry{display:none!important}
+@media(max-width:1180px){body.start-dashboard-body .start-shell{grid-template-columns:1fr}body.start-dashboard-body .start-sidebar{position:relative;top:0;height:auto;max-height:none;margin:10px;padding:14px;overflow:visible}body.start-dashboard-body .start-side-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.start-sidebar .sidebar-account-entry{max-width:300px;margin:0 auto 12px}.start-sidebar .start-sidebar-actions{grid-column:1/-1}.start-sidebar .start-discord-link,.start-sidebar .sidebar-leadership-link{max-width:300px}}
+@media(max-width:720px){body.start-dashboard-body .start-sidebar-logo{display:block;width:130px;max-height:64px;margin-bottom:12px}body.start-dashboard-body .start-side-nav{display:flex;flex-direction:column}body.start-dashboard-body .start-sidebar-actions{display:grid;grid-template-columns:1fr;gap:8px}.start-sidebar .sidebar-guild-switcher{min-width:0;width:100%}.start-sidebar .sidebar-account-entry,.start-sidebar .start-discord-link,.start-sidebar .sidebar-leadership-link{max-width:none}.start-sidebar .global-guild-menu{position:absolute!important;left:0!important;right:0!important;top:100%!important;width:auto!important}.start-sidebar .sidebar-guild-switcher{position:relative}}

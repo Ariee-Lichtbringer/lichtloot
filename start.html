@@ -2939,6 +2939,8 @@ html,body{max-width:100%;overflow-x:hidden}
 <script src="dkp-widget.js?v=20260906-1"></script>
 <script src="loot-system.js?v=20260906-2"></script>
 <link rel="stylesheet" href="start-raid-cards.css?v=20260906-1">
+<link rel="stylesheet" href="start-navigation.css?v=20260907-1">
+<script defer src="start-navigation.js?v=20260907-1"></script>
 </head>
 
 <body class="start-dashboard-body">
@@ -3703,6 +3705,7 @@ function startRaidIsInsideConfiguredPeriod(raid){
 }
 
 function applyGuildBrand(){
+  document.querySelector(".start-sidebar")?.classList.toggle("night-metal", CURRENT_GUILD_SLUG === "nachtloot");
   const guild = currentGuildInfo;
   window.GuildLootServers.setGuild(guild);
   window.GuildLootMode.apply(guild);
