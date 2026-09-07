@@ -87,5 +87,5 @@
   function enhance(){document.querySelectorAll("#publishedTable tr").forEach(row=>{const cell=row.cells?.[1];if(!cell||cell.querySelector(".prio-gear-player"))return;const name=cell.textContent.trim();if(!name||/keine|spieler/i.test(name))return;cell.textContent="";const button=document.createElement("button");button.type="button";button.className="prio-gear-player";button.textContent=name;button.title=`Ausrüstung von ${name} anzeigen`;button.addEventListener("click",()=>open(name));cell.appendChild(button);});}
   function initialize(){installStyles();const table=document.getElementById("publishedTable");if(table){enhance();new MutationObserver(enhance).observe(table,{childList:true,subtree:true});}}
   document.addEventListener("keydown",event=>{if(event.key==="Escape")close();});document.readyState==="loading"?document.addEventListener("DOMContentLoaded",initialize):initialize();
-  window.openPrioPlayerGear=open;window.closePrioPlayerGear=close;window.renderPrioPlayerGearInline=renderInline;
+  window.GuildLootGear={loadProfile};window.openPrioPlayerGear=open;window.closePrioPlayerGear=close;window.renderPrioPlayerGearInline=renderInline;
 })();

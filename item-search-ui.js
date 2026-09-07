@@ -35,7 +35,7 @@
   });
  }
  let dialog, returnFocus;
- function open(item,opener){
+ function open(item,opener,character){
   returnFocus=opener;
   if(!dialog){dialog=document.createElement('dialog');dialog.className='item-search-dialog item-search-wow';dialog.setAttribute('aria-labelledby','itemSearchTitle');document.body.append(dialog);
    dialog.addEventListener('close',()=>returnFocus?.focus());
@@ -69,6 +69,7 @@
   dialog.append(card);
   dialog.append(node('p',[origins(item),item.itemId?`Item-ID: ${item.itemId}`:''].filter(Boolean).join(' · '),'item-search-origin'));
   if(item.boss)dialog.append(node('p',`Boss / Quelle: ${item.boss}`,'item-search-origin'));
+  window.GuildLootCompare?.mount(dialog,item,character);
   if(!dialog.open)dialog.showModal();close.focus();
  }
  async function search(term,signal){

@@ -42,7 +42,7 @@
      const quality=window.GuildLootItems.qualityClass(item?.quality||row.quality);
      const icon=el('img','','player-search-item-icon');icon.src=window.GuildLootItems.iconUrl(item||{});icon.alt='';icon.onerror=()=>{icon.onerror=null;icon.src=window.GuildLootItems.iconUrl({});};
      button.append(icon,el('span',row.item,`player-search-item-name ${quality}`),el('strong',`${fmt(row.points)} P0+`,'player-search-point-badge'));
-     if(item){button.setAttribute('aria-label',`${row.item}: ${fmt(row.points)} P0+ – Tooltip öffnen`);button.onclick=()=>window.GuildLootItems.open(item,button);}
+     if(item){button.setAttribute('aria-label',`${row.item}: ${fmt(row.points)} P0+ – Tooltip öffnen`);button.onclick=()=>window.GuildLootItems.open(item,button,player);}
      else{button.disabled=true;button.title='Für dieses Item sind noch keine Tooltipdaten verfügbar.';}
      li.append(button);list.append(li);
     }section.append(list);points.append(section);
