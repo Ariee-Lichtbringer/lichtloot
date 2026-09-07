@@ -7092,7 +7092,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let rememberedMasterCode="";
   try{rememberedMasterCode=localStorage.getItem(MASTER_STORAGE_KEY)||"";}catch(_error){}
   if(masterField) masterField.value = rememberedMasterCode;
-  if(rememberField) rememberField.checked = Boolean(rememberedMasterCode);
+  if(rememberField) rememberField.checked = true;
   rememberField?.addEventListener("change",()=>{if(!rememberField.checked){try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}}});
   if(worldbuffField) worldbuffField.value = "";
   setGuildLocked(true);
@@ -7112,8 +7112,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 window.addEventListener("pageshow", event => {
   if(!event.persisted) return;
-  let remembered=false;try{remembered=Boolean(localStorage.getItem(MASTER_STORAGE_KEY));}catch(_error){}
+  let remembered="";try{remembered=localStorage.getItem(MASTER_STORAGE_KEY)||"";}catch(_error){}
   if(!remembered) clearMasterCode();
+  else{
+    const field=document.getElementById("masterCode");
+    if(field) field.value=remembered;
+    loadOverview();
+  }
 });
 
 function enterLoads(event){
@@ -7268,6 +7273,10 @@ async function openLootMasterTargetsDialog(raidId){
 }
 
 function clearMasterCode(){
+  raidHelperSchedulesGeneration++;
+  raidHelperSchedules = [];
+  raidHelperSchedulesState = "idle";
+  renderRaidHelperScheduleRules();
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
   try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}
   document.getElementById("masterCode").value = "";
@@ -7715,6 +7724,7 @@ async function loadOverview(options){
     // diesem Fall wurde der Rollenabruf wegen des noch leeren Master-Codes
     // übersprungen. Nach erfolgreichem Login deshalb immer erneut befüllen.
     loadRaidHelperDiscordRoles();
+    if(!document.getElementById("raidHelperTab-scheduledEvents")?.classList.contains("hidden")) loadRaidHelperSchedules();
     loadWorldbuffMiniOverview();
     if(!guildSetupWizardDeepLinkHandled && new URLSearchParams(location.search).get("setup") === "1"){
       guildSetupWizardDeepLinkHandled = true;
@@ -10673,6 +10683,8 @@ let raidHelperEditingTemplateIdentifier = "";
 let raidHelperEditingRaidIdentifier = "";
 let raidHelperEditingScheduleIdentifier = "";
 let raidHelperSchedules = [];
+let raidHelperSchedulesState = "idle";
+let raidHelperSchedulesGeneration = 0;
 let raidHelperAttendanceCache = null;
 let raidHelperAttendanceRaidKey = "bwl";
 let raidHelperP0ReleaseCache = null;
@@ -13359,26 +13371,38 @@ function raidHelperScheduleFromEditor(){
 }
 
 async function loadRaidHelperSchedules(){
-  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const field = document.getElementById("masterCode");
+  let masterCode = field?.value.trim() || "";
   if(!masterCode){
+    try{masterCode = localStorage.getItem(MASTER_STORAGE_KEY) || "";}catch(_error){}
+    if(masterCode && field) field.value = masterCode;
+  }
+  const generation = ++raidHelperSchedulesGeneration;
+  if(!masterCode){
+    raidHelperSchedulesState = "auth";
+    setRaidHelperScheduleStatus("Bitte die Gildenleitung mit dem Master-Code freischalten, um die gespeicherten Wochenrhythmen zu laden.", "bad");
     renderRaidHelperScheduleRules();
-    renderRaidHelperScheduledEvents();
     return;
   }
+  raidHelperSchedulesState = "loading";
   setRaidHelperScheduleStatus("Rhythmen werden geladen ...", "");
+  renderRaidHelperScheduleRules();
   try{
     const result = await railwayApi({ action:"guildGetRaidHelperSchedules", masterCode });
-    if(result.success){
-      raidHelperSchedules = Array.isArray(result.schedules) ? result.schedules : [];
-      await loadOverview({ preserveStatus:true });
-      renderRaidHelperScheduleRules();
-      if(!document.getElementById("raidHelperScheduleTitle")?.value.trim()) resetRaidHelperScheduleForm();
-      setRaidHelperScheduleStatus("Rhythmen geladen.", "good");
-      return;
-    }
-    throw new Error(result.error || "Rhythmen konnten nicht geladen werden.");
+    if(generation !== raidHelperSchedulesGeneration) return;
+    if(!result.success) throw new Error(result.error || "Rhythmen konnten nicht geladen werden.");
+    if(!Array.isArray(result.schedules)) throw new Error("Die Antwort enthält keine gültige Rhythmus-Liste. Bitte erneut laden.");
+    raidHelperSchedules = result.schedules;
+    raidHelperSchedulesState = "loaded";
+    renderRaidHelperScheduleRules();
+    if(!document.getElementById("raidHelperScheduleTitle")?.value.trim()) resetRaidHelperScheduleForm();
+    const count = raidHelperSchedules.filter(schedule=>schedule.enabled!==false && String(schedule.recurrence || "weekly").toLowerCase()==="weekly").length;
+    setRaidHelperScheduleStatus(`${count} aktive Wochenrhythmen geladen.`, "good");
   }catch(error){
+    if(generation !== raidHelperSchedulesGeneration) return;
+    raidHelperSchedulesState = "error";
     setRaidHelperScheduleStatus(error.message || "Rhythmen konnten nicht geladen werden.", "bad");
+    renderRaidHelperScheduleRules();
   }
 }
 
@@ -13604,7 +13628,8 @@ function renderRaidHelperScheduleRules(){
   renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
   const activeSchedules=raidHelperSchedules.filter(schedule=>schedule.enabled!==false && String(schedule.recurrence || "weekly").toLowerCase()==="weekly");
   if(!activeSchedules.length){
-    box.innerHTML = '<div class="muted">Noch keine Rhythmus-Regel gespeichert.</div>';
+    const message = ({idle:"Wochenrhythmen wurden noch nicht geladen.",loading:"Wochenrhythmen werden geladen …",auth:"Wochenrhythmen sind erst nach dem Freischalten der Gildenleitung sichtbar.",error:"Wochenrhythmen konnten nicht geladen werden. Bitte erneut aktualisieren.",loaded:"Keine aktiven Wochenrhythmen vorhanden."})[raidHelperSchedulesState];
+    box.innerHTML = '<div class="muted">' + escapeHtml(message) + '</div>';
     return;
   }
   box.innerHTML = activeSchedules.map(schedule => {
