@@ -68,15 +68,17 @@
     const section=document.createElement('section');
     section.className='start-function-search';
     section.setAttribute('aria-label','Funktionen suchen');
-    section.innerHTML='<form role="search"><label for="startFunctionSearch">Was möchtest du machen?</label><div class="start-search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="startFunctionSearch" type="search" autocomplete="off" placeholder="z. B. Charakter oder Twink hinzufügen" aria-controls="startSearchResults"><button type="submit">Suchen</button></div></form><div id="startSearchResults" class="start-search-results" hidden></div><p class="start-search-status" role="status" aria-live="polite"></p>';
+    section.innerHTML='<form role="search"><label for="startFunctionSearch">Was möchtest du machen?</label><div class="start-search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="startFunctionSearch" type="search" autocomplete="off" placeholder="Funktion, Raid, Itemname oder Item-ID" aria-controls="startSearchResults"><button type="submit">Suchen</button></div></form><div id="startSearchResults" class="start-search-results" hidden></div><p class="start-search-status" role="status" aria-live="polite"></p>';
     header.after(section);
-    if(management){section.classList.add('management-function-search');section.querySelector('input').placeholder='z. B. Wochenrhythmen, Raid erstellen oder Spielerlogins';}
+    if(management){section.classList.add('management-function-search');section.querySelector('input').placeholder='Verwaltung, Raid, Itemname oder Item-ID';}
     const back=document.createElement('button');back.type='button';back.className='start-search-back';back.textContent='← Zurück zu den Raids';if(!management)section.append(back);back.addEventListener('click',()=>{document.body.classList.remove('start-search-open');goHomeView();});
     const activate=entry=>{if(!management)document.body.classList.add('start-search-open');entry[3]();};
     const input=section.querySelector('input'),results=section.querySelector('#startSearchResults'),status=section.querySelector('[role="status"]');
-    let matches=[];
-    const close=()=>{results.hidden=true;status.textContent='';};
+    let matches=[], itemTimer, itemRequest, generation=0;
+    const close=()=>{generation++;clearTimeout(itemTimer);itemRequest?.abort();results.hidden=true;status.textContent='';};
     const render=()=>{
+      const current=++generation;clearTimeout(itemTimer);itemRequest?.abort();
+
       const tokens=normal(input.value).split(/\s+/).filter(word=>word&&!['ich','mochte','will','einen','ein','eine','meinen','wie','kann','man','und','oder','zu'].includes(word));
       const available=[...entries,...raidEntries()];
       matches=tokens.length?available.filter(entry=>tokens.every(token=>normal(entry.slice(0,3).join(' ')).includes(token))):entries.slice(0,5);
@@ -87,12 +89,33 @@
         title.textContent=entry[0];detail.textContent=entry[1];button.append(title,detail);
         button.addEventListener('click',()=>{close();activate(entry);});results.append(button);
       });
+      if(input.value.trim().length>=2 && window.GuildLootItems){
+        const group=document.createElement('div');group.className='start-search-items';
+        const heading=document.createElement('strong');heading.textContent='Items · gesamte Datenbank';group.append(heading);
+        const note=document.createElement('p');note.textContent='Items werden gesucht …';group.append(note);results.append(group);
+        const term=input.value.trim();
+        itemTimer=setTimeout(async()=>{
+          itemRequest=new AbortController();
+          try{
+            const data=await GuildLootItems.search(term,itemRequest.signal);
+            if(current!==generation)return;
+            note.textContent=data.items.length?`${data.total} ${data.total===1?'Item':'Items'} gefunden${data.total>data.items.length?' · die besten 25 Treffer werden angezeigt':''}`:'Keine passenden Items gefunden.';
+            data.items.forEach(item=>{
+              const button=document.createElement('button');button.type='button';
+              const title=document.createElement('strong'),detail=document.createElement('span');title.textContent=item.name;
+              detail.textContent=[GuildLootItems.origins(item),item.itemId?`ID ${item.itemId}`:'','Tooltip öffnen'].filter(Boolean).join(' · ');
+              button.append(title,detail);button.addEventListener('click',()=>{close();GuildLootItems.open(item,input);});group.append(button);
+            });
+            status.textContent=`${matches.length} ${matches.length===1?'Funktion':'Funktionen'}, ${data.total} ${data.total===1?'Item':'Items'} gefunden.`;
+          }catch(error){if(current!==generation||error.name==='AbortError')return;note.textContent='Itemsuche derzeit nicht erreichbar. Bitte erneut suchen.';}
+        },250);
+      }
       results.hidden=false;
       status.textContent=matches.length?`${matches.length} ${matches.length===1?'passende Funktion':'passende Funktionen'}`:(management?'Keine passende Funktion. Versuche „Wochenrhythmen“, „Spieler“ oder „Raid erstellen“.':'Keine passende Funktion. Versuche „Twink“, „Prio Naxx“ oder „Raid erstellen“.');
     };
     document.addEventListener('start-raids-updated',()=>{if(!results.hidden)render();});
     input.addEventListener('input',render);input.addEventListener('focus',render);
-    section.querySelector('form').addEventListener('submit',event=>{event.preventDefault();render();if(matches.length){close();activate(matches[0]);}});
+    section.querySelector('form').addEventListener('submit',event=>{event.preventDefault();render();});
     section.addEventListener('keydown',event=>{
       if(event.key==='Escape'){close();input.focus();close();event.preventDefault();}
       if(event.key==='ArrowDown'||event.key==='ArrowUp'){

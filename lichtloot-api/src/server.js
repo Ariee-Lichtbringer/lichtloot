@@ -1,3 +1,4 @@
+import { searchLootCatalog } from "./item-search.js";
 import {queueBossTokenNotice} from "./boss-token-notices.js";
 import {createWclAttendanceStore} from "./wcl-attendance-store.js";
 import {createCalendarPosts} from "./calendar-posts.js";
@@ -30927,6 +30928,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const onyBackfill = await applyOnyLootMetadataBackfillOnce();
       const mcCoreFelclothPattern = await applyMcCoreFelclothBagPatternCorrectionOnce();
       return res.json({ ...metadata, onyBackfill, mcCoreFelclothPattern, guild: guild.slug });
+    }
+
+    if (action === "searchLootItems") {
+      return res.json(await searchLootCatalog(query, req.query, normalizeLootItemForApi));
     }
 
     if (action === "getLootItems" || action === "guildGetLootItems") {
