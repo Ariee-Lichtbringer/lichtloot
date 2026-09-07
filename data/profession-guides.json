@@ -1,0 +1,4010 @@
+{
+  "version": "classic-era-1-300",
+  "checkedAt": "2026-09-07",
+  "professions": [
+    {
+      "id": "alchemy",
+      "name": "Alchemie",
+      "icon": "🧪",
+      "aliases": "alchi alchemy tränke tranke elixiere kräuter kraeuter",
+      "kind": "craft",
+      "partner": "Kräuterkunde",
+      "intro": "Laborbedarf beim Händler kaufen. Heiltränke aus dem ersten Abschnitt für den nächsten aufheben.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 60,
+          "recipe": {
+            "type": "item",
+            "id": 118,
+            "name": "Schwacher Heiltrank",
+            "englishName": "Minor Healing Potion"
+          },
+          "crafts": 65,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2447,
+              "name": "Friedensblume",
+              "quantity": 65,
+              "englishName": "Peacebloom"
+            },
+            {
+              "type": "item",
+              "id": 765,
+              "name": "Silberblatt",
+              "quantity": 65,
+              "englishName": "Silverleaf"
+            },
+            {
+              "type": "item",
+              "id": 3371,
+              "name": "Leere Phiole",
+              "quantity": 65,
+              "englishName": "Empty Vial"
+            }
+          ]
+        },
+        {
+          "from": 60,
+          "to": 110,
+          "recipe": {
+            "type": "item",
+            "id": 858,
+            "name": "Geringer Heiltrank",
+            "englishName": "Lesser Healing Potion"
+          },
+          "crafts": 65,
+          "materials": [
+            {
+              "type": "item",
+              "id": 118,
+              "name": "Schwacher Heiltrank",
+              "quantity": 65,
+              "englishName": "Minor Healing Potion"
+            },
+            {
+              "type": "item",
+              "id": 2450,
+              "name": "Wilddornrose",
+              "quantity": 65,
+              "englishName": "Briarthorn"
+            }
+          ]
+        },
+        {
+          "from": 110,
+          "to": 140,
+          "recipe": {
+            "type": "spell",
+            "id": 3447,
+            "name": "Heiltrank",
+            "englishName": "Healing Potion"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2453,
+              "name": "Beulengras",
+              "quantity": 35,
+              "englishName": "Bruiseweed"
+            },
+            {
+              "type": "item",
+              "id": 2450,
+              "name": "Wilddornrose",
+              "quantity": 35,
+              "englishName": "Briarthorn"
+            },
+            {
+              "type": "item",
+              "id": 3372,
+              "name": "Verbleite Phiole",
+              "quantity": 35,
+              "englishName": "Leaded Vial"
+            }
+          ]
+        },
+        {
+          "from": 140,
+          "to": 155,
+          "recipe": {
+            "type": "item",
+            "id": 3385,
+            "name": "Geringer Manatrank",
+            "englishName": "Lesser Mana Potion"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 785,
+              "name": "Maguskönigskraut",
+              "quantity": 20,
+              "englishName": "Mageroyal"
+            },
+            {
+              "type": "item",
+              "id": 3820,
+              "name": "Würgetang",
+              "quantity": 20,
+              "englishName": "Stranglekelp"
+            },
+            {
+              "type": "item",
+              "id": 3371,
+              "name": "Leere Phiole",
+              "quantity": 20,
+              "englishName": "Empty Vial"
+            }
+          ]
+        },
+        {
+          "from": 155,
+          "to": 185,
+          "recipe": {
+            "type": "item",
+            "id": 1710,
+            "name": "Großer Heiltrank",
+            "englishName": "Greater Healing Potion"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3357,
+              "name": "Lebenswurz",
+              "quantity": 35,
+              "englishName": "Liferoot"
+            },
+            {
+              "type": "item",
+              "id": 3356,
+              "name": "Königsblut",
+              "quantity": 35,
+              "englishName": "Kingsblood"
+            },
+            {
+              "type": "item",
+              "id": 3372,
+              "name": "Verbleite Phiole",
+              "quantity": 35,
+              "englishName": "Leaded Vial"
+            }
+          ]
+        },
+        {
+          "from": 185,
+          "to": 210,
+          "recipe": {
+            "type": "item",
+            "id": 8949,
+            "name": "Elixier der Beweglichkeit",
+            "englishName": "Elixir of Agility"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3820,
+              "name": "Würgetang",
+              "quantity": 30,
+              "englishName": "Stranglekelp"
+            },
+            {
+              "type": "item",
+              "id": 3821,
+              "name": "Golddorn",
+              "quantity": 30,
+              "englishName": "Goldthorn"
+            },
+            {
+              "type": "item",
+              "id": 3372,
+              "name": "Verbleite Phiole",
+              "quantity": 30,
+              "englishName": "Leaded Vial"
+            }
+          ]
+        },
+        {
+          "from": 210,
+          "to": 215,
+          "recipe": {
+            "type": "item",
+            "id": 8951,
+            "name": "Elixier der großen Verteidigung",
+            "englishName": "Elixir of Greater Defense"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3355,
+              "name": "Wildstahlblume",
+              "quantity": 5,
+              "englishName": "Wild Steelbloom"
+            },
+            {
+              "type": "item",
+              "id": 3821,
+              "name": "Golddorn",
+              "quantity": 5,
+              "englishName": "Goldthorn"
+            },
+            {
+              "type": "item",
+              "id": 3372,
+              "name": "Verbleite Phiole",
+              "quantity": 5,
+              "englishName": "Leaded Vial"
+            }
+          ]
+        },
+        {
+          "from": 215,
+          "to": 230,
+          "recipe": {
+            "type": "item",
+            "id": 3928,
+            "name": "Überragender Heiltrank",
+            "englishName": "Superior Healing Potion"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 8838,
+              "name": "Sonnengras",
+              "quantity": 15,
+              "englishName": "Sungrass"
+            },
+            {
+              "type": "item",
+              "id": 3358,
+              "name": "Khadgars Schnurrbart",
+              "quantity": 15,
+              "englishName": "Khadgar's Whisker"
+            },
+            {
+              "type": "item",
+              "id": 8925,
+              "name": "Kristallphiole",
+              "quantity": 15,
+              "englishName": "Crystal Vial"
+            }
+          ]
+        },
+        {
+          "from": 230,
+          "to": 265,
+          "recipe": {
+            "type": "item",
+            "id": 9154,
+            "name": "Elixier der Untotenentdeckung",
+            "englishName": "Elixir of Detect Undead"
+          },
+          "crafts": 45,
+          "materials": [
+            {
+              "type": "item",
+              "id": 8836,
+              "name": "Arthas' Tränen",
+              "quantity": 45,
+              "englishName": "Arthas' Tears"
+            },
+            {
+              "type": "item",
+              "id": 8925,
+              "name": "Kristallphiole",
+              "quantity": 45,
+              "englishName": "Crystal Vial"
+            }
+          ]
+        },
+        {
+          "from": 265,
+          "to": 285,
+          "recipe": {
+            "type": "item",
+            "id": 13443,
+            "name": "Überragender Manatrank",
+            "englishName": "Superior Mana Potion"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 8838,
+              "name": "Sonnengras",
+              "quantity": 60,
+              "englishName": "Sungrass"
+            },
+            {
+              "type": "item",
+              "id": 8839,
+              "name": "Blindkraut",
+              "quantity": 60,
+              "englishName": "Blindweed"
+            },
+            {
+              "type": "item",
+              "id": 8925,
+              "name": "Kristallphiole",
+              "quantity": 30,
+              "englishName": "Crystal Vial"
+            }
+          ]
+        },
+        {
+          "from": 285,
+          "to": 300,
+          "recipe": {
+            "type": "item",
+            "id": 13446,
+            "name": "Erheblicher Heiltrank",
+            "englishName": "Major Healing Potion"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 13464,
+              "name": "Goldener Sansam",
+              "quantity": 40,
+              "englishName": "Golden Sansam"
+            },
+            {
+              "type": "item",
+              "id": 13465,
+              "name": "Bergsilberweisling",
+              "quantity": 20,
+              "englishName": "Mountain Silversage"
+            },
+            {
+              "type": "item",
+              "id": 8925,
+              "name": "Kristallphiole",
+              "quantity": 20,
+              "englishName": "Crystal Vial"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Ainethil in Darnassus (Allianz) oder Doktor Herbert Halsey in Unterstadt (Horde)."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Kylanna Windwhisper in Feralas (Allianz) oder Rogvar in Stonard (Horde)."
+        },
+        {
+          "skill": 265,
+          "text": "Überragender Manatrank: Rezept bei Ulthir in Darnassus oder Algernon in Unterstadt. Begrenzter Vorrat."
+        },
+        {
+          "skill": 285,
+          "text": "Erheblicher Heiltrank: Rezept bei Evie Whirlbrew in der Ewigen Warte, Winterquell. Begrenzter Vorrat."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/alchemy-leveling-guide-classic-wow"
+    },
+    {
+      "id": "blacksmithing",
+      "name": "Schmiedekunst",
+      "icon": "⚒️",
+      "aliases": "schmied schmieden blacksmithing schmiede",
+      "kind": "craft",
+      "partner": "Bergbau",
+      "intro": "Schmiedehammer und Amboss nötig. Dieser Weg nutzt ab 235 Mithrilhelme statt eines zufälligen Sporen-Rezeptdrops.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 30,
+          "recipe": {
+            "type": "item",
+            "id": 2862,
+            "name": "Rauer Wetzstein",
+            "englishName": "Rough Sharpening Stone"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2835,
+              "name": "Rauer Stein",
+              "quantity": 40,
+              "englishName": "Rough Stone"
+            }
+          ]
+        },
+        {
+          "from": 30,
+          "to": 65,
+          "recipe": {
+            "type": "item",
+            "id": 3470,
+            "name": "Rauer Schleifstein",
+            "englishName": "Rough Grinding Stone"
+          },
+          "crafts": 55,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2835,
+              "name": "Rauer Stein",
+              "quantity": 110,
+              "englishName": "Rough Stone"
+            }
+          ]
+        },
+        {
+          "from": 65,
+          "to": 75,
+          "recipe": {
+            "type": "item",
+            "id": 2863,
+            "name": "Grober Wetzstein",
+            "englishName": "Coarse Sharpening Stone"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2836,
+              "name": "Grober Stein",
+              "quantity": 25,
+              "englishName": "Coarse Stone"
+            }
+          ]
+        },
+        {
+          "from": 75,
+          "to": 90,
+          "recipe": {
+            "type": "item",
+            "id": 3478,
+            "name": "Grober Schleifstein",
+            "englishName": "Coarse Grinding Stone"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2836,
+              "name": "Grober Stein",
+              "quantity": 70,
+              "englishName": "Coarse Stone"
+            }
+          ]
+        },
+        {
+          "from": 90,
+          "to": 100,
+          "recipe": {
+            "type": "item",
+            "id": 2857,
+            "name": "Runenverzierter Kupfergürtel",
+            "englishName": "Runed Copper Belt"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2840,
+              "name": "Kupferbarren",
+              "quantity": 100,
+              "englishName": "Copper Bar"
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 105,
+          "recipe": {
+            "type": "item",
+            "id": 6338,
+            "name": "Silberrute",
+            "englishName": "Silver Rod"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2842,
+              "name": "Silberbarren",
+              "quantity": 5,
+              "englishName": "Silver Bar"
+            },
+            {
+              "type": "item",
+              "id": 3470,
+              "name": "Rauer Schleifstein",
+              "quantity": 10,
+              "englishName": "Rough Grinding Stone"
+            }
+          ]
+        },
+        {
+          "from": 105,
+          "to": 110,
+          "recipe": {
+            "type": "item",
+            "id": 2857,
+            "name": "Runenverzierter Kupfergürtel",
+            "englishName": "Runed Copper Belt"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2840,
+              "name": "Kupferbarren",
+              "quantity": 50,
+              "englishName": "Copper Bar"
+            }
+          ]
+        },
+        {
+          "from": 110,
+          "to": 125,
+          "recipe": {
+            "type": "item",
+            "id": 2865,
+            "name": "Raue bronzene Gamaschen",
+            "englishName": "Rough Bronze Leggings"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2841,
+              "name": "Bronzebarren",
+              "quantity": 90,
+              "englishName": "Bronze Bar"
+            }
+          ]
+        },
+        {
+          "from": 125,
+          "to": 140,
+          "recipe": {
+            "type": "item",
+            "id": 3486,
+            "name": "Schwerer Schleifstein",
+            "englishName": "Heavy Grinding Stone"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2838,
+              "name": "Schwerer Stein",
+              "quantity": 105,
+              "englishName": "Heavy Stone"
+            }
+          ]
+        },
+        {
+          "from": 140,
+          "to": 150,
+          "recipe": {
+            "type": "spell",
+            "id": 2672,
+            "name": "Gemusterte bronzene Armschienen",
+            "englishName": "Patterned Bronze Bracers"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2841,
+              "name": "Bronzebarren",
+              "quantity": 50,
+              "englishName": "Bronze Bar"
+            },
+            {
+              "type": "item",
+              "id": 3478,
+              "name": "Grober Schleifstein",
+              "quantity": 20,
+              "englishName": "Coarse Grinding Stone"
+            }
+          ]
+        },
+        {
+          "from": 150,
+          "to": 155,
+          "recipe": {
+            "type": "item",
+            "id": 11128,
+            "name": "Goldrute",
+            "englishName": "Golden Rod"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3577,
+              "name": "Goldbarren",
+              "quantity": 5,
+              "englishName": "Gold Bar"
+            },
+            {
+              "type": "item",
+              "id": 3478,
+              "name": "Grober Schleifstein",
+              "quantity": 10,
+              "englishName": "Coarse Grinding Stone"
+            }
+          ]
+        },
+        {
+          "from": 155,
+          "to": 165,
+          "recipe": {
+            "type": "spell",
+            "id": 3506,
+            "name": "Grüne Eisengamaschen",
+            "englishName": "Green Iron Leggings"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3575,
+              "name": "Eisenbarren",
+              "quantity": 80,
+              "englishName": "Iron Bar"
+            },
+            {
+              "type": "item",
+              "id": 3486,
+              "name": "Schwerer Schleifstein",
+              "quantity": 10,
+              "englishName": "Heavy Grinding Stone"
+            },
+            {
+              "type": "item",
+              "id": 2605,
+              "name": "Grüner Farbstoff",
+              "quantity": 10,
+              "englishName": "Green Dye"
+            }
+          ]
+        },
+        {
+          "from": 165,
+          "to": 190,
+          "recipe": {
+            "type": "spell",
+            "id": 3501,
+            "name": "Grüne Eisenarmschienen",
+            "englishName": "Green Iron Bracers"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3575,
+              "name": "Eisenbarren",
+              "quantity": 150,
+              "englishName": "Iron Bar"
+            },
+            {
+              "type": "item",
+              "id": 2605,
+              "name": "Grüner Farbstoff",
+              "quantity": 25,
+              "englishName": "Green Dye"
+            }
+          ]
+        },
+        {
+          "from": 190,
+          "to": 200,
+          "recipe": {
+            "type": "spell",
+            "id": 7223,
+            "name": "Goldene Schuppenarmschienen",
+            "englishName": "Golden Scale Bracers"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3859,
+              "name": "Stahlbarren",
+              "quantity": 50,
+              "englishName": "Steel Bar"
+            },
+            {
+              "type": "item",
+              "id": 3486,
+              "name": "Schwerer Schleifstein",
+              "quantity": 20,
+              "englishName": "Heavy Grinding Stone"
+            }
+          ]
+        },
+        {
+          "from": 200,
+          "to": 210,
+          "recipe": {
+            "type": "spell",
+            "id": 9920,
+            "name": "Robuster Schleifstein",
+            "englishName": "Solid Grinding Stone"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 7912,
+              "name": "Robuster Stein",
+              "quantity": 120,
+              "englishName": "Solid Stone"
+            }
+          ]
+        },
+        {
+          "from": 210,
+          "to": 225,
+          "recipe": {
+            "type": "spell",
+            "id": 9928,
+            "name": "Schwere Mithrilstulpen",
+            "englishName": "Heavy Mithril Gauntlet"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 90,
+              "englishName": "Mithril Bar"
+            },
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 60,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 225,
+          "to": 235,
+          "recipe": {
+            "type": "spell",
+            "id": 9935,
+            "name": "Stahlplattenhelm",
+            "englishName": "Steel Plate Helm"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3859,
+              "name": "Stahlbarren",
+              "quantity": 140,
+              "englishName": "Steel Bar"
+            },
+            {
+              "type": "spell",
+              "id": 9920,
+              "name": "Robuster Schleifstein",
+              "quantity": 10,
+              "englishName": "Solid Grinding Stone"
+            }
+          ]
+        },
+        {
+          "from": 235,
+          "to": 250,
+          "recipe": {
+            "type": "spell",
+            "id": 9961,
+            "name": "Mithrilhelmkappe",
+            "englishName": "Mithril Coif"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 150,
+              "englishName": "Mithril Bar"
+            },
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 90,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 250,
+          "to": 260,
+          "recipe": {
+            "type": "item",
+            "id": 12404,
+            "name": "Verdichteter Wetzstein",
+            "englishName": "Dense Sharpening Stone"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12365,
+              "name": "Verdichteter Stein",
+              "quantity": 20,
+              "englishName": "Dense Stone"
+            }
+          ]
+        },
+        {
+          "from": 260,
+          "to": 265,
+          "recipe": {
+            "type": "spell",
+            "id": 9968,
+            "name": "Schwere Mithrilstiefel",
+            "englishName": "Heavy Mithril Boots"
+          },
+          "crafts": 8,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 112,
+              "englishName": "Mithril Bar"
+            },
+            {
+              "type": "item",
+              "id": 4304,
+              "name": "Dickes Leder",
+              "quantity": 32,
+              "englishName": "Thick Leather"
+            }
+          ]
+        },
+        {
+          "from": 265,
+          "to": 270,
+          "recipe": {
+            "type": "spell",
+            "id": 16647,
+            "name": "Imperialer Plattengürtel",
+            "englishName": "Imperial Plate Belt"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12359,
+              "name": "Thoriumbarren",
+              "quantity": 110,
+              "englishName": "Thorium Bar"
+            },
+            {
+              "type": "item",
+              "id": 8170,
+              "name": "Unverwüstliches Leder",
+              "quantity": 30,
+              "englishName": "Rugged Leather"
+            },
+            {
+              "type": "item",
+              "id": 7909,
+              "name": "Aquamarin",
+              "quantity": 5,
+              "englishName": "Aquamarine"
+            }
+          ]
+        },
+        {
+          "from": 270,
+          "to": 295,
+          "recipe": {
+            "type": "spell",
+            "id": 16649,
+            "name": "Imperiale Plattenarmschienen",
+            "englishName": "Imperial Plate Bracers"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12359,
+              "name": "Thoriumbarren",
+              "quantity": 500,
+              "englishName": "Thorium Bar"
+            },
+            {
+              "type": "item",
+              "id": 7910,
+              "name": "Sternrubin",
+              "quantity": 25,
+              "englishName": "Star Ruby"
+            }
+          ]
+        },
+        {
+          "from": 295,
+          "to": 300,
+          "recipe": {
+            "type": "spell",
+            "id": 16657,
+            "name": "Imperiale Plattenstiefel",
+            "englishName": "Imperial Plate Boots"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12359,
+              "name": "Thoriumbarren",
+              "quantity": 170,
+              "englishName": "Thorium Bar"
+            },
+            {
+              "type": "item",
+              "id": 7910,
+              "name": "Sternrubin",
+              "quantity": 5,
+              "englishName": "Star Ruby"
+            },
+            {
+              "type": "item",
+              "id": 7909,
+              "name": "Aquamarin",
+              "quantity": 5,
+              "englishName": "Aquamarine"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Bengus Deepforge in Eisenschmiede (Allianz) oder Saru Steelfury in Orgrimmar (Horde)."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Brikk Keencraft in Beutebucht."
+        },
+        {
+          "skill": 265,
+          "text": "Imperiale Plattenrezepte: Quests von Derotain Mudsipper in Gadgetzan, ab Charakterstufe 50. Zusätzlich 20 Thoriumbarren für den Gürtelplan, 20 für Armschienen und 40 für Stiefel einplanen. Diese Rezeptkosten stehen nicht in der Herstellungsliste."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/blacksmithing-leveling-guide-classic-wow"
+    },
+    {
+      "id": "enchanting",
+      "name": "Verzauberkunst",
+      "icon": "✨",
+      "aliases": "verzaubern verzauberung vz enchanting",
+      "kind": "craft",
+      "partner": "Schneiderei",
+      "intro": "Verzauberungen können zum Skillen wiederholt auf denselben passenden Gegenstand angewendet werden. Stäbe behalten.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 2,
+          "recipe": {
+            "type": "item",
+            "id": 6218,
+            "name": "Runenverzierte Kupferrute",
+            "englishName": "Runed Copper Rod"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 6217,
+              "name": "Kupferrute",
+              "quantity": 1,
+              "englishName": "Copper Rod"
+            },
+            {
+              "type": "item",
+              "id": 10940,
+              "name": "Seltsamer Staub",
+              "quantity": 1,
+              "englishName": "Strange Dust"
+            },
+            {
+              "type": "item",
+              "id": 10938,
+              "name": "Geringe Magieessenz",
+              "quantity": 1,
+              "englishName": "Lesser Magic Essence"
+            }
+          ]
+        },
+        {
+          "from": 2,
+          "to": 50,
+          "recipe": {
+            "type": "spell",
+            "id": 7418,
+            "name": "Armschiene - Schwache Gesundheit",
+            "englishName": "Enchant Bracer: Minor Health"
+          },
+          "crafts": 48,
+          "materials": [
+            {
+              "type": "item",
+              "id": 10940,
+              "name": "Seltsamer Staub",
+              "quantity": 48,
+              "englishName": "Strange Dust"
+            }
+          ]
+        },
+        {
+          "from": 50,
+          "to": 90,
+          "recipe": {
+            "type": "spell",
+            "id": 7418,
+            "name": "Armschiene - Schwache Gesundheit",
+            "englishName": "Enchant Bracer: Minor Health"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 10940,
+              "name": "Seltsamer Staub",
+              "quantity": 40,
+              "englishName": "Strange Dust"
+            }
+          ]
+        },
+        {
+          "from": 90,
+          "to": 100,
+          "recipe": {
+            "type": "spell",
+            "id": 7457,
+            "name": "Armschiene - Schwache Ausdauer",
+            "englishName": "Enchant Bracer: Minor Stamina"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 10940,
+              "name": "Seltsamer Staub",
+              "quantity": 30,
+              "englishName": "Strange Dust"
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 101,
+          "recipe": {
+            "type": "item",
+            "id": 6339,
+            "name": "Runenverzierte Silberrute",
+            "englishName": "Runed Silver Rod"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 6338,
+              "name": "Silberrute",
+              "quantity": 1,
+              "englishName": "Silver Rod"
+            },
+            {
+              "type": "item",
+              "id": 10940,
+              "name": "Seltsamer Staub",
+              "quantity": 6,
+              "englishName": "Strange Dust"
+            },
+            {
+              "type": "item",
+              "id": 10939,
+              "name": "Große Magieessenz",
+              "quantity": 3,
+              "englishName": "Greater Magic Essence"
+            },
+            {
+              "type": "item",
+              "id": 1210,
+              "name": "Schattenedelstein",
+              "quantity": 1,
+              "englishName": "Shadowgem"
+            }
+          ]
+        },
+        {
+          "from": 101,
+          "to": 110,
+          "recipe": {
+            "type": "item",
+            "id": 11288,
+            "name": "Großer Magiezauberstab",
+            "englishName": "Greater Magic Wand"
+          },
+          "crafts": 9,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4470,
+              "name": "Einfaches Holz",
+              "quantity": 9,
+              "englishName": "Simple Wood"
+            },
+            {
+              "type": "item",
+              "id": 10939,
+              "name": "Große Magieessenz",
+              "quantity": 9,
+              "englishName": "Greater Magic Essence"
+            }
+          ]
+        },
+        {
+          "from": 110,
+          "to": 135,
+          "recipe": {
+            "type": "spell",
+            "id": 13419,
+            "name": "Umhang - Schwache Beweglichkeit",
+            "englishName": "Enchant Cloak: Minor Agility"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 10998,
+              "name": "Geringe Astralessenz",
+              "quantity": 25,
+              "englishName": "Lesser Astral Essence"
+            }
+          ]
+        },
+        {
+          "from": 135,
+          "to": 155,
+          "recipe": {
+            "type": "spell",
+            "id": 13501,
+            "name": "Armschiene - Geringe Ausdauer",
+            "englishName": "Enchant Bracer - Lesser Stamina"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11083,
+              "name": "Seelenstaub",
+              "quantity": 40,
+              "englishName": "Soul Dust"
+            }
+          ]
+        },
+        {
+          "from": 155,
+          "to": 156,
+          "recipe": {
+            "type": "item",
+            "id": 11130,
+            "name": "Runenverzierte Goldrute",
+            "englishName": "Runed Golden Rod"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11128,
+              "name": "Goldrute",
+              "quantity": 1,
+              "englishName": "Golden Rod"
+            },
+            {
+              "type": "item",
+              "id": 5500,
+              "name": "Schillernde Perle",
+              "quantity": 1,
+              "englishName": "Iridescent Pearl"
+            },
+            {
+              "type": "item",
+              "id": 11082,
+              "name": "Große Astralessenz",
+              "quantity": 2,
+              "englishName": "Greater Astral Essence"
+            },
+            {
+              "type": "item",
+              "id": 11083,
+              "name": "Seelenstaub",
+              "quantity": 2,
+              "englishName": "Soul Dust"
+            }
+          ]
+        },
+        {
+          "from": 156,
+          "to": 185,
+          "recipe": {
+            "type": "spell",
+            "id": 13536,
+            "name": "Armschiene - Geringe Stärke",
+            "englishName": "Enchant Bracer - Lesser Strength"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11083,
+              "name": "Seelenstaub",
+              "quantity": 80,
+              "englishName": "Soul Dust"
+            }
+          ]
+        },
+        {
+          "from": 185,
+          "to": 200,
+          "recipe": {
+            "type": "spell",
+            "id": 13661,
+            "name": "Armschiene - Stärke",
+            "englishName": "Enchant Bracer: Strength"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 15,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 200,
+          "to": 201,
+          "recipe": {
+            "type": "item",
+            "id": 11145,
+            "name": "Runenverzierte Echtsilberrute",
+            "englishName": "Runed Truesilver Rod"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11144,
+              "name": "Echtsilberrute",
+              "quantity": 1,
+              "englishName": "Truesilver Rod"
+            },
+            {
+              "type": "item",
+              "id": 7971,
+              "name": "Schwarze Perle",
+              "quantity": 1,
+              "englishName": "Black Pearl"
+            },
+            {
+              "type": "item",
+              "id": 11135,
+              "name": "Große Mystikeressenz",
+              "quantity": 2,
+              "englishName": "Greater Mystic Essence"
+            },
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 2,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 201,
+          "to": 220,
+          "recipe": {
+            "type": "spell",
+            "id": 13661,
+            "name": "Armschiene - Stärke",
+            "englishName": "Enchant Bracer: Strength"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 35,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 220,
+          "to": 225,
+          "recipe": {
+            "type": "spell",
+            "id": 13746,
+            "name": "Umhang - Große Verteidigung",
+            "englishName": "Enchant Cloak: Greater Defense"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 15,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 225,
+          "to": 230,
+          "recipe": {
+            "type": "spell",
+            "id": 13815,
+            "name": "Handschuhe - Beweglichkeit",
+            "englishName": "Enchant Gloves: Agility"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11174,
+              "name": "Geringe Netheressenz",
+              "quantity": 5,
+              "englishName": "Lesser Nether Essence"
+            },
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 5,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 230,
+          "to": 235,
+          "recipe": {
+            "type": "spell",
+            "id": 13836,
+            "name": "Stiefel - Ausdauer",
+            "englishName": "Enchant Boots - Stamina"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 25,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 235,
+          "to": 250,
+          "recipe": {
+            "type": "spell",
+            "id": 13858,
+            "name": "Brust - Überragende Gesundheit",
+            "englishName": "Enchant Chest: Superior Health"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11137,
+              "name": "Visionenstaub",
+              "quantity": 150,
+              "englishName": "Vision Dust"
+            }
+          ]
+        },
+        {
+          "from": 250,
+          "to": 265,
+          "recipe": {
+            "type": "spell",
+            "id": 25127,
+            "name": "Geringes Manaöl",
+            "englishName": "Lesser Mana Oil"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11176,
+              "name": "Traumstaub",
+              "quantity": 60,
+              "englishName": "Dream Dust"
+            },
+            {
+              "type": "item",
+              "id": 8831,
+              "name": "Lila Lotus",
+              "quantity": 40,
+              "englishName": "Purple Lotus"
+            },
+            {
+              "type": "item",
+              "id": 8925,
+              "name": "Kristallphiole",
+              "quantity": 20,
+              "englishName": "Crystal Vial"
+            }
+          ]
+        },
+        {
+          "from": 265,
+          "to": 294,
+          "recipe": {
+            "type": "spell",
+            "id": 20017,
+            "name": "Schild - Große Ausdauer",
+            "englishName": "Enchant Shield: Greater Stamina"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 11176,
+              "name": "Traumstaub",
+              "quantity": 300,
+              "englishName": "Dream Dust"
+            }
+          ]
+        },
+        {
+          "from": 294,
+          "to": 295,
+          "recipe": {
+            "type": "item",
+            "id": 16207,
+            "name": "Runenverzierte Arkanitrute",
+            "englishName": "Runed Arcanite Rod"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 16206,
+              "name": "Arkanitrute",
+              "quantity": 1,
+              "englishName": "Arcanite Rod"
+            },
+            {
+              "type": "item",
+              "id": 13926,
+              "name": "Goldene Perle",
+              "quantity": 1,
+              "englishName": "Golden Pearl"
+            },
+            {
+              "type": "item",
+              "id": 16204,
+              "name": "Illusionsstaub",
+              "quantity": 10,
+              "englishName": "Illusion Dust"
+            },
+            {
+              "type": "item",
+              "id": 16203,
+              "name": "Große ewige Essenz",
+              "quantity": 4,
+              "englishName": "Greater Eternal Essence"
+            },
+            {
+              "type": "item",
+              "id": 14343,
+              "name": "Kleiner glänzender Splitter",
+              "quantity": 4,
+              "englishName": "Small Brilliant Shard"
+            },
+            {
+              "type": "item",
+              "id": 14344,
+              "name": "Großer glänzender Splitter",
+              "quantity": 2,
+              "englishName": "Large Brilliant Shard"
+            }
+          ]
+        },
+        {
+          "from": 295,
+          "to": 300,
+          "recipe": {
+            "type": "spell",
+            "id": 20015,
+            "name": "Umhang - Überragende Verteidigung",
+            "englishName": "Enchant Cloak: Superior Defense"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 16204,
+              "name": "Illusionsstaub",
+              "quantity": 40,
+              "englishName": "Illusion Dust"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 110,
+          "text": "Umhang – Schwache Beweglichkeit und Armschiene – Geringe Stärke: Formeln bei Dalria im Eschental (Allianz) oder Kulwia im Steinkrallengebirge (Horde). Begrenzter Vorrat."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Kitta Firewind im Turm von Azora, Wald von Elwynn (Allianz), oder Hgarth im Sonnenfels, Steinkrallengebirge (Horde)."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Annora in Uldaman. Gruppe mitnehmen und alle benötigten Rezepte vor dem Verlassen lernen."
+        },
+        {
+          "skill": 250,
+          "text": "Geringes Manaöl: Formel bei Kania in der Burg Cenarius, Silithus. Dieser Guide setzt die freigeschalteten Classic-Era-Inhalte voraus."
+        },
+        {
+          "skill": 265,
+          "text": "Schild – Große Ausdauer: Formel bei Mythrin’dir in Darnassus oder Daniel Bartlett in Unterstadt; beim Aufheben gebunden und begrenzter Vorrat."
+        },
+        {
+          "skill": 294,
+          "text": "Runenverzierter Arkanitstab und Umhang – Überragende Verteidigung: beide Formeln bei Lorelae Wintersong in Nachthafen, Mondlichtung."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/enchanting-leveling-guide-classic-wow"
+    },
+    {
+      "id": "engineering",
+      "name": "Ingenieurskunst",
+      "icon": "⚙️",
+      "aliases": "ingenieur ingi ing engineering",
+      "kind": "craft",
+      "partner": "Bergbau",
+      "intro": "Bauteile aufheben: Pulver, Bolzen, Röhren, Auslöser und Gehäuse werden später weiterverarbeitet. Werkzeuge behalten.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 30,
+          "recipe": {
+            "type": "item",
+            "id": 4357,
+            "name": "Raues Sprengpulver",
+            "englishName": "Rough Blasting Powder"
+          },
+          "crafts": 60,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2835,
+              "name": "Rauer Stein",
+              "quantity": 60,
+              "englishName": "Rough Stone"
+            }
+          ]
+        },
+        {
+          "from": 30,
+          "to": 50,
+          "recipe": {
+            "type": "item",
+            "id": 4359,
+            "name": "Eine Hand voll Kupferbolzen",
+            "englishName": "Handful of Copper Bolts"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2840,
+              "name": "Kupferbarren",
+              "quantity": 30,
+              "englishName": "Copper Bar"
+            }
+          ]
+        },
+        {
+          "from": 50,
+          "to": 51,
+          "recipe": {
+            "type": "item",
+            "id": 6219,
+            "name": "Bogenlichtschraubenschlüssel",
+            "englishName": "Arclight Spanner"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2840,
+              "name": "Kupferbarren",
+              "quantity": 6,
+              "englishName": "Copper Bar"
+            }
+          ]
+        },
+        {
+          "from": 51,
+          "to": 75,
+          "recipe": {
+            "type": "item",
+            "id": 4360,
+            "name": "Raue Kupferbombe",
+            "englishName": "Rough Copper Bomb"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2840,
+              "name": "Kupferbarren",
+              "quantity": 30,
+              "englishName": "Copper Bar"
+            },
+            {
+              "type": "item",
+              "id": 4359,
+              "name": "Eine Hand voll Kupferbolzen",
+              "quantity": 30,
+              "englishName": "Handful of Copper Bolts"
+            },
+            {
+              "type": "item",
+              "id": 4357,
+              "name": "Raues Sprengpulver",
+              "quantity": 60,
+              "englishName": "Rough Blasting Powder"
+            },
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 30,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 75,
+          "to": 90,
+          "recipe": {
+            "type": "item",
+            "id": 4364,
+            "name": "Grobes Sprengpulver",
+            "englishName": "Coarse Blasting Powder"
+          },
+          "crafts": 60,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2836,
+              "name": "Grober Stein",
+              "quantity": 60,
+              "englishName": "Coarse Stone"
+            }
+          ]
+        },
+        {
+          "from": 90,
+          "to": 100,
+          "recipe": {
+            "type": "item",
+            "id": 4365,
+            "name": "Grobes Dynamit",
+            "englishName": "Coarse Dynamite"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4364,
+              "name": "Grobes Sprengpulver",
+              "quantity": 60,
+              "englishName": "Coarse Blasting Powder"
+            },
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 20,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 105,
+          "recipe": {
+            "type": "item",
+            "id": 4404,
+            "name": "Silberkontakt",
+            "englishName": "Silver Contact"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2842,
+              "name": "Silberbarren",
+              "quantity": 5,
+              "englishName": "Silver Bar"
+            }
+          ]
+        },
+        {
+          "from": 105,
+          "to": 125,
+          "recipe": {
+            "type": "item",
+            "id": 4371,
+            "name": "Bronzeröhre",
+            "englishName": "Bronze Tube"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2841,
+              "name": "Bronzebarren",
+              "quantity": 50,
+              "englishName": "Bronze Bar"
+            },
+            {
+              "type": "item",
+              "id": 2880,
+              "name": "Schwacher Fluxus",
+              "quantity": 25,
+              "englishName": "Weak Flux"
+            }
+          ]
+        },
+        {
+          "from": 125,
+          "to": 135,
+          "recipe": {
+            "type": "item",
+            "id": 4406,
+            "name": "Standardzielfernrohr",
+            "englishName": "Standard Scope"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4371,
+              "name": "Bronzeröhre",
+              "quantity": 10,
+              "englishName": "Bronze Tube"
+            },
+            {
+              "type": "item",
+              "id": 1206,
+              "name": "Moosachat",
+              "quantity": 10,
+              "englishName": "Moss Agate"
+            }
+          ]
+        },
+        {
+          "from": 135,
+          "to": 150,
+          "recipe": {
+            "type": "item",
+            "id": 4377,
+            "name": "Schweres Sprengpulver",
+            "englishName": "Heavy Blasting Powder"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2838,
+              "name": "Schwerer Stein",
+              "quantity": 30,
+              "englishName": "Heavy Stone"
+            }
+          ]
+        },
+        {
+          "from": 135,
+          "to": 150,
+          "recipe": {
+            "type": "item",
+            "id": 4375,
+            "name": "Surrendes bronzenes Dingsda",
+            "englishName": "Whirring Bronze Gizmo"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2841,
+              "name": "Bronzebarren",
+              "quantity": 30,
+              "englishName": "Bronze Bar"
+            },
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 15,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 150,
+          "to": 160,
+          "recipe": {
+            "type": "item",
+            "id": 4382,
+            "name": "Bronzegerüst",
+            "englishName": "Bronze Framework"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2841,
+              "name": "Bronzebarren",
+              "quantity": 30,
+              "englishName": "Bronze Bar"
+            },
+            {
+              "type": "item",
+              "id": 2319,
+              "name": "Mittleres Leder",
+              "quantity": 15,
+              "englishName": "Medium Leather"
+            },
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 15,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 160,
+          "to": 175,
+          "recipe": {
+            "type": "item",
+            "id": 4384,
+            "name": "Explodierendes Schaf",
+            "englishName": "Explosive Sheep"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4377,
+              "name": "Schweres Sprengpulver",
+              "quantity": 30,
+              "englishName": "Heavy Blasting Powder"
+            },
+            {
+              "type": "item",
+              "id": 4375,
+              "name": "Surrendes bronzenes Dingsda",
+              "quantity": 15,
+              "englishName": "Whirring Bronze Gizmo"
+            },
+            {
+              "type": "item",
+              "id": 4382,
+              "name": "Bronzegerüst",
+              "quantity": 15,
+              "englishName": "Bronze Framework"
+            },
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 30,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 175,
+          "to": 194,
+          "recipe": {
+            "type": "item",
+            "id": 10505,
+            "name": "Robustes Sprengpulver",
+            "englishName": "Solid Blasting Powder"
+          },
+          "crafts": 60,
+          "materials": [
+            {
+              "type": "item",
+              "id": 7912,
+              "name": "Robuster Stein",
+              "quantity": 120,
+              "englishName": "Solid Stone"
+            }
+          ]
+        },
+        {
+          "from": 194,
+          "to": 195,
+          "recipe": {
+            "type": "item",
+            "id": 10498,
+            "name": "Gyromatischer Mikroregler",
+            "englishName": "Gyromatic Micro-Adjustor"
+          },
+          "crafts": 1,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3859,
+              "name": "Stahlbarren",
+              "quantity": 4,
+              "englishName": "Steel Bar"
+            }
+          ]
+        },
+        {
+          "from": 195,
+          "to": 200,
+          "recipe": {
+            "type": "item",
+            "id": 10559,
+            "name": "Mithrilrohr",
+            "englishName": "Mithril Tube"
+          },
+          "crafts": 7,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 21,
+              "englishName": "Mithril Bar"
+            }
+          ]
+        },
+        {
+          "from": 200,
+          "to": 215,
+          "recipe": {
+            "type": "item",
+            "id": 10560,
+            "name": "Instabiler Auslöser",
+            "englishName": "Unstable Trigger"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 20,
+              "englishName": "Mithril Bar"
+            },
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 20,
+              "englishName": "Mageweave Cloth"
+            },
+            {
+              "type": "item",
+              "id": 10505,
+              "name": "Robustes Sprengpulver",
+              "quantity": 20,
+              "englishName": "Solid Blasting Powder"
+            }
+          ]
+        },
+        {
+          "from": 215,
+          "to": 238,
+          "recipe": {
+            "type": "item",
+            "id": 10561,
+            "name": "Mithrilgehäuse",
+            "englishName": "Mithril Casing"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3860,
+              "name": "Mithrilbarren",
+              "quantity": 120,
+              "englishName": "Mithril Bar"
+            }
+          ]
+        },
+        {
+          "from": 238,
+          "to": 250,
+          "recipe": {
+            "type": "item",
+            "id": 10562,
+            "name": "Hochexplosive Bombe",
+            "englishName": "Hi-Explosive Bomb"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 10561,
+              "name": "Mithrilgehäuse",
+              "quantity": 40,
+              "englishName": "Mithril Casing"
+            },
+            {
+              "type": "item",
+              "id": 10560,
+              "name": "Instabiler Auslöser",
+              "quantity": 20,
+              "englishName": "Unstable Trigger"
+            },
+            {
+              "type": "item",
+              "id": 10505,
+              "name": "Robustes Sprengpulver",
+              "quantity": 40,
+              "englishName": "Solid Blasting Powder"
+            }
+          ]
+        },
+        {
+          "from": 250,
+          "to": 260,
+          "recipe": {
+            "type": "item",
+            "id": 15992,
+            "name": "Dichtes Sprengpulver",
+            "englishName": "Dense Blasting Powder"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12365,
+              "name": "Verdichteter Stein",
+              "quantity": 60,
+              "englishName": "Dense Stone"
+            }
+          ]
+        },
+        {
+          "from": 260,
+          "to": 285,
+          "recipe": {
+            "type": "item",
+            "id": 15994,
+            "name": "Thoriumapparat",
+            "englishName": "Thorium Widget"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12359,
+              "name": "Thoriumbarren",
+              "quantity": 105,
+              "englishName": "Thorium Bar"
+            },
+            {
+              "type": "item",
+              "id": 14047,
+              "name": "Runenstoff",
+              "quantity": 35,
+              "englishName": "Runecloth"
+            }
+          ]
+        },
+        {
+          "from": 285,
+          "to": 300,
+          "recipe": {
+            "type": "item",
+            "id": 16000,
+            "name": "Thoriumröhre",
+            "englishName": "Thorium Tube"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12359,
+              "name": "Thoriumbarren",
+              "quantity": 120,
+              "englishName": "Thorium Bar"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Springspindle Fizzlegear in Eisenschmiede oder Roxxik in Orgrimmar."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Buzzek Bracketswing in Gadgetzan. Gnomische oder Goblin-Spezialisierung ist eine getrennte Entscheidung."
+        },
+        {
+          "skill": 260,
+          "text": "Thoriumapparat: Bauplan bei Gearcutter Cogspinner in Eisenschmiede oder Sovik in Orgrimmar."
+        },
+        {
+          "skill": 285,
+          "text": "Thoriumröhre: Bauplan bei Xizzer Fizzbolt in der Ewigen Warte, Winterquell."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/engineering-leveling-guide-classic-wow"
+    },
+    {
+      "id": "leatherworking",
+      "name": "Lederverarbeitung",
+      "icon": "🧵",
+      "aliases": "leder lederer leatherworking",
+      "kind": "craft",
+      "partner": "Kürschnerei",
+      "intro": "Der gewählte Weg benötigt schwere Bälge. Eine Spezialisierung ist für diesen Skillweg nicht erforderlich.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 45,
+          "recipe": {
+            "type": "item",
+            "id": 2304,
+            "name": "Leichtes Rüstungsset",
+            "englishName": "Light Armor Kit"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 2881,
+              "name": "Leichtes Leder",
+              "quantity": 40,
+              "englishName": "Light Leather"
+            }
+          ]
+        },
+        {
+          "from": 45,
+          "to": 55,
+          "recipe": {
+            "type": "item",
+            "id": 7276,
+            "name": "Handgenähter Lederumhang",
+            "englishName": "Handstitched Leather Cloak"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 2881,
+              "name": "Leichtes Leder",
+              "quantity": 40,
+              "englishName": "Light Leather"
+            },
+            {
+              "type": "item",
+              "id": 2320,
+              "name": "Grober Faden",
+              "quantity": 20,
+              "englishName": "Coarse Thread"
+            }
+          ]
+        },
+        {
+          "from": 55,
+          "to": 100,
+          "recipe": {
+            "type": "item",
+            "id": 4239,
+            "name": "Geprägte Lederhandschuhe",
+            "englishName": "Embossed Leather Gloves"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 2881,
+              "name": "Leichtes Leder",
+              "quantity": 150,
+              "englishName": "Light Leather"
+            },
+            {
+              "type": "item",
+              "id": 2320,
+              "name": "Grober Faden",
+              "quantity": 100,
+              "englishName": "Coarse Thread"
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 125,
+          "recipe": {
+            "type": "item",
+            "id": 4246,
+            "name": "Feiner Ledergürtel",
+            "englishName": "Fine Leather Belt"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 2881,
+              "name": "Leichtes Leder",
+              "quantity": 240,
+              "englishName": "Light Leather"
+            },
+            {
+              "type": "item",
+              "id": 2320,
+              "name": "Grober Faden",
+              "quantity": 80,
+              "englishName": "Coarse Thread"
+            }
+          ]
+        },
+        {
+          "from": 125,
+          "to": 137,
+          "recipe": {
+            "type": "item",
+            "id": 2315,
+            "name": "Dunkle Lederstiefel",
+            "englishName": "Dark Leather Boots"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2319,
+              "name": "Mittleres Leder",
+              "quantity": 60,
+              "englishName": "Medium Leather"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 30,
+              "englishName": "Fine Thread"
+            },
+            {
+              "type": "item",
+              "id": 4340,
+              "name": "Grauer Farbstoff",
+              "quantity": 15,
+              "englishName": "Gray Dye"
+            }
+          ]
+        },
+        {
+          "from": 137,
+          "to": 150,
+          "recipe": {
+            "type": "spell",
+            "id": 7135,
+            "name": "Dunkle Lederhose",
+            "englishName": "Dark Leather Pants"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2319,
+              "name": "Mittleres Leder",
+              "quantity": 240,
+              "englishName": "Medium Leather"
+            },
+            {
+              "type": "item",
+              "id": 4340,
+              "name": "Grauer Farbstoff",
+              "quantity": 20,
+              "englishName": "Gray Dye"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 20,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 150,
+          "to": 155,
+          "recipe": {
+            "type": "spell",
+            "id": 20649,
+            "name": "Schweres Leder",
+            "englishName": "Heavy Leather"
+          },
+          "crafts": 7,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2319,
+              "name": "Mittleres Leder",
+              "quantity": 35,
+              "englishName": "Medium Leather"
+            }
+          ]
+        },
+        {
+          "from": 155,
+          "to": 165,
+          "recipe": {
+            "type": "item",
+            "id": 4236,
+            "name": "Geschmeidiger schwerer Balg",
+            "englishName": "Cured Heavy Hide"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4235,
+              "name": "Schwerer Balg",
+              "quantity": 20,
+              "englishName": "Heavy Hide"
+            },
+            {
+              "type": "item",
+              "id": 4289,
+              "name": "Salz",
+              "quantity": 60,
+              "englishName": "Salt"
+            }
+          ]
+        },
+        {
+          "from": 165,
+          "to": 180,
+          "recipe": {
+            "type": "item",
+            "id": 4265,
+            "name": "Schweres Rüstungsset",
+            "englishName": "Heavy Armor Kit"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 20649,
+              "name": "Schweres Leder",
+              "quantity": 75,
+              "englishName": "Heavy Leather"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 15,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 180,
+          "to": 190,
+          "recipe": {
+            "type": "item",
+            "id": 5964,
+            "name": "Barbarische Schultern",
+            "englishName": "Barbaric Shoulders"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 20649,
+              "name": "Schweres Leder",
+              "quantity": 80,
+              "englishName": "Heavy Leather"
+            },
+            {
+              "type": "item",
+              "id": 4236,
+              "name": "Geschmeidiger schwerer Balg",
+              "quantity": 10,
+              "englishName": "Cured Heavy Hide"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 20,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 190,
+          "to": 200,
+          "recipe": {
+            "type": "item",
+            "id": 5966,
+            "name": "Wächterhandschuhe",
+            "englishName": "Guardian Gloves"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "spell",
+              "id": 20649,
+              "name": "Schweres Leder",
+              "quantity": 40,
+              "englishName": "Heavy Leather"
+            },
+            {
+              "type": "item",
+              "id": 4236,
+              "name": "Geschmeidiger schwerer Balg",
+              "quantity": 10,
+              "englishName": "Cured Heavy Hide"
+            },
+            {
+              "type": "item",
+              "id": 4291,
+              "name": "Seidenfaden",
+              "quantity": 10,
+              "englishName": "Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 200,
+          "to": 205,
+          "recipe": {
+            "type": "spell",
+            "id": 10487,
+            "name": "Dickes Rüstungsset",
+            "englishName": "Thick Armor Kit"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4304,
+              "name": "Dickes Leder",
+              "quantity": 25,
+              "englishName": "Thick Leather"
+            },
+            {
+              "type": "item",
+              "id": 4291,
+              "name": "Seidenfaden",
+              "quantity": 5,
+              "englishName": "Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 205,
+          "to": 235,
+          "recipe": {
+            "type": "item",
+            "id": 8176,
+            "name": "Stirnband des Nachtschleichers",
+            "englishName": "Nightscape Headband"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4304,
+              "name": "Dickes Leder",
+              "quantity": 200,
+              "englishName": "Thick Leather"
+            },
+            {
+              "type": "item",
+              "id": 4291,
+              "name": "Seidenfaden",
+              "quantity": 80,
+              "englishName": "Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 235,
+          "to": 250,
+          "recipe": {
+            "type": "item",
+            "id": 8193,
+            "name": "Hose des Nachtschleichers",
+            "englishName": "Nightscape Pants"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4304,
+              "name": "Dickes Leder",
+              "quantity": 210,
+              "englishName": "Thick Leather"
+            },
+            {
+              "type": "item",
+              "id": 4291,
+              "name": "Seidenfaden",
+              "quantity": 60,
+              "englishName": "Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 250,
+          "to": 260,
+          "recipe": {
+            "type": "spell",
+            "id": 10558,
+            "name": "Stiefel des Nachtschleichers",
+            "englishName": "Nightscape Boots"
+          },
+          "crafts": 13,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4304,
+              "name": "Dickes Leder",
+              "quantity": 208,
+              "englishName": "Thick Leather"
+            },
+            {
+              "type": "item",
+              "id": 8343,
+              "name": "Schwerer Seidenfaden",
+              "quantity": 26,
+              "englishName": "Heavy Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 260,
+          "to": 290,
+          "recipe": {
+            "type": "spell",
+            "id": 19049,
+            "name": "Tückische Lederstulpen",
+            "englishName": "Wicked Leather Gauntlets"
+          },
+          "crafts": 33,
+          "materials": [
+            {
+              "type": "item",
+              "id": 8170,
+              "name": "Unverwüstliches Leder",
+              "quantity": 264,
+              "englishName": "Rugged Leather"
+            },
+            {
+              "type": "item",
+              "id": 2325,
+              "name": "Schwarzer Farbstoff",
+              "quantity": 33,
+              "englishName": "Black Dye"
+            },
+            {
+              "type": "item",
+              "id": 14341,
+              "name": "Runenfaden",
+              "quantity": 33,
+              "englishName": "Rune Thread"
+            }
+          ]
+        },
+        {
+          "from": 290,
+          "to": 300,
+          "recipe": {
+            "type": "spell",
+            "id": 19082,
+            "name": "Runenverziertes Lederstirnband",
+            "englishName": "Runic Leather Headband"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 8170,
+              "name": "Unverwüstliches Leder",
+              "quantity": 140,
+              "englishName": "Rugged Leather"
+            },
+            {
+              "type": "item",
+              "id": 14047,
+              "name": "Runenstoff",
+              "quantity": 100,
+              "englishName": "Runecloth"
+            },
+            {
+              "type": "item",
+              "id": 14341,
+              "name": "Runenfaden",
+              "quantity": 10,
+              "englishName": "Rune Thread"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Telonis in Darnassus (Allianz) oder Una in Donnerfels (Horde)."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Drakk Stonehand am Nistgipfel, Hinterland (Allianz), oder Hahrana Ironhide im Camp Mojache, Feralas (Horde)."
+        },
+        {
+          "skill": 260,
+          "text": "Tückische Lederstulpen: Muster bei Leonard Porter in den Westlichen Pestländern oder Werg Thickblade in Tirisfal. Begrenzter Vorrat; vor dem Materialkauf besorgen."
+        },
+        {
+          "skill": 290,
+          "text": "Runenverziertes Lederstirnband: Muster bei Jase Farlane in den Östlichen Pestländern. Begrenzter Vorrat."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/leatherworking-leveling-guide-classic-wow"
+    },
+    {
+      "id": "tailoring",
+      "name": "Schneiderei",
+      "icon": "🪡",
+      "aliases": "schneider tailoring stoff ballen",
+      "kind": "craft",
+      "partner": "Verzauberkunst",
+      "intro": "Stoffballen werden für spätere Abschnitte vorbereitet. Nicht verkaufen, bevor die nachfolgenden Rezepte hergestellt sind.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 45,
+          "recipe": {
+            "type": "item",
+            "id": 2996,
+            "name": "Leinenstoffballen",
+            "englishName": "Bolt of Linen Cloth"
+          },
+          "crafts": 102,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 204,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 45,
+          "to": 70,
+          "recipe": {
+            "type": "spell",
+            "id": 8776,
+            "name": "Leinengürtel",
+            "englishName": "Linen Belt"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2996,
+              "name": "Leinenstoffballen",
+              "quantity": 40,
+              "englishName": "Bolt of Linen Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2320,
+              "name": "Grober Faden",
+              "quantity": 40,
+              "englishName": "Coarse Thread"
+            }
+          ]
+        },
+        {
+          "from": 70,
+          "to": 75,
+          "recipe": {
+            "type": "item",
+            "id": 2580,
+            "name": "Verstärktes Leinencape",
+            "englishName": "Reinforced Linen Cape"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2996,
+              "name": "Leinenstoffballen",
+              "quantity": 10,
+              "englishName": "Bolt of Linen Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2320,
+              "name": "Grober Faden",
+              "quantity": 15,
+              "englishName": "Coarse Thread"
+            }
+          ]
+        },
+        {
+          "from": 75,
+          "to": 100,
+          "recipe": {
+            "type": "item",
+            "id": 2997,
+            "name": "Wollstoffballen",
+            "englishName": "Bolt of Woolen Cloth"
+          },
+          "crafts": 45,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 135,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 110,
+          "recipe": {
+            "type": "item",
+            "id": 10047,
+            "name": "Einfacher Kilt",
+            "englishName": "Simple Kilt"
+          },
+          "crafts": 13,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2996,
+              "name": "Leinenstoffballen",
+              "quantity": 52,
+              "englishName": "Bolt of Linen Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 13,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 110,
+          "to": 125,
+          "recipe": {
+            "type": "item",
+            "id": 4314,
+            "name": "Doppeltgenähte Wollschultern",
+            "englishName": "Double-stitched Woolen Shoulders"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2997,
+              "name": "Wollstoffballen",
+              "quantity": 45,
+              "englishName": "Bolt of Woolen Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 30,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 125,
+          "to": 145,
+          "recipe": {
+            "type": "item",
+            "id": 4305,
+            "name": "Seidenstoffballen",
+            "englishName": "Bolt of Silk Cloth"
+          },
+          "crafts": 201,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4306,
+              "name": "Seidenstoff",
+              "quantity": 804,
+              "englishName": "Silk Cloth"
+            }
+          ]
+        },
+        {
+          "from": 145,
+          "to": 160,
+          "recipe": {
+            "type": "item",
+            "id": 7048,
+            "name": "Azurblaue Seidenkapuze",
+            "englishName": "Azure Silk Hood"
+          },
+          "crafts": 18,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4305,
+              "name": "Seidenstoffballen",
+              "quantity": 36,
+              "englishName": "Bolt of Silk Cloth"
+            },
+            {
+              "type": "item",
+              "id": 6260,
+              "name": "Blauer Farbstoff",
+              "quantity": 36,
+              "englishName": "Blue Dye"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 18,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 160,
+          "to": 170,
+          "recipe": {
+            "type": "item",
+            "id": 7050,
+            "name": "Seidenes Stirnband",
+            "englishName": "Silk Headband"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4305,
+              "name": "Seidenstoffballen",
+              "quantity": 30,
+              "englishName": "Bolt of Silk Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 20,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 170,
+          "to": 175,
+          "recipe": {
+            "type": "item",
+            "id": 4334,
+            "name": "Formelles weißes Hemd",
+            "englishName": "Formal White Shirt"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4305,
+              "name": "Seidenstoffballen",
+              "quantity": 15,
+              "englishName": "Bolt of Silk Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2324,
+              "name": "Bleiche",
+              "quantity": 10,
+              "englishName": "Bleach"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 5,
+              "englishName": "Fine Thread"
+            }
+          ]
+        },
+        {
+          "from": 175,
+          "to": 185,
+          "recipe": {
+            "type": "item",
+            "id": 4339,
+            "name": "Magiestoffballen",
+            "englishName": "Bolt of Mageweave"
+          },
+          "crafts": 94,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 470,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 185,
+          "to": 205,
+          "recipe": {
+            "type": "item",
+            "id": 7058,
+            "name": "Purpurrote Seidenweste",
+            "englishName": "Crimson Silk Vest"
+          },
+          "crafts": 20,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4305,
+              "name": "Seidenstoffballen",
+              "quantity": 80,
+              "englishName": "Bolt of Silk Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2321,
+              "name": "Feiner Faden",
+              "quantity": 40,
+              "englishName": "Fine Thread"
+            },
+            {
+              "type": "item",
+              "id": 2604,
+              "name": "Roter Farbstoff",
+              "quantity": 40,
+              "englishName": "Red Dye"
+            }
+          ]
+        },
+        {
+          "from": 205,
+          "to": 215,
+          "recipe": {
+            "type": "item",
+            "id": 7062,
+            "name": "Purpurrote Seidenpantalons",
+            "englishName": "Crimson Silk Pantaloons"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4305,
+              "name": "Seidenstoffballen",
+              "quantity": 40,
+              "englishName": "Bolt of Silk Cloth"
+            },
+            {
+              "type": "item",
+              "id": 2604,
+              "name": "Roter Farbstoff",
+              "quantity": 20,
+              "englishName": "Red Dye"
+            },
+            {
+              "type": "item",
+              "id": 4291,
+              "name": "Seidenfaden",
+              "quantity": 20,
+              "englishName": "Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 215,
+          "to": 220,
+          "recipe": {
+            "type": "item",
+            "id": 10056,
+            "name": "Oranges Magiestoffhemd",
+            "englishName": "Orange Mageweave Shirt"
+          },
+          "crafts": 5,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4339,
+              "name": "Magiestoffballen",
+              "quantity": 5,
+              "englishName": "Bolt of Mageweave"
+            },
+            {
+              "type": "item",
+              "id": 6261,
+              "name": "Oranger Farbstoff",
+              "quantity": 5,
+              "englishName": "Orange Dye"
+            },
+            {
+              "type": "item",
+              "id": 8343,
+              "name": "Schwerer Seidenfaden",
+              "quantity": 5,
+              "englishName": "Heavy Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 220,
+          "to": 230,
+          "recipe": {
+            "type": "item",
+            "id": 10003,
+            "name": "Schwarze Magiestoffhandschuhe",
+            "englishName": "Black Mageweave Gloves"
+          },
+          "crafts": 10,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4339,
+              "name": "Magiestoffballen",
+              "quantity": 20,
+              "englishName": "Bolt of Mageweave"
+            },
+            {
+              "type": "item",
+              "id": 8343,
+              "name": "Schwerer Seidenfaden",
+              "quantity": 20,
+              "englishName": "Heavy Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 230,
+          "to": 250,
+          "recipe": {
+            "type": "item",
+            "id": 10024,
+            "name": "Schwarzes Magiestoffstirnband",
+            "englishName": "Black Mageweave Headband"
+          },
+          "crafts": 23,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4339,
+              "name": "Magiestoffballen",
+              "quantity": 69,
+              "englishName": "Bolt of Mageweave"
+            },
+            {
+              "type": "item",
+              "id": 8343,
+              "name": "Schwerer Seidenfaden",
+              "quantity": 46,
+              "englishName": "Heavy Silken Thread"
+            }
+          ]
+        },
+        {
+          "from": 250,
+          "to": 260,
+          "recipe": {
+            "type": "item",
+            "id": 14048,
+            "name": "Runenstoffballen",
+            "englishName": "Bolt of Runecloth"
+          },
+          "crafts": 239,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14047,
+              "name": "Runenstoff",
+              "quantity": 1195,
+              "englishName": "Runecloth"
+            }
+          ]
+        },
+        {
+          "from": 260,
+          "to": 280,
+          "recipe": {
+            "type": "spell",
+            "id": 18402,
+            "name": "Runenstoffgürtel",
+            "englishName": "Runecloth Belt"
+          },
+          "crafts": 25,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14048,
+              "name": "Runenstoffballen",
+              "quantity": 75,
+              "englishName": "Bolt of Runecloth"
+            },
+            {
+              "type": "item",
+              "id": 14341,
+              "name": "Runenfaden",
+              "quantity": 25,
+              "englishName": "Rune Thread"
+            }
+          ]
+        },
+        {
+          "from": 280,
+          "to": 290,
+          "recipe": {
+            "type": "item",
+            "id": 14046,
+            "name": "Runenstofftasche",
+            "englishName": "Runecloth Bag"
+          },
+          "crafts": 18,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14048,
+              "name": "Runenstoffballen",
+              "quantity": 90,
+              "englishName": "Bolt of Runecloth"
+            },
+            {
+              "type": "item",
+              "id": 8170,
+              "name": "Unverwüstliches Leder",
+              "quantity": 36,
+              "englishName": "Rugged Leather"
+            },
+            {
+              "type": "item",
+              "id": 14341,
+              "name": "Runenfaden",
+              "quantity": 18,
+              "englishName": "Rune Thread"
+            }
+          ]
+        },
+        {
+          "from": 290,
+          "to": 300,
+          "recipe": {
+            "type": "item",
+            "id": 13863,
+            "name": "Runenstoffhandschuhe",
+            "englishName": "Runecloth Gloves"
+          },
+          "crafts": 18,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14048,
+              "name": "Runenstoffballen",
+              "quantity": 72,
+              "englishName": "Bolt of Runecloth"
+            },
+            {
+              "type": "item",
+              "id": 8170,
+              "name": "Unverwüstliches Leder",
+              "quantity": 72,
+              "englishName": "Rugged Leather"
+            },
+            {
+              "type": "item",
+              "id": 14341,
+              "name": "Runenfaden",
+              "quantity": 18,
+              "englishName": "Rune Thread"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Ausbildung: Geselle ab Skill 50 / Charakterstufe 10, Experte ab 125 / Stufe 20, Fachmann ab 200 / Stufe 35. Vor den Limits 75, 150 und 225 den nächsten Rang lernen."
+        },
+        {
+          "skill": 125,
+          "text": "Experte: Georgio Bolero in Sturmwind (Allianz) oder Josef Gregorian in Unterstadt (Horde)."
+        },
+        {
+          "skill": 200,
+          "text": "Fachmann: Timothy Worthington in Theramore (Allianz) oder Daryl Stack in Tarrens Mühle (Horde)."
+        },
+        {
+          "skill": 280,
+          "text": "Runenstofftasche und Runenstoffhandschuhe: beide Muster bei Qia in der Bank der Ewigen Warte, Winterquell. Begrenzter Vorrat; vor dem Einkauf auf Verfügbarkeit achten."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/tailoring-leveling-guide-classic-wow"
+    },
+    {
+      "id": "cooking",
+      "name": "Kochen",
+      "icon": "🍲",
+      "aliases": "koch cooking essen nahrung",
+      "kind": "craft",
+      "partner": "Angeln",
+      "intro": "Sekundärberuf: belegt keinen der zwei Hauptberufsplätze. Für Rezepte wird ein Kochfeuer oder eine geeignete Feuerstelle benötigt.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 50,
+          "recipe": {
+            "type": "spell",
+            "id": 2538,
+            "name": "Verkohltes Wolfsfleisch"
+          },
+          "crafts": 55,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2672,
+              "name": "Sehniges Wolfsfleisch",
+              "quantity": 55
+            }
+          ]
+        },
+        {
+          "from": 50,
+          "to": 100,
+          "recipe": {
+            "type": "spell",
+            "id": 6499,
+            "name": "Gekochte Muscheln"
+          },
+          "crafts": 55,
+          "materials": [
+            {
+              "type": "item",
+              "id": 5503,
+              "name": "Muschelfleisch",
+              "quantity": 55
+            },
+            {
+              "type": "item",
+              "id": 159,
+              "name": "Erfrischendes Quellwasser",
+              "quantity": 55
+            }
+          ]
+        },
+        {
+          "from": 100,
+          "to": 130,
+          "recipe": {
+            "type": "spell",
+            "id": 2544,
+            "name": "Krebsküchlein"
+          },
+          "crafts": 40,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2674,
+              "name": "Kriecherfleisch",
+              "quantity": 40
+            },
+            {
+              "type": "item",
+              "id": 2678,
+              "name": "Milde Gewürze",
+              "quantity": 40
+            }
+          ]
+        },
+        {
+          "from": 130,
+          "to": 175,
+          "recipe": {
+            "type": "spell",
+            "id": 3376,
+            "name": "Seltsam schmeckendes Omelett"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 3685,
+              "name": "Raptorei",
+              "quantity": 50
+            },
+            {
+              "type": "item",
+              "id": 2692,
+              "name": "Scharfe Gewürze",
+              "quantity": 50
+            }
+          ]
+        },
+        {
+          "from": 175,
+          "to": 225,
+          "recipe": {
+            "type": "spell",
+            "id": 15855,
+            "name": "Gerösteter Raptor"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12184,
+              "name": "Raptorfleisch",
+              "quantity": 50
+            },
+            {
+              "type": "item",
+              "id": 2692,
+              "name": "Scharfe Gewürze",
+              "quantity": 50
+            }
+          ]
+        },
+        {
+          "from": 225,
+          "to": 275,
+          "recipe": {
+            "type": "spell",
+            "id": 15933,
+            "name": "Monsteromelett"
+          },
+          "crafts": 65,
+          "materials": [
+            {
+              "type": "item",
+              "id": 12207,
+              "name": "Riesenei",
+              "quantity": 65
+            },
+            {
+              "type": "item",
+              "id": 3713,
+              "name": "Feine Gewürze",
+              "quantity": 130
+            }
+          ]
+        },
+        {
+          "from": 275,
+          "to": 300,
+          "recipe": {
+            "type": "spell",
+            "id": 18244,
+            "name": "Gedünsteter Sonnenschuppenlachs"
+          },
+          "crafts": 35,
+          "materials": [
+            {
+              "type": "item",
+              "id": 13760,
+              "name": "Roher Sonnenschuppenlachs",
+              "quantity": 35
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Gesellenkochen beim Lehrer lernen, ab Charakterstufe 10. Das erhöht das Skill-Limit von 75 auf 150."
+        },
+        {
+          "skill": 125,
+          "text": "Expertenkochbuch bei Shandrina im Eschental (Allianz) oder Wulan in Schattenflucht, Desolace (Horde); ab Charakterstufe 20."
+        },
+        {
+          "skill": 130,
+          "text": "Seltsam schmeckendes Omelett: Rezept bei Kendor Kabonka in Sturmwind oder Keena im Arathihochland."
+        },
+        {
+          "skill": 175,
+          "text": "Gerösteter Raptor: Rezept bei Hammon Karwn oder Keena im Arathihochland."
+        },
+        {
+          "skill": 225,
+          "text": "Fachmann durch „Muschelette Surprise“ bei Dirge Quikcleave in Gadgetzan: Charakterstufe 35, Kochen 225, 12 Rieseneier, 10 scharfes Muschelfleisch und 20 Alteraclochkäse. Questmaterial zusätzlich einplanen."
+        },
+        {
+          "skill": 225,
+          "text": "Monsteromelett: Rezept bei Himmik in Winterquell oder Malygen/Bale im Teufelswald."
+        },
+        {
+          "skill": 275,
+          "text": "Gedünsteter Sonnenschuppenlachs: Rezept bei Gikkix im Hafen von Steamwheedle, Tanaris."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/cooking-leveling-guide-classic-wow"
+    },
+    {
+      "id": "first-aid",
+      "name": "Erste Hilfe",
+      "icon": "🩹",
+      "aliases": "erste hilfe verband verbände verbaende first aid",
+      "kind": "craft",
+      "partner": "Kein Partnerberuf nötig",
+      "intro": "Sekundärberuf: belegt keinen Hauptberufsplatz. Stoffe für die Abschnitte nach 225 zum Questgeber mitnehmen.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 40,
+          "recipe": {
+            "type": "spell",
+            "id": 3275,
+            "name": "Leinenverband",
+            "englishName": "Linen Bandage"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 50,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 40,
+          "to": 75,
+          "recipe": {
+            "type": "spell",
+            "id": 3276,
+            "name": "Schwerer Leinenverband",
+            "englishName": "Heavy Linen Bandage"
+          },
+          "crafts": 45,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 90,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 75,
+          "to": 80,
+          "recipe": {
+            "type": "spell",
+            "id": 3276,
+            "name": "Schwerer Leinenverband",
+            "englishName": "Heavy Linen Bandage"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2589,
+              "name": "Leinenstoff",
+              "quantity": 30,
+              "englishName": "Linen Cloth"
+            }
+          ]
+        },
+        {
+          "from": 80,
+          "to": 115,
+          "recipe": {
+            "type": "spell",
+            "id": 3277,
+            "name": "Wollverband",
+            "englishName": "Wool Bandage"
+          },
+          "crafts": 60,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 60,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 115,
+          "to": 150,
+          "recipe": {
+            "type": "spell",
+            "id": 3278,
+            "name": "Schwerer Wollverband",
+            "englishName": "Heavy Wool Bandage"
+          },
+          "crafts": 60,
+          "materials": [
+            {
+              "type": "item",
+              "id": 2592,
+              "name": "Wollstoff",
+              "quantity": 120,
+              "englishName": "Wool Cloth"
+            }
+          ]
+        },
+        {
+          "from": 150,
+          "to": 180,
+          "recipe": {
+            "type": "spell",
+            "id": 7928,
+            "name": "Seidenverband",
+            "englishName": "Silk Bandage"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4306,
+              "name": "Seidenstoff",
+              "quantity": 50,
+              "englishName": "Silk Cloth"
+            }
+          ]
+        },
+        {
+          "from": 180,
+          "to": 210,
+          "recipe": {
+            "type": "spell",
+            "id": 7929,
+            "name": "Schwerer Seidenverband",
+            "englishName": "Heavy Silk Bandage"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4306,
+              "name": "Seidenstoff",
+              "quantity": 100,
+              "englishName": "Silk Cloth"
+            }
+          ]
+        },
+        {
+          "from": 210,
+          "to": 225,
+          "recipe": {
+            "type": "spell",
+            "id": 10840,
+            "name": "Magiestoffverband",
+            "englishName": "Mageweave Bandage"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 30,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 225,
+          "to": 240,
+          "recipe": {
+            "type": "spell",
+            "id": 10840,
+            "name": "Magiestoffverband",
+            "englishName": "Mageweave Bandage"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 30,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 240,
+          "to": 260,
+          "recipe": {
+            "type": "spell",
+            "id": 10841,
+            "name": "Schwerer Magiestoffverband",
+            "englishName": "Heavy Mageweave Bandage"
+          },
+          "crafts": 30,
+          "materials": [
+            {
+              "type": "item",
+              "id": 4338,
+              "name": "Magiestoff",
+              "quantity": 60,
+              "englishName": "Mageweave Cloth"
+            }
+          ]
+        },
+        {
+          "from": 260,
+          "to": 290,
+          "recipe": {
+            "type": "spell",
+            "id": 18629,
+            "name": "Runenstoffverband",
+            "englishName": "Runecloth Bandage"
+          },
+          "crafts": 50,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14047,
+              "name": "Runenstoff",
+              "quantity": 50,
+              "englishName": "Runecloth"
+            }
+          ]
+        },
+        {
+          "from": 290,
+          "to": 300,
+          "recipe": {
+            "type": "spell",
+            "id": 18630,
+            "name": "Schwerer Runenstoffverband",
+            "englishName": "Heavy Runecloth Bandage"
+          },
+          "crafts": 15,
+          "materials": [
+            {
+              "type": "item",
+              "id": 14047,
+              "name": "Runenstoff",
+              "quantity": 30,
+              "englishName": "Runecloth"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "skill": 1,
+          "text": "Rezepte ohne gesonderten Hinweis beim passenden Berufs- bzw. Verbandlehrer lernen. Händlerrezepte können ausverkauft sein. Ausbildungs-, Rezept- und Werkzeugkosten sind nicht Teil der Materialliste."
+        },
+        {
+          "skill": 50,
+          "text": "Gesellenausbildung beim Erste-Hilfe-Lehrer lernen, bevor du das Skill-Limit 75 erreichst."
+        },
+        {
+          "skill": 125,
+          "text": "Expertenbuch bei Deneb Walker in Stromgarde (Allianz) oder Balai Lok’Wein im Brackenwall, Düstermarschen (Horde). Auch die Handbücher für schwere Seidenverbände und Magiestoffverbände kaufen."
+        },
+        {
+          "skill": 180,
+          "text": "Handbuch für schwere Seidenverbände benutzen; ab 210 das Handbuch für Magiestoffverbände."
+        },
+        {
+          "skill": 225,
+          "text": "Fachmann durch Triage, ab Charakterstufe 35 und Erste Hilfe 225: Doktor Gustaf VanHowzen in Theramore oder Doktor Gregory Victor in Hammerfall. Die Questverbände verwenden und kritisch Verletzte zuerst versorgen."
+        },
+        {
+          "skill": 240,
+          "text": "Schwere Magiestoffverbände beim Triage-Arzt lernen; bei 260 Runenstoffverbände und bei 290 schwere Runenstoffverbände."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/first-aid-leveling-guide-classic-wow"
+    },
+    {
+      "id": "herbalism",
+      "name": "Kräuterkunde",
+      "icon": "🌿",
+      "aliases": "kräuter kraeuter kräutern herb herbalism",
+      "kind": "gather",
+      "partner": "Alchemie",
+      "intro": "Kräutersuche aktivieren. Wähle Gebiete passend zu deinem Charakterlevel; höherwertige Kräuter erst ab der angegebenen Mindestfertigkeit sammeln.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 70,
+          "title": "Friedensblume, Silberblatt, Erdwurzel",
+          "text": "Startgebiete: Wald von Elwynn, Dun Morogh, Teldrassil, Durotar, Mulgore oder Tirisfal."
+        },
+        {
+          "from": 70,
+          "to": 115,
+          "title": "Maguskönigskraut und Wilddornrose; Würgetang ab 85",
+          "text": "Brachland, Silberwald, Loch Modan oder Dunkelküste."
+        },
+        {
+          "from": 115,
+          "to": 170,
+          "title": "Wildstahlblume; Königsblut ab 125, Lebenswurz ab 150",
+          "text": "Vorgebirge des Hügellands, Sumpfland oder Steinkrallengebirge."
+        },
+        {
+          "from": 170,
+          "to": 205,
+          "title": "Golddorn und Blassblatt; Khadgars Schnurrbart ab 185",
+          "text": "Schlingendorntal oder Arathihochland."
+        },
+        {
+          "from": 205,
+          "to": 230,
+          "title": "Lila Lotus und Feuerblüte",
+          "text": "Tanaris oder Sengende Schlucht."
+        },
+        {
+          "from": 230,
+          "to": 270,
+          "title": "Sonnengras; Geisterpilz ab 245",
+          "text": "Hinterland. Höhlen nur mit passendem Charakterlevel betreten."
+        },
+        {
+          "from": 270,
+          "to": 300,
+          "title": "Gromsblut, Goldener Sansam, Traumblatt und spätere Kräuter",
+          "text": "Teufelswald. Kräuter nach der angezeigten Sammelbarkeit auswählen."
+        }
+      ],
+      "notes": [
+        {
+          "skill": 50,
+          "text": "Geselle vor dem Skill-Limit 75 lernen; Experte vor 150 und Fachmann vor 225. Bei Sammelberufen sind die Lehrerregeln nicht mit den Herstellungsberufen gleichzusetzen."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/herbalism-leveling-guide-classic-wow"
+    },
+    {
+      "id": "mining",
+      "name": "Bergbau",
+      "icon": "⛏️",
+      "aliases": "bergbau mining erz erze abbauen",
+      "kind": "gather",
+      "partner": "Schmiedekunst oder Ingenieurskunst",
+      "intro": "Bergbauhacke im Inventar und Mineralsuche aktiv halten. Die Gebiete sind Vorschläge, keine garantierten Vorkommen.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 65,
+          "title": "Kupfer",
+          "text": "Startgebiete wie Durotar, Mulgore, Wald von Elwynn oder Dun Morogh."
+        },
+        {
+          "from": 65,
+          "to": 125,
+          "title": "Zinn, Kupfer und Silber ab 75",
+          "text": "Vorgebirge des Hügellands, Rotkammgebirge, Eschental oder Brachland."
+        },
+        {
+          "from": 125,
+          "to": 175,
+          "title": "Eisen und Gold ab 155",
+          "text": "Arathihochland, Desolace oder Tausend Nadeln."
+        },
+        {
+          "from": 175,
+          "to": 245,
+          "title": "Mithril; Echtsilber ab 230",
+          "text": "Hinterland oder Tanaris."
+        },
+        {
+          "from": 245,
+          "to": 275,
+          "title": "Kleine Thoriumvorkommen",
+          "text": "Krater von Un’Goro, Teufelswald oder Verwüstete Lande."
+        },
+        {
+          "from": 275,
+          "to": 300,
+          "title": "Auch reiche Thoriumvorkommen",
+          "text": "Winterquell, Östliche Pestländer, Brennende Steppe oder Un’Goro."
+        }
+      ],
+      "notes": [
+        {
+          "skill": 50,
+          "text": "Geselle vor dem Skill-Limit 75 lernen; Experte vor 150 und Fachmann vor 225. Bei Sammelberufen sind die Lehrerregeln nicht mit den Herstellungsberufen gleichzusetzen."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/mining-leveling-guide-classic-wow"
+    },
+    {
+      "id": "skinning",
+      "name": "Kürschnerei",
+      "icon": "🐾",
+      "aliases": "kürschner kuerschner kürschnerei kuerschnerei skinning leder balg",
+      "kind": "gather",
+      "partner": "Lederverarbeitung",
+      "intro": "Kürschnermesser im Inventar behalten. Tote Wildtiere vollständig plündern, dann kürschnern. Auch orange Ziele garantieren keinen Skillpunkt.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 75,
+          "title": "Wildtiere im Startgebiet",
+          "text": "Zum Beispiel Durotar oder Dun Morogh; die ganz frühen Startgegner lassen sich nicht alle kürschnern."
+        },
+        {
+          "from": 75,
+          "to": 155,
+          "title": "Wildtiere auf dem Weg ins nächste Gebiet",
+          "text": "Brachland oder Loch Modan und Sumpfland. Passende, noch skillgebende Tiere wählen."
+        },
+        {
+          "from": 155,
+          "to": 205,
+          "title": "Raptoren und andere Wildtiere",
+          "text": "Arathihochland; für die Horde auch Tausend Nadeln ab etwa 165."
+        },
+        {
+          "from": 205,
+          "to": 260,
+          "title": "Wildtiere und Yetis",
+          "text": "Feralas: zunächst um Camp Mojache, später höherstufige Yetis."
+        },
+        {
+          "from": 260,
+          "to": 300,
+          "title": "Höherstufige Wildtiere",
+          "text": "Feralas; ab etwa 280 auch Un’Goro. Bei Gegnern ab Stufe 20 benötigt man grundsätzlich Gegnerstufe × 5 Kürschnerei."
+        }
+      ],
+      "notes": [
+        {
+          "skill": 50,
+          "text": "Geselle vor dem Skill-Limit 75 lernen; Experte vor 150 und Fachmann vor 225. Bei Sammelberufen sind die Lehrerregeln nicht mit den Herstellungsberufen gleichzusetzen."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/skinning-leveling-guide-classic-wow"
+    },
+    {
+      "id": "fishing",
+      "name": "Angeln",
+      "icon": "🎣",
+      "aliases": "angeln fishing fischen fisch angel",
+      "kind": "gather",
+      "partner": "Kochen",
+      "intro": "Sekundärberuf. Angel ausrüsten und Köder verwenden. Skillpunkte entstehen durch erfolgreiche Fänge; der benötigte Fangumfang steigt. Es gibt keine feste Material- oder Fangzahl bis 300.",
+      "steps": [
+        {
+          "from": 1,
+          "to": 75,
+          "title": "Angel und einfache Köder kaufen",
+          "text": "In einem Gewässer eines Startgebiets angeln."
+        },
+        {
+          "from": 75,
+          "to": 150,
+          "title": "Gesellenrang lernen",
+          "text": "In geeigneten Gewässern einer Hauptstadt weiterangeln; entkommende Fische durch Köder reduzieren."
+        },
+        {
+          "from": 150,
+          "to": 225,
+          "title": "Expertenbuch benutzen",
+          "text": "Buch bei Old Man Heming in Beutebucht, ab Charakterstufe 20. Mit Ködern beispielsweise in den Düstermarschen angeln."
+        },
+        {
+          "from": 225,
+          "to": 300,
+          "title": "Nat Pagles Ausbildungsquest abschließen",
+          "text": "Ab Charakterstufe 35 und Angeln 225 bei Nat Pagle in den Düstermarschen. Danach mit Ködern etwa in Feralas, Tanaris oder im Hinterland weiterangeln."
+        }
+      ],
+      "notes": [
+        {
+          "skill": 225,
+          "text": "Für Nat Pagle werden vier Questfische benötigt: Feralas-Ahi in Feralas, Nebelschilf-Mahi-Mahi in den Sümpfen des Elends, Sar’theris-Barsch in Desolace und Blausegelstrandflossenfisch an der Wilden Küste im Schlingendorntal. Erst nach Annahme der Quest fangen."
+        }
+      ],
+      "source": "https://www.wow-professions.com/classic/fishing-leveling-guide-classic-wow"
+    }
+  ]
+}
