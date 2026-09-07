@@ -70,6 +70,7 @@
   dialog.append(card);
   dialog.append(node('p',[origins(item),item.itemId?`Item-ID: ${item.itemId}`:''].filter(Boolean).join(' · '),'item-search-origin'));
   if(item.boss)dialog.append(node('p',`Boss / Quelle: ${item.boss}`,'item-search-origin'));
+  window.GuildLootT3?.mount(dialog,item);
   window.GuildLootCompare?.mount(dialog,item,character);
   dialog.append(node('p','Am Titel verschieben · an der unteren rechten Ecke Größe ändern','item-search-resize-hint'));
   if(!dialog.open)dialog.showModal();close.focus();

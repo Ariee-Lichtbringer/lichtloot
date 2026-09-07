@@ -1,0 +1,2205 @@
+{
+  "version": "classic-era-phase-6",
+  "checkedAt": "2026-09-07",
+  "items": {
+    "22490": {
+      "name": "Kopfstück des Traumwandlers",
+      "slot": "Head",
+      "questId": 9088,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22360,
+          "name": "Entweihtes Kopfstück",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 6
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9088"
+    },
+    "22491": {
+      "name": "Schiftung des Traumwandlers",
+      "slot": "Shoulder",
+      "questId": 9089,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22361,
+          "name": "Entweihte Schiftung",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9089"
+    },
+    "22488": {
+      "name": "Tunika des Traumwandlers",
+      "slot": "Chest",
+      "questId": 9086,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22350,
+          "name": "Entweihte Tunika",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 6
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9086"
+    },
+    "22495": {
+      "name": "Handgelenksschutz des Traumwandlers",
+      "slot": "Wrist",
+      "questId": 9093,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22362,
+          "name": "Entweihter Handgelenksschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9093"
+    },
+    "22493": {
+      "name": "Handschützer des Traumwandlers",
+      "slot": "Hands",
+      "questId": 9091,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22364,
+          "name": "Entweihte Handschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9091"
+    },
+    "22494": {
+      "name": "Gurt des Traumwandlers",
+      "slot": "Waist",
+      "questId": 9092,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22363,
+          "name": "Entweihter Gurt",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 3
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9092"
+    },
+    "22489": {
+      "name": "Beinschützer des Traumwandlers",
+      "slot": "Legs",
+      "questId": 9087,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22359,
+          "name": "Entweihte Beinschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 8
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9087"
+    },
+    "22492": {
+      "name": "Stiefel des Traumwandlers",
+      "slot": "Feet",
+      "questId": 9090,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22365,
+          "name": "Entweihte Stiefel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 3
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9090"
+    },
+    "23064": {
+      "name": "Ring of the Dreamwalker",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23064"
+    },
+    "22438": {
+      "name": "Kopfstück des Gruftpirschers",
+      "slot": "Head",
+      "questId": 9056,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22360,
+          "name": "Entweihtes Kopfstück",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9056"
+    },
+    "22439": {
+      "name": "Schiftung des Gruftpirschers",
+      "slot": "Shoulder",
+      "questId": 9057,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22361,
+          "name": "Entweihte Schiftung",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9057"
+    },
+    "22436": {
+      "name": "Tunika des Gruftpirschers",
+      "slot": "Chest",
+      "questId": 9054,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22350,
+          "name": "Entweihte Tunika",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9054"
+    },
+    "22443": {
+      "name": "Handgelenksschutz des Gruftpirschers",
+      "slot": "Wrist",
+      "questId": 9061,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22362,
+          "name": "Entweihter Handgelenksschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9061"
+    },
+    "22441": {
+      "name": "Handschützer des Gruftpirschers",
+      "slot": "Hands",
+      "questId": 9059,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22364,
+          "name": "Entweihte Handschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9059"
+    },
+    "22442": {
+      "name": "Gurt des Gruftpirschers",
+      "slot": "Waist",
+      "questId": 9060,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22363,
+          "name": "Entweihter Gurt",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9060"
+    },
+    "22437": {
+      "name": "Beinschützer des Gruftpirschers",
+      "slot": "Legs",
+      "questId": 9055,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22359,
+          "name": "Entweihte Beinschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 3
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9055"
+    },
+    "22440": {
+      "name": "Stiefel des Gruftpirschers",
+      "slot": "Feet",
+      "questId": 9058,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22365,
+          "name": "Entweihte Stiefel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9058"
+    },
+    "23067": {
+      "name": "Ring of the Cryptstalker",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23067"
+    },
+    "22498": {
+      "name": "Frostfeuerreif",
+      "slot": "Head",
+      "questId": 9097,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22367,
+          "name": "Entweihter Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 3
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9097"
+    },
+    "22499": {
+      "name": "Frostfeuerschulterpolster",
+      "slot": "Shoulder",
+      "questId": 9098,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22368,
+          "name": "Entweihte Schulterpolster",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9098"
+    },
+    "22496": {
+      "name": "Frostfeuerrobe",
+      "slot": "Chest",
+      "questId": 9095,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22351,
+          "name": "Entweihte Robe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9095"
+    },
+    "22503": {
+      "name": "Frostfeuerbindungen",
+      "slot": "Wrist",
+      "questId": 9102,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22369,
+          "name": "Entweihte Bindungen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9102"
+    },
+    "22501": {
+      "name": "Frostfeuerhandschuhe",
+      "slot": "Hands",
+      "questId": 9100,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22371,
+          "name": "Entweihte Handschuhe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9100"
+    },
+    "22502": {
+      "name": "Frostfeuergürtel",
+      "slot": "Waist",
+      "questId": 9101,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22370,
+          "name": "Entweihter Gürtel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 2
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9101"
+    },
+    "22497": {
+      "name": "Frostfeuergamaschen",
+      "slot": "Legs",
+      "questId": 9096,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22366,
+          "name": "Entweihte Gamaschen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9096"
+    },
+    "22500": {
+      "name": "Frostfeuersandalen",
+      "slot": "Feet",
+      "questId": 9099,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22372,
+          "name": "Entweihte Sandalen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9099"
+    },
+    "23062": {
+      "name": "Frostfire Ring",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23062"
+    },
+    "22428": {
+      "name": "Kopfstück der Erlösung",
+      "slot": "Head",
+      "questId": 9045,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22360,
+          "name": "Entweihtes Kopfstück",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 5
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9045"
+    },
+    "22429": {
+      "name": "Schiftung der Erlösung",
+      "slot": "Shoulder",
+      "questId": 9046,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22361,
+          "name": "Entweihte Schiftung",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9046"
+    },
+    "22425": {
+      "name": "Tunika der Erlösung",
+      "slot": "Chest",
+      "questId": 9043,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22350,
+          "name": "Entweihte Tunika",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9043"
+    },
+    "22424": {
+      "name": "Handgelenksschutz der Erlösung",
+      "slot": "Wrist",
+      "questId": 9050,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22362,
+          "name": "Entweihter Handgelenksschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9050"
+    },
+    "22426": {
+      "name": "Handschützer der Erlösung",
+      "slot": "Hands",
+      "questId": 9048,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22364,
+          "name": "Entweihte Handschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9048"
+    },
+    "22431": {
+      "name": "Gurt der Erlösung",
+      "slot": "Waist",
+      "questId": 9049,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22363,
+          "name": "Entweihter Gurt",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9049"
+    },
+    "22427": {
+      "name": "Beinschützer der Erlösung",
+      "slot": "Legs",
+      "questId": 9044,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22359,
+          "name": "Entweihte Beinschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9044"
+    },
+    "22430": {
+      "name": "Stiefel der Erlösung",
+      "slot": "Feet",
+      "questId": 9047,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22365,
+          "name": "Entweihte Stiefel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9047"
+    },
+    "23066": {
+      "name": "Ring of Redemption",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23066"
+    },
+    "22514": {
+      "name": "Reif des Glaubens",
+      "slot": "Head",
+      "questId": 9113,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22367,
+          "name": "Entweihter Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 3
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9113"
+    },
+    "22515": {
+      "name": "Schulterpolster des Glaubens",
+      "slot": "Shoulder",
+      "questId": 9114,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22368,
+          "name": "Entweihte Schulterpolster",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9114"
+    },
+    "22512": {
+      "name": "Robe des Glaubens",
+      "slot": "Chest",
+      "questId": 9111,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22351,
+          "name": "Entweihte Robe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9111"
+    },
+    "22519": {
+      "name": "Bindungen des Glaubens",
+      "slot": "Wrist",
+      "questId": 9118,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22369,
+          "name": "Entweihte Bindungen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9118"
+    },
+    "22517": {
+      "name": "Handschuhe des Glaubens",
+      "slot": "Hands",
+      "questId": 9116,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22371,
+          "name": "Entweihte Handschuhe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9116"
+    },
+    "22518": {
+      "name": "Gürtel des Glaubens",
+      "slot": "Waist",
+      "questId": 9117,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22370,
+          "name": "Entweihter Gürtel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 2
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9117"
+    },
+    "22513": {
+      "name": "Gamaschen des Glaubens",
+      "slot": "Legs",
+      "questId": 9112,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22366,
+          "name": "Entweihte Gamaschen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9112"
+    },
+    "22516": {
+      "name": "Sandalen des Glaubens",
+      "slot": "Feet",
+      "questId": 9115,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22372,
+          "name": "Entweihte Sandalen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9115"
+    },
+    "23061": {
+      "name": "Ring of Faith",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23061"
+    },
+    "22478": {
+      "name": "Helm der Knochensense",
+      "slot": "Head",
+      "questId": 9079,
+      "classMask": null,
+      "gold": 75,
+      "requirements": [
+        {
+          "itemId": 22353,
+          "name": "Entweihter Helm",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 8
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9079"
+    },
+    "22479": {
+      "name": "Schulterstücke der Knochensense",
+      "slot": "Shoulder",
+      "questId": 9080,
+      "classMask": null,
+      "gold": 50,
+      "requirements": [
+        {
+          "itemId": 22354,
+          "name": "Entweihte Schulterstücke",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9080"
+    },
+    "22476": {
+      "name": "Brustplatte der Knochensense",
+      "slot": "Chest",
+      "questId": 9077,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22349,
+          "name": "Entweihte Brustplatte",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 6
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9077"
+    },
+    "22483": {
+      "name": "Armschienen der Knochensense",
+      "slot": "Wrist",
+      "questId": 9084,
+      "classMask": 8,
+      "gold": 10,
+      "requirements": [
+        {
+          "itemId": 22355,
+          "name": "Entweihte Armschienen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9084"
+    },
+    "22481": {
+      "name": "Stulpen der Knochensense",
+      "slot": "Hands",
+      "questId": 9082,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22357,
+          "name": "Entweihte Stulpen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9082"
+    },
+    "22482": {
+      "name": "Taillenschutz der Knochensense",
+      "slot": "Waist",
+      "questId": 9083,
+      "classMask": 8,
+      "gold": 15,
+      "requirements": [
+        {
+          "itemId": 22356,
+          "name": "Entweihter Taillenschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9083"
+    },
+    "22477": {
+      "name": "Beinplatten der Knochensense",
+      "slot": "Legs",
+      "questId": 9078,
+      "classMask": null,
+      "gold": 100,
+      "requirements": [
+        {
+          "itemId": 22352,
+          "name": "Entweihte Beinplatten",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 8
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9078"
+    },
+    "22480": {
+      "name": "Sabatons der Knochensense",
+      "slot": "Feet",
+      "questId": 9081,
+      "classMask": null,
+      "gold": 25,
+      "requirements": [
+        {
+          "itemId": 22358,
+          "name": "Entweihte Sabatons",
+          "quantity": 1
+        },
+        {
+          "itemId": 22373,
+          "name": "Kampfzerschlissenes Lederstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9081"
+    },
+    "23060": {
+      "name": "Bonescythe Ring",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23060"
+    },
+    "22467": {
+      "name": "Schiftung des Erdspalters",
+      "slot": "Shoulder",
+      "questId": 9071,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22361,
+          "name": "Entweihte Schiftung",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9071"
+    },
+    "22464": {
+      "name": "Tunika des Erdspalters",
+      "slot": "Chest",
+      "questId": 9068,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22350,
+          "name": "Entweihte Tunika",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9068"
+    },
+    "22471": {
+      "name": "Handgelenksschutz des Erdspalters",
+      "slot": "Wrist",
+      "questId": 9075,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22362,
+          "name": "Entweihter Handgelenksschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9075"
+    },
+    "22469": {
+      "name": "Handschützer des Erdspalters",
+      "slot": "Hands",
+      "questId": 9073,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22364,
+          "name": "Entweihte Handschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9073"
+    },
+    "22470": {
+      "name": "Gurt des Erdspalters",
+      "slot": "Waist",
+      "questId": 9074,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22363,
+          "name": "Entweihter Gurt",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9074"
+    },
+    "22465": {
+      "name": "Beinschützer des Erdspalters",
+      "slot": "Legs",
+      "questId": 9069,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22359,
+          "name": "Entweihte Beinschützer",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 3
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9069"
+    },
+    "22468": {
+      "name": "Stiefel des Erdspalters",
+      "slot": "Feet",
+      "questId": 9072,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22365,
+          "name": "Entweihte Stiefel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9072"
+    },
+    "23065": {
+      "name": "Ring of the Earthshatterer",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23065"
+    },
+    "22506": {
+      "name": "Reif des verseuchten Herzens",
+      "slot": "Head",
+      "questId": 9105,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22367,
+          "name": "Entweihter Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 3
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9105"
+    },
+    "22507": {
+      "name": "Schulterpolster des verseuchten Herzens",
+      "slot": "Shoulder",
+      "questId": 9106,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22368,
+          "name": "Entweihte Schulterpolster",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9106"
+    },
+    "22504": {
+      "name": "Robe des verseuchten Herzens",
+      "slot": "Chest",
+      "questId": 9103,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22351,
+          "name": "Entweihte Robe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9103"
+    },
+    "22511": {
+      "name": "Bindungen des verseuchten Herzens",
+      "slot": "Wrist",
+      "questId": 9110,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22369,
+          "name": "Entweihte Bindungen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9110"
+    },
+    "22509": {
+      "name": "Handschuhe des verseuchten Herzens",
+      "slot": "Hands",
+      "questId": 9108,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22371,
+          "name": "Entweihte Handschuhe",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9108"
+    },
+    "22510": {
+      "name": "Gürtel des verseuchten Herzens",
+      "slot": "Waist",
+      "questId": 9109,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22370,
+          "name": "Entweihter Gürtel",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12363,
+          "name": "Arkankristall",
+          "quantity": 2
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9109"
+    },
+    "22505": {
+      "name": "Gamaschen des verseuchten Herzens",
+      "slot": "Legs",
+      "questId": 9104,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22366,
+          "name": "Entweihte Gamaschen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9104"
+    },
+    "22508": {
+      "name": "Sandalen des verseuchten Herzens",
+      "slot": "Feet",
+      "questId": 9107,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22372,
+          "name": "Entweihte Sandalen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22376,
+          "name": "Kampfzerschlissenes Stoffstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 14342,
+          "name": "Mondstoff",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9107"
+    },
+    "23063": {
+      "name": "Plagueheart Ring",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23063"
+    },
+    "22418": {
+      "name": "Helm des Schreckenspanzers",
+      "slot": "Head",
+      "questId": 9037,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22353,
+          "name": "Entweihter Helm",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 5
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9037"
+    },
+    "22419": {
+      "name": "Schulterstücke des Schreckenspanzers",
+      "slot": "Shoulder",
+      "questId": 9038,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22354,
+          "name": "Entweihte Schulterstücke",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9038"
+    },
+    "22416": {
+      "name": "Brustplatte des Schreckenspanzers",
+      "slot": "Chest",
+      "questId": 9034,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22349,
+          "name": "Entweihte Brustplatte",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 25
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9034"
+    },
+    "22423": {
+      "name": "Armschienen des Schreckenspanzers",
+      "slot": "Wrist",
+      "questId": 9042,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22355,
+          "name": "Entweihte Armschienen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 6
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 1
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9042"
+    },
+    "22421": {
+      "name": "Stulpen des Schreckenspanzers",
+      "slot": "Hands",
+      "questId": 9040,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22357,
+          "name": "Entweihte Stulpen",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9040"
+    },
+    "22422": {
+      "name": "Taillenschutz des Schreckenspanzers",
+      "slot": "Waist",
+      "questId": 9041,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22356,
+          "name": "Entweihter Taillenschutz",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 8
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 1
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9041"
+    },
+    "22417": {
+      "name": "Beinplatten des Schreckenspanzers",
+      "slot": "Legs",
+      "questId": 9036,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22352,
+          "name": "Entweihte Beinplatten",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 20
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9036"
+    },
+    "22420": {
+      "name": "Sabatons des Schreckenspanzers",
+      "slot": "Feet",
+      "questId": 9039,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22358,
+          "name": "Entweihte Sabatons",
+          "quantity": 1
+        },
+        {
+          "itemId": 22375,
+          "name": "Kampfzerschlissenes Plattenstück",
+          "quantity": 12
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 2
+        },
+        {
+          "itemId": 15407,
+          "name": "Geschmeidiger unverwüstlicher Balg",
+          "quantity": 3
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9039"
+    },
+    "23059": {
+      "name": "Ring of the Dreadnaught",
+      "slot": "Ring",
+      "directDrop": true,
+      "source": "https://www.wowhead.com/classic/item=23059"
+    },
+    "22466": {
+      "name": "Kopfstück des Erdspalters",
+      "slot": "Head",
+      "questId": 9070,
+      "classMask": null,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 22360,
+          "name": "Entweihtes Kopfstück",
+          "quantity": 1
+        },
+        {
+          "itemId": 22374,
+          "name": "Kampfzerschlissenes Kettenstück",
+          "quantity": 15
+        },
+        {
+          "itemId": 12360,
+          "name": "Arkanitbarren",
+          "quantity": 4
+        },
+        {
+          "itemId": 20725,
+          "name": "Nexuskristall",
+          "quantity": 2
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=9070"
+    }
+  }
+}
