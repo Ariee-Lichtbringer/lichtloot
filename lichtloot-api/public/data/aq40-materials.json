@@ -1,0 +1,2078 @@
+{
+  "version": "classic-era-phase-5",
+  "checkedAt": "2026-09-07",
+  "items": {
+    "21355": {
+      "name": "Stiefel der Genesis",
+      "slot": "Boots",
+      "questId": 8665,
+      "classMask": 1024,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8665",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21353": {
+      "name": "Helm der Genesis",
+      "slot": "Helm",
+      "questId": 8667,
+      "classMask": 1024,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20930,
+          "name": "Vek'lors Diadem",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8667",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20930,
+      "kind": "set"
+    },
+    "21354": {
+      "name": "Schulterpolster der Genesis",
+      "slot": "Shoulder",
+      "questId": 8669,
+      "classMask": 1024,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8669",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21356": {
+      "name": "Beinkleider der Genesis",
+      "slot": "Pants",
+      "questId": 8668,
+      "classMask": 1024,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20931,
+          "name": "Haut des großen Sandwurms",
+          "quantity": 1
+        },
+        {
+          "itemId": 20882,
+          "name": "Götze des Krieges",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8668",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20931,
+      "kind": "set"
+    },
+    "21357": {
+      "name": "Weste der Genesis",
+      "slot": "Chest",
+      "questId": 8666,
+      "classMask": 1024,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20933,
+          "name": "Hülle des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8666",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20933,
+      "kind": "set"
+    },
+    "21365": {
+      "name": "Fußschützer des Hetzers",
+      "slot": "Boots",
+      "questId": 8626,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8626",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21366": {
+      "name": "Diadem des Hetzers",
+      "slot": "Helm",
+      "questId": 8657,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20930,
+          "name": "Vek'lors Diadem",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8657",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20930,
+      "kind": "set"
+    },
+    "21367": {
+      "name": "Schulterstücke des Hetzers",
+      "slot": "Shoulder",
+      "questId": 8659,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20882,
+          "name": "Götze des Krieges",
+          "quantity": 2
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8659",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21368": {
+      "name": "Gamaschen des Hetzers",
+      "slot": "Pants",
+      "questId": 8658,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20931,
+          "name": "Haut des großen Sandwurms",
+          "quantity": 1
+        },
+        {
+          "itemId": 20874,
+          "name": "Götze der Sonne",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8658",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20931,
+      "kind": "set"
+    },
+    "21370": {
+      "name": "Halsberge des Hetzers",
+      "slot": "Chest",
+      "questId": 8656,
+      "classMask": 4,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20929,
+          "name": "Knochenpanzer des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8656",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20929,
+      "kind": "set"
+    },
+    "21344": {
+      "name": "Stiefel des Mysteriums",
+      "slot": "Boots",
+      "questId": 8634,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20874,
+          "name": "Götze der Sonne",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8634",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21347": {
+      "name": "Reif des Mysteriums",
+      "slot": "Helm",
+      "questId": 8632,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20926,
+          "name": "Vek'nilashs Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 20875,
+          "name": "Götze der Nacht",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8632",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20926,
+      "kind": "set"
+    },
+    "21345": {
+      "name": "Schulterpolster des Mysteriums",
+      "slot": "Shoulder",
+      "questId": 8625,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20876,
+          "name": "Götze des Todes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8625",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21343": {
+      "name": "Roben des Mysteriums",
+      "slot": "Chest",
+      "questId": 8633,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20933,
+          "name": "Hülle des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20874,
+          "name": "Götze der Sonne",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8633",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20933,
+      "kind": "set"
+    },
+    "21388": {
+      "name": "Schienbeinschützer des Rächers",
+      "slot": "Boots",
+      "questId": 8655,
+      "classMask": 2,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8655",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21387": {
+      "name": "Krone des Rächers",
+      "slot": "Helm",
+      "questId": 8628,
+      "classMask": 2,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20930,
+          "name": "Vek'lors Diadem",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8628",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20930,
+      "kind": "set"
+    },
+    "21391": {
+      "name": "Schulterstücke des Rächers",
+      "slot": "Shoulder",
+      "questId": 8630,
+      "classMask": 2,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8630",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21389": {
+      "name": "Brustplatte des Rächers",
+      "slot": "Chest",
+      "questId": 8627,
+      "classMask": 2,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20929,
+          "name": "Knochenpanzer des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8627",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20929,
+      "kind": "set"
+    },
+    "21349": {
+      "name": "Fußlappen des Orakels",
+      "slot": "Boots",
+      "questId": 8596,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20876,
+          "name": "Götze des Todes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8596",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21348": {
+      "name": "Tiara des Orakels",
+      "slot": "Helm",
+      "questId": 8592,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20926,
+          "name": "Vek'nilashs Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8592",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20926,
+      "kind": "set"
+    },
+    "21350": {
+      "name": "Mantel des Orakels",
+      "slot": "Shoulder",
+      "questId": 8594,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8594",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21352": {
+      "name": "Beinkleider des Orakels",
+      "slot": "Pants",
+      "questId": 8593,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20927,
+          "name": "Ouros intakte Haut",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8593",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20927,
+      "kind": "set"
+    },
+    "21351": {
+      "name": "Gewänder des Orakels",
+      "slot": "Chest",
+      "questId": 8603,
+      "classMask": 16,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20933,
+          "name": "Hülle des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20876,
+          "name": "Götze des Todes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8603",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20933,
+      "kind": "set"
+    },
+    "21359": {
+      "name": "Stiefel des Todesboten",
+      "slot": "Boots",
+      "questId": 8637,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8637",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21360": {
+      "name": "Helm des Todesboten",
+      "slot": "Helm",
+      "questId": 8639,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20930,
+          "name": "Vek'lors Diadem",
+          "quantity": 1
+        },
+        {
+          "itemId": 20882,
+          "name": "Götze des Krieges",
+          "quantity": 2
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8639",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20930,
+      "kind": "set"
+    },
+    "21361": {
+      "name": "Schiftung des Todesboten",
+      "slot": "Shoulder",
+      "questId": 8641,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20874,
+          "name": "Götze der Sonne",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8641",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21362": {
+      "name": "Gamaschen des Todesboten",
+      "slot": "Pants",
+      "questId": 8640,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20927,
+          "name": "Ouros intakte Haut",
+          "quantity": 1
+        },
+        {
+          "itemId": 20875,
+          "name": "Götze der Nacht",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8640",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20927,
+      "kind": "set"
+    },
+    "21364": {
+      "name": "Weste des Todesboten",
+      "slot": "Chest",
+      "questId": 8638,
+      "classMask": 8,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20929,
+          "name": "Knochenpanzer des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8638",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20929,
+      "kind": "set"
+    },
+    "21373": {
+      "name": "Fußschützer des Sturmrufers",
+      "slot": "Boots",
+      "questId": 8621,
+      "classMask": 64,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8621",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21372": {
+      "name": "Diadem des Sturmrufers",
+      "slot": "Helm",
+      "questId": 8623,
+      "classMask": 64,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20930,
+          "name": "Vek'lors Diadem",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8623",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20930,
+      "kind": "set"
+    },
+    "21376": {
+      "name": "Schulterstücke des Sturmrufers",
+      "slot": "Shoulder",
+      "questId": 8602,
+      "classMask": 64,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20879,
+          "name": "Götze des Lebens",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8602",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21375": {
+      "name": "Gamaschen des Sturmrufers",
+      "slot": "Pants",
+      "questId": 8624,
+      "classMask": 64,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20931,
+          "name": "Haut des großen Sandwurms",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8624",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20931,
+      "kind": "set"
+    },
+    "21374": {
+      "name": "Halsberge des Sturmrufers",
+      "slot": "Chest",
+      "questId": 8622,
+      "classMask": 64,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20929,
+          "name": "Knochenpanzer des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8622",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20929,
+      "kind": "set"
+    },
+    "21338": {
+      "name": "Fußlappen des Verdammnisrufers",
+      "slot": "Boots",
+      "questId": 8660,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20875,
+          "name": "Götze der Nacht",
+          "quantity": 2
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8660",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21337": {
+      "name": "Reif des Verdammnisrufers",
+      "slot": "Helm",
+      "questId": 8662,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20926,
+          "name": "Vek'nilashs Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 20876,
+          "name": "Götze des Todes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8662",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20926,
+      "kind": "set"
+    },
+    "21335": {
+      "name": "Mantel des Verdammnisrufers",
+      "slot": "Shoulder",
+      "questId": 8664,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20932,
+          "name": "Dominanzbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8664",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20932,
+      "kind": "set"
+    },
+    "21336": {
+      "name": "Beinkleider des Verdammnisrufers",
+      "slot": "Pants",
+      "questId": 8663,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20931,
+          "name": "Haut des großen Sandwurms",
+          "quantity": 1
+        },
+        {
+          "itemId": 20878,
+          "name": "Götze der Wiedergeburt",
+          "quantity": 2
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8663",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20931,
+      "kind": "set"
+    },
+    "21334": {
+      "name": "Roben des Verdammnisrufers",
+      "slot": "Chest",
+      "questId": 8661,
+      "classMask": 256,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20933,
+          "name": "Hülle des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20875,
+          "name": "Götze der Nacht",
+          "quantity": 2
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8661",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20933,
+      "kind": "set"
+    },
+    "21333": {
+      "name": "Schienbeinschützer des Eroberers",
+      "slot": "Boots",
+      "questId": 8559,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20882,
+          "name": "Götze des Krieges",
+          "quantity": 2
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20859,
+          "name": "Goldskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8559",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21329": {
+      "name": "Krone des Eroberers",
+      "slot": "Helm",
+      "questId": 8561,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20926,
+          "name": "Vek'nilashs Reif",
+          "quantity": 1
+        },
+        {
+          "itemId": 20874,
+          "name": "Götze der Sonne",
+          "quantity": 2
+        },
+        {
+          "itemId": 20862,
+          "name": "Kristallskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8561",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20926,
+      "kind": "set"
+    },
+    "21330": {
+      "name": "Schiftung des Eroberers",
+      "slot": "Shoulder",
+      "questId": 8544,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20928,
+          "name": "Befehlsbindungen der Qiraji",
+          "quantity": 1
+        },
+        {
+          "itemId": 20875,
+          "name": "Götze der Nacht",
+          "quantity": 2
+        },
+        {
+          "itemId": 20863,
+          "name": "Tonskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20858,
+          "name": "Steinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8544",
+      "questgiver": {
+        "id": 15502,
+        "name": "Andorgos"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Neutral"
+      },
+      "tokenId": 20928,
+      "kind": "set"
+    },
+    "21332": {
+      "name": "Beinschützer des Eroberers",
+      "slot": "Pants",
+      "questId": 8560,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20927,
+          "name": "Ouros intakte Haut",
+          "quantity": 1
+        },
+        {
+          "itemId": 20876,
+          "name": "Götze des Todes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8560",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20927,
+      "kind": "set"
+    },
+    "21331": {
+      "name": "Brustplatte des Eroberers",
+      "slot": "Chest",
+      "questId": 8562,
+      "classMask": 1,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20929,
+          "name": "Knochenpanzer des alten Gottes",
+          "quantity": 1
+        },
+        {
+          "itemId": 20882,
+          "name": "Götze des Krieges",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8562",
+      "questgiver": {
+        "id": 15504,
+        "name": "Vethsera"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Wohlwollend"
+      },
+      "tokenId": 20929,
+      "kind": "set"
+    },
+    "21346": {
+      "name": "Gamaschen des Mysteriums",
+      "slot": "Pants",
+      "questId": 8631,
+      "classMask": 128,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20927,
+          "name": "Ouros intakte Haut",
+          "quantity": 1
+        },
+        {
+          "itemId": 20877,
+          "name": "Götze der Weisen",
+          "quantity": 2
+        },
+        {
+          "itemId": 20860,
+          "name": "Silberskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20864,
+          "name": "Knochenskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8631",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20927,
+      "kind": "set"
+    },
+    "21390": {
+      "name": "Beinschützer des Rächers",
+      "slot": "Pants",
+      "questId": 8629,
+      "classMask": 2,
+      "gold": 0,
+      "requirements": [
+        {
+          "itemId": 20931,
+          "name": "Haut des großen Sandwurms",
+          "quantity": 1
+        },
+        {
+          "itemId": 20881,
+          "name": "Götze des Kampfes",
+          "quantity": 2
+        },
+        {
+          "itemId": 20865,
+          "name": "Elfenbeinskarabäus",
+          "quantity": 5
+        },
+        {
+          "itemId": 20861,
+          "name": "Bronzeskarabäus",
+          "quantity": 5
+        }
+      ],
+      "source": "https://www.wowhead.com/classic/de/quest=8629",
+      "questgiver": {
+        "id": 15503,
+        "name": "Kandrostrasz"
+      },
+      "location": "Tempel von Ahn’Qiraj · Raum hinter dem Propheten Skeram",
+      "minimumLevel": 60,
+      "reputation": {
+        "faction": "Brut Nozdormus",
+        "standing": "Freundlich"
+      },
+      "tokenId": 20931,
+      "kind": "set"
+    },
+    "21242": {
+      "name": "Gesegnete Qirajikriegsaxt",
+      "questId": 8789,
+      "kind": "weapon",
+      "tokenId": 21232,
+      "requirements": [
+        {
+          "itemId": 21232,
+          "name": "Imperiale Qirajiwaffe",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15380,
+        "name": "Arygos"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8789"
+    },
+    "21272": {
+      "name": "Gesegnete Qirajimuskete",
+      "questId": 8789,
+      "kind": "weapon",
+      "tokenId": 21232,
+      "requirements": [
+        {
+          "itemId": 21232,
+          "name": "Imperiale Qirajiwaffe",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15380,
+        "name": "Arygos"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8789"
+    },
+    "21244": {
+      "name": "Gesegneter Qirajipugio",
+      "questId": 8789,
+      "kind": "weapon",
+      "tokenId": 21232,
+      "requirements": [
+        {
+          "itemId": 21232,
+          "name": "Imperiale Qirajiwaffe",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15380,
+        "name": "Arygos"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8789"
+    },
+    "21269": {
+      "name": "Gesegneter Qirajischild",
+      "questId": 8789,
+      "kind": "weapon",
+      "tokenId": 21232,
+      "requirements": [
+        {
+          "itemId": 21232,
+          "name": "Imperiale Qirajiwaffe",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15380,
+        "name": "Arygos"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8789"
+    },
+    "21273": {
+      "name": "Gesegneter Akolythenstab der Qiraji",
+      "questId": 8790,
+      "kind": "weapon",
+      "tokenId": 21237,
+      "requirements": [
+        {
+          "itemId": 21237,
+          "name": "Imperiale Qirajiinsignie",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15378,
+        "name": "Merithra des Traums"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8790"
+    },
+    "21275": {
+      "name": "Gesegneter Weissagungsstab der Qiraji",
+      "questId": 8790,
+      "kind": "weapon",
+      "tokenId": 21237,
+      "requirements": [
+        {
+          "itemId": 21237,
+          "name": "Imperiale Qirajiinsignie",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15378,
+        "name": "Merithra des Traums"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8790"
+    },
+    "21268": {
+      "name": "Gesegneter Qirajikriegshammer",
+      "questId": 8790,
+      "kind": "weapon",
+      "tokenId": 21237,
+      "requirements": [
+        {
+          "itemId": 21237,
+          "name": "Imperiale Qirajiinsignie",
+          "quantity": 1
+        },
+        {
+          "itemId": 18562,
+          "name": "Elementiumerz",
+          "quantity": 3
+        }
+      ],
+      "minimumLevel": 60,
+      "questgiver": {
+        "id": 15378,
+        "name": "Merithra des Traums"
+      },
+      "location": "Tempel von Ahn’Qiraj · bei den Drachen hinter den Zwillingsimperatoren",
+      "reputation": null,
+      "source": "https://www.wowhead.com/classic/de/quest=8790"
+    }
+  }
+}
