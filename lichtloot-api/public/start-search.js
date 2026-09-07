@@ -68,16 +68,18 @@
     const section=document.createElement('section');
     section.className='start-function-search';
     section.setAttribute('aria-label','Funktionen suchen');
-    section.innerHTML='<form role="search"><label for="startFunctionSearch">Was möchtest du machen?</label><div class="start-search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="startFunctionSearch" type="search" autocomplete="off" placeholder="Funktion, Raid, Itemname oder Item-ID" aria-controls="startSearchResults"><button type="submit">Suchen</button></div></form><div id="startSearchResults" class="start-search-results" hidden></div><p class="start-search-status" role="status" aria-live="polite"></p>';
+    section.innerHTML='<form role="search"><label for="startFunctionSearch">Was möchtest du machen?</label><div class="start-search-field"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="startFunctionSearch" type="search" autocomplete="off" placeholder="Funktion, Raid, Spieler oder Item" aria-controls="startSearchResults"><button type="submit">Suchen</button></div></form><div id="startSearchResults" class="start-search-results" hidden></div><p class="start-search-status" role="status" aria-live="polite"></p>';
     header.after(section);
-    if(management){section.classList.add('management-function-search');section.querySelector('input').placeholder='Verwaltung, Raid, Itemname oder Item-ID';}
+    if(management){section.classList.add('management-function-search');section.querySelector('input').placeholder='Verwaltung, Raid, Spieler oder Item';}
     const back=document.createElement('button');back.type='button';back.className='start-search-back';back.textContent='← Zurück zu den Raids';if(!management)section.append(back);back.addEventListener('click',()=>{document.body.classList.remove('start-search-open');goHomeView();});
     const activate=entry=>{if(!management)document.body.classList.add('start-search-open');entry[3]();};
     const input=section.querySelector('input'),results=section.querySelector('#startSearchResults'),status=section.querySelector('[role="status"]');
-    let matches=[], itemTimer, itemRequest, generation=0;
-    const close=()=>{generation++;clearTimeout(itemTimer);itemRequest?.abort();results.hidden=true;status.textContent='';};
+    let matches=[], itemTimer, itemRequest, playerTimer, playerRequest, generation=0;
+    const close=()=>{generation++;clearTimeout(itemTimer);itemRequest?.abort();clearTimeout(playerTimer);playerRequest?.abort();results.hidden=true;status.textContent='';};
     const render=()=>{
-      const current=++generation;clearTimeout(itemTimer);itemRequest?.abort();
+      const current=++generation;clearTimeout(itemTimer);itemRequest?.abort();clearTimeout(playerTimer);playerRequest?.abort();
+      let itemTotal=null,playerTotal=null;
+      const updateStatus=()=>{status.textContent=[`${matches.length} ${matches.length===1?'Funktion':'Funktionen'}`,itemTotal===null?'':`${itemTotal} ${itemTotal===1?'Item':'Items'}`,playerTotal===null?'':`${playerTotal} Charaktere`].filter(Boolean).join(' · ');};
 
       const tokens=normal(input.value).split(/\s+/).filter(word=>word&&!['ich','mochte','will','einen','ein','eine','meinen','wie','kann','man','und','oder','zu'].includes(word));
       const available=[...entries,...raidEntries()];
@@ -106,8 +108,29 @@
               detail.textContent=[GuildLootItems.origins(item),item.itemId?`ID ${item.itemId}`:'','Tooltip öffnen'].filter(Boolean).join(' · ');
               button.append(title,detail);button.addEventListener('click',()=>{close();GuildLootItems.open(item,input);});group.append(button);
             });
-            status.textContent=`${matches.length} ${matches.length===1?'Funktion':'Funktionen'}, ${data.total} ${data.total===1?'Item':'Items'} gefunden.`;
+            itemTotal=data.total;updateStatus();
           }catch(error){if(current!==generation||error.name==='AbortError')return;note.textContent='Itemsuche derzeit nicht erreichbar. Bitte erneut suchen.';}
+        },250);
+      }
+      if(input.value.trim().length>=2 && window.GuildLootPlayers){
+        const group=document.createElement('div');group.className='start-search-items';
+        const heading=document.createElement('strong');heading.textContent='Spieler · aktive Gilde';group.append(heading);
+        const note=document.createElement('p');note.setAttribute('role','status');note.textContent='Spieler werden gesucht …';group.append(note);results.append(group);
+        const term=input.value.trim();
+        playerTimer=setTimeout(async()=>{
+          playerRequest=new AbortController();
+          try{
+            const data=await GuildLootPlayers.search(term,playerRequest.signal);
+            if(current!==generation)return;
+            playerTotal=data.total;updateStatus();
+            note.textContent=data.players.length?`${data.total} Charaktere gefunden${data.total>data.players.length?' · die besten 25 Treffer werden angezeigt':''}`:'Keine passenden Spieler in dieser Gilde gefunden.';
+            data.players.forEach(player=>{
+              const button=document.createElement('button');button.type='button';
+              const title=document.createElement('strong'),detail=document.createElement('span');title.textContent=player.name;
+              detail.textContent=[player.server||'Server nicht hinterlegt',player.className,'P0+-Punkte & Ausrüstung'].filter(Boolean).join(' · ');
+              button.append(title,detail);button.addEventListener('click',()=>{close();GuildLootPlayers.open(player,input);});group.append(button);
+            });
+          }catch(error){if(current!==generation||error.name==='AbortError')return;note.textContent='Spielersuche derzeit nicht erreichbar. Bitte erneut suchen.';}
         },250);
       }
       results.hidden=false;

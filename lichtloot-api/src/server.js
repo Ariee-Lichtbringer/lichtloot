@@ -1,3 +1,4 @@
+import { searchGuildPlayers, publicPlayerPoints } from "./player-search.js";
 import { searchLootCatalog } from "./item-search.js";
 import {queueBossTokenNotice} from "./boss-token-notices.js";
 import {createWclAttendanceStore} from "./wcl-attendance-store.js";
@@ -30928,6 +30929,15 @@ app.get("/api/apps-script", async (req, res, next) => {
       const onyBackfill = await applyOnyLootMetadataBackfillOnce();
       const mcCoreFelclothPattern = await applyMcCoreFelclothBagPatternCorrectionOnce();
       return res.json({ ...metadata, onyBackfill, mcCoreFelclothPattern, guild: guild.slug });
+    }
+
+    if (action === "searchGuildPlayers") {
+      await ensureUnlinkedP0PlusSchema();
+      return res.json(await searchGuildPlayers(query, guild.id, req.query.q));
+    }
+    if (action === "getSearchPlayerPoints") {
+      const points = await getP0Plus(guild.id);
+      return res.json(publicPlayerPoints(points.entries, clean(req.query.player), clean(req.query.server)));
     }
 
     if (action === "searchLootItems") {

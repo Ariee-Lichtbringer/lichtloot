@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
+const nodes=[];
+const element=tag=>({tag,children:[],className:'',textContent:'',open:false,append(...children){this.children.push(...children)},replaceChildren(){this.children=[]},setAttribute(){},addEventListener(){},showModal(){this.open=true},focus(){}});
+const context=vm.createContext({window:{},document:{body:{append:n=>nodes.push(n)},createElement:element}});
+vm.runInContext(fs.readFileSync(new URL('../../item-search-ui.js',import.meta.url),'utf8'),context);
+context.window.GuildLootItems.open({name:'Reif des Glaubens',quality:'episch',tooltip:'Circlet of Faith | Item Level 88 | +22 Ausdauer | Anlegen: Heilung +75 | Set: Testbonus | Haltbarkeit 37 / 60',raids:['naxx'],itemId:'test'});
+const dialog=nodes[0],title=dialog.children.find(n=>n.tag==='h2'),card=dialog.children.find(n=>n.className==='item-search-card');
+assert.ok(dialog.className.includes('item-search-wow'));assert.ok(title.className.includes('epic'));
+assert.ok(!card.children.some(n=>n.textContent==='Circlet of Faith'),'No duplicate English item title');
+assert.ok(card.children.find(n=>n.textContent.startsWith('Anlegen')).className.includes('item-search-effect-start'));
+assert.ok(card.children.find(n=>n.textContent.startsWith('Set:')).className.includes('item-search-effect'));
+assert.ok(card.children.find(n=>n.textContent.startsWith('Haltbarkeit')).className.includes('item-search-footer-start'));
+context.window.GuildLootItems.open({name:'<img onerror=alert(1)>',quality:'rare',stats:['+1 Stärke']});
+assert.equal(dialog.children.find(n=>n.tag==='h2').textContent,'<img onerror=alert(1)>','Names remain text, never HTML');
+console.log('PASS: quality names, duplicate title suppression, green effects and set bonuses, footer spacing and safe text rendering.');

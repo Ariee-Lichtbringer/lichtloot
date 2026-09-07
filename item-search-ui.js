@@ -6,7 +6,7 @@
  let dialog, returnFocus;
  function open(item,opener){
   returnFocus=opener;
-  if(!dialog){dialog=document.createElement('dialog');dialog.className='item-search-dialog';dialog.setAttribute('aria-labelledby','itemSearchTitle');document.body.append(dialog);
+  if(!dialog){dialog=document.createElement('dialog');dialog.className='item-search-dialog item-search-wow';dialog.setAttribute('aria-labelledby','itemSearchTitle');document.body.append(dialog);
    dialog.addEventListener('close',()=>returnFocus?.focus());
    dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
   }
@@ -14,14 +14,23 @@
   const close=node('button','✕','item-search-close');close.type='button';close.setAttribute('aria-label','Itemdetails schließen');close.addEventListener('click',()=>dialog.close());dialog.append(close);
   const title=node('h2',item.name);title.id='itemSearchTitle';
   const quality=String(item.quality||'').toLowerCase();
-  title.className='item-search-title '+({'4':'epic','3':'rare','2':'uncommon','5':'legendary'}[quality]||(['epic','rare','uncommon','legendary'].includes(quality)?quality:''));dialog.append(title);
-  dialog.append(node('p',[origins(item),item.itemId?`Item-ID: ${item.itemId}`:''].filter(Boolean).join(' · '),'item-search-origin'));
+  title.className='item-search-title '+({'4':'epic','3':'rare','2':'uncommon','5':'legendary','episch':'epic','selten':'rare','ungewöhnlich':'uncommon','legendär':'legendary'}[quality]||(['epic','rare','uncommon','legendary'].includes(quality)?quality:''));dialog.append(title);
   const card=node('div','','item-search-card');
   const tooltip=String(item.tooltip||'').split(/\||\n/).map(s=>s.trim()).filter(Boolean);
   const lines=tooltip.length?tooltip:[item.bind,[item.slot,item.type].filter(Boolean).join(' · '),...(item.stats||[]),item.needed,item.equip].filter(Boolean);
-  for(const line of lines){if(line===item.name)continue;card.append(node('p',line,/^(Anlegen:|Benutzen:|Equip:|Use:)/i.test(line)?'item-search-effect':''));}
+  let effectsStarted=false,footerStarted=false;
+  if(tooltip.length>1 && /^(Item Level|Gegenstandsstufe)\b/i.test(tooltip[1]))lines.shift();
+  for(const line of lines){
+    if(line===item.name)continue;
+    const effect=/^(Anlegen:|Benutzen:|Equip:|Use:|Set:|\(\d+\) Set:|Chance bei Treffer|Chance on hit|Verzaubert:)/i.test(line);
+    const footer=/^(Haltbarkeit|Benötigt|Verkaufspreis|Durability|Requires Level|Sell Price)/i.test(line);
+    const classes=[];if(effect){classes.push('item-search-effect');if(!effectsStarted){classes.push('item-search-effect-start');effectsStarted=true;}}
+    if(footer&&effectsStarted&&!footerStarted){classes.push('item-search-footer-start');footerStarted=true;}
+    card.append(node('p',line,classes.join(' ')));
+  }
   if(!lines.length)card.append(node('p','Für dieses Item sind noch keine Tooltipwerte hinterlegt.'));
   dialog.append(card);
+  dialog.append(node('p',[origins(item),item.itemId?`Item-ID: ${item.itemId}`:''].filter(Boolean).join(' · '),'item-search-origin'));
   if(item.boss)dialog.append(node('p',`Boss / Quelle: ${item.boss}`,'item-search-origin'));
   if(!dialog.open)dialog.showModal();close.focus();
  }

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {rankPlayerSearch,publicPlayerPoints,searchGuildPlayers} from '../src/player-search.js';
+const rows=[{name:'Ariee',server:'Everlook',class_name:'Priester'},{name:'Ariee',server:'Lakeshire',class_name:'Magier'},{name:'Áriee',server:'Everlook',class_name:'Priester'}];
+assert.equal(rankPlayerSearch(rows,'ariee').total,3,'Search tolerates accents but keeps identities separate');
+assert.equal(rankPlayerSearch(rows,'ariee lakeshire').players.length,1);
+assert.equal(rankPlayerSearch(rows,'airee').players.length,3,'Transposed letters');
+assert.equal(rankPlayerSearch(rows,'x').players.length,0);
+const result=publicPlayerPoints([{player:'Ariee',server:'Everlook',raid:'zg-prime',item:'Götze',points:.5,note:'private'}, {player:'Ariee',server:'Everlook',raid:'zg-late',item:'Götze',points:2},{player:'Ariee',server:'Lakeshire',raid:'zg',item:'Götze',points:99},{player:'Áriee',server:'Everlook',raid:'zg',item:'Götze',points:99}],'ARIEE','everlook');
+assert.equal(result.total,2.5);assert.equal(result.entries.length,2);assert.ok(!JSON.stringify(result).includes('private'));
+assert.equal(publicPlayerPoints([],'Zero','Everlook').total,0);
+let called=false;await searchGuildPlayers(()=>{called=true},'guild','a');assert.equal(called,false);
+await searchGuildPlayers(async(sql,args)=>{assert.deepEqual(args,['guild']);assert.equal((sql.match(/guild_id=\$1/g)||[]).length,2);return {rows:[{...rows[0],player_pin:'secret'}]};},'guild','ariee').then(r=>assert.ok(!JSON.stringify(r).includes('secret')));
+console.log('PASS: typo search, realm and accent identity separation, per-raid points, no credentials or notes, guild scoping, empty and short searches.');
