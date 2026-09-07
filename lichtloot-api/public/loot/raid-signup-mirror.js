@@ -386,7 +386,32 @@
   }
   function syncPageSignupState(){const select=document.getElementById("raidSignupPageStatus"),character=document.getElementById("raidSignupPageCharacter"),feedback=document.getElementById("raidSignupPageFeedback");if(!select||!character)return;if(!select.querySelector('option[value=""]'))select.insertAdjacentHTML("afterbegin",'<option value="">⚪ Nicht angemeldet</option>');const row=allSignupRows.find(item=>norm(item.player||item.char||item.playerName||item.characterName)===norm(character.value));if(row){const status=statusInfo(row.status||row.signupStatus);select.value=status[2];if(feedback)feedback.innerHTML=`Aktueller Status: <strong>${status[0]} ${esc(status[1])}</strong>`;}else{select.value="";if(feedback)feedback.innerHTML='<strong>⚪ Nicht angemeldet</strong> – beim Speichern wird eine neue Anmeldung erstellt.';}}
   function refreshPageSignupState(){const raidId=activeSignupRaidId(),now=Date.now();if(!raidId)return;if(raidId!==lastPageSignupLoadKey||now-lastPageSignupLoadAt>30000){lastPageSignupLoadKey=raidId;lastPageSignupLoadAt=now;load();}}
-  async function load(){const box=document.getElementById("raidSignupMirrorList"),raidId=activeSignupRaidId(),raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";if(!raidId)return;if(box)box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';try{const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");allSignupRows=[...(result.signups||[]),...(result.externalSignups||[])];pageSignupLoadedRaidId=String(raidId);syncPageSignupState();autoSelectRaidCharacter();if(box)render(allSignupRows);}catch(error){if(box)box.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;}}
+  let signupLoadSequence=0;
+  async function load(){
+    const raidId=activeSignupRaidId(),raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";
+    if(!raidId)return;
+    const sequence=++signupLoadSequence,box=document.getElementById("raidSignupMirrorList");
+    const hasLoaded=pageSignupLoadedRaidId===String(raidId);
+    if(box){
+      if(hasLoaded){render(allSignupRows);box.setAttribute("aria-busy","true");}
+      else box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';
+    }
+    try{
+      const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});
+      if(sequence!==signupLoadSequence||String(activeSignupRaidId())!==String(raidId))return;
+      if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");
+      allSignupRows=[...(result.signups||[]),...(result.externalSignups||[])];pageSignupLoadedRaidId=String(raidId);
+      syncPageSignupState();autoSelectRaidCharacter();
+      if(document.getElementById("raidSignupMirrorList"))render(allSignupRows);
+    }catch(error){
+      if(sequence!==signupLoadSequence)return;
+      const target=document.getElementById("raidSignupMirrorList");
+      if(target){
+        if(hasLoaded){render(allSignupRows);target.insertAdjacentHTML("afterbegin",'<div class="raid-signup-mirror-empty">Aktualisierung fehlgeschlagen. Zuletzt geladener Stand wird angezeigt.</div>');}
+        else target.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;
+      }
+    }finally{if(sequence===signupLoadSequence)document.getElementById("raidSignupMirrorList")?.removeAttribute("aria-busy");}
+  }
   async function raidLeadLogin(){const pin=document.getElementById("raidSignupLeadPin")?.value.trim()||"",feedback=document.getElementById("raidSignupLeadFeedback"),raidId=String(activeSignupRaidId());if(!pin){if(feedback)feedback.textContent="Bitte LeadPIN eingeben.";return;}if(feedback)feedback.textContent="PIN wird geprüft …";try{const result=await apiJsonp({action:"validateLeadPin",leadPin:pin,raidId,allowMaster:"true",t:Date.now()});if(!result?.success)throw new Error(result?.error||"Gildenleiter-/LeadPIN ist nicht gültig.");raidLeadAuthenticated=true;raidLeadPin=pin;raidLeadMaster=result.managerMode==="master";sessionStorage.setItem(`raidSignupLeadPin_${raidId}`,pin);if(feedback)feedback.textContent=raidLeadMaster?"✓ Gildenleiter-Funktionen freigeschaltet.":"✓ Raidlead-Funktionen freigeschaltet.";document.getElementById("raidSignupLeadLogin")?.classList.add("is-authenticated");render(allSignupRows);}catch(error){raidLeadAuthenticated=false;raidLeadPin="";raidLeadMaster=false;if(feedback)feedback.textContent=error.message||"PIN konnte nicht geprüft werden.";}}
   async function setRaidLeadStatus(signupId,status){if(!raidLeadAuthenticated||!raidLeadPin)return;const feedback=document.getElementById("raidSignupLeadFeedback"),labels={signed:"angemeldet",bench:"auf die Bank gesetzt",late:"als verspätet markiert",absent:"als abwesend markiert"};if(feedback)feedback.textContent="Status wird gespeichert …";try{const auth=raidLeadMaster?{masterCode:raidLeadPin}:{leadPin:raidLeadPin},result=await apiJsonp({action:"guildUpdateRaidHelperSignup",signupId,signupStatus:status,...auth,notifyMessage:`${raidLeadMaster?"Gildenleitung":"Raidlead"} hat den Status auf ${labels[status]||status} geändert.`,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Status konnte nicht gespeichert werden.");if(feedback)feedback.textContent=result.noticeQueued?"✓ Status gespeichert und Spieler im Discord informiert.":"✓ Status gespeichert. Discord-Raidanmelder wird aktualisiert.";await load();}catch(error){if(feedback)feedback.textContent=error.message||"Status konnte nicht gespeichert werden.";}}
   async function saveOwnSignup(){

@@ -12,6 +12,9 @@
     create:'M5 7h22v21H5Z M10 3v8 M22 3v8 M5 13h22 M16 17v8 M12 21h8',
     bell:'M7 22h18l-3-5v-5a6 6 0 0 0-12 0v5l-3 5Z M13 26a3 3 0 0 0 6 0 M16 2v3',
     shield:'M5 7l11-4 11 4v10c0 6-6 10-11 13C11 27 5 23 5 17V7Z M9 10l7-3 7 3v7c0 4-4 7-7 9-3-2-7-5-7-9v-7Z',
+    mail:'M3 7h26v19H3Z M3 8l13 10L29 8 M3 26l9-10 M29 26l-9-10',
+    exit:'M14 4H5v24h9 M11 16h18 M23 10l6 6-6 6',
+    key:'M12 17a7 7 0 1 1 4-4L29 26l-3 3-4-4 2-2-3-3-2 2-7-4Z M7 8h.01',
     leadership:'M5 10l11-3 11 3v8c0 5-6 9-11 12C11 27 5 23 5 18v-8Z M10 7 8 2l5 3 3-4 3 4 5-3-2 5 M16 12l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1Z'
   };
   let count=0;
@@ -32,6 +35,17 @@
         const action=(button.getAttribute('onclick')||'').match(/openRaidStartAction\('([^']+)'/);
         const name=button.textContent.includes('Raidregeln')?'raidRules':button.textContent.includes('Prioseiten')?'prioPages':action?.[1]||'shield';
         button.querySelector('img')?.remove();button.prepend(icon(name));
+      });
+    }
+    const admin=document.querySelector('.app-frame > .sidebar');
+    if(admin){
+      document.body.classList.add('management-navigation');
+      admin.querySelectorAll('.side-link').forEach(button=>{
+        if(button.querySelector('.fantasy-nav-icon'))return;
+        const label=(button.getAttribute('aria-label')||button.textContent).toLowerCase();
+        const mappings=[[/logout/,'exit'],[/passwort/,'key'],[/postfach|informieren|benachrichtigung/,'mail'],[/dashboard|startseite/,'dashboard'],[/hordenbuff/,'hordenbuff'],[/worldbuff/,'worldbuff'],[/plündermeister|raidlead/,'raidlead'],[/p0|po\+|punkte|dkp/,'p0plus'],[/loganalys|statistik|spieleranalyse/,'logs'],[/prioseite|einträge|raidsheet|aufstellung/,'prioPages'],[/anmelder|raid erstellen|raids/,'create'],[/sichern|archiv/,'raidlead'],[/hinweis|erreichbar/,'bell']];
+        const name=mappings.find(([pattern])=>pattern.test(label))?.[1]||'shield';
+        const old=button.querySelector('.side-icon-img,.side-icon');if(old)old.replaceWith(icon(name));
       });
     }
     const side=document.querySelector('.start-sidebar');if(!side)return;

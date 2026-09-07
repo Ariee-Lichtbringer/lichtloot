@@ -77,3 +77,21 @@ body.start-dashboard-body .start-sidebar>*{flex-shrink:0}
 #meinLichtLootCard .account-current-raids .character-raid-prios span{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:1350px){#meinLichtLootCard .account-private-row{grid-template-columns:220px minmax(0,1fr)}#meinLichtLootCard .account-guild-switch{grid-column:1/-1}}
 @media(max-width:850px){#meinLichtLootCard .account-private-row{grid-template-columns:minmax(0,1fr)}#meinLichtLootCard .account-current-raids .character-raid-list{max-height:320px}}
+
+/* Management screens share the dashboard's navigation materials and emblems. */
+.management-navigation .app-frame{grid-template-columns:260px minmax(0,1fr)}
+.management-navigation .app-frame>.sidebar{position:sticky;top:12px;align-self:start;box-sizing:border-box;width:auto;min-height:0;height:calc(100dvh - 24px);margin:12px 0 12px 12px;padding:20px 12px 16px;overflow:auto;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:linear-gradient(145deg,#1b2330,#101824 70%);scrollbar-width:thin;scrollbar-color:#536171 transparent}
+.management-navigation .side-logo{width:166px;max-height:94px;height:auto;object-fit:contain;margin:0 auto 22px;filter:none}
+.management-navigation .side-nav{gap:5px}
+.management-navigation .side-group{border:0;background:transparent;box-shadow:none;margin-top:10px}
+.management-navigation .side-group-toggle{min-height:34px;padding:10px 12px 6px;border:0;background:transparent;color:#9ba8b9;font-size:10px;font-weight:650;letter-spacing:.09em;text-transform:uppercase}
+.management-navigation .side-group-items{padding:0;gap:3px;border:0;background:transparent}
+.management-navigation .side-link{position:relative;display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:#e4e9f1;font-size:13px;font-weight:650;line-height:1.35;white-space:normal}
+.management-navigation .side-link span:not(.side-count){font-size:13px;line-height:1.35;white-space:normal}
+.management-navigation .side-link.active{border-color:rgba(var(--gold-rgb),.15);background:linear-gradient(90deg,rgba(var(--gold-rgb),.14),rgba(var(--gold-rgb),.025))}
+.management-navigation .side-link.active:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--gold);border-radius:4px}
+.management-navigation .side-link:hover{background:#ffffff07;border-color:#ffffff12}
+.management-navigation .side-link:focus-visible,.management-navigation .side-group-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.management-navigation .sidebar-foot{margin-top:14px;padding-top:12px;border-top:1px solid #ffffff12}
+@media(max-width:1000px){.management-navigation .app-frame{grid-template-columns:1fr}.management-navigation .app-frame>.sidebar{position:relative;top:0;height:auto;margin:10px;overflow:visible}.management-navigation .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.management-navigation .side-nav{grid-template-columns:1fr}}
