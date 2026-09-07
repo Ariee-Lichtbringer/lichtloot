@@ -18,3 +18,12 @@ const weapon=c.stats({tooltip:'187 - 282 Damage Speed 3.20 | (73.28 damage per s
 let focused=false,eventType='',notice='';const input={value:'',dispatchEvent(e){eventType=e.type},before(n){notice=n.textContent},scrollIntoView(){},focus(){focused=true}};
 vm.runInNewContext(fs.readFileSync(new URL('../../item-prio-handoff.js',import.meta.url),'utf8'),{URLSearchParams,location:{search:'?itemSearch=Reif&plannedFor=Ariee'},document:{readyState:'complete',getElementById(id){assert.equal(id,'itemSearch');return input},createElement(){return {setAttribute(){}}}},Event:class{constructor(type){this.type=type}}});
 assert.equal(input.value,'Reif');assert.equal(eventType,'input');assert.equal(focused,true);assert.ok(notice.includes('Ariee'));console.log('PASS: gained set threshold, weapon DPS/speed, safe handoff focuses item search without changing raid or priority.');
+const totals=c.addTotals(d.rows,gear,{STAMINA:262,INTELLECT:364});
+assert.equal(totals.find(r=>r.key==='sta').totalBefore,262);assert.equal(totals.find(r=>r.key==='sta').totalAfter,276);
+assert.equal(totals.find(r=>r.key==='int').totalAfter,369);
+assert.equal(totals.find(r=>r.key==='healing').totalBefore,29);assert.equal(totals.find(r=>r.key==='healing').totalSource,'Erkannte Ausrüstung');
+assert.equal(c.addTotals([{key:'sta',delta:-2}],[],{STAMINA:0})[0].totalAfter,-2,'Zero is a supplied snapshot, not a missing value');
+assert.equal(c.addTotals([{key:'sta',delta:-2}],[{tooltip:'+11 Stamina'}],{STAMINA:null})[0].totalBefore,11,'Missing snapshot uses explicitly labelled equipment total');
+assert.equal(c.addTotals([{key:'speed',delta:1}],[],{})[0].totalAfter,null,'Do not sum weapon speed');
+assert.equal(c.addTotals(two.rows,[{slot:'Waffenhand',tooltip:'+4 Stärke'},{slot:'Schildhand',tooltip:'+3 Stärke'}],{STRENGTH:100}).find(r=>r.key==='str').totalAfter,108,'Two-hand replacement removes both item contributions');
+console.log('PASS: character totals before/after, labelled equipment fallback, zero/null handling and two-hand totals.');

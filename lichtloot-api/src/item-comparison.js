@@ -41,10 +41,20 @@
   for(const worn of removed)for(const [k,v] of Object.entries(stats(worn).values))old[k]=(old[k]||0)+v;
   return {removed,rows:Object.keys(labels).filter(k=>old[k]||fresh.values[k]).map(k=>({key:k,label:labels[k],before:old[k]||0,after:fresh.values[k]||0,delta:(fresh.values[k]||0)-(old[k]||0)})),sets:setChanges(gear,after,templates),unknown:[...new Set([...removed.flatMap(g=>stats(g).unknown),...fresh.unknown])]};
  }
+ function addTotals(rows,gear,characterStats={}){
+  const mapping={str:'STRENGTH',agi:'AGILITY',sta:'STAMINA',int:'INTELLECT',spi:'SPIRIT',armor:'ARMOR',ap:'ATTACKPOWER',spell:'SPELLPOWER',healing:'BONUSHEALINGGEAR'};
+  const equipment={};for(const item of gear)for(const [key,value] of Object.entries(stats(item).values))equipment[key]=(equipment[key]||0)+value;
+  return rows.map(row=>{
+   if(['weaponDps','speed'].includes(row.key))return {...row,totalBefore:null,totalAfter:null,totalSource:''};
+   const raw=characterStats[mapping[row.key]],provided=raw!==null&&raw!==undefined&&raw!==''&&Number.isFinite(Number(raw));
+   const totalBefore=provided?Number(raw):(equipment[row.key]||0);
+   return {...row,totalBefore,totalAfter:totalBefore+row.delta,totalSource:provided?(row.key==='healing'?'Ausrüstung · Armory':'Charakter · Datenstand'):'Erkannte Ausrüstung'};
+  });
+ }
  const el=(tag,text,cls)=>{const n=document.createElement(tag);n.textContent=text||'';if(cls)n.className=cls;return n;};
  function mount(parent,item,context){
   if(!slot(item))return;
-  const area=el('details','','item-compare');area.append(el('summary','Mit Charakter vergleichen'));parent.append(area);
+  const area=el('details','','item-compare');area.append(el('summary','Mit Charakter vergleichen'));parent.append(area);area.addEventListener('toggle',()=>window.dispatchEvent(new Event('resize')));
   const body=el('div','','item-compare-body');area.append(body);
   const selected=context||(typeof selectedDashboardCharacter==='function'?selectedDashboardCharacter():null);
   const known=typeof myLichtlootCharacters!=='undefined'&&Array.isArray(myLichtlootCharacters)?myLichtlootCharacters:[];
@@ -67,9 +77,18 @@
      if(renderRun!==generation||!area.isConnected)return;result.replaceChildren();
      const diff=compare(item,gear,index,template?[template]:[]),cards=el('div','','item-compare-cards');
      for(const [label,items] of [['Aktuell',diff.removed],['Geplant',[item]]]){const card=el('section');card.append(el('h4',label));for(const entry of items){const heading=el('p',entry.name,window.GuildLootItems.qualityClass(entry.quality)),img=el('img');img.src=window.GuildLootItems.iconUrl({...entry,icon:entry.icon||entry.iconUrl});img.alt='';heading.prepend(img);card.append(heading);const tooltip=el('details');tooltip.append(el('summary','Itemwerte anzeigen'),el('p',lines(entry).join('\n'),'item-compare-raw'));card.append(tooltip);if(entry.enchant)card.append(el('small','Verzauberung: '+entry.enchant));}cards.append(card);}result.append(cards);
-     const table=el('table'),head=el('tr');['Wert','Aktuell','Geplant','Differenz'].forEach(t=>head.append(el('th',t)));table.append(head);const fmt=n=>Number(n).toLocaleString('de-DE',{maximumFractionDigits:2});for(const row of diff.rows){const tr=el('tr');[row.label,fmt(row.before),fmt(row.after)].forEach(t=>tr.append(el('td',t)));tr.append(el('td',(row.delta>0?'+':'')+fmt(row.delta),row.key==='speed'?'':row.delta>0?'compare-positive':row.delta<0?'compare-negative':''));table.append(tr);}result.append(table);
+     const table=el('table'),head=el('tr');['Wert','Gesamt vorher','Altes Item','Neues Item','Gesamt nachher*','Differenz'].forEach(t=>{const th=el('th',t);th.scope='col';head.append(th);});table.append(head);
+     const fmt=n=>Number(n).toLocaleString('de-DE',{maximumFractionDigits:2});
+     for(const row of addTotals(diff.rows,gear,latest.stats||{})){
+      const tr=el('tr'),label=el('th',row.label);label.scope='row';tr.append(label);
+      const total=el('td',row.totalBefore===null?'–':fmt(row.totalBefore));if(row.totalSource)total.append(el('small',row.totalSource,'item-compare-total-source'));tr.append(total);
+      [fmt(row.before),fmt(row.after),row.totalAfter===null?'–':'≈ '+fmt(row.totalAfter)].forEach(t=>tr.append(el('td',t)));
+      tr.append(el('td',(row.delta>0?'+':'')+fmt(row.delta),row.key==='speed'?'':row.delta>0?'compare-positive':row.delta<0?'compare-negative':''));table.append(tr);
+     }
+     const scroll=el('div','','item-compare-table-scroll');scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Wertevergleich mit Gesamtwerten');scroll.append(table);result.append(scroll);
+
      if(!diff.rows.length)result.append(el('p','Für diese Items sind keine automatisch vergleichbaren Zahlenwerte hinterlegt. Bitte die Itemwerte ansehen.'));
-     result.append(el('p','Verglichen werden erkannte Grundwerte der Items. Verzauberungen, Buffs und Seteffekte sind nicht in der Zahlentabelle enthalten; daraus wird keine DPS-Prognose berechnet.','item-search-origin'));
+     result.append(el('p','* Gesamt nachher = Gesamt vorher − altes Item + neues Item. Das ist eine rechnerische Schätzung bei unveränderten Verzauberungen, Buffs und Talenten; deren Wechselwirkungen und geänderte Seteffekte werden nicht neu berechnet. Fehlt ein Charakterwert, steht ausdrücklich die Summe der erkannten Ausrüstungswerte dabei. Waffen-DPS und Tempo werden nicht über mehrere Waffen addiert.','item-search-origin'));
      const sets=el('section');sets.append(el('h4','Setboni'));if(!diff.sets.length)sets.append(el('p','Keine Änderung der erkannten Setteil-Anzahl.'));for(const s of diff.sets){sets.append(el('p',`${s.name}: ${s.before} → ${s.after} Teile`));if(!s.known)sets.append(el('p','Die benötigten Teilezahlen sind nicht hinterlegt. Aktivierung oder Verlust lässt sich nicht sicher bestimmen.'));else if(!s.changes.length)sets.append(el('p','Keine bekannte Setbonus-Schwelle überschritten.'));for(const change of s.changes)sets.append(el('p',`${change.gained?'Gewonnen':'Verloren'} (${change.threshold} Teile): ${change.text}`,change.gained?'compare-positive':'compare-negative'));}result.append(sets);
      if(diff.unknown.length){const effects=el('details');effects.append(el('summary','Weitere Effekte – separat beurteilen'));diff.unknown.forEach(line=>effects.append(el('p',line)));result.append(effects);}
      const save=el('button','Als Prio vormerken'),status=el('p','','item-search-origin');save.type='button';save.onclick=()=>{try{const key='guildloot:item-wishlist:v1',guild=typeof CURRENT_GUILD_SLUG!=='undefined'?CURRENT_GUILD_SLUG:new URLSearchParams(location.search).get('guild')||'lichtloot';const stored=JSON.parse(localStorage.getItem(key)||'[]');const entry={guild,character,itemId:item.itemId,name:item.name,raids:item.raids||[item.raid],createdAt:new Date().toISOString()};const list=Array.isArray(stored)?stored:[];const identity=e=>e.guild===guild&&exact(e.character?.name)===exact(character.name)&&exact(e.character?.server)===exact(character.server)&&String(e.itemId)===String(item.itemId);localStorage.setItem(key,JSON.stringify([...list.filter(e=>!identity(e)),entry]));status.textContent='Auf diesem Gerät vorgemerkt. Wähle auf der Raidseite den Termin und speichere dort deine Prio.';save.textContent='Vorgemerkt ✓';renderAccountWishlist();}catch{status.textContent='Die Vormerkung konnte auf diesem Gerät nicht gespeichert werden.';}};result.append(save,status);
@@ -102,5 +121,5 @@
  }
  window.addEventListener('storage',renderAccountWishlist);
  window.addEventListener('load',installWishlist,{once:true});
- window.GuildLootCompare={matchingEntries,renderAccountWishlist,slot,candidates,stats,setInfo,setChanges,compare,mount};
+ window.GuildLootCompare={addTotals,matchingEntries,renderAccountWishlist,slot,candidates,stats,setInfo,setChanges,compare,mount};
 })();

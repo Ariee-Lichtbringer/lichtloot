@@ -39,11 +39,12 @@
   returnFocus=opener;
   if(!dialog){dialog=document.createElement('dialog');dialog.className='item-search-dialog item-search-wow';dialog.setAttribute('aria-labelledby','itemSearchTitle');document.body.append(dialog);
    dialog.addEventListener('close',()=>returnFocus?.focus());
+   if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{if(!dialog.open)return;const r=dialog.getBoundingClientRect();if(r.left<8||r.top<8||r.right>window.innerWidth-8||r.bottom>window.innerHeight-8)positionCard(r.left,r.top);}).observe(dialog);
    window.addEventListener('resize',()=>{if(dialog.open){const rect=dialog.getBoundingClientRect();positionCard(rect.left,rect.top);}});
    dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
   }
   dialog.replaceChildren();
-  for(const property of ['margin','left','top','right','bottom'])dialog.style[property]='';
+  for(const property of ['margin','left','top','right','bottom','width','height'])dialog.style[property]='';
   const header=node('header','','item-search-drag-handle');
   const icon=document.createElement('img');icon.className='item-search-icon';icon.alt='';icon.width=40;icon.height=40;icon.draggable=false;icon.referrerPolicy='no-referrer';icon.src=iconUrl(item);
   icon.addEventListener('error',()=>{if(icon.getAttribute('src')!==fallbackIcon)icon.src=fallbackIcon;});
@@ -70,6 +71,7 @@
   dialog.append(node('p',[origins(item),item.itemId?`Item-ID: ${item.itemId}`:''].filter(Boolean).join(' · '),'item-search-origin'));
   if(item.boss)dialog.append(node('p',`Boss / Quelle: ${item.boss}`,'item-search-origin'));
   window.GuildLootCompare?.mount(dialog,item,character);
+  dialog.append(node('p','Am Titel verschieben · an der unteren rechten Ecke Größe ändern','item-search-resize-hint'));
   if(!dialog.open)dialog.showModal();close.focus();
  }
  async function search(term,signal){
