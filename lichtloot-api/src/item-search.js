@@ -1,3 +1,4 @@
+import {t3SearchAliases} from './t3-search.js';
 // Shared public item search: no guild configuration or player data is exposed.
 export const normalizeItemSearch = value => String(value ?? '').toLowerCase()
   .replace(/ä|ae/g,'a').replace(/ö|oe/g,'o').replace(/ü|ue/g,'u').replace(/ß/g,'ss')
@@ -16,7 +17,7 @@ export function rankItemSearch(rows,term,limit=25){
  if(q.length<2)return {items:[],total:0};
  const matches=[];
  for(const row of rows){
-  const name=normalizeItemSearch(row.name),fields=normalizeItemSearch([row.name,row.raid_type,row.boss,row.slot,row.type].join(' '));
+  const name=normalizeItemSearch(row.name),fields=normalizeItemSearch([row.name,row.raid_type,row.boss,row.slot,row.type,t3SearchAliases(row.item_id)].join(' '));
   const words=fields.split(' ');let score=0;
   if(/^\d+$/.test(q)){if(String(row.item_id)!==q)continue;}
   else {
