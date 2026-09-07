@@ -62,3 +62,18 @@ body.start-dashboard-body .start-sidebar>*{flex-shrink:0}
 }
 
 @media(max-width:900px){#meinLichtLootCard .dashboard-paperdoll-right .dashboard-paperdoll-item{grid-template-columns:40px minmax(0,1fr)}}
+
+/* Put the selected character's signups beside the compact personal PIN. */
+#meinLichtLootCard .account-private-row{grid-template-columns:240px minmax(280px,1fr) 240px;align-items:start;gap:12px}
+#meinLichtLootCard .account-private-pin{grid-template-columns:36px minmax(0,1fr);height:auto;min-width:0;align-content:start;gap:10px;padding:14px}
+#meinLichtLootCard .account-private-pin>button{grid-column:1/-1;width:100%;margin:0}
+#meinLichtLootCard .account-private-pin-copy small{white-space:normal;line-height:1.5}
+#meinLichtLootCard .account-current-raids{padding:14px;border:1px solid #ffffff20;border-radius:12px;background:#101824}
+#meinLichtLootCard .account-current-raids .character-overview-head{flex-wrap:wrap;gap:4px;margin-bottom:10px}
+#meinLichtLootCard .account-current-raids .character-overview-head small{font-size:11px}
+#meinLichtLootCard .account-current-raids .character-raid-list{max-height:248px;overflow:auto;scrollbar-width:thin;scrollbar-color:#536171 transparent}
+#meinLichtLootCard .account-current-raids .character-raid-card{grid-template-columns:44px minmax(0,1fr);gap:8px}
+#meinLichtLootCard .account-current-raids .character-raid-card img{width:44px;height:44px;object-fit:contain}
+#meinLichtLootCard .account-current-raids .character-raid-prios span{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:1350px){#meinLichtLootCard .account-private-row{grid-template-columns:220px minmax(0,1fr)}#meinLichtLootCard .account-guild-switch{grid-column:1/-1}}
+@media(max-width:850px){#meinLichtLootCard .account-private-row{grid-template-columns:minmax(0,1fr)}#meinLichtLootCard .account-current-raids .character-raid-list{max-height:320px}}
