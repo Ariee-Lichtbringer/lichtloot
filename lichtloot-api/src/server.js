@@ -12914,14 +12914,13 @@ async function savePrio({ guildId, query: params }) {
          join raids signup_raid on signup_raid.id = rs.raid_id
          join characters signup_character on signup_character.id = rs.character_id
          where signup_raid.guild_id = $1
-           and lower(signup_raid.raid_type) = any($2)
-           and signup_raid.raid_date = $3
-           and signup_character.player_id = $4
+           and signup_raid.id = $2
+           and signup_character.player_id = $3
            and lower(coalesce(rs.status, 'signed')) not in (
              'absent','declined','rejected','abgemeldet','abwesend','nein','verworfen'
            )
          limit 1`,
-        [guildId, raidTypeSearchValues(savedRaidForSignupCheck.raid_type), savedRaidForSignupCheck.raid_date, character.player_id]
+        [guildId, savedRaidForSignupCheck.id, character.player_id]
       );
       if (!signupResult.rows[0]) {
         const error = new Error("Du musst dich zuerst mit einem Charakter deines LichtLoot-Accounts für diesen Raid anmelden, bevor du eine Prio speichern kannst.");
@@ -23169,15 +23168,8 @@ async function deletePoEntriesAfterRaidSignupChange({ guildId, raid, playerId, d
     [playerId]
   );
   const characterNames = charactersResult.rows.map(row => clean(row.name)).filter(Boolean);
-  const relatedRaidsResult = await query(
-    `select id, raid_pin, external_raid_id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const raidKeys = [...new Set(relatedRaidsResult.rows.flatMap(row => [row.id, row.raid_pin, row.external_raid_id]).map(clean).filter(Boolean))];
+  // A character change belongs to this exact occurrence, including its post aliases.
+  const raidKeys = [...new Set([raid.id, raid.raid_pin, raid.external_raid_id].map(clean).filter(Boolean))];
   if (!raidKeys.length || (!characterNames.length && !clean(discordUserId))) return { deleted: 0, queued: 0 };
 
   const result = await query(
@@ -23225,6 +23217,14 @@ async function saveRaidSignup({ guildId, query: params }) {
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
+    throw error;
+  }
+
+  const raidStatus = clean(raid.status).toLowerCase();
+  if (raid.raidhelper_enabled === false ||
+      ["archiviert", "archive", "archived", "gelöscht", "geloescht", "deleted", "abgesagt", "cancelled", "canceled"].includes(raidStatus)) {
+    const error = new Error("Die Anmeldung für diesen Raid ist nicht mehr verfügbar.");
+    error.statusCode = 409;
     throw error;
   }
 
@@ -23283,15 +23283,7 @@ async function saveRaidSignup({ guildId, query: params }) {
     }
   }
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+  const relatedRaidIds = [raid.id];
 
   const previousSignup = await query(
     `select rs.character_id
@@ -23445,15 +23437,7 @@ async function deleteRaidSignup({ guildId, query: params }) {
     source: "raid_signup_deleted"
   });
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+  const relatedRaidIds = [raid.id];
 
   const result = await query(
     `delete from raid_signups
