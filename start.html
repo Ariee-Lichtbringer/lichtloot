@@ -4596,14 +4596,7 @@ function dashboardPrioHint(raid){
 
 function dashboardOwnRaidSignup(raid){
   const list=Array.isArray(window.myDashboardRaidSignups) ? window.myDashboardRaidSignups : [];
-  const raidId=String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toLowerCase();
-  const raidKey=normalizeRaidKey(raid?.raid || raid?.raidName || raidId || "");
-  const raidDate=String(activeRaidDate(raid) || "").slice(0,10);
-  return list.find(signup=>{
-    const signupId=String(signup?.raidId || "").trim().toLowerCase();
-    if(raidId && signupId && raidId===signupId) return true;
-    return normalizeRaidKey(signup?.raid || "")===raidKey && String(signup?.raidDate || "").slice(0,10)===raidDate;
-  }) || null;
+  return list.find(signup=>dashboardRaidMatches(raid,signup)) || null;
 }
 
 async function loadDashboardRaidSignups(pin){
@@ -5996,10 +5989,16 @@ function selectedDashboardCharacter(){
 function dashboardRaidMatches(left,right){
   const leftId=String(left?.raidId||left?.RaidID||left?.id||"").trim().toLowerCase();
   const rightId=String(right?.raidId||right?.RaidID||right?.id||"").trim().toLowerCase();
-  if(leftId&&rightId&&leftId===rightId) return true;
-  const leftKey=normalizeRaidKey(left?.raid||left?.raidName||leftId);
-  const rightKey=normalizeRaidKey(right?.raid||right?.raidName||rightId);
-  return Boolean(leftKey&&leftKey===rightKey&&String(activeRaidDate(left)||"").slice(0,10)===String(activeRaidDate(right)||right?.raidDate||"").slice(0,10));
+  // Different concrete raids must never match through a shared type/date.
+  if(leftId && rightId) return leftId===rightId;
+  const key=entry=>String(entry?.raid||entry?.raidType||entry?._raidKey||entry?.raidName||"").trim().toLowerCase();
+  const leftKey=key(left),rightKey=key(right);
+  const leftDate=String(activeRaidDate(left)||"").slice(0,10);
+  const rightDate=String(activeRaidDate(right)||"").slice(0,10);
+  const leftTime=String(activeRaidTime(left)||"").trim().slice(0,5);
+  const rightTime=String(activeRaidTime(right)||"").trim().slice(0,5);
+  // Legacy records without IDs need a complete, unambiguous appointment.
+  return Boolean(leftKey && leftKey===rightKey && leftDate && leftDate===rightDate && leftTime && leftTime===rightTime);
 }
 
 function dashboardEntryMatchesCharacter(entry,character){
