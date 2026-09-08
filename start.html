@@ -6000,7 +6000,10 @@ function dashboardRaidMatches(left,right){
   const leftId=String(left?.raidId||left?.RaidID||left?.id||"").trim().toLowerCase();
   const rightId=String(right?.raidId||right?.RaidID||right?.id||"").trim().toLowerCase();
   // Different concrete raids must never match through a shared type/date.
-  if(leftId && rightId) return leftId===rightId;
+  if(leftId && rightId){
+    const aliases=e=>[e.raidId,e.RaidID,e.externalRaidId,e.external_raid_id,e.id].filter(Boolean).map(v=>String(v).toLowerCase());
+    return aliases(left).some(id=>aliases(right).includes(id));
+  }
   const key=entry=>String(entry?.raid||entry?.raidType||entry?._raidKey||entry?.raidName||"").trim().toLowerCase();
   const leftKey=key(left),rightKey=key(right);
   const leftDate=String(activeRaidDate(left)||"").slice(0,10);
@@ -6034,12 +6037,14 @@ function renderDashboardCharacterRaidCards(){
   if(!target) return;
   const character=selectedDashboardCharacter();
   if(!character){target.innerHTML='<div class="character-overview-empty">Noch kein Charakter ausgewählt.</div>';return;}
+  const known=window.prioStatusLoadedCharacter;
+  const prioKnown=Boolean(known && known.name===character.name && known.server===(character.server||""));
   const signups=(window.myDashboardRaidSignups||[]).filter(entry=>dashboardEntryMatchesCharacter(entry,character));
   const prios=(myRaidCalendarPrioEntries||[]).filter(entry=>dashboardEntryMatchesCharacter(entry,character));
   const cards=(window.activeRaidDashboardEntries||[]).filter(activeRaidIsTodayOrFuture).map(raid=>({raid,signup:signups.find(entry=>dashboardRaidMatches(raid,entry)),prio:prios.find(entry=>dashboardRaidMatches(raid,entry))})).filter(item=>item.signup||item.prio).sort((a,b)=>activeRaidTimestamp(a.raid)-activeRaidTimestamp(b.raid));
   window.dashboardCharacterMiniRaids=cards;
   if(!cards.length){target.innerHTML='<div class="character-overview-empty">Für diesen Charakter gibt es noch keine kommende Raidanmeldung.</div>';return;}
-  target.innerHTML=cards.map((item,index)=>{const raid=item.raid,key=normalizeRaidKey(raid.raid||raid.raidName||raid.raidId||raid.id),name=raid.raidName||raid.name||String(raid.raid||key).toUpperCase();return `<button class="character-raid-card" type="button" onclick="openDashboardCharacterMiniRaid(${index})"><img src="${safeAttr(raidImagePath(key))}" alt=""><span class="character-raid-copy"><strong>${safeHtml(name)}</strong><span class="character-raid-meta"><span>${safeHtml(formatRaidDateForDisplay(activeRaidDate(raid)))}</span><span>${safeHtml(formatRaidTimeForDisplay(activeRaidTime(raid)))} Uhr</span>${item.signup?'<span>✓ angemeldet</span>':''}</span><span class="character-raid-prios">${dashboardPriorityChips(item.prio)}</span></span></button>`;}).join("");
+  target.innerHTML=cards.map((item,index)=>{const raid=item.raid,key=normalizeRaidKey(raid.raid||raid.raidName||raid.raidId||raid.id),name=raid.raidName||raid.name||String(raid.raid||key).toUpperCase();return `<button class="character-raid-card" type="button" onclick="openDashboardCharacterMiniRaid(${index})"><img src="${safeAttr(raidImagePath(key))}" alt=""><span class="character-raid-copy"><strong>${safeHtml(name)}</strong><span class="character-raid-meta"><span>${safeHtml(formatRaidDateForDisplay(activeRaidDate(raid)))}</span><span>${safeHtml(formatRaidTimeForDisplay(activeRaidTime(raid)))} Uhr</span>${item.signup?'<span>Anmeldung: '+safeHtml(({signed:'✓ angemeldet',registered:'✓ angemeldet',confirmed:'✓ bestätigt',bench:'Warteliste',absent:'abgemeldet',tentative:'unsicher'})[item.signup.status]||item.signup.status||'vorhanden')+'</span>':'<span>❌ Keine Anmeldung</span>'}<span>${prioKnown?(item.prio?'✓ Prio gespeichert':'❌ Prio fehlt'):'Prio noch nicht geprüft'}</span></span><span class="character-raid-prios">${dashboardPriorityChips(item.prio)}</span></span></button>`;}).join("");
 }
 
 function openDashboardCharacterMiniRaid(index){
@@ -8372,6 +8377,7 @@ async function loadMyPrios(){
     selectedChar={name:select.value,server:""};
   }
 
+  window.prioStatusLoadedCharacter=null;
   const charName=String(selectedChar.name || "").trim();
 
   if(!charName){
@@ -8453,6 +8459,7 @@ function renderEmptyMyPriosForRailwayCharacter(char){
 }
 
 function renderMyPrios(data){
+  window.prioStatusLoadedCharacter={name:data.player,server:data.server};
   const status=document.getElementById("myPriosStatus");
   const results=document.getElementById("myPriosResults");
   const entries=data.entries || [];
@@ -8470,6 +8477,7 @@ function renderMyPrios(data){
 
   let html='';
 
+  html+='<button type="button" onclick="GuildLootPrioHistory.open()">Prio-Verlauf ansehen</button>';
   html+=renderPoReleaseRequestCard(data,poReleaseRequests);
   html+=renderMyPoReleasesCard(poReleases,poReleaseRequests,data);
 
@@ -10130,5 +10138,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
+<script src="prio-history-ui.js?v=20260908"></script>
 </body>
 </html>

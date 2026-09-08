@@ -1,4 +1,5 @@
-import { installPrioHistory } from "./prio-history.js";
+import { createPrioReceipts } from "./prio-receipts.js";
+import { installPrioHistory, installP0PlusNotices } from "./prio-history.js";
 import { searchGuildPlayers, publicPlayerPoints, attachPointItems } from "./player-search.js";
 import { searchLootCatalog } from "./item-search.js";
 import {queueBossTokenNotice} from "./boss-token-notices.js";
@@ -31,6 +32,8 @@ import nodemailer from "nodemailer";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { inTransaction, pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
+
+const prioReceipts=createPrioReceipts({query,findCharacter:findCharacterForPin});
 
 const calendarPosts=createCalendarPosts({query,transaction:inTransaction});
 const p0Deletions=createP0Deletions({query,transaction:inTransaction,p0Query});
@@ -394,6 +397,8 @@ await ensurePrioSchema().catch(error => {
 await ensureP0PlusAuditSchema().catch(error => {
   console.warn("P0+-Audit-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
+
+await installP0PlusNotices(query);
 
 await ensureUnlinkedP0PlusSchema().catch(error => {
   console.warn("Nicht zugeordnete PO+-Punkte konnten nicht vorbereitet werden:", error.message || error);
@@ -13088,6 +13093,8 @@ async function savePrio({ guildId, query: params }) {
       playerPin: normalizePin(pin),
       tempPin: normalizePin(pin),
       prioId: prioResult.rows[0].id,
+      savedItemIds: [p1?.id || null,p2?.id || null,p3?.id || null],
+      savedRaidId: savedRaid.id,
       p0Plus: Boolean(p0PlusSelected),
       raidId: savedRaid.external_raid_id || savedRaid.id,
       p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
@@ -13740,6 +13747,7 @@ async function getPlayerPrioHistory(guildId, params) {
 
   const result = await query(
     `select
+       c.name as character_name, c.server as character_server, c.class_name as character_class,
        pr.id,
        pr.comment,
        pr.created_at,
@@ -13820,9 +13828,9 @@ async function getPlayerPrioHistory(guildId, params) {
       raidTime: row.raid_time || meta.raidTime || "",
       guild: row.guild_name || "",
       createdAt: row.updated_at || row.created_at,
-      player: character.name,
-      server: character.server,
-      className: character.class_name,
+      player: row.character_name,
+      server: row.character_server,
+      className: row.character_class,
       p1: row.p1 || "",
       p2: row.p2 || "",
       p3: row.p3 || "",
@@ -30517,6 +30525,15 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getWorldbuffRuleAgreement") {
       const agreement = await getWorldbuffRuleAgreement(guild.id, req.query);
       return res.json({ ...agreement, guild: guild.slug });
+    }
+
+    if (["getSavedPrioState","getPrioChangeHistory","guildGetPrioChangeHistory"].includes(action)) {
+      res.set("Cache-Control","no-store");
+      if(action === "guildGetPrioChangeHistory") {
+        requireMasterCodeForGuild(guild,req.query.masterCode,action,req.query);
+        return res.json(await prioReceipts.history(guild.id));
+      }
+      return res.json(await (action === "getSavedPrioState" ? prioReceipts.state(guild.id,req.query) : prioReceipts.playerHistory(guild.id,req.query)));
     }
 
     if (action === "getPlayerPrioHistory") {

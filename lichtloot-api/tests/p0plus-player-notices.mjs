@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
+await db.exec(`create table characters(id uuid,player_id uuid);create table discord_player_links(guild_id uuid,character_id uuid,discord_user_id text,updated_at timestamptz default now());create table raids(id uuid,guild_id uuid,name text,raid_date date,raid_time text);create table bot_update_queue(guild_id uuid,type text,status text,payload jsonb);create table p0plus_point_audit(id uuid,character_id uuid,guild_id uuid,raid_id uuid,raid_type text,player_name text,server text,item_name text,action text,old_points numeric,new_points numeric,delta_points numeric);`);
+await db.query('insert into characters values($1,$2)',[id(1),id(2)]);await db.query('insert into discord_player_links(guild_id,character_id,discord_user_id) values($1,$2,$3)',[id(3),id(1),'123']);await db.query('insert into raids values($1,$2,$3,$4,$5)',[id(4),id(3),'MC','2026-09-08','21:30']);
+await db.exec(await readFile(new URL('../migrations/042_p0plus_player_notices.sql',import.meta.url),'utf8'));
+const add=(n,action='raid_transfer',guild=id(3),delta=1)=>db.query(`insert into p0plus_point_audit values($1,$2,$3,$4,'mc','Mála','Everlook','Magierklinge',$5,2,$6,$7)`,[id(n),id(1),guild,id(4),action,2+delta,delta]);
+const rows=async()=>(await db.query('select * from bot_update_queue')).rows;
+await add(5);await add(5);assert.equal((await rows()).length,1);assert.equal((await rows())[0].payload.newPoints,3);assert.equal((await rows())[0].payload.discordUserId,'123');
+await db.exec('begin');await add(6);await db.exec('rollback');assert.equal((await rows()).length,1);
+await add(7,'item_received_pending');await add(8,'manual_set');await add(9,'raid_transfer',id(3),0);assert.equal((await rows()).length,1);
+await add(10,'item_received_clear',id(3),-2);assert.equal((await rows())[1].payload.newPoints,0);
+await add(11,'raid_transfer',id(99));assert.equal((await rows())[2].status,'failed');assert.equal((await rows())[2].payload.discordUserId,null);
+await db.close();console.log('PASS transactional points notices, audit deduplication, rollback, no premature reset notice, zero awards, guild recipient isolation.');

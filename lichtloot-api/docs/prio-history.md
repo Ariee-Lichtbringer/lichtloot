@@ -19,7 +19,12 @@ PO-Spiegel; separate Random-Raid-Daten sind nicht Teil dieses Protokolls.
 
 ## Auslesen
 
-Nur serverseitig mit Datenbankzugriff (kein öffentlicher API-Endpunkt):
+In Mein LichtLoot über „Prio-Verlauf ansehen“, für die Gildenleitung über
+„Prio-Verlauf der Gilde“. Spieler sehen nur den gewählten eigenen Charakter;
+die Gildenleitung nur Vorgänge ihrer Gilde (jeweils letzte 100, lokal filterbar).
+Die API prüft Spieler-PIN/Charakter bzw. den Gilden-Mastercode.
+
+Für Support zusätzlich serverseitig mit Datenbankzugriff:
 
 ```sh
 node scripts/read-prio-history.mjs GILDEN_UUID 'Mála' RAID_UUID

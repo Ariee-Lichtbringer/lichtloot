@@ -3896,6 +3896,10 @@ async function submitPrioWithPin(savePin, oldPin, selection){
   if(!response.ok){
     throw new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
   }
+  if(data.success && data.prioId && new URLSearchParams(location.search).get("random") !== "1"){
+    try{data.receipt=await window.GuildLootPrioReceipt.verify(url,data);}
+    catch(error){throw new Error("Die API hat das Speichern bestätigt, aber die erneute Prüfung ist offen. "+error.message);}
+  }
   return data;
 }
 
@@ -4026,7 +4030,8 @@ async function savePrio(){
     const displayedPin = result.tempPin || result.characterPin || playerPin;
 
     status.innerHTML =
-      `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
+      `<span class="ok">✓ Deine Prios wurden gespeichert${result.receipt ? " und geprüft" : ""}.</span><br>`+
+      (result.receipt ? `<div style="white-space:pre-line">${safe(result.receipt)}</div>` : "")+
       `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
       `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
       `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
@@ -4065,7 +4070,7 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    status.innerHTML=`<span class="bad">Speichern fehlgeschlagen.</span><br>${safe(error.message||"Die Prios konnten nicht gespeichert werden.")}`;
+    status.innerHTML=`<span class="bad">Speicherung nicht abschließend bestätigt.</span><br>${safe(error.message||"Die Prios konnten nicht gespeichert werden.")}`;
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -11370,6 +11375,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="po-release-status.js?v=20260906-stored-status2"></script>
 <script src="raid-signup-mirror.js?v=20260907-search"></script>
 <script src="../pin-visibility.js"></script>
+<script src="prio-receipt.js?v=20260908"></script>
 <script src="p0-selection-fix.js?v=20260906-itemid"></script>
 <script src="player-gear-popup.js?v=20260906-realm"></script>
 

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import {createPrioReceipts} from '../src/prio-receipts.js';
+let calls=[];const service=createPrioReceipts({findCharacter:async(g,p)=>g==='own'&&p==='valid'?{id:'character'}:null,query:async(sql,args)=>{calls.push(args);return {rows:[]};}});
+await assert.rejects(service.playerHistory('other',{pin:'valid'}),e=>e.statusCode===403);assert.equal(calls.length,0);
+await service.playerHistory('own',{pin:'valid'});assert.deepEqual(calls.pop(),['own','character']);
+await service.state('own',{pin:'valid',prioId:'00000000-0000-0000-0000-000000000001'});assert.deepEqual(calls.pop(),['own','character','00000000-0000-0000-0000-000000000001']);
+let entry={raid_id:'raid',p1_item_id:'a',p2_item_id:null,p3_item_id:null,p1:'Testitem',character:'Mála',server:'Everlook',raid_name:'MC',raid_date:'2026-09-08',raid_time:'21:30',updated_at:'2026-09-08T06:24:20Z',signup_status:'bench'};let requested;
+const ctx={window:{},URL,AbortSignal,Date,fetch:async url=>{requested=new URL(url);return {ok:true,json:async()=>({success:true,entry})};}};vm.createContext(ctx);vm.runInContext(await readFile(new URL('../../loot/prio-receipt.js',import.meta.url),'utf8'),ctx);
+const verify=()=>ctx.window.GuildLootPrioReceipt.verify('https://example.test/?guild=g&player=Mála&playerPin=valid&p1=write&raidPin=raid',{prioId:'id',savedRaidId:'raid',savedItemIds:['a',null,null]});
+let text=await verify();assert.match(text,/Warteliste/);assert.match(text,/Testitem/);assert.equal(requested.searchParams.has('p1'),false);assert.equal(requested.searchParams.get('action'),'getSavedPrioState');
+entry={...entry,p1_item_id:'changed'};await assert.rejects(verify(),/inzwischen verändert/);entry=null;await assert.rejects(verify(),/nicht erneut bestätigt/);
+vm.runInContext(await readFile(new URL('../../prio-history-ui.js',import.meta.url),'utf8'),ctx);
+const rendered=ctx.window.GuildLootPrioHistory.render([{operation:'DELETE',recorded_at:'2026-09-08',old_state:{characterName:'<script>bad</script>',p1:{name:'Item'}}}]);assert(!rendered.includes('<script>'));assert.match(rendered,/Gelöscht/);
+console.log('PASS receipt re-read, mismatches, missing rows, signup distinction, authenticated scope and safe history rendering.');
