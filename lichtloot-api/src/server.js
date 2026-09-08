@@ -1,3 +1,4 @@
+import { addonCalendar } from './addon-calendar.js';
 import { createAddonRaidImport, compareAttendance } from "./addon-raid-import.js";
 import { createPrioReceipts } from "./prio-receipts.js";
 import { installPrioHistory, installP0PlusNotices } from "./prio-history.js";
@@ -13843,6 +13844,7 @@ async function getPlayerPrioHistory(guildId, params) {
       raidTime: row.raid_time || meta.raidTime || "",
       guild: row.guild_name || "",
       createdAt: row.updated_at || row.created_at,
+      prioCreatedAt: row.created_at,
       player: row.character_name,
       server: row.character_server,
       className: row.character_class,
@@ -13864,6 +13866,7 @@ async function getPlayerPrioHistory(guildId, params) {
     server: character.server,
     className: character.class_name,
     entries,
+    ...(String(params.addon)==='1'?{addonCalendar:await addonCalendar(query,guildId,character)}:{}),
     poReleases,
     recruitReleases,
     attendance16,

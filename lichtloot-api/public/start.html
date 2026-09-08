@@ -3028,6 +3028,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="tool-btn" onclick="loadMyPrios()">Prios anzeigen</button>
     </div>
 
+    <div id="guildlootMyExport"></div>
     <div id="myPriosStatus" class="status">Gib deinen SpielerPin ein. Danach werden alle Charaktere mit diesem Pin geladen.</div>
     <div id="myWorldbuffBox" class="my-worldbuff-box hidden">
       <div class="my-worldbuff-head">
@@ -3316,6 +3317,7 @@ html,body{max-width:100%;overflow-x:hidden}
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
           <div class="account-private-row"><div id="startPoLoginCallout" class="account-private-pin hidden" aria-live="polite"><div class="account-private-pin-badge" aria-hidden="true">P0!</div><div class="account-private-pin-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Nur hier sichtbar. Beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><section class="character-overview-card account-current-raids"><div class="character-overview-head"><strong>Meine Raidanmeldungen</strong><small>Ausgewählter Charakter · Prios</small></div><div id="dashboardCharacterRaidCards" class="character-raid-list"><div class="character-overview-empty">Noch kein Charakter ausgewählt.</div></div></section><button class="account-guild-switch" type="button" onclick="openGlobalGuildMenuFromAccount(event)"><img src="images/content.png" data-account-guild-logo alt=""><span><small>Aktive Lootgilde · wechseln</small><strong data-guild-brand="guildName">Lichtbringer</strong></span><b aria-hidden="true">⌄</b></button></div>
+          <div id="guildlootDashboardExport"></div>
           <div class="mein-lichtloot-tiles" aria-label="Account-Bereiche">
             <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')"><img src="images/dashboard-icons/admin.jpg" alt=""><span>Charaktere & Prios</span><small>Charakter wählen, Prios ansehen und Twinks verwalten.</small></button>
             <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="openRaidCalendarModal()"><img src="images/dashboard-icons/dashboard.jpg" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
@@ -8726,14 +8728,15 @@ function raidCalendarTimestamp(event){
 }
 
 const RAID_CALENDAR_RESET_RULES=[
+  { id:"weekly", title:"MC/BWL/AQ40/Naxx Reset", anchor:"2026-06-24", intervalDays:7, time:"09:00", resetClass:"server" },
   { id:"zg-aq20", title:"ZG/AQ20 Reset", anchor:"2026-06-20", intervalDays:3, time:"09:00", resetClass:"short" },
   { id:"ony", title:"Onyxia Reset", anchor:"2026-06-21", intervalDays:5, time:"09:00", resetClass:"ony" }
 ];
 
-function firstMondayOfMonth(year,month){
+function darkmoonOpeningMonday(year,month){
   const date=new Date(year,month,1);
-  const offset=(8-date.getDay())%7;
-  date.setDate(1+offset);
+  const offset=(5-date.getDay()+7)%7;
+  date.setDate(1+offset+3);
   return date;
 }
 
@@ -8774,7 +8777,7 @@ function buildRaidCalendarResetEvents(){
   const monthCursor=new Date(start.getFullYear(),start.getMonth()-1,1);
   const lastMonth=new Date(end.getFullYear(),end.getMonth()+1,1);
   while(monthCursor <= lastMonth){
-    const dmfStart=firstMondayOfMonth(monthCursor.getFullYear(),monthCursor.getMonth());
+    const dmfStart=darkmoonOpeningMonday(monthCursor.getFullYear(),monthCursor.getMonth());
     for(let day=0;day<7;day++){
       const date=new Date(dmfStart);
       date.setDate(dmfStart.getDate()+day);
@@ -10146,7 +10149,9 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
 <script src="prio-history-ui.js?v=20260908"></script>
-<script src="/guildloot-prio-download.js?v=20260908-4"></script>
+<script src="/guildloot-prio-download.js?v=20260908-5"></script>
 <script src="/guildloot-all-points.js?v=20260908-3"></script>
+<script src="/guildloot-personal-export.js?v=20260908-1"></script>
+<script src="/guildloot-home-export.js?v=20260908-1"></script>
 </body>
 </html>

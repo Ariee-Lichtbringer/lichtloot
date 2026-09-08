@@ -14,7 +14,10 @@ function buildPrioExport({guild,raid,prios,points,items,instanceId}){
     const total=points.filter(p=>norm(p.player)===norm(row.Spieler)&&norm(p.server)===norm(realm)&&norm(p.item)===norm(itemName)&&(!p.itemId||Number(p.itemId)===Number(itemId))).reduce((n,p)=>n+Number(p.points||0),0);
     if(!Number.isFinite(total))throw fail('Ungültiger Punktestand.');
     const bench=row.staffBenched===true||['ja','true','1','bench'].includes(norm(row.Bench));
-    lines.push([itemId,itemName,row.Spieler,realm,priority,total,row.Klasse||'',bench?1:0].map(encode).join(';'));
+    const rawCreated=row.PrioCreatedAt||row.prioCreatedAt;
+    const parsedCreated=rawCreated?Date.parse(rawCreated):NaN;
+    const created=Number.isFinite(parsedCreated)&&parsedCreated>0?Math.floor(parsedCreated/1000):'';
+    lines.push([itemId,itemName,row.Spieler,realm,priority,total,row.Klasse||'',bench?1:0,created].map(encode).join(';'));
   }
   for(const row of prios){
     for(const slot of ['P1','P2','P3'])if(row[slot])add(row,row[`${slot}ItemId`],row[slot],slot);
@@ -38,6 +41,7 @@ function mount(host,options){
   const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});const data=await response.json();
   if(!response.ok||data.success===false||data.error)throw Error(data.error||'Daten konnten nicht geladen werden.');return data;
  }
+ if(options.extendExport)button.textContent='Mein GuildLoot: Raid-Prios, alle Punkte und eigene Freigaben';
  button.onclick=async()=>{
   button.disabled=true;box.hidden=true;download.hidden=true;exported='';status.textContent='Prioliste und aktuelle Punkte werden geladen …';
   try{
@@ -45,13 +49,14 @@ function mount(host,options){
    const key=String(raid.raid||'').toLowerCase(),instanceId=instances[key];
    if(!instanceId)throw Error('Für diesen Raid ist der Era-Export noch nicht verfügbar.');
    const raidId=String(raid.raidId||raid.id||'');if(!raidId)throw Error('Raid-ID fehlt.');
-   const [prios,points,catalog]=await Promise.all([get('getPublishedPrios',{raidId}),get('getP0Plus',{raid:key,all:1,nocache:1}),get('getLootItems',{raid:key.startsWith('zg-')?'zg':key})]);
+   const [prios,points,catalog]=await Promise.all([get('getPublishedPrios',{raidId}),get('getP0Plus',{raid:key,all:1,nocache:1,addon:1}),get('getLootItems',{raid:key.startsWith('zg-')?'zg':key})]);
    if(options.requirePublished&&prios.published!==true)throw Error('Die Raid-Prios sind noch nicht veröffentlicht.');
    if(!Array.isArray(prios.prios)||!Array.isArray(points.entries)||!Array.isArray(catalog.items))throw Error('Unvollständige Antwort. Es wurde kein Export erstellt.');
    const result=buildPrioExport({guild:{slug:options.guild},raid:{id:raidId,name:raid.raidName||key.toUpperCase(),raid_date:raid.raidDate||raid.date},instanceId,prios:prios.prios,points:points.entries,items:catalog.items.map(i=>({name:i.name,item_id:i.itemId||i.ItemID}))});
    if(!host.isConnected)return;
-   exported=result.text;exportedRaidId=raidId;box.value=exported;box.hidden=false;download.hidden=false;box.focus();box.select();
-   status.textContent=result.entries+' Einträge. In WoW /gle → Importfeld → Einfügen → Übernehmen. Aktuelle Punkte, Stand '+new Date().toLocaleString('de-DE')+'.'+(result.warnings.length?' Hinweise: '+result.warnings.join(' '):'');
+   const complete=options.extendExport?await options.extendExport(result,get):result;
+   exported=complete.text;exportedRaidId=raidId;box.value=exported;box.hidden=false;download.hidden=false;box.focus();box.select();
+   status.textContent=(options.extendExport?'Persönlicher Gesamtexport für Addon ab 0.9.0. ':'')+result.entries+' Raid-Einträge. In WoW /gle → Importfeld → Einfügen → Übernehmen. Aktuelle Punkte, Stand '+new Date().toLocaleString('de-DE')+'.'+(result.warnings.length?' Hinweise: '+result.warnings.join(' '):'');
   }catch(e){if(host.isConnected)status.textContent=e.message;}finally{button.disabled=false;}
  };
  download.onclick=()=>{if(!exported)return;const url=URL.createObjectURL(new Blob([exported],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=String(exportedRaidId||'raid').replace(/[^a-zA-Z0-9_-]/g,'_')+'-guildloot-punkte.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
