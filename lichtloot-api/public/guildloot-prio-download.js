@@ -5,7 +5,7 @@ const norm=v=>String(v??'').trim().normalize('NFC').toLowerCase();
 function buildPrioExport({guild,raid,prios,points,items,instanceId}){
   if(!instanceId)throw fail('Dieser Raid wird von der Classic-Era-Beta noch nicht unterstützt.');
   const encode=v=>encodeURIComponent(String(v??''));
-  const lines=[['GLP1',guild.slug,raid.external_raid_id||raid.id,raid.name||raid.raid_type,Math.floor(Date.now()/1000),instanceId,guild.server||'',String(raid.raid_date instanceof Date?raid.raid_date.toISOString().slice(0,10):raid.raid_date).slice(0,10)].map(encode).join('|')];
+  const lines=[['GLP1',guild.slug,raid.external_raid_id||raid.id,raid.name||raid.raid_type,Math.floor(Date.now()/1000),instanceId,guild.server||'',String(raid.raid_date instanceof Date?raid.raid_date.toISOString().slice(0,10):raid.raid_date).slice(0,10)].map(encode).join(';')];
   const warnings=[],seen=new Set();
   function add(row,itemId,itemName,priority){
     if(!Number.isSafeInteger(Number(itemId))||Number(itemId)<1){warnings.push(`Keine Item-ID für ${row.Spieler}: ${itemName}.`);return;}
@@ -14,7 +14,7 @@ function buildPrioExport({guild,raid,prios,points,items,instanceId}){
     const total=points.filter(p=>norm(p.player)===norm(row.Spieler)&&norm(p.server)===norm(realm)&&norm(p.item)===norm(itemName)).reduce((n,p)=>n+Number(p.points||0),0);
     if(!Number.isFinite(total))throw fail('Ungültiger Punktestand.');
     const bench=row.staffBenched===true||['ja','true','1','bench'].includes(norm(row.Bench));
-    lines.push([itemId,itemName,row.Spieler,realm,priority,total,row.Klasse||'',bench?1:0].map(encode).join('|'));
+    lines.push([itemId,itemName,row.Spieler,realm,priority,total,row.Klasse||'',bench?1:0].map(encode).join(';'));
   }
   for(const row of prios){
     for(const slot of ['P1','P2','P3'])if(row[slot])add(row,row[`${slot}ItemId`],row[slot],slot);
