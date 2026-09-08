@@ -9,6 +9,7 @@ import {createWclAttendanceStore} from "./wcl-attendance-store.js";
 import {createCalendarPosts} from "./calendar-posts.js";
 import {createP0Deletions} from "./p0-deletions.js";
 import {calendarDate, scheduleWindow, createWeeklyScheduler} from "./weekly-schedules.js";
+import {createBotQueueDelivery} from "./bot-queue-delivery.js";
 import {maintainRaidRefreshQueue,failBotQueue} from "./queue-maintenance.js";
 import {createPrioReminderPosts} from "./prio-reminder-posts.js";
 import { createDkpService, lootSystem } from "./dkp.js";
@@ -8403,6 +8404,8 @@ async function getBotQueue({ guildId, query: params }) {
   };
 }
 
+const botQueueDelivery = createBotQueueDelivery((...args) => query(...args));
+
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued();
@@ -8415,7 +8418,7 @@ async function getBotQueueAllGuilds({ query: params }) {
   // ihrer bestehenden Wiederholungslogik bereits nach einer Minute weiterlaufen.
   await query(
     `update bot_update_queue
-        set status = 'open', claimed_at = null
+        set status = 'open', claimed_at = null, payload = payload - 'workerLease'
       where status = 'processing'
         and claimed_at < now() - case
           when type = 'p0plus_points_update_dm' then interval '1 minute'
@@ -8486,7 +8489,9 @@ async function getBotQueueAllGuilds({ query: params }) {
        limit $2
      ), claimed as (
        update bot_update_queue q
-       set status = 'processing', claimed_at = now()
+       set status = case when $3::boolean then q.status else 'processing' end,
+           claimed_at = case when $3::boolean then q.claimed_at else now() end,
+           payload = case when $3::boolean then q.payload else q.payload - 'workerLease' end
        from candidates c
        where q.id = c.id
        returning q.id, q.guild_id, q.type, q.payload, q.created_at
@@ -8496,10 +8501,11 @@ async function getBotQueueAllGuilds({ query: params }) {
      from claimed c
      join guilds g on g.id = c.guild_id
      order by c.created_at asc`,
-    [requestedTypes.length ? requestedTypes : null, limit]
+    [requestedTypes.length ? requestedTypes : null, limit, params.claimMode === "manual-v1"]
   );
   return {
     success: true,
+    claimMode: params.claimMode === "manual-v1" ? "manual-v1" : "automatic",
     items: result.rows.map(row => ({
       rowNumber: row.id,
       type: row.type,
@@ -12582,6 +12588,7 @@ async function queueLogAnalysisDiscordPost({ guildId, query: params }) {
 
 async function resolveBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  if (params.leaseToken) return botQueueDelivery.complete(guildId,clean(params.rowNumber),clean(params.leaseToken),clean(params.messageId),clean(params.messageChannelId));
   const rowNumber = clean(params.rowNumber);
   if (!isUuid(rowNumber)) return { success: true };
   const messageId = clean(params.messageId);
@@ -12593,7 +12600,7 @@ async function resolveBotQueue({ guildId, query: params }) {
            when $3 = '' then payload
            else payload || jsonb_build_object('messageId', $3::text) || case when $4::text='' then '{}'::jsonb else jsonb_build_object('postChannelId',$4::text) end
          end
-     where guild_id = $1 and id = $2`,
+     where guild_id = $1 and id = $2 and not (payload ? 'workerLease')`,
     [guildId, rowNumber, messageId, /^\d{17,20}$/.test(clean(params.messageChannelId)) ? clean(params.messageChannelId) : ""]
   );
   return { success: true };
@@ -12601,12 +12608,13 @@ async function resolveBotQueue({ guildId, query: params }) {
 
 async function claimBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  if (params.leaseProtocol === "v1") return botQueueDelivery.claim(guildId,clean(params.rowNumber));
   const rowNumber = clean(params.rowNumber);
   if (!isUuid(rowNumber)) return { success: false, claimed: false };
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
   const result = await query(
     `update bot_update_queue
-     set status = 'processing', claimed_at = now()
+     set status = 'processing', claimed_at = now(), payload = payload - 'workerLease'
      where guild_id = $1
        and id = $2
        and (
@@ -32519,8 +32527,17 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(action==='lichtbotPreparePrioReminder'?await reminderPosts.prepare(guild.id,postParams.rowNumber):await reminderPosts.complete(guild.id,postParams));
     }
 
+    if (action === "lichtbotRenewQueue" || action === "lichtbotRetryQueue") {
+      requireMasterOrQueueToken(postParams);
+      const args=[guild.id,clean(postParams.rowNumber),clean(postParams.leaseToken)];
+      return res.json(action === "lichtbotRenewQueue"
+        ? await botQueueDelivery.renew(...args)
+        : await botQueueDelivery.retry(...args,postParams.reason));
+    }
+
     if(action === 'lichtbotFailQueue'){
       requireMasterOrQueueToken(postParams);
+      if (postParams.leaseToken) return res.json(await botQueueDelivery.retry(guild.id,clean(postParams.rowNumber),clean(postParams.leaseToken),postParams.reason,true));
       return res.json(await failBotQueue(query,guild.id,postParams.rowNumber,postParams.reason));
     }
 
