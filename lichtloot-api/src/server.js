@@ -31,6 +31,7 @@ import cors from "cors";
 import { calculateGearStats, normalizeArmoryPlannerItem } from "../public/loot/gear-stat-calculator.js";
 import express from "express";
 import nodemailer from "nodemailer";
+import { createP0Scheduler, lockSchedule } from "./p0-schedules.js";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { inTransaction, pool, p0Pool, p0Query, query, randomPool, randomQuery, requireGuild } from "./db.js";
@@ -13361,7 +13362,7 @@ async function importEmergencyPrios({ guild, query: params }) {
   return { success: failed.length === 0, imported, failed, importedCount: imported.length, failedCount: failed.length };
 }
 
-async function savePoSignupPrioFromBot({ guildId, query: params }) {
+async function savePoSignupPrioFromBot({ guildId, query: params }, scheduleOptions = {}) {
   await dkpService.assertPrio(guildId);
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -13381,14 +13382,14 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   // Ein PO-Post besitzt eine eigene postKey-ID, die nicht zwingend der
   // external_raid_id des LichtLoot-Raids entspricht. Die Prio-PIN ist die
   // eindeutige Verbindung und muss deshalb zuerst verwendet werden.
-  let raid = await findRaid(guildId, {
+  let raid = scheduleOptions.raidId ? (await query("select * from raids where id=$1 and guild_id=$2 and deleted_at is null", [scheduleOptions.raidId, guildId])).rows[0] : await findRaid(guildId, {
     ...params,
     raidId: "",
     prioPin: requestedRaidPin,
     playerPin: requestedRaidPin
   });
 
-  if (!raid && clean(params.raidId) && clean(params.raidId) !== postKey) {
+  if (!scheduleOptions.raidId && !raid && clean(params.raidId) && clean(params.raidId) !== postKey) {
     raid = await findRaid(guildId, {
       ...params,
       raidId: clean(params.raidId),
@@ -13397,7 +13398,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     });
   }
 
-  if (!raid && postKey) {
+  if (!scheduleOptions.raidId && !raid && postKey) {
     const postConfig = await query(
       `select raid, title, raid_pin, raid_date, raid_time
        from po_post_entries
@@ -13486,10 +13487,29 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     }
   }
 
+  if (scheduleOptions.validateOnly || scheduleOptions.jobId) {
+    if (normalizeStatus(raid.status) !== "geöffnet") throw Object.assign(new Error("Der Raid ist nicht für Prios geöffnet."), {statusCode:409});
+    const item = await requireGuildPoItem(guildId, params.itemId || "", itemName, raidType);
+    const linked = await query(`select 1 from po_post_entries where guild_id=$1
+      and raid_id=any($2::text[]) and archived_at is null limit 1`, [guildId,[String(raid.id),String(raid.external_raid_id || "")]]);
+    if (!linked.rows.length) throw Object.assign(new Error("Für diesen Raid ist kein P0-Anmelder verknüpft."), {statusCode:409});
+    if (scheduleOptions.validateOnly) return {raid, character:verifiedCharacter, item};
+  }
   const client = await pool.connect();
+  let scheduleClientReleased = false;
 
   try {
     await client.query("begin");
+    if (scheduleOptions.jobId) {
+      const job = await lockSchedule(client, scheduleOptions.jobId);
+      if (!job) { await client.query("rollback"); return {success:true, skipped:true}; }
+      if (String(job.guild_id) !== String(guildId) || String(job.raid_id) !== String(raid.id)
+          || String(job.character_id) !== String(verifiedCharacter.id) || job.item_name !== itemName) {
+        throw new Error("Die Planung passt nicht mehr zu Raid oder Charakter.");
+      }
+      const currentRaid = await client.query("select status,deleted_at from raids where id=$1 for share",[raid.id]);
+      if (!currentRaid.rows[0] || currentRaid.rows[0].deleted_at || normalizeStatus(currentRaid.rows[0].status) !== "geöffnet") throw new Error("Der Raid ist inzwischen geschlossen oder gelöscht.");
+    }
 
     // Der Discord-P0-Weg hat den Charakter bereits über den SpielerLogin
     // verifiziert. Ausschließlich diese kanonische Charakter-ID verwenden;
@@ -13546,13 +13566,26 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       item,
       source: "po_bot_prio_saved"
     });
+    if (scheduleOptions.jobId) {
+      const applied = await client.query(`update p0_schedules set status='applied',finished_at=clock_timestamp(),
+        detail='In LichtLoot und im Anmelder gespeichert; Discord-Aktualisierung ausstehend.'
+        where id=$1 and status='pending' and deadline_at>clock_timestamp() returning id`, [scheduleOptions.jobId]);
+      if (!applied.rows.length) throw new Error("P0-Schluss während der Verarbeitung erreicht; Eintragung zurückgerollt.");
+    }
     await client.query("commit");
+    if (scheduleOptions.jobId) { client.release(); scheduleClientReleased = true; }
     const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "po_bot_prio_saved");
     const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
       guildId,
       raid,
       "po_bot_prio_saved"
     );
+    if (scheduleOptions.jobId) {
+      await query("update p0_schedules set detail=$2 where id=$1", [scheduleOptions.jobId,
+        poPostRefresh.success && raidAnnouncementRefresh?.success !== false
+          ? "In LichtLoot und im Anmelder gespeichert; Discord-Aktualisierung beauftragt."
+          : "P0 gespeichert. Discord-Aktualisierung fehlgeschlagen; Anmelder bitte prüfen."]);
+    }
     return {
       success: true,
       prioId: prioResult.rows[0].id,
@@ -13565,12 +13598,28 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       raidAnnouncementRefresh
     };
   } catch (error) {
-    await client.query("rollback").catch(() => {});
+    if (!scheduleClientReleased) await client.query("rollback").catch(() => {});
     throw error;
   } finally {
-    client.release();
+    if (!scheduleClientReleased) client.release();
   }
 }
+
+const p0Scheduler = createP0Scheduler({
+  query,
+  prepare: async (guildId, params) => {
+    if (!isUuid(params.raidId)) throw Object.assign(new Error("Bitte einen konkreten Raid auswählen."), {statusCode:400});
+    return savePoSignupPrioFromBot({guildId,query:params},{validateOnly:true,raidId:params.raidId});
+  },
+  execute: async job => {
+    const character = (await query(`select c.name,c.server,p.player_pin from characters c
+      join players p on p.id=c.player_id where c.id=$1 and p.guild_id=$2
+      and coalesce(p.is_blocked,false)=false and coalesce(p.approval_status,'approved')='approved'`,[job.character_id,job.guild_id])).rows[0];
+    if (!character) throw new Error("Der Charakter ist nicht mehr freigegeben.");
+    return savePoSignupPrioFromBot({guildId:job.guild_id,query:{masterCode,playerPin:character.player_pin,
+      player:character.name,server:character.server,item:job.item_name}}, {raidId:job.raid_id,jobId:job.id});
+  }
+});
 
 async function syncPoSignupPrios({ guildId, query: params }) {
   await dkpService.assertPrio(guildId);
@@ -31852,6 +31901,12 @@ app.post("/api/apps-script", async (req, res, next) => {
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
     }
 
+    if (["guildScheduleP0","guildListScheduledP0","guildCancelScheduledP0"].includes(action)) {
+      requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+      enforceSecurityRateLimit(req, "p0-schedule", 60, 60_000);
+      return res.json(await p0Scheduler.handle(guild, postParams));
+    }
+
     if(action === "guildSetRaidTaskReview"){return res.json({...await raidTaskReviewService.set(guild,postParams),guild:guild.slug});}
 
     if (action === "getRaidCloseout" || action === "applyRaidCloseout") {
@@ -32775,6 +32830,9 @@ async function runMissingPrioReminderTick() {
 }
 
 app.listen(port, () => {
+  const scheduledP0Tick = () => p0Scheduler.tick().catch(() => console.error("P0-Zeitplanung konnte nicht verarbeitet werden."));
+  scheduledP0Tick();
+  setInterval(scheduledP0Tick, 250).unref();
   const attendanceTick=()=>runWclAttendanceSync().catch(error=>console.warn("Attendance-Synchronisierung fehlgeschlagen:",error.message||error));
   setTimeout(attendanceTick,20000).unref();setInterval(attendanceTick,5*60*1000).unref();
   const inboxTick=()=>supportInbox.tick().catch(()=>console.error('Support inbox check failed'));

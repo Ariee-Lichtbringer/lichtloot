@@ -263,6 +263,8 @@
     }
   </style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<style>.p0-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:end}#p0Planner summary{cursor:pointer;color:var(--gold)}#p0Planner p{line-height:1.5}#p0Planner button{white-space:normal}</style>
+<script src="/p0-schedules-ui.js?v=20260908-1" defer></script>
 </head>
 <body>
   <main>
@@ -306,6 +308,7 @@
     </form>
 
     <div class="status" id="status">Bitte Master-Code eingeben und laden.</div>
+    <section id="p0Planner" aria-label="P0-Zeitplanung"></section>
     <section id="raids"></section>
   </main>
 
@@ -428,6 +431,7 @@
 
     function renderBackup(data) {
       lastBackup = data;
+      window.dispatchEvent(new CustomEvent("backup:loaded", {detail:{...data,raids:(data.raids||[]).map(raid=>({...raid,guild:"lichtloot",guildName:"Lichtbringer"}))}}));
       downloadButton.disabled = !data;
       generatedEl.textContent = data.generatedAt ? `Stand ${formatDate(data.generatedAt)}` : "Geladen";
       const raids = Array.isArray(data.raids) ? data.raids : [];
