@@ -13808,6 +13808,8 @@ async function getPlayerPrioHistory(guildId, params) {
     };
   }
 
+  if(String(params.addon)==='1' && p0Pool) await ensureP0OnlySchema();
+
   const historyParams = [guildId, character.player_id];
 
   const result = await query(
@@ -13915,7 +13917,7 @@ async function getPlayerPrioHistory(guildId, params) {
     server: character.server,
     className: character.class_name,
     entries,
-    ...(String(params.addon)==='1'?{addonCalendar:await addonCalendar(query,guildId,character)}:{}),
+    ...(String(params.addon)==='1'?{addonCalendar:await addonCalendar(query,guildId,character,{p0Query:p0Pool?p0Query:null,visibleP0Rows:rows=>p0Deletions.visibleRows(guildId,rows)})}:{}),
     poReleases,
     recruitReleases,
     attendance16,
