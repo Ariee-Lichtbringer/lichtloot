@@ -10,7 +10,7 @@ export function createP0Deletions({query,transaction,p0Query}) {
       await query('select pg_advisory_xact_lock(hashtext($1))',[guildId+':'+event.id+':'+discordUserId]);
       for(const row of rows){
         await query('insert into p0_signup_deletions(guild_id,signup_id,event_id,character_id,discord_user_id) values($1,$2,$3,$4,$5) on conflict do nothing',[guildId,row.id,event.id,character.id,discordUserId]);
-        await query(`delete from prios p using raids r where r.id=p.raid_id and r.guild_id=$1 and p.character_id=$2 and p.comment::text ~ ('"p0OnlySignupId"[[:space:]]*:[[:space:]]*"'||$3::text||'"')`,[guildId,character.id,row.id]);
+        await query(`/* prio-audit:remove */ delete from prios p using raids r where r.id=p.raid_id and r.guild_id=$1 and p.character_id=$2 and p.comment::text ~ ('"p0OnlySignupId"[[:space:]]*:[[:space:]]*"'||$3::text||'"')`,[guildId,character.id,row.id]);
       }
       await archiveMirrors({query},guildId,event,character,discordUserId);
       if(linkedRaid)await archiveMirrors({query},guildId,linkedRaid,character,discordUserId);

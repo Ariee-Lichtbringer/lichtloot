@@ -134,7 +134,7 @@ export function createRaidCloseoutService({pool, secret, authorize, configuratio
           if(a.type==='flag'||a.repairFlag)for(const before of a.comments){
             if(repaired.has(before.id))continue;
             const old=metaOf(before.comment),next={...old,p0Selected:'ja',p0Plus:'ja',p0Item:a.item};
-            const changed=await client.query(`update prios set comment=$1,updated_at=now() where id=$2 and comment is not distinct from $3`,[JSON.stringify(next),before.id,before.comment]);
+            const changed=await client.query(`/* prio-audit:apply */ update prios set comment=$1,updated_at=now() where id=$2 and comment is not distinct from $3`,[JSON.stringify(next),before.id,before.comment]);
             if(changed.rowCount!==1)throw fail('Ein Prio-Eintrag wurde inzwischen geändert. Bitte neu prüfen.');
             repaired.add(before.id);
           }

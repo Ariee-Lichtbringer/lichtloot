@@ -1,3 +1,4 @@
+import { installPrioHistory } from "./prio-history.js";
 import { searchGuildPlayers, publicPlayerPoints, attachPointItems } from "./player-search.js";
 import { searchLootCatalog } from "./item-search.js";
 import {queueBossTokenNotice} from "./boss-token-notices.js";
@@ -378,6 +379,9 @@ await ensureRandomRaidSchema().catch(error => {
 await ensurePoPostEntriesSchema().catch(error => {
   console.warn("P0-Anmelder-Zuordnung konnte nicht vorbereitet werden:", error.message || error);
 });
+
+// Fail startup if durable Prio history cannot be installed.
+await installPrioHistory(query);
 
 await purgeExpiredDeletedRaids().catch(error => {
   console.warn("Abgelaufene gelöschte Raids konnten nicht bereinigt werden:", error.message || error);
@@ -4131,7 +4135,7 @@ async function ensurePrioSchemaNow() {
        add column if not exists updated_at timestamptz not null default now()`
   );
   await query(
-    `delete from prios
+    `/* prio-audit:ensurePrioSchemaNow */ delete from prios
      where id in (
        select id
        from (
@@ -4146,7 +4150,7 @@ async function ensurePrioSchemaNow() {
      )`
   );
   await query(
-    `delete from prios
+    `/* prio-audit:ensurePrioSchemaNow */ delete from prios
      where id in (
        select id
        from (
@@ -11263,7 +11267,7 @@ async function deletePoSignupPrioForEntry(guildId, entry, params = {}) {
   const itemMatchClause = itemClauses.length ? itemClauses.join(" or ") : "false";
 
   const result = await query(
-    `delete from prios pr
+    `/* prio-audit:deletePoSignupPrioForEntry */ delete from prios pr
      using characters c
      where pr.character_id = c.id
        and pr.raid_id = $2
@@ -12709,7 +12713,7 @@ async function removeDuplicatePriosForCharacterName(client, raidId, character) {
   if (!duplicateIds.length) return 0;
 
   const deleted = await client.query(
-    `delete from prios
+    `/* prio-audit:removeDuplicatePriosForCharacterName */ delete from prios
      where id = any($1::uuid[])
      returning id`,
     [duplicateIds]
@@ -12726,7 +12730,7 @@ async function removeDuplicatePriosForPlayerLogin(client, raidId, character) {
   const playerId = playerResult.rows[0]?.player_id;
   if (!playerId) return 0;
   const deleted = await client.query(
-    `delete from prios pr
+    `/* prio-audit:removeDuplicatePriosForPlayerLogin */ delete from prios pr
      using characters duplicate_character
      where pr.raid_id = $1
        and pr.character_id = duplicate_character.id
@@ -13018,7 +13022,7 @@ async function savePrio({ guildId, query: params }) {
     });
 
     const prioResult = await client.query(
-      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+      `/* prio-audit:savePrio */ insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
        values ($1, $2, $3, $4, $5, $6)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
@@ -13228,7 +13232,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     });
 
     const prioResult = await client.query(
-      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+      `/* prio-audit:savePrioAsRaidlead */ insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
        values ($1, $2, $3, $4, $5, $6)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
@@ -13501,7 +13505,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     });
 
     const prioResult = await client.query(
-      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+      `/* prio-audit:savePoSignupPrioFromBot */ insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
        values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
@@ -13888,7 +13892,7 @@ async function deletePrio({ guildId, query: params }) {
         exactServerClause = `and lower(c.server) = lower($${exactValues.length})`;
       }
       const exactResult = await query(
-        `delete from prios pr
+        `/* prio-audit:deletePrio */ delete from prios pr
          using characters c, raids target_raid
          where pr.character_id = c.id
            and pr.raid_id = target_raid.id
@@ -13921,7 +13925,7 @@ async function deletePrio({ guildId, query: params }) {
     }
 
     const result = await query(
-      `delete from prios pr
+      `/* prio-audit:deletePrio */ delete from prios pr
        using characters c
        where pr.character_id = c.id
          and pr.raid_id = $2
@@ -13958,7 +13962,7 @@ async function deletePrio({ guildId, query: params }) {
       }
       if (directPrio) {
         const directDelete = await query(
-          "delete from prios where id = $1 returning id, raid_id",
+          "/* prio-audit:deletePrio */ delete from prios where id = $1 returning id, raid_id",
           [directPrio.id]
         );
         const poPostRefresh = await removePoPostEntryAfterPrioDelete(
@@ -14058,7 +14062,7 @@ async function deletePrio({ guildId, query: params }) {
   }
 
   let result = await query(
-    `delete from prios pr
+    `/* prio-audit:deletePrio */ delete from prios pr
      using raids r, characters c, players p
      where pr.raid_id = r.id
        and pr.character_id = c.id
@@ -14079,7 +14083,7 @@ async function deletePrio({ guildId, query: params }) {
     });
     if (pinRaid) {
       result = await query(
-        `delete from prios pr
+        `/* prio-audit:deletePrio */ delete from prios pr
          using characters c, players p
          where pr.character_id = c.id
            and c.player_id = p.id
@@ -14094,7 +14098,7 @@ async function deletePrio({ guildId, query: params }) {
 
   if (!result.rowCount && resolvedDeleteRaid?.id) {
     result = await query(
-      `delete from prios pr
+      `/* prio-audit:deletePrio */ delete from prios pr
        using characters c, players p
        where pr.character_id = c.id
          and c.player_id = p.id
@@ -25255,7 +25259,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     });
 
     await client.query(
-      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+      `/* prio-audit:saveP0DiscordSignup */ insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
        values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
@@ -25420,7 +25424,7 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
     // zuvor geprüfte Account-Verknüpfung stellt sicher, dass nur ein eigener
     // Charakter entfernt werden kann.
     const deletedPrios = await client.query(
-      `delete from prios
+      `/* prio-audit:deleteP0DiscordSignup */ delete from prios
        where raid_id = $1 and character_id = $2
          and (
            comment::text ~ '"p0Selected"[[:space:]]*:[[:space:]]*"ja"'
@@ -25488,7 +25492,7 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
     }
     if (approvalStatus === "rejected") {
       const removed = await client.query(
-        `delete from prios
+        `/* prio-audit:syncReviewedP0OnlySignupToLinkedRaid */ delete from prios
          where raid_id=$1 and character_id=$2
            and comment::text like $3`,
         [linkedRaid.id, character.id, `%\"p0OnlySignupId\":\"${signup.id}\"%`]
@@ -25526,7 +25530,7 @@ async function syncReviewedP0OnlySignupToLinkedRaid({
       discordUserId: signup.discord_user_id || ""
     });
     await client.query(
-      `insert into prios (raid_id,character_id,p1_item_id,p2_item_id,p3_item_id,comment)
+      `/* prio-audit:syncReviewedP0OnlySignupToLinkedRaid */ insert into prios (raid_id,character_id,p1_item_id,p2_item_id,p3_item_id,comment)
        values ($1,$2,$3,$3,$3,$4)
        on conflict (raid_id,character_id) do update
          set p1_item_id=excluded.p1_item_id,
@@ -25744,7 +25748,7 @@ async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
       throw error;
     }
     await client.query(
-      `delete from prios
+      `/* prio-audit:managementDeleteP0DiscordSignup */ delete from prios
        where raid_id=$1 and character_id=$2
          and comment::text like '%"source":"discord-p0"%'`,
       [deleted.rows[0].raid_id, deleted.rows[0].character_id]
@@ -26303,7 +26307,7 @@ async function setPrioBench({ guildId, query: params }) {
 
   try {
     await client.query("begin");
-    await client.query("update prios set bench = $1, updated_at = now() where id = $2", [bench, prio.id]);
+    await client.query("/* prio-audit:setPrioBench */ update prios set bench = $1, updated_at = now() where id = $2", [bench, prio.id]);
 
     if (prio.p1_item_id) {
       const oldPoints = await getP0PlusPointTotal(client, guildId, prio.character_id, prio.p1_item_id);
@@ -26372,7 +26376,7 @@ async function deleteGuildPrio({ guildId, query: params }) {
   const prio = await findPrioForRaidAndPlayer(raid.id, params.player || params.char || params.spieler, params.server);
   if (!prio) return { success: true, deleted: 0 };
 
-  const result = await query("delete from prios where id = $1 returning id", [prio.id]);
+  const result = await query("/* prio-audit:deleteGuildPrio */ delete from prios where id = $1 returning id", [prio.id]);
   const refresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, "guild_prio_deleted");
   return { success: true, deleted: result.rowCount, raidAnnouncementRefresh: refresh };
 }
@@ -28400,7 +28404,7 @@ async function deletePlayerLogin({ guildId, query: params }) {
         [guildId, characterIds]
       );
       await client.query(
-        "delete from prios where character_id = any($1::uuid[])",
+        "/* prio-audit:deletePlayerLogin */ delete from prios where character_id = any($1::uuid[])",
         [characterIds]
       );
       await client.query(
@@ -28463,7 +28467,7 @@ async function mergeDuplicateGuildCharacters({ guildId, query: params }) {
     if(new Set(characterResult.rows.map(row=>normalizeReviewName(row.name))).size!==1){const error=new Error("Zusammengeführt werden dürfen nur gleiche Charakternamen (Sonderzeichen werden ignoriert).");error.statusCode=400;throw error;}
     const keep=characterResult.rows.find(row=>String(row.id)===keepCharacterId),duplicateRows=characterResult.rows.filter(row=>String(row.id)!==keepCharacterId),duplicateIds=duplicateRows.map(row=>row.id),affectedPlayerIds=[...new Set(duplicateRows.map(row=>row.player_id))];
     const prioRows=await client.query(`select * from prios where character_id = any($1::uuid[]) order by updated_at desc nulls last,created_at desc nulls last`,[[keepCharacterId,...duplicateIds]]);
-    for(const row of prioRows.rows){if(String(row.character_id)===keepCharacterId)continue;const existing=await client.query("select * from prios where raid_id=$1 and character_id=$2 limit 1",[row.raid_id,keepCharacterId]);if(!existing.rows.length)await client.query("update prios set character_id=$1,updated_at=now() where id=$2",[keepCharacterId,row.id]);else{const target=existing.rows[0];await client.query(`update prios set p1_item_id=coalesce(p1_item_id,$2),p2_item_id=coalesce(p2_item_id,$3),p3_item_id=coalesce(p3_item_id,$4),comment=coalesce(nullif(comment,''),$5),bench=coalesce(nullif(bench,''),$6),updated_at=now() where id=$1`,[target.id,row.p1_item_id,row.p2_item_id,row.p3_item_id,clean(row.comment)||null,clean(row.bench)||null]);await client.query("delete from prios where id=$1",[row.id]);}}
+    for(const row of prioRows.rows){if(String(row.character_id)===keepCharacterId)continue;const existing=await client.query("select * from prios where raid_id=$1 and character_id=$2 limit 1",[row.raid_id,keepCharacterId]);if(!existing.rows.length)await client.query("/* prio-audit:mergeDuplicateGuildCharacters */ update prios set character_id=$1,updated_at=now() where id=$2",[keepCharacterId,row.id]);else{const target=existing.rows[0];await client.query(`/* prio-audit:mergeDuplicateGuildCharacters */ update prios set p1_item_id=coalesce(p1_item_id,$2),p2_item_id=coalesce(p2_item_id,$3),p3_item_id=coalesce(p3_item_id,$4),comment=coalesce(nullif(comment,''),$5),bench=coalesce(nullif(bench,''),$6),updated_at=now() where id=$1`,[target.id,row.p1_item_id,row.p2_item_id,row.p3_item_id,clean(row.comment)||null,clean(row.bench)||null]);await client.query("/* prio-audit:mergeDuplicateGuildCharacters */ delete from prios where id=$1",[row.id]);}}
     const signupRows=await client.query("select id,raid_id from raid_signups where character_id = any($1::uuid[])",[duplicateIds]);for(const row of signupRows.rows){const exists=await client.query("select 1 from raid_signups where raid_id=$1 and character_id=$2",[row.raid_id,keepCharacterId]);if(exists.rows.length)await client.query("delete from raid_signups where id=$1",[row.id]);else await client.query("update raid_signups set character_id=$1,updated_at=now() where id=$2",[keepCharacterId,row.id]);}
     for(const table of ["character_po_releases","character_recruit_releases"]){await client.query(`insert into ${table} (guild_id,character_id,raid_type,approved_by,approved_at,updated_at${table==="character_po_releases"?",source":""}) select guild_id,$1,raid_type,approved_by,approved_at,now()${table==="character_po_releases"?",source":""} from ${table} where guild_id=$2 and character_id = any($3::uuid[]) on conflict(guild_id,character_id,raid_type) do nothing`,[keepCharacterId,guildId,duplicateIds]);await client.query(`delete from ${table} where guild_id=$1 and character_id = any($2::uuid[])`,[guildId,duplicateIds]);}
     await client.query("update p0plus_points set character_id=$1 where guild_id=$2 and character_id = any($3::uuid[])",[keepCharacterId,guildId,duplicateIds]);
@@ -29345,9 +29349,9 @@ async function applyZgHakkariOffhandCorrectionOnce() {
            and item_id = '135365'`
       );
       for (const row of oldOffhandRows.rows) {
-        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [offhandId, row.id]);
-        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [offhandId, row.id]);
-        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [offhandId, row.id]);
+        const p1 = await client.query("/* prio-audit:applyZgHakkariOffhandCorrectionOnce */ update prios set p1_item_id = $1 where p1_item_id = $2", [offhandId, row.id]);
+        const p2 = await client.query("/* prio-audit:applyZgHakkariOffhandCorrectionOnce */ update prios set p2_item_id = $1 where p2_item_id = $2", [offhandId, row.id]);
+        const p3 = await client.query("/* prio-audit:applyZgHakkariOffhandCorrectionOnce */ update prios set p3_item_id = $1 where p3_item_id = $2", [offhandId, row.id]);
         const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [offhandId, row.id]);
         movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
         const deleted = await client.query("delete from items where id = $1", [row.id]);
@@ -29446,9 +29450,9 @@ async function applyLootRaidAssignmentCorrectionsOnce() {
 
       for (const wrongRow of wrongResult.rows) {
         if (!targetId || wrongRow.id === targetId) continue;
-        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [targetId, wrongRow.id]);
-        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [targetId, wrongRow.id]);
-        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [targetId, wrongRow.id]);
+        const p1 = await client.query("/* prio-audit:applyLootRaidAssignmentCorrectionsOnce */ update prios set p1_item_id = $1 where p1_item_id = $2", [targetId, wrongRow.id]);
+        const p2 = await client.query("/* prio-audit:applyLootRaidAssignmentCorrectionsOnce */ update prios set p2_item_id = $1 where p2_item_id = $2", [targetId, wrongRow.id]);
+        const p3 = await client.query("/* prio-audit:applyLootRaidAssignmentCorrectionsOnce */ update prios set p3_item_id = $1 where p3_item_id = $2", [targetId, wrongRow.id]);
         const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [targetId, wrongRow.id]);
         movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
         const deleted = await client.query("delete from items where id = $1", [wrongRow.id]);
@@ -29621,9 +29625,9 @@ async function applyNaxxPoItemAliasCleanupOnce() {
       });
 
       for (const duplicate of duplicateItems) {
-        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [targetItem.id, duplicate.id]);
-        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [targetItem.id, duplicate.id]);
-        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [targetItem.id, duplicate.id]);
+        const p1 = await client.query("/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ update prios set p1_item_id = $1 where p1_item_id = $2", [targetItem.id, duplicate.id]);
+        const p2 = await client.query("/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ update prios set p2_item_id = $1 where p2_item_id = $2", [targetItem.id, duplicate.id]);
+        const p3 = await client.query("/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ update prios set p3_item_id = $1 where p3_item_id = $2", [targetItem.id, duplicate.id]);
         const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [targetItem.id, duplicate.id]);
         movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
         const deleted = await client.query("delete from items where id = $1", [duplicate.id]);
@@ -29649,7 +29653,7 @@ async function applyNaxxPoItemAliasCleanupOnce() {
         if (!meta.p0Item || !aliasKeys.has(itemLookupKey(meta.p0Item))) continue;
         meta.p0Item = correction.targetName;
         const updated = await client.query(
-          "update prios set comment = $2, updated_at = now() where id = $1",
+          "/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ update prios set comment = $2, updated_at = now() where id = $1",
           [row.id, JSON.stringify(meta)]
         );
         rewrittenComments += updated.rowCount;
@@ -29738,7 +29742,7 @@ async function applyNaxxPoItemAliasCleanupOnce() {
       }
 
       await client.query(
-        `update prios
+        `/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ update prios
          set p1_item_id = $2,
              p2_item_id = $3,
              p3_item_id = $4,
@@ -29757,7 +29761,7 @@ async function applyNaxxPoItemAliasCleanupOnce() {
       );
 
       const deletedDuplicatePrios = await client.query(
-        `delete from prios
+        `/* prio-audit:applyNaxxPoItemAliasCleanupOnce */ delete from prios
          where id = any($1::uuid[])
            and id <> $2`,
         [prioIds, keepPrioId]
@@ -30309,9 +30313,9 @@ async function adminDeleteItem({ guildId, query: params }) {
   try {
     await client.query("begin");
     await client.query("delete from p0plus_points where guild_id = $1 and item_id = $2", [guildId, id]);
-    await client.query("update prios set p1_item_id = null where p1_item_id = $1", [id]);
-    await client.query("update prios set p2_item_id = null where p2_item_id = $1", [id]);
-    await client.query("update prios set p3_item_id = null where p3_item_id = $1", [id]);
+    await client.query("/* prio-audit:adminDeleteItem */ update prios set p1_item_id = null where p1_item_id = $1", [id]);
+    await client.query("/* prio-audit:adminDeleteItem */ update prios set p2_item_id = null where p2_item_id = $1", [id]);
+    await client.query("/* prio-audit:adminDeleteItem */ update prios set p3_item_id = null where p3_item_id = $1", [id]);
     const deleted = await client.query("delete from items where id = $1 returning name, raid_type", [id]);
     await client.query("commit");
     return { success: true, deleted: deleted.rowCount, item: deleted.rows[0] || null };
@@ -32661,7 +32665,7 @@ async function runRequestedArieeJuksiPrioCleanupOnce() {
       return { skipped: true, deleted: 0, entries: [] };
     }
     const deleted = await client.query(
-      `delete from prios pr
+      `/* prio-audit:runRequestedArieeJuksiPrioCleanupOnce */ delete from prios pr
        using raids r, characters c, players p, guilds g
        where pr.raid_id = r.id
          and pr.character_id = c.id
