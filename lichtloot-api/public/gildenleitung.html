@@ -5486,6 +5486,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
+          <button class="side-link" type="button" onclick="openAddonRaidSheets()"><span class="side-icon">▦</span><span class="side-label">Raidsheets fürs Addon</span></button>
           <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidsheet" title="Raidsheet"><span class="side-icon">⚔</span><span class="side-label">Raidsheet</span></button>
           <button id="bwlTestSetupSideButton" class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
           <button id="panemGearPlannerSideButton" class="side-link" type="button" onclick="openPanemGearPlanner()" aria-label="Ausrüstungsplaner Beta" title="Ausrüstungsplaner Beta" style="display:none"><span class="side-icon">♜</span><span class="side-label">Ausrüstungsplaner</span></button>
@@ -6838,6 +6839,11 @@ function withGuildUrl(url){
   return String(url || "") + sep + CURRENT_GUILD_QUERY;
 }
 
+function openAddonRaidSheets(){
+  const code=document.getElementById("masterCode")?.value.trim()||"";
+  try{if(code)sessionStorage.setItem(MASTER_STORAGE_KEY,code);}catch{}
+  window.location.href=withGuildUrl("raidsheets.html");
+}
 function openRaidSetupPage(){
   const masterCode=document.getElementById("masterCode")?.value.trim() || "";
   try{

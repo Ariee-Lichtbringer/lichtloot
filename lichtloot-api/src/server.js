@@ -30789,6 +30789,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       }));
     }
 
+    if (action === "getRaidSheets") {
+      const sheets=await getGuildLayoutValue(guild.id,"raidSheets");
+      return res.json({success:true,sheets:sheets && typeof sheets==="object" ? sheets : {}});
+    }
+
     if (action === "getRaidHelper" || action === "getRaidSignups") {
       const helper = await getRaidHelper({ guildId: guild.id, query: req.query });
       return res.json({ ...helper, guild: guild.slug, guildId: guild.id });
@@ -32294,14 +32299,33 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...synced, guild: guild.slug });
     }
 
-    if (action === "publishAddonPrios") {
+    if (action === "publishAddonPrios" || action === "verifyAddonMaster") {
       const leadPin = clean(postParams.leadPin);
       const raid = await findP0DiscordRaid(guild.id, postParams);
-      if (!leadPin || !raid || !raid.lead_pin || leadPin !== raid.lead_pin) {
-        return res.status(403).json({ success: false, error: "LeadPIN passt nicht zu diesem Raid." });
+      let guildAccess = false;
+      try { requireMasterCodeForGuild(guild, leadPin, action, postParams); guildAccess = true; } catch {}
+      if (!leadPin || !raid || (!guildAccess && (!raid.lead_pin || leadPin !== raid.lead_pin))) {
+        return res.status(403).json({ success: false, error: "PIN passt nicht zu diesem Raid oder dieser Gilde." });
       }
-      const saved = await setRaidStatus({ guildId: guild.id, query: { raidId: postParams.raidId, leadPin, status: "geöffnet" } });
+      if (action === "verifyAddonMaster") return res.json({ success: true, accessScope: guildAccess ? "guild" : "raid" });
+      const saved = await setRaidStatus({ guildId: guild.id, query: { raidId: postParams.raidId, leadPin: guildAccess ? raid.lead_pin : leadPin, status: "geöffnet" } });
       return res.json({ success: saved.success !== false, guild: guild.slug, status: "geöffnet" });
+    }
+
+    if (action === "guildSaveRaidSheets") {
+      requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+      const allowed = ["mc","bwl","aq40","naxx","ony","zg","aq20","zg-mittwoch","zg-prime","zg-late"];
+      const input=postParams.sheets;
+      if (!input || typeof input!=="object" || Array.isArray(input)) return res.status(400).json({success:false,error:"Sheet-Adressen fehlen."});
+      const sheets={};
+      for(const key of allowed){
+        const value=clean(input[key]);if(!value)continue;
+        let url;try{url=new URL(value);}catch{return res.status(400).json({success:false,error:"Ungültige Sheet-Adresse für "+key});}
+        if(url.protocol!=="https:" || url.hostname!=="docs.google.com" || url.username || url.password || !/^\/spreadsheets\/d\/[A-Za-z0-9_-]+\/(edit|view)?$/.test(url.pathname))return res.status(400).json({success:false,error:"Bitte einen Google-Sheets-Link für "+key+" angeben."});
+        sheets[key]=url.href;
+      }
+      await query(`insert into guild_settings(guild_id,layout_json) values($1,jsonb_build_object('raidSheets',$2::jsonb)) on conflict(guild_id) do update set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{raidSheets}',$2::jsonb,true),updated_at=now()`,[guild.id,JSON.stringify(sheets)]);
+      return res.json({success:true,sheets});
     }
 
     if (action === "savePrio") {
