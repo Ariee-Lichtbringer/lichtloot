@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
 export function betaInvitation(pin) {
-  return `Hallo! 👋\n\nDu bist zum Betatest unseres GuildLoot-Addons für WoW Classic Era eingeladen.\n\n🔗 Download: https://lichtloot.de/start.html?addonBeta=1\n🔑 Deine Beta-PIN: ${pin}\n\nÖffne den Link, gib die PIN im Fenster „Beta Testversion“ ein und lade das Addon herunter. Entpacke den Ordner GuildLootEra nach _classic_era_/Interface/AddOns/ und starte WoW neu.\n\nBitte melde uns Fehler und schreib dazu, was du gerade gemacht hast. Teile die Beta-PIN bitte nur nach Absprache weiter.\n\n📝 Fehler oder Verbesserung melden: https://lichtloot.de/addon-beta-feedback.html\n\nVielen Dank fürs Testen!\nAriee / GuildLoot`;
+  return `Hallo! 👋\n\nDu bist zum Betatest unseres GuildLoot-Addons für WoW Classic Era eingeladen.\n\n🔗 Download: https://lichtloot.de/start.html?addonBeta=1\n🔑 Deine Beta-PIN: ${pin}\n\nÖffne den Link, wähle Windows oder deinen Mac-Typ und gib die Beta-PIN ein. Öffne danach die heruntergeladene Installationsdatei. GuildLoot Sync enthält das Addon und startet nach der Installation. Klicke dort auf „Addon installieren / aktualisieren“ und wähle deinen WoW-Ordner. Zum Verbinden nutzt du deinen Spieler-PIN. Starte WoW nach der Addon-Installation neu.\n\nBitte melde uns Fehler und schreib dazu, was du gerade gemacht hast. Teile die Beta-PIN bitte nur nach Absprache weiter.\n\n📝 Fehler oder Verbesserung melden: https://lichtloot.de/addon-beta-feedback.html\n\nVielen Dank fürs Testen!\nAriee / GuildLoot`;
 }
 
 export function installAddonBetaAdmin(app, { query, transaction, authorize, ensureMembers, ensureMailbox, enqueue, rateLimit, feedback,
