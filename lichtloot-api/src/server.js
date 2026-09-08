@@ -1,3 +1,5 @@
+import { installAddonBetaAdmin } from './addon-beta-admin.js';
+import { installAddonBetaDownload } from './addon-beta-download.js';
 import {createRaidSheetBridge} from './raid-sheet-bridge.js';
 import { addonCalendar } from './addon-calendar.js';
 import { createAddonRaidImport, compareAttendance } from "./addon-raid-import.js";
@@ -359,6 +361,12 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+installAddonBetaDownload(app);
+installAddonBetaAdmin(app, {query,transaction:inTransaction,authorize:requirePlatformMasterCode,
+  ensureMembers:ensureDiscordChannelSchema,ensureMailbox:ensurePlayerMailboxSchema,
+  enqueue:enqueueBotUpdate,rateLimit:enforceSecurityRateLimit,
+  feedback:masterCode=>getPlatformSupportTickets({query:{masterCode,category:'addon_beta'}})});
 
 app.use("/downloads", express.static("public/downloads"));
 app.use(express.static("public", {
