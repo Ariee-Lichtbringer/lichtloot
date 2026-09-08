@@ -2950,6 +2950,9 @@ html,body{max-width:100%;overflow-x:hidden}
 <script defer src="item-search-ui.js?v=20260907-aq40-1"></script>
 <script defer src="player-search-ui.js?v=20260907-compare-1"></script>
 <script defer src="start-search.js?v=20260907-professions-1"></script>
+<style id="guildloot-sync-coming-style">
+.guildloot-sync-coming{margin:16px 0;padding:16px;border:1px solid #43505c;border-radius:12px;background:rgba(35,43,53,.55);color:#aab4bf}.guildloot-sync-coming>strong{font-size:17px}.guildloot-sync-coming strong span{display:inline-block;margin-left:8px;padding:3px 8px;border-radius:5px;background:#37404a;color:#c2c9d0;font-size:11px;text-transform:uppercase;letter-spacing:.6px}.guildloot-sync-coming p{margin:9px 0 12px;font-size:13px;line-height:1.5}.guildloot-sync-coming>div{display:flex;flex-wrap:wrap;gap:10px}.guildloot-sync-coming button:disabled{background:#353c44!important;border:1px solid #525a64!important;color:#9ca4ad!important;box-shadow:none!important;cursor:not-allowed;opacity:.7;padding:10px 16px;border-radius:8px;font:inherit}
+</style>
 </head>
 
 <body class="start-dashboard-body">
@@ -3029,6 +3032,11 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
 
     <div id="guildlootMyExport"></div>
+<section class="guildloot-sync-coming" aria-label="GuildLoot Sync – kommend">
+  <strong>GuildLoot Sync <span>Kommend</span></strong>
+  <p>Die Begleit-App für macOS und Windows wird vorbereitet. Sie verbindet GuildLoot mit dem WoW-Addon und hilft bei der Installation.</p>
+  <div><button type="button" disabled>macOS · Kommend</button><button type="button" disabled>Windows · Kommend</button></div>
+</section>
     <div id="myPriosStatus" class="status">Gib deinen SpielerPin ein. Danach werden alle Charaktere mit diesem Pin geladen.</div>
     <div id="myWorldbuffBox" class="my-worldbuff-box hidden">
       <div class="my-worldbuff-head">
@@ -3318,6 +3326,11 @@ html,body{max-width:100%;overflow-x:hidden}
           </div>
           <div class="account-private-row"><div id="startPoLoginCallout" class="account-private-pin hidden" aria-live="polite"><div class="account-private-pin-badge" aria-hidden="true">P0!</div><div class="account-private-pin-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Nur hier sichtbar. Beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><section class="character-overview-card account-current-raids"><div class="character-overview-head"><strong>Meine Raidanmeldungen</strong><small>Ausgewählter Charakter · Prios</small></div><div id="dashboardCharacterRaidCards" class="character-raid-list"><div class="character-overview-empty">Noch kein Charakter ausgewählt.</div></div></section><button class="account-guild-switch" type="button" onclick="openGlobalGuildMenuFromAccount(event)"><img src="images/content.png" data-account-guild-logo alt=""><span><small>Aktive Lootgilde · wechseln</small><strong data-guild-brand="guildName">Lichtbringer</strong></span><b aria-hidden="true">⌄</b></button></div>
           <div id="guildlootDashboardExport"></div>
+<section class="guildloot-sync-coming" aria-label="GuildLoot Sync – kommend">
+  <strong>GuildLoot Sync <span>Kommend</span></strong>
+  <p>Die Begleit-App für macOS und Windows wird vorbereitet. Sie verbindet GuildLoot mit dem WoW-Addon und hilft bei der Installation.</p>
+  <div><button type="button" disabled>macOS · Kommend</button><button type="button" disabled>Windows · Kommend</button></div>
+</section>
           <div class="mein-lichtloot-tiles" aria-label="Account-Bereiche">
             <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')"><img src="images/dashboard-icons/admin.jpg" alt=""><span>Charaktere & Prios</span><small>Charakter wählen, Prios ansehen und Twinks verwalten.</small></button>
             <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="openRaidCalendarModal()"><img src="images/dashboard-icons/dashboard.jpg" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
