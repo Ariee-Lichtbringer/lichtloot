@@ -30790,7 +30790,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getRaidSheets") {
-      const sheets=await getGuildLayoutValue(guild.id,"raidSheets");
+      await ensureGuildLayoutSchema();
+      const result=await query("select layout_json->'raidSheets' as sheets from guild_settings where guild_id=$1",[guild.id]);
+      const sheets=result.rows[0]?.sheets;
       return res.json({success:true,sheets:sheets && typeof sheets==="object" ? sheets : {}});
     }
 
