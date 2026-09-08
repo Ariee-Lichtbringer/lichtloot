@@ -32294,6 +32294,16 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...synced, guild: guild.slug });
     }
 
+    if (action === "publishAddonPrios") {
+      const leadPin = clean(postParams.leadPin);
+      const raid = await findP0DiscordRaid(guild.id, postParams);
+      if (!leadPin || !raid || !raid.lead_pin || leadPin !== raid.lead_pin) {
+        return res.status(403).json({ success: false, error: "LeadPIN passt nicht zu diesem Raid." });
+      }
+      const saved = await setRaidStatus({ guildId: guild.id, query: { raidId: postParams.raidId, leadPin, status: "geöffnet" } });
+      return res.json({ success: saved.success !== false, guild: guild.slug, status: "geöffnet" });
+    }
+
     if (action === "savePrio") {
       const saved = await savePrio({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
