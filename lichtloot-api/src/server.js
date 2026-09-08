@@ -1,3 +1,4 @@
+import {createRaidSheetBridge} from './raid-sheet-bridge.js';
 import { addonCalendar } from './addon-calendar.js';
 import { createAddonRaidImport, compareAttendance } from "./addon-raid-import.js";
 import { createPrioReceipts } from "./prio-receipts.js";
@@ -59,6 +60,7 @@ let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
 const gmailApi = createGmailApi({query});
 const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensureSupportReplySchema});
+const raidSheetBridge=createRaidSheetBridge(query);
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -32320,6 +32322,21 @@ app.post("/api/apps-script", async (req, res, next) => {
       if (action === "verifyAddonMaster") return res.json({ success: true, accessScope: guildAccess ? "guild" : "raid" });
       const saved = await setRaidStatus({ guildId: guild.id, query: { raidId: postParams.raidId, leadPin: guildAccess ? raid.lead_pin : leadPin, status: "geöffnet" } });
       return res.json({ success: saved.success !== false, guild: guild.slug, status: "geöffnet" });
+    }
+
+    if (action === "getRaidSheetSnapshots") {
+      const characters=await getCharactersByPin(guild.id,postParams.pin);
+      if(!characters.length)return res.status(403).json({success:false,error:"Spieler-PIN erforderlich."});
+      return res.json({success:true,snapshots:await raidSheetBridge.read(guild.id)});
+    }
+    if (action === "guildCreateRaidSheetBridge") {
+      requireMasterCodeForGuild(guild,postParams.masterCode,action,postParams);
+      const connection=await raidSheetBridge.create(guild,clean(postParams.raid),clean(postParams.url));
+      return res.json({success:true,connection});
+    }
+    if (action === "pushRaidSheetSnapshot") {
+      try {const exportedAt=await raidSheetBridge.receive(guild,postParams.raid,postParams.token,postParams.snapshot);return res.json({success:true,exportedAt});}
+      catch {return res.status(400).json({success:false,error:"Sheet-Übertragung abgelehnt: Verbindungsschlüssel und Tabelleninhalt prüfen."});}
     }
 
     if (action === "guildSaveRaidSheets") {

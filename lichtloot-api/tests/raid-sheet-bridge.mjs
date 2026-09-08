@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {createRaidSheetBridge,validateSheetSnapshot} from '../src/raid-sheet-bridge.js';
+const db=new Map();const query=async(sql,p=[])=>{const key=p.slice(0,2).join('|');if(sql.startsWith('create table'))return{rows:[]};if(sql.startsWith('insert')){db.set(key,{spreadsheet_id:p[2],token_hash:p[3]});return{rows:[]}}if(sql.startsWith('select spreadsheet'))return{rows:db.has(key)?[db.get(key)]:[]};if(sql.startsWith('update')){const row=db.get(key);if(row.token_hash!==p[3])return{rows:[]};row.snapshot=JSON.parse(p[2]);return{rows:[{raid_type:p[1]}]}}if(sql.startsWith('select raid_type'))return{rows:[...db].filter(([k])=>k.startsWith(p[0]+'|')).map(([k,v])=>({raid_type:k.split('|')[1],snapshot:v.snapshot}))};throw Error(sql);};
+const b=createRaidSheetBridge(query),g={id:1,slug:'lichtloot'};
+const c=await b.create(g,'naxx','https://docs.google.com/spreadsheets/d/test/edit');
+const payload={spreadsheetId:'test',tabs:[{name:'Boss',gid:4,rows:[['Ariee','']],backgrounds:[['#00FF00','invalid']],fontColors:[['#000000','']]}]};
+await b.receive(g,'naxx',c.token,payload);assert.equal((await b.read(1)).naxx.tabs[0].rows[0][0],'Ariee');assert.equal((await b.read(1)).naxx.tabs[0].backgrounds[0][1],'');
+await assert.rejects(()=>b.receive({id:2},'naxx',c.token,payload));await assert.rejects(()=>b.receive(g,'aq40',c.token,payload));await assert.rejects(()=>b.receive(g,'naxx',c.token,{...payload,spreadsheetId:'other'}));
+await b.create(g,'naxx','https://docs.google.com/spreadsheets/d/test/edit');await assert.rejects(()=>b.receive(g,'naxx',c.token,payload));assert.throws(()=>validateSheetSnapshot({spreadsheetId:'test',tabs:[{name:'x',rows:[[4]]}]},'test'));
+console.log('PASS: guild/raid/sheet scope, token rotation, cell validation, colors and snapshot read');
