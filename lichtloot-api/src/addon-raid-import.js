@@ -53,6 +53,25 @@ export function validateRaidExport(raw,{guild,raidId,instanceId}){
       return {guid:str(e.guid,'Spieler-GUID',100),player:str(e.player,'Spieler',100),realm:str(e.realm,'Realm',100),evidence:e.evidence,firstSeen,lastSeen:num(e.lastSeen,'Letzte Sichtung',firstSeen,out.endedAt)};
     });
   }
+  for(const key of ['trades','chatEvidence']) {
+    if(p[key]===undefined)continue;
+    if(!Array.isArray(p[key])||p[key].length>5000)throw fail('Ungültige Zusatznachweise.');
+    const ids=new Set();out[key]=p[key].map(e=>{
+      if(!e||typeof e!=='object')throw fail('Ungültiger Nachweis.');
+      const id=str(e.id,'Nachweis-ID',240),prefix=out.sessionId+(key==='trades'?':trade:':':evidence:');
+      if(!id.startsWith(prefix)||!/^\d+$/.test(id.slice(prefix.length))||ids.has(id))throw fail('Ungültige Nachweis-ID.');ids.add(id);
+      const row={id,observedAt:num(e.observedAt,'Zeit',out.startedAt,out.endedAt)};
+      if(key==='trades')return {...row,giver:str(e.giver,'Geber'),recipient:str(e.recipient,'Empfänger'),itemId:num(e.itemId,'Item-ID',1,1000000),itemName:str(e.itemName,'Item',250),quantity:num(e.quantity,'Menge',1,10000)};
+      Object.assign(row,{kind:e.kind,raw:str(e.raw,'Originalmeldung',3000),sender:str(e.sender,'Spieler'),channel:str(e.channel,'Kanal',40)});
+      if(e.kind==='priority') {
+        if(!['P1','P2','P3'].includes(e.priority)||!['CHAT_MSG_RAID','CHAT_MSG_RAID_LEADER','CHAT_MSG_RAID_WARNING'].includes(e.channel))throw fail('Ungültige Prio-Meldung.');
+        return {...row,itemId:num(e.itemId,'Item-ID',1,1000000),itemName:str(e.itemName,'Item',250),priority:e.priority,players:str(e.players,'Spieler',3000)};
+      }
+      if(e.kind!=='roll'||e.channel!=='CHAT_MSG_SYSTEM')throw fail('Ungültige Würfelmeldung.');
+      const minimum=num(e.minimum,'Minimum',0,1000000),maximum=num(e.maximum,'Maximum',minimum,1000000);
+      return {...row,minimum,maximum,roll:num(e.roll,'Wurf',minimum,maximum)};
+    });
+  }
   out.drops.sort((a,b)=>a.id.localeCompare(b.id));
   return out;
 }
