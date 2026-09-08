@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-const raids={mc:409,bwl:469,ony:249,zg:309,aq20:509,aq40:531,naxx:533};
-const labels={mc:'MC',bwl:'BWL',ony:'Onyxia',zg:'ZG',aq20:'AQ20',aq40:'AQ40',naxx:'Naxx'};
+const raids={mc:409,bwl:469,ony:249,zg:309,aq20:509,aq40:531,naxx:533,'zg-mittwoch':309,'zg-prime':309,'zg-late':309};
+const labels={mc:'MC',bwl:'BWL',ony:'Onyxia',zg:'ZG',aq20:'AQ20',aq40:'AQ40',naxx:'Naxx','zg-mittwoch':'ZG Mittwoch','zg-prime':'ZG Prime','zg-late':'ZG Late'};
 function build({guild,entries,catalogs}){
  if(!guild||!Array.isArray(entries))throw Error('Unvollständige Punktedaten.');
  const grouped=Object.fromEntries(Object.keys(raids).map(r=>[r,[]]));
@@ -30,11 +30,11 @@ async function exportAll(){
    const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});const result=await response.json();
    if(!response.ok||!result.success)throw Error(result.error||'Daten konnten nicht geladen werden.');return result;
   }
-  const points=await get('getP0Plus');
+  const points=await get('getP0Plus',{addon:1});
   if(!Array.isArray(points.entries))throw Error('Punktestand fehlt.');
   const catalogs={};
   await Promise.all([...new Set(points.entries.map(e=>e.raid))].map(async raid=>{
-   const result=await get('getLootItems',{raid});
+   const result=await get('getLootItems',{raid:raid.startsWith('zg-')?'zg':raid});
    if(!Array.isArray(result.items))throw Error('Itemliste fehlt: '+raid);
    catalogs[raid]=result.items.map(i=>({name:i.name,item_id:i.itemId||i.ItemID}));
   }));

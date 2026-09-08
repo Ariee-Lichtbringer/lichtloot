@@ -1,0 +1,9 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const {PGlite}=await import(process.env.PGLITE_MODULE||'@electric-sql/pglite');const db=new PGlite();
+await db.exec(`create table characters(id int,name text,server text);create table items(id int,item_id text,name text,raid_type text,quality text);create table p0plus_points(guild_id int,character_id int,item_id int,points numeric,source text,note text,created_at timestamptz);create table unlinked_p0plus_points(guild_id int,item_id int,player_name text,server text,points numeric,source text,updated_at timestamptz);
+insert into characters values(1,'Same','Realm');insert into items values(1,'19865','Kriegsklinge der Hakkari','zg-late','epic'),(2,'19866','Kriegsklinge der Hakkari','zg-late','epic');insert into p0plus_points values(1,1,1,3,'test','',now()),(1,1,2,7,'test','',now());`);
+const src=fs.readFileSync(new URL('../src/server.js',import.meta.url),'utf8');const start=src.indexOf('async function getP0Plus(guildId, params = {})');const code=src.slice(start,src.indexOf('\nasync function importUnlinkedP0Plus',start));
+const ctx=vm.createContext({ensureUnlinkedP0PlusSchema:async()=>{},normalizeRaidType:v=>v,raidTypeSearchValues:v=>[v],clean:v=>String(v??'').trim(),readSlotFromNote:()=>'',query:(sql,args)=>db.query(sql,args)});vm.runInContext(code,ctx);
+const legacy=await ctx.getP0Plus(1,{});assert.equal(legacy.entries.length,1);assert.equal(legacy.entries[0].points,10);assert.equal(legacy.entries[0].itemId,undefined);
+const addon=await ctx.getP0Plus(1,{addon:'1'});assert.equal(addon.entries.length,2);assert.equal(addon.entries.find(e=>e.itemId==='19865').points,3);assert.equal(addon.entries.find(e=>e.itemId==='19866').points,7);
+console.log('Addon item IDs are separate; existing website point grouping unchanged.');await db.close();

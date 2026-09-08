@@ -11,7 +11,7 @@ function buildPrioExport({guild,raid,prios,points,items,instanceId}){
     if(!Number.isSafeInteger(Number(itemId))||Number(itemId)<1){warnings.push(`Keine Item-ID für ${row.Spieler}: ${itemName}.`);return;}
     const realm=row.Server||'';
     const key=[itemId,row.Spieler,realm,priority].join('|');if(seen.has(key))return;seen.add(key);
-    const total=points.filter(p=>norm(p.player)===norm(row.Spieler)&&norm(p.server)===norm(realm)&&norm(p.item)===norm(itemName)).reduce((n,p)=>n+Number(p.points||0),0);
+    const total=points.filter(p=>norm(p.player)===norm(row.Spieler)&&norm(p.server)===norm(realm)&&norm(p.item)===norm(itemName)&&(!p.itemId||Number(p.itemId)===Number(itemId))).reduce((n,p)=>n+Number(p.points||0),0);
     if(!Number.isFinite(total))throw fail('Ungültiger Punktestand.');
     const bench=row.staffBenched===true||['ja','true','1','bench'].includes(norm(row.Bench));
     lines.push([itemId,itemName,row.Spieler,realm,priority,total,row.Klasse||'',bench?1:0].map(encode).join(';'));
@@ -24,7 +24,7 @@ function buildPrioExport({guild,raid,prios,points,items,instanceId}){
   for(const p of points){
     const matches=items.filter(i=>norm(i.name)===norm(p.item));const ids=[...new Set(matches.map(i=>Number(i.item_id)))];
     const already=prios.some(r=>norm(r.Spieler)===norm(p.player)&&norm(r.Server)===norm(p.server)&&[r.P1,r.P2,r.P3,r.P0Item].some(i=>norm(i)===norm(p.item)));
-    if(!already)add({Spieler:p.player,Server:p.server},ids.length===1?ids[0]:null,p.item,'Punkte');
+    if(!already)add({Spieler:p.player,Server:p.server},p.itemId||(ids.length===1?ids[0]:null),p.item,'Punkte');
   }
   return {text:lines.join('\n'),warnings:[...new Set(warnings)],entries:lines.length-1};
 }

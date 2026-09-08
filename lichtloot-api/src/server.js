@@ -26408,6 +26408,7 @@ async function deleteGuildPrio({ guildId, query: params }) {
 async function getP0Plus(guildId, params = {}) {
   await ensureUnlinkedP0PlusSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  const addonExport = String(params.addon || "") === "1";
   const values = [guildId];
   let raidClause = "";
   if (raidType && raidType !== "raid") {
@@ -26419,6 +26420,7 @@ async function getP0Plus(guildId, params = {}) {
        coalesce(i.raid_type, 'Raid') as raid,
        coalesce(i.name, pp.note, 'P0/P0+') as item,
        coalesce(i.quality, '') as quality,
+       i.item_id as item_game_id,
        c.name as player,
        c.server,
        pp.points,
@@ -26436,6 +26438,7 @@ async function getP0Plus(guildId, params = {}) {
        coalesce(i.raid_type, 'Raid') as raid,
        i.name as item,
        coalesce(i.quality, '') as quality,
+       i.item_id as item_game_id,
        up.player_name as player,
        up.server,
        up.points,
@@ -26457,10 +26460,12 @@ async function getP0Plus(guildId, params = {}) {
       clean(row.raid).toLowerCase(),
       clean(row.item).toLowerCase(),
       clean(row.player).toLowerCase(),
-      clean(row.server).toLowerCase()
+      clean(row.server).toLowerCase(),
+      ...(addonExport ? [clean(row.item_game_id)] : [])
     ].join("|");
     const current = grouped.get(key) || {
       raid: row.raid,
+      ...(addonExport ? {itemId: row.item_game_id || null} : {}),
       item: row.item,
       quality: row.quality || "",
       player: row.player,
