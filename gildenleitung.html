@@ -5423,6 +5423,7 @@ body.worldbuff-only .master-only{display:none!important}
 </style>
 <link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
 <script src="raid-closeout.js?v=20260906-1"></script>
+<script src="guildloot-prio-download.js?v=20260908-1"></script>
 <style id="leadership-workflow-style">
 .leadership-review-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}.leadership-review-actions{display:flex;gap:8px;flex-wrap:wrap}.leadership-reviewed{margin-top:20px}.leadership-reviewed summary{cursor:pointer;color:var(--muted);padding:10px 0}
 
@@ -18294,14 +18295,17 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
     </div>
   `;
 
-  const mountCloseout = () => window.GuildLootCloseout?.mount(document.getElementById("guildRaidCloseout"), {
+  const mountCloseout = () => {
+    window.GuildLootPrioDownload?.mount(document.getElementById("guildLootPrioDownload"),{api:LICHTLOOT_API_URL,guild:CURRENT_GUILD_SLUG,raid});
+    window.GuildLootCloseout?.mount(document.getElementById("guildRaidCloseout"), {
     api:LICHTLOOT_API_URL, guild:CURRENT_GUILD_SLUG, raidId,
     credentials:() => ({masterCode:document.getElementById("masterCode").value.trim()}),
     onApplied:() => openPrioModal(raidId,forceListOpen)
   });
+  };
   if(!prios.length){
     document.getElementById("prioModalContent").innerHTML = `
-      ${toolbar}<div id="guildRaidCloseout"></div>
+      ${toolbar}<div id="guildLootPrioDownload"></div><div id="guildRaidCloseout"></div>
       <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
     `;
     mountCloseout();
@@ -18309,7 +18313,7 @@ function renderPrioModalContent(result, raid, forceListOpen = false){
   }
 
   document.getElementById("prioModalContent").innerHTML = `
-    ${toolbar}<div id="guildRaidCloseout"></div>
+    ${toolbar}<div id="guildLootPrioDownload"></div><div id="guildRaidCloseout"></div>
     <div class="table-wrap">
       <table class="prio-table">
         <thead>
