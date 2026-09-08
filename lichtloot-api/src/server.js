@@ -1,3 +1,4 @@
+import { createAddonRaidImport, compareAttendance } from "./addon-raid-import.js";
 import { createPrioReceipts } from "./prio-receipts.js";
 import { installPrioHistory, installP0PlusNotices } from "./prio-history.js";
 import { searchGuildPlayers, publicPlayerPoints, attachPointItems } from "./player-search.js";
@@ -66,6 +67,20 @@ const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const lichtstatsApiToken = process.env.LICHTSTATS_API_TOKEN || "";
 const analyticsHashSecret = process.env.ANALYTICS_HASH_SECRET || masterCode;
 
+const addonRaidImport = createAddonRaidImport({pool,
+  authorize: (guild,params) => requireRaidleadP0MasterCodeForGuild(guild,params.masterCode),
+  resolveTarget: resolveZgPointTarget,writeAudit: insertP0PlusAudit
+});
+async function addonAttendanceReview(guildId,raid,rows){
+  let wcl={available:false,players:{}};
+  try{const config=await getGuildEraConfiguration(guildId);if(config.warcraftLogsGuildId)wcl=await getWclRaidParticipationForRaidView(raid.raid_type,config.warcraftLogsGuildId,raid.raid_date.toISOString().slice(0,10));}catch{}
+  const names=new Map();for(const row of rows){const key=normalizeAttendanceName(row.player);if(!names.has(key))names.set(key,new Set());names.get(key).add(row.server);}
+  return new Map(rows.map(row=>{
+    const key=normalizeAttendanceName(row.player),player=wcl.players[key];
+    const state=!wcl.available?'no_data':names.get(key).size>1?'ambiguous':player?.bench?'bench':player?.participated?'participated':'not_found';
+    return [row.character_id,compareAttendance(commentMeta(row.comment).addonAttendance,state)];
+  }));
+}
 const raidCloseoutService = createRaidCloseoutService({
   pool, secret: analyticsHashSecret,
   authorize: async (guild, params, raid, write) => {
@@ -24241,6 +24256,7 @@ async function getPublishedPrios({ guildId, query: params }) {
           : "no_data",
         wclSourceTitle: wclParticipation.reports[0]?.code ? `Warcraft Logs ${wclParticipation.reports[0].code}` : "Warcraft Logs",
         wclSourceUrl: wclParticipation.reports[0]?.url || "",
+        addonAttendance: meta.addonAttendance || null,
         p0ItemReceived: row.p0_item_received === true,
         p0PointsCleared: row.p0_points_cleared === true,
         StaffBenched: row.staff_benched === true,
@@ -27842,6 +27858,8 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       }
     }
     dedupedCandidates = missingCandidates;
+    const addonAttendance=priosResult.rows.some(row=>commentMeta(row.comment).addonAttendance)
+      ? await addonAttendanceReview(guildId,raid,priosResult.rows) : new Map();
     const reviewRows=[];
     for(const row of dedupedCandidates){
       // Read-only counterpart of upsertItem: a preview must not create item records.
@@ -27852,7 +27870,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       const currentPoints=target.rows[0]?await getP0PlusPointTotal(client,guildId,row.character_id,target.rows[0].id):0;
       row.awardPoints=raidTransferPoints;
       reviewRows.push({characterId:row.character_id,itemId:row.item_id,player:row.player,server:row.server,item:row.item_name,
-        currentPoints,points:raidTransferPoints,staffBenched:row.staff_benched===true});
+        currentPoints,points:raidTransferPoints,attendance:addonAttendance.get(row.character_id)||null,staffBenched:row.staff_benched===true});
     }
     const receivedItems=receivedResult.rows.map(row=>({characterId:row.character_id,player:row.player_name,server:row.server,item:row.item_name,deletedPoints:Number(row.deleted_points||0),pending:row.pending===true}));
     const reviewToken=createHmac("sha256",analyticsHashSecret).update(JSON.stringify({guildId,raidId:raid.id,targetRaidType,reviewRows,receivedItems,skipped})).digest("hex");
@@ -27860,6 +27878,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       await client.query("rollback");
       return {success:true,preview:true,reviewToken,raidId:raidPublicId(raid),raidName:raid.name||raid.raid_type,targetRaid:targetRaidType,entries:reviewRows,receivedItems,skippedEntries:skipped};
     }
+    if(addonAttendance.size&&params.pointEdits===undefined)throw Object.assign(new Error("Bitte die P0+-Kontrollvorschau öffnen und bestätigen."),{statusCode:400});
     if(params.pointEdits!==undefined){
       if(clean(params.reviewToken)!==reviewToken)throw Object.assign(new Error("Prios oder Punktestände haben sich geändert. Bitte die Vorschau neu laden."),{statusCode:409});
       const edits=params.pointEdits;
@@ -27868,6 +27887,8 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       for(const edit of edits){
         const key=clean(edit.characterId)+":"+clean(edit.itemId),points=Number(edit.points);
         if(edit.points===""||edit.points===null||!Number.isFinite(points)||points<0||points>100||Math.abs(points*100-Math.round(points*100))>0.00001||byKey.has(key))throw Object.assign(new Error("Bitte Punkte zwischen 0 und 100 mit höchstens zwei Nachkommastellen eingeben."),{statusCode:400});
+        const attendance=addonAttendance.get(clean(edit.characterId));
+        if(attendance?.needsReview&&edit.attendanceConfirmed!==true)throw Object.assign(new Error("Bitte unklare Teilnahme und Punkte im Kontrollfenster prüfen."),{statusCode:400});
         byKey.set(key,points);
       }
       for(const row of dedupedCandidates){const key=row.character_id+":"+row.item_id;if(!byKey.has(key))throw Object.assign(new Error("Unbekannter Spieler oder unbekanntes Item in der Punkteauswahl."),{statusCode:400});row.awardPoints=byKey.get(key);}
@@ -31819,7 +31840,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     await loadWorldbuffAccessCode(guild.id);
     await loadLootMasterAccessCode(guild.id);
     if (clean(postParams.masterCode)) {
-      if (["transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout","guildSetRaidTaskReview"].includes(action)) requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
+      if (["guildAddonRaidImport","transferP0PlusPoints","clearP0PlusForPlayer","getRaidCloseout","applyRaidCloseout","guildSetRaidTaskReview"].includes(action)) requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
     }
 
@@ -31831,6 +31852,14 @@ app.post("/api/apps-script", async (req, res, next) => {
         ? await raidCloseoutService.apply(guild, postParams)
         : await raidCloseoutService.review(guild, postParams);
       return res.json({...result, guild:guild.slug});
+    }
+
+    if(action === "guildAddonRaidImport"){
+      requireRaidleadP0MasterCodeForGuild(guild,postParams.masterCode);
+      await dkpService.assertPrio(guild.id);
+      enforceSecurityRateLimit(req,"addon-raid-import",20,60_000);
+      await ensureP0PlusAuditSchema();
+      return res.json({...await addonRaidImport.apply(guild,postParams),guild:guild.slug});
     }
 
     if(action === "transferP0PlusPoints"){

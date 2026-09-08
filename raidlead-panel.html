@@ -1386,6 +1386,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
 </style>
 <link rel="stylesheet" href="raid-closeout.css?v=20260906-1">
 <script src="raid-closeout.js?v=20260906-1"></script>
+<script src="addon-raid-upload.js?v=20260908-1"></script>
 <style>.glc-cancel-backdrop{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:grid;place-items:center;padding:20px}.glc-cancel-dialog{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel,#101622);color:var(--text,#f8fafc);border:1px solid var(--line,#334155);border-radius:14px;padding:24px}.glc-cancel-dialog p{line-height:1.5;margin:12px 0}.glc-cancel-dialog label{display:block;margin:14px 0}.glc-cancel-dialog input[type=password],.glc-cancel-dialog textarea{display:block;width:100%;margin-top:8px}.glc-cancel-actions{display:flex;gap:10px;justify-content:flex-end}</style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 <script src="server-selection.js?v=20260906-1"></script>
@@ -2001,6 +2002,7 @@ async function loadPriosFromRailway(leadPin, raidKey = ""){
       wclParticipation: p.WclParticipation || p.wclParticipation || "no_data",
       wclSourceTitle: p.wclSourceTitle || p.WclSourceTitle || "Warcraft Logs",
       wclSourceUrl: p.wclSourceUrl || p.WclSourceUrl || "",
+      addonAttendance: p.addonAttendance || null,
       p0ItemReceived: p.p0ItemReceived===true,
       p0PointsCleared: p.p0PointsCleared===true,
       staffBenched: p.staffBenched===true||p.StaffBenched===true,
@@ -2324,6 +2326,7 @@ function renderRaidView(){
       ${transferButton}
     </div>
 
+    ${!RANDOM_RAIDLEAD_MODE ? '<div id="addonRaidUpload"></div>' : ""}
     <section class="entries-panel" id="entriesPanel">
       ${renderRaidleadPrioForm()}
 
@@ -2355,6 +2358,7 @@ function renderRaidView(){
     </section>
   `;
 
+  window.GuildLootRaidUpload?.mount(document.getElementById("addonRaidUpload"),{api:RAID_API_URL,guild:currentGuildSlug(),raidId:currentRaidData.raidId,onApplied:()=>reloadCurrentRaid()});
   window.GuildLootServers.refresh();
   loadRaidleadItemOptions();
   if(!RANDOM_RAIDLEAD_MODE && isAllowedP0Raid()) window.GuildLootCloseout?.mount(document.getElementById("raidCloseoutCheck"), {
@@ -2689,10 +2693,11 @@ function renderBenchName(entry){
     : participation==="not_found"
       ? `<span class="prio-wcl-attendance not-found">✕ In ${source} nicht als Teilnehmer gefunden</span>`
       : '<span class="prio-wcl-attendance no-data">– Kein Warcraft-Logs-Raid für Gilde, Instanz und Datum gefunden</span>';
+  const addonAttendance=entry.addonAttendance?`<span class="prio-wcl-attendance ${entry.addonAttendance.state==='participated'?'participated':'no-data'}">${entry.addonAttendance.state==='participated'?'✓ Addon: Teilnahme belegt':'– Addon: nicht erfasst, mit Logs prüfen'}</span>`:"";
   const directTimestamp=currentPrioListDisplay.prioEntryUnderName===true,directAttendance=currentPrioListDisplay.attendanceUnderName===true;
   const hoverContent=`${directTimestamp?"":timestampHtml}${directAttendance?"":attendance}`;
   const attendanceClass=participation==="participated"?"attendance-participated":participation==="not_found"?"attendance-not-found":"attendance-no-data";
-  return `<span class="prio-player-hover" tabindex="0"><strong class="${attendanceClass}">${safe(entry.player || "-")}</strong>${entry.staffBenched===true?'<span class="staff-bench-icon" role="img" aria-label="Durch Raidlead oder Gildenleitung auf Bank gesetzt" title="Durch Raidlead oder Gildenleitung auf Bank gesetzt">🪑</span>':""}${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${directTimestamp?timestampHtml:""}${directAttendance?attendance:""}`;
+  return `<span class="prio-player-hover" tabindex="0"><strong class="${attendanceClass}">${safe(entry.player || "-")}</strong>${entry.staffBenched===true?'<span class="staff-bench-icon" role="img" aria-label="Durch Raidlead oder Gildenleitung auf Bank gesetzt" title="Durch Raidlead oder Gildenleitung auf Bank gesetzt">🪑</span>':""}${hoverContent?`<span class="prio-player-info-card">${hoverContent}</span>`:""}</span>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${directTimestamp?timestampHtml:""}${directAttendance?attendance:""}${addonAttendance}`;
 }
 
 function formatPrioEntryTimestamp(value){
@@ -3418,13 +3423,14 @@ async function requestP0Review(state,extra){const response=await fetch(RAID_API_
 async function loadP0TransferReview(){const state=p0TransferReview;if(!state||state.busy)return;state.plan=null;if(!state.targetRaid){document.getElementById('p0ReviewConfirm').disabled=true;return;}setP0ReviewBusy(true);document.getElementById('p0ReviewStatus').textContent='Vorschau wird geladen …';try{const plan=await requestP0Review(state,{preview:true});if(p0TransferReview!==state)return;state.plan=plan;renderP0TransferReview(plan);document.getElementById('p0ReviewStatus').textContent='Noch nichts übertragen. Die Punkte in der Spalte „Für diesen Raid“ kannst du ändern.';}catch(error){document.getElementById('p0ReviewStatus').textContent=error.message;document.getElementById('p0ReviewContent').textContent='Die Vorschau konnte nicht geladen werden.';}finally{if(p0TransferReview===state)setP0ReviewBusy(false);}}
 function renderP0TransferReview(plan){
   const skippedLabels={'bereits-übertragen':'Bereits übertragen','charakter-doppelt':'Doppelter Eintrag'};
-  document.getElementById('p0ReviewContent').innerHTML=`<h3>Punkte für diesen Raid <span>(${plan.entries.length})</span></h3><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Item</th><th>Aktuell</th><th>Für diesen Raid</th><th>Danach</th></tr></thead><tbody>${plan.entries.map((entry,index)=>`<tr><td><strong>${safe(entry.player)}</strong>${entry.staffBenched?' 🪑':''}<small>${safe(entry.server)}</small></td><td>${renderItem(entry.item)}</td><td>${safe(entry.currentPoints)}</td><td><input data-review-points="${index}" type="number" min="0" max="100" step="0.01" value="${safe(entry.points)}" aria-label="Punkte für ${safe(entry.player)}"></td><td data-review-total="${index}">${safe(Number(entry.currentPoints)+Number(entry.points))}</td></tr>`).join('')||'<tr><td colspan="5">Keine offenen P0+-Übertragungen.</td></tr>'}</tbody></table></div><h3>Erhaltene Items · Punkte-Löschung</h3><p class="p0-review-hint">Diese Spieler bekommen für diesen Raid keine weiteren P0+-Punkte. Vorgemerkte Punkte werden erst mit der bestätigten Übertragung gelöscht. Bereits abgeschlossene Löschungen sind gekennzeichnet.</p><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Erhaltenes Item</th><th>Punkte / Status</th></tr></thead><tbody>${plan.receivedItems.map(entry=>`<tr><td><strong>${safe(entry.player)}</strong><small>${safe(entry.server)}</small></td><td class="p0-item-received">${renderItem(entry.item)}</td><td class="p0-review-deleted">−${safe(entry.deletedPoints)}<small>${entry.pending?"Wird mit Übertragung gelöscht":"Bereits gelöscht"}</small></td></tr>`).join('')||'<tr><td colspan="3">Noch keine Items als erhalten markiert.</td></tr>'}</tbody></table></div>${plan.skippedEntries.length?`<h3>Keine erneute Übertragung</h3><ul>${plan.skippedEntries.map(entry=>`<li>${safe(entry.player)} · ${safe(entry.item)} — ${safe(skippedLabels[entry.reason]||entry.reason)}</li>`).join('')}</ul>`:''}`;
+  document.getElementById('p0ReviewContent').innerHTML=`<h3>Punkte für diesen Raid <span>(${plan.entries.length})</span></h3><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Item</th><th>Aktuell</th><th>Für diesen Raid</th><th>Danach</th></tr></thead><tbody>${plan.entries.map((entry,index)=>`<tr><td><strong>${safe(entry.player)}</strong>${entry.staffBenched?' 🪑':''}<small>${safe(entry.server)}</small>${entry.attendance?`<small style="color:${entry.attendance.needsReview?'#facc15':'#4ade80'}">${safe(entry.attendance.label)}</small>${entry.attendance.needsReview?`<label><input type="checkbox" data-attendance-confirm="${index}"> Teilnahme / Punkte geprüft</label>`:""}`:""}</td><td>${renderItem(entry.item)}</td><td>${safe(entry.currentPoints)}</td><td><input data-review-points="${index}" type="number" min="0" max="100" step="0.01" value="${safe(entry.points)}" aria-label="Punkte für ${safe(entry.player)}"></td><td data-review-total="${index}">${safe(Number(entry.currentPoints)+Number(entry.points))}</td></tr>`).join('')||'<tr><td colspan="5">Keine offenen P0+-Übertragungen.</td></tr>'}</tbody></table></div><h3>Erhaltene Items · Punkte-Löschung</h3><p class="p0-review-hint">Diese Spieler bekommen für diesen Raid keine weiteren P0+-Punkte. Vorgemerkte Punkte werden erst mit der bestätigten Übertragung gelöscht. Bereits abgeschlossene Löschungen sind gekennzeichnet.</p><div class="p0-review-table"><table><thead><tr><th>Spieler</th><th>Erhaltenes Item</th><th>Punkte / Status</th></tr></thead><tbody>${plan.receivedItems.map(entry=>`<tr><td><strong>${safe(entry.player)}</strong><small>${safe(entry.server)}</small></td><td class="p0-item-received">${renderItem(entry.item)}</td><td class="p0-review-deleted">−${safe(entry.deletedPoints)}<small>${entry.pending?"Wird mit Übertragung gelöscht":"Bereits gelöscht"}</small></td></tr>`).join('')||'<tr><td colspan="3">Noch keine Items als erhalten markiert.</td></tr>'}</tbody></table></div>${plan.skippedEntries.length?`<h3>Keine erneute Übertragung</h3><ul>${plan.skippedEntries.map(entry=>`<li>${safe(entry.player)} · ${safe(entry.item)} — ${safe(skippedLabels[entry.reason]||entry.reason)}</li>`).join('')}</ul>`:''}`;
   document.querySelectorAll('[data-review-points]').forEach(input=>input.addEventListener('input',()=>{const row=plan.entries[Number(input.dataset.reviewPoints)],value=Number(input.value);document.querySelector(`[data-review-total="${input.dataset.reviewPoints}"]`).textContent=input.value!==''&&Number.isFinite(value)?(Number(row.currentPoints)+value).toLocaleString('de-DE',{maximumFractionDigits:2}):'–';}));
 }
 async function confirmP0TransferReview(){
   const state=p0TransferReview;if(!state?.plan||state.busy)return;
   const inputs=[...document.querySelectorAll('[data-review-points]')];const invalid=inputs.find(input=>input.value===''||!input.checkValidity());if(invalid){invalid.reportValidity();invalid.focus();document.getElementById('p0ReviewStatus').textContent='Bitte alle Punkte zwischen 0 und 100 eingeben.';return;}
-  const pointEdits=inputs.map(input=>{const row=state.plan.entries[Number(input.dataset.reviewPoints)];return {characterId:row.characterId,itemId:row.itemId,points:Number(input.value)};});
+  const unchecked=document.querySelector('[data-attendance-confirm]:not(:checked)');if(unchecked){unchecked.focus();document.getElementById('p0ReviewStatus').textContent='Bitte die unklaren Teilnahmen prüfen und bestätigen.';return;}
+  const pointEdits=inputs.map(input=>{const index=Number(input.dataset.reviewPoints),row=state.plan.entries[index];return {characterId:row.characterId,itemId:row.itemId,points:Number(input.value),...(row.attendance?.needsReview?{attendanceConfirmed:document.querySelector(`[data-attendance-confirm="${index}"]`)?.checked===true}:{})};});
   setP0ReviewBusy(true);document.getElementById('p0ReviewStatus').textContent='Die geprüften Punkte werden übertragen …';
   try{const result=await requestP0Review(state,{reviewToken:state.plan.reviewToken,pointEdits});state.plan=null;setP0ReviewBusy(false);document.getElementById('p0ReviewContent').innerHTML=`<div class="p0-review-complete">✓ P0+-Punkte wurden übertragen.<p>${safe(result.awarded||0)} Einträge gespeichert.</p></div>`;document.getElementById('p0ReviewStatus').textContent='Die Prioliste wird aktualisiert.';document.querySelector('#p0TransferReviewModal [data-review-close]').focus();await reloadCurrentRaid();if(p0TransferReview!==state)return;document.getElementById('p0ReviewStatus').textContent='Übertragung abgeschlossen.';}catch(error){if(p0TransferReview!==state)return;state.plan=null;setP0ReviewBusy(false);document.getElementById('p0ReviewStatus').textContent=error.message+' Bitte die Vorschau vor einem weiteren Versuch neu laden.';}
 }
