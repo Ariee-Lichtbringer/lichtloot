@@ -23,9 +23,10 @@ async function exportAll(){
  const button=document.getElementById('guildlootAllPointsButton'),status=document.getElementById('guildlootAllPointsStatus'),box=document.getElementById('guildlootAllPointsText'),copy=document.getElementById('guildlootAllPointsCopy');
  button.disabled=true;box.hidden=true;copy.hidden=true;box.value='';status.textContent='Aktuelle Punkte aller Raids werden geladen …';
  try{
-  const guild=CURRENT_GUILD_SLUG;
+  const guild=typeof CURRENT_GUILD_SLUG!=='undefined'?CURRENT_GUILD_SLUG:currentGuildSlug();
+  const api=typeof LICHTLOOT_API_URL!=='undefined'?LICHTLOOT_API_URL:APPS_SCRIPT_URL;
   async function get(action,extra={}){
-   const url=new URL(LICHTLOOT_API_URL);url.search=new URLSearchParams({action,guild,all:1,nocache:1,t:Date.now(),...extra});
+   const url=new URL(api);url.search=new URLSearchParams({action,guild,all:1,nocache:1,t:Date.now(),...extra});
    const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});const result=await response.json();
    if(!response.ok||!result.success)throw Error(result.error||'Daten konnten nicht geladen werden.');return result;
   }

@@ -2037,6 +2037,17 @@ function openRaidStartAction(action){
 
 <div id="prioCard" class="card info-card">
 <h2>Aktuelle Prioliste</h2>
+<details style="margin:14px 0;padding:14px;border:1px solid rgba(var(--gold-rgb),.4);border-radius:12px">
+  <summary style="cursor:pointer;font-weight:800">GuildLoot-Addon: Prios &amp; Punkte exportieren</summary>
+  <p>Für alle Raidteilnehmer · Export kopieren und im Addon unter /gle → Daten importieren einfügen. Die Gilde wird automatisch zugeordnet.</p>
+  <div id="guildlootParticipantRaidExport"></div>
+  <button id="guildlootAllPointsButton" type="button" class="tool-btn">Alle Raid-Punkte fürs Addon</button>
+  <p style="font-size:14px">Alternativ: alle aktuellen P0+-Punkte dieser Gilde, getrennt nach Raid.</p>
+  <div id="guildlootAllPointsStatus" role="status"></div>
+  <textarea id="guildlootAllPointsText" hidden readonly rows="5" aria-label="P0+-Sammel-Export" style="box-sizing:border-box;width:100%;font:14px/1.5 monospace"></textarea>
+  <button id="guildlootAllPointsCopy" type="button" class="tool-btn" hidden>Export kopieren</button>
+</details>
+
 
 <button class="btn" onclick="refreshPrios()">Prioliste aktualisieren</button>
 <div class="prio-export-buttons prio-export-main" data-prio-export-buttons>
@@ -10805,5 +10816,8 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
 <script src="/item-prio-handoff.js?v=20260907-compare-1" defer></script>
+<script src="../guildloot-prio-download.js?v=20260908-3"></script>
+<script src="../guildloot-all-points.js?v=20260908-2"></script>
+<script src="../guildloot-participant-export.js?v=20260908-1"></script>
 </body>
 </html>
