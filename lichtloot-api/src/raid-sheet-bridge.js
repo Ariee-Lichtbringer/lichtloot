@@ -15,7 +15,10 @@ export function validateSheetSnapshot(input,expectedId){
   });
   if(images&&images.length>100)throw Error('Zu viele Bilder.');
   const notes=rows.map((row,r)=>row.map((_,c)=>String(tab.notes?.[r]?.[c]||'').slice(0,2000)));
-  return {images,notes,name:tab.name.slice(0,100),gid:String(tab.gid||'').slice(0,20),rows,backgrounds:colors(tab.backgrounds),fontColors:colors(tab.fontColors)};
+  const merges=(Array.isArray(tab.merges)?tab.merges:[]).slice(0,5000).filter(m=>[m.r,m.c,m.h,m.w].every(Number.isInteger)&&m.r>0&&m.c>0&&m.h>0&&m.w>0&&m.r+m.h<=1001&&m.c+m.w<=151).map(({r,c,h,w})=>({r,c,h,w}));
+  const widths=Array.from({length:Math.max(0,...rows.map(r=>r.length))},(_,c)=>Math.max(8,Math.min(2000,Number(tab.widths?.[c])||100)));
+  const heights=rows.map((_,r)=>Math.max(8,Math.min(2000,Number(tab.heights?.[r])||24)));
+  return {merges,widths,heights,images,notes,name:tab.name.slice(0,100),gid:String(tab.gid||'').slice(0,20),rows,backgrounds:colors(tab.backgrounds),fontColors:colors(tab.fontColors)};
  });
  if(imageBytes>50000000)throw Error('Bilder zu groß.');
  if(cells>100000)throw Error('Zu viele Zellen.');
