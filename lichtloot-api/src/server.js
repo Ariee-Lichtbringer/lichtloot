@@ -32294,6 +32294,11 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...synced, guild: guild.slug });
     }
 
+    if (action === "savePrio") {
+      const saved = await savePrio({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "saveRaidSignup") {
       const saved = await saveRaidSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug, guildId: guild.id });
