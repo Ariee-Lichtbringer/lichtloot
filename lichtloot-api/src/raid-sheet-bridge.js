@@ -2,13 +2,22 @@ import {randomBytes,createHash,timingSafeEqual} from 'node:crypto';
 export const RAID_SHEET_TYPES=['mc','bwl','aq40','naxx','ony','zg','aq20','zg-mittwoch','zg-prime','zg-late'];
 export function validateSheetSnapshot(input,expectedId){
  if(!input||input.spreadsheetId!==expectedId||!Array.isArray(input.tabs)||!input.tabs.length||input.tabs.length>30)throw Error('Unerwartete Tabelle oder Tabellenblätter.');
- let cells=0;
+ let cells=0,imageBytes=0;
  const tabs=input.tabs.map(tab=>{
   if(!tab||typeof tab.name!=='string'||!Array.isArray(tab.rows)||tab.rows.length>1000)throw Error('Ungültiges Tabellenblatt.');
   const rows=tab.rows.map(row=>{if(!Array.isArray(row)||row.length>150)throw Error('Zu viele Spalten.');cells+=row.length;return row.map(cell=>{if(typeof cell!=='string'||cell.length>2000)throw Error('Ungültiger Zelltext.');return cell;});});
   const colors=matrix=>rows.map((row,r)=>row.map((_,c)=>/^#[0-9a-f]{6}$/i.test(matrix?.[r]?.[c]||'')?matrix[r][c]:''));
-  return {name:tab.name.slice(0,100),gid:String(tab.gid||'').slice(0,20),rows,backgrounds:colors(tab.backgrounds),fontColors:colors(tab.fontColors)};
+  const images=tab.images===undefined?undefined:tab.images.map(image=>{
+   if(!image||!Number.isInteger(image.row)||image.row<1||image.row>1000||!Number.isInteger(image.col)||image.col<1||image.col>150||typeof image.data!=='string'||image.data.length>12000000||!/^[A-Za-z0-9+/]*={0,2}$/.test(image.data))throw Error('Ungültiges Bild.');
+   imageBytes+=image.data.length;const bytes=Buffer.from(image.data,'base64');
+   if(!(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))||bytes.subarray(0,3).equals(Buffer.from([255,216,255]))))throw Error('Bildformat nicht unterstützt.');
+   return {row:image.row,col:image.col,width:Math.max(1,Math.min(20000,Number(image.width)||1)),height:Math.max(1,Math.min(20000,Number(image.height)||1)),hash:createHash('sha256').update(bytes).digest('hex'),data:image.data};
+  });
+  if(images&&images.length>100)throw Error('Zu viele Bilder.');
+  const notes=rows.map((row,r)=>row.map((_,c)=>String(tab.notes?.[r]?.[c]||'').slice(0,2000)));
+  return {images,notes,name:tab.name.slice(0,100),gid:String(tab.gid||'').slice(0,20),rows,backgrounds:colors(tab.backgrounds),fontColors:colors(tab.fontColors)};
  });
+ if(imageBytes>50000000)throw Error('Bilder zu groß.');
  if(cells>100000)throw Error('Zu viele Zellen.');
  return {available:1,source:'apps-script',spreadsheetId:expectedId,tabs,rows:tabs[0].rows};
 }
@@ -27,12 +36,12 @@ export function createRaidSheetBridge(query){
   },
   async receive(guild,raid,token,payload){
    if(!RAID_SHEET_TYPES.includes(raid)||typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('Verbindungsschlüssel ungültig.');
-   await ensure();const found=await query('select spreadsheet_id,token_hash from addon_raid_sheet_bridge where guild_id=$1 and raid_type=$2',[String(guild.id),raid]);const row=found.rows[0];
+   await ensure();const found=await query('select spreadsheet_id,token_hash,snapshot from addon_raid_sheet_bridge where guild_id=$1 and raid_type=$2',[String(guild.id),raid]);const row=found.rows[0];
    if(!row||!timingSafeEqual(Buffer.from(hash(token),'hex'),Buffer.from(row.token_hash,'hex')))throw Error('Verbindungsschlüssel ungültig.');
-   const snapshot=validateSheetSnapshot(payload,row.spreadsheet_id);snapshot.exportedAt=Math.floor(Date.now()/1000);
+   const snapshot=validateSheetSnapshot(payload,row.spreadsheet_id);for(const tab of snapshot.tabs){if(tab.images===undefined)tab.images=(row.snapshot?.tabs||[]).find(old=>old.gid===tab.gid)?.images||[];}snapshot.exportedAt=Math.floor(Date.now()/1000);
    const saved=await query('update addon_raid_sheet_bridge set snapshot=$3::jsonb,received_at=now() where guild_id=$1 and raid_type=$2 and token_hash=$4 returning raid_type',[String(guild.id),raid,JSON.stringify(snapshot),row.token_hash]);
    if(!saved.rows.length)throw Error('Verbindungsschlüssel wurde erneuert.');return snapshot.exportedAt;
   },
-  async read(guildId){await ensure();const r=await query('select raid_type,snapshot from addon_raid_sheet_bridge where guild_id=$1 and snapshot is not null',[String(guildId)]);return Object.fromEntries(r.rows.map(x=>[x.raid_type,x.snapshot]));}
+  async read(guildId,withImages=false){await ensure();const r=await query('select raid_type,snapshot from addon_raid_sheet_bridge where guild_id=$1 and snapshot is not null',[String(guildId)]);return Object.fromEntries(r.rows.map(x=>[x.raid_type,withImages?x.snapshot:{...x.snapshot,tabs:x.snapshot.tabs.map(t=>({...t,images:(t.images||[]).map(({data,...meta})=>meta)}))}]));}
  };
 }

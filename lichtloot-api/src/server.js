@@ -32324,9 +32324,13 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ success: saved.success !== false, guild: guild.slug, status: "geöffnet" });
     }
 
-    if (action === "getRaidSheetSnapshots") {
+    if (action === "getRaidSheetSnapshots" || action === "getRaidSheetImages") {
       const characters=await getCharactersByPin(guild.id,postParams.pin);
       if(!characters.length)return res.status(403).json({success:false,error:"Spieler-PIN erforderlich."});
+      if(action === "getRaidSheetImages") {
+        const snapshot=(await raidSheetBridge.read(guild.id,true))[postParams.raid];
+        return res.json({success:true,images:(snapshot?.tabs||[]).flatMap(t=>t.images||[])});
+      }
       return res.json({success:true,snapshots:await raidSheetBridge.read(guild.id)});
     }
     if (action === "guildCreateRaidSheetBridge") {
