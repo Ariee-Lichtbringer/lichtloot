@@ -1,4 +1,4 @@
-export const SEARCH_NEWS_VERSION='2026-09-07-search';
+export const SEARCH_NEWS_VERSION='2026-09-09-archive-professions';
 export const SUPPORT_NEWS_VERSION='2026-09-06-support';
 export const SUPPORT_NOTICE_TEXT='🛟 **Fehler oder Probleme mit GuildLoot?**\n\nBitte nutzt den Button **„Support · Fehler melden“** unten auf der jeweiligen GuildLoot-Seite. Beschreibt kurz, was ihr tun wolltet und was passiert ist. Einen Screenshot könnt ihr direkt anhängen. Gebt eine E-Mail-Adresse oder euren Discord-Namen an, damit wir euch antworten können.\n\nSo landet eure Meldung direkt beim Support und geht nicht im Channel unter. Danke!\nhttps://lichtloot.de';
 export function createSupportNotices({query,env=process.env}){

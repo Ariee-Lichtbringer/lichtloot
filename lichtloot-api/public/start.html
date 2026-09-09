@@ -10111,8 +10111,10 @@ async function submitMobileLootLogin(event){
   }
 }
 
-const LICHTLOOT_NEWS_VERSION="2026-09-07-search";
+const LICHTLOOT_NEWS_VERSION="2026-09-09-archive-professions";
 const LICHTLOOT_NEWS_ENTRIES=[
+  {"date": "2026-09-09", "title": "Neu: Raidarchiv auf der Startseite", "text": "Vergangene Raids findest du jetzt direkt im Raidarchiv auf der Startseite. Öffne einen Raid und schau dir die verfügbaren Informationen und die Lootübersicht an.", "linkLabel": "Raidarchiv öffnen", "action": "raid-archive"},
+  {"date": "2026-09-09", "title": "Neu: Berufe skillen", "text": "Plane deinen Beruf von 1 bis 300: Wähle deinen Beruf und deinen aktuellen Skill. Der Guide zeigt dir passende Schritte, Rezepte und Materialien sowie Hinweise zur Ausbildung. Auch Sammelberufe, Kochen, Erste Hilfe und Angeln sind dabei.", "linkLabel": "Berufe skillen", "action": "professions"},
   {"date": "2026-09-07", "title": "Tier-Sets finden: T3 und T2,5 mit Materialien und Quests", "text": "Suche zum Beispiel nach „T3 Priester“ oder „T 2,5 Paladin“: Du findest alle neun T3-Setteile einschließlich Ring beziehungsweise die fünf AQ40-Setteile deiner Klasse. Auch „T2.5“, „Tier 2,5“, Klassenkürzel und viele Tippfehler werden erkannt. Öffne ein Setteil oder Token, um den Materialbedarf und die Quest direkt in GuildLoot anzusehen. Bei Tokens mit mehreren Belohnungen wählst du das gewünschte Item aus. Für Naxxramas zeigen wir auch die Vorquest „Echo des Krieges“, für AQ40 die benötigte Rufstufe. Die imperialen AQ40-Waffen und Insignien sind ebenfalls enthalten. Questgeber, Abgabeort und Belohnung stehen direkt in der Karte. Vorhandene Materialien, Ruf und Questfortschritt werden noch nicht automatisch berücksichtigt.", "linkLabel": "Tier-Sets suchen", "action": "search"},
   {date:"2026-09-07",title:"Itemvergleich und persönliche Vormerkliste",text:"Vergleiche ein gefundenes Item direkt mit der Ausrüstung deines Charakters: Gesamtwert vorher, altes Item, neues Item, rechnerischer Gesamtwert nach dem Austausch und Differenz. Bekannte gewonnene oder verlorene Setboni werden separat angezeigt. Die Nachher-Werte sind Schätzungen bei unveränderten Verzauberungen, Buffs und Talenten. Merke dir interessante Items vor und finde sie unter Mein LichtLoot → Charaktere & Prios → Vorgemerkte Items wieder – getrennt nach Charakter und Server, auf diesem Gerät gespeichert. Von dort gelangst du zur passenden Raidseite, um deine Prio einzutragen. Itemfenster kannst du an der Kopfzeile verschieben und an der unteren rechten Ecke vergrößern oder verkleinern.",linkLabel:"Itemvergleich ausprobieren",action:"search"},
   {date:"2026-09-07",title:"Neu: Funktionen, Items und Spieler suchen",text:"Finde Funktionen, Items und Spieler direkt über die Suche „Was möchtest du machen?“. Du kannst nach Gegenstandsnamen oder Item-IDs in der gesamten Datenbank suchen und Tooltipkarten mit Icon und Qualitätsfarbe öffnen und verschieben. Bei Spielern siehst du Klassenicon, P0+-Punkte je Raid und Item sowie die verfügbare Ausrüstung / Paperdoll. Auch viele Tippfehler werden erkannt. Startseite und Gildenleitung zeigen die jeweils passenden Funktionen.",linkLabel:"Suche ausprobieren",action:"search"},
@@ -10165,6 +10167,8 @@ function openLichtlootNews(){
 }
 
 function openLichtlootNewsFeature(action){
+  if(action==="raid-archive"){closeLichtlootNews();window.openRaidArchive();return;}
+  if(action==="professions"){closeLichtlootNews();window.GuildLootProfessions.open();return;}
   if(action==="search"){closeLichtlootNews();const search=document.getElementById("startFunctionSearch");search?.scrollIntoView({behavior:"smooth",block:"center"});search?.focus();return;}
   if(action==="support"){closeLichtlootNews();document.querySelector("[data-guild-support]")?.click();return;}
   if(action==="random-create"){
@@ -10184,6 +10188,12 @@ function openLichtlootNewsFeature(action){
   openNextRaidLoot();
 }
 
+window.addEventListener("load",()=>{
+ const url=new URL(location.href);const action=url.searchParams.get("newsFeature");
+ if(!["raid-archive","professions"].includes(action))return;
+ url.searchParams.delete("newsFeature");history.replaceState(null,"",url.href);
+ openLichtlootNewsFeature(action);
+},{once:true});
 function installLichtlootNews(){
   if(document.getElementById("lichtlootNewsBackdrop")) return;
   const entries=LICHTLOOT_NEWS_ENTRIES.map(entry=>`<article class="nachtloot-news-entry"><div class="nachtloot-news-date">${safeHtml(entry.date)}</div><h3>${safeHtml(entry.title)}</h3><p>${safeHtml(entry.text)}</p>${entry.linkLabel?`<button class="nachtloot-news-link" type="button" data-news-feature="${safeAttr(entry.action||"")}">${safeHtml(entry.linkLabel)} <span aria-hidden="true">→</span></button>`:""}</article>`).join("");
@@ -10258,7 +10268,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <script src="pin-visibility.js"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
-<script src="/support-form.js?v=20260907-search-news-2" defer></script>
+<script src="/support-form.js?v=20260909-archive-professions" defer></script>
 <script src="prio-history-ui.js?v=20260908"></script>
 <script src="/guildloot-prio-download.js?v=20260908-5"></script>
 <script src="/guildloot-all-points.js?v=20260908-3"></script>
