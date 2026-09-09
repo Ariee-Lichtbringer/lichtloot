@@ -48,7 +48,7 @@ export function installAddonBetaDownload(app, {
       const decipher = createDecipheriv('aes-256-gcm', Buffer.from(encryptionKey, 'hex'), encrypted.subarray(0, 12));
       decipher.setAuthTag(encrypted.subarray(12, 28));
       const zip = Buffer.concat([decipher.update(encrypted.subarray(28)), decipher.final()]);
-      res.attachment('GuildLootEra-0.20.2-beta.zip').type('application/zip').send(zip);
+      res.attachment('GuildLootEra-0.21.0-beta.zip').type('application/zip').send(zip);
     } catch {
       res.status(503).json({error:'Die Beta-Datei ist gerade nicht verfügbar.'});
     }
