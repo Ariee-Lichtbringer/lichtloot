@@ -11,6 +11,18 @@ export function archiveLoot(payloads) {
   return receipts.sort((a,b)=>a.time-b.time);
 }
 const norm = value => String(value||'').normalize('NFC').trim().toLocaleLowerCase('de-DE');
+export function includeConfirmedAwards(loot, priorities) {
+  const rows=[...loot];
+  for(const p of priorities) {
+    if(p.p0ItemReceived!==true || !p.p0Item || !p.player || !p.server) continue;
+    const itemId=p.p0ItemId || (norm(p.p1)===norm(p.p0Item) ? p.p1ItemId : null);
+    if(!itemId) continue;
+    const player=`${p.player}-${p.server}`;
+    if(rows.some(r=>norm(r.player)===norm(player) && (String(r.itemId)===String(itemId)||norm(r.item)===norm(p.p0Item)))) continue;
+    rows.push({player,itemId:Number(itemId),item:p.p0Item,quantity:1,time:null,source:'confirmed_award'});
+  }
+  return rows;
+}
 export function decorateLoot(loot, priorities, metadata = new Map()) {
   const awards = priorities.filter(p=>p.p0ItemReceived === true && p.p0Item);
   return loot.map(row=>{
@@ -58,7 +70,7 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const prio = value => priosVisible ? value : (value ? 'gesetzt' : '–');
       const prios = (priorities.prios||[]).map(p=>({player:p.player,server:p.server,className:p.className,
         p1:prio(p.p1),p2:prio(p.p2),p3:prio(p.p3),p0:p.p0Item}));
-      const receipts=archiveLoot(logs.rows.map(row=>row.payload));
+      const receipts=includeConfirmedAwards(archiveLoot(logs.rows.map(row=>row.payload)),priorities.prios||[]);
       const metadata=await getItemMetadata([...new Set(receipts.map(row=>row.itemId))]);
       const loot=decorateLoot(receipts,priorities.prios||[],metadata);
       res.setHeader('Cache-Control','no-store');
