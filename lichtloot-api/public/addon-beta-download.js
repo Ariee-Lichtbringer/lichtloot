@@ -23,16 +23,7 @@
     status.textContent = ''; input.value = ''; dialog.showModal(); input.focus();
   }
   document.querySelectorAll('[data-addon-update]').forEach(button => { button.onclick = () => openDownload(true); });
-  hosts.forEach(host => {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'tool-btn addon-beta-trigger'; button.textContent = 'GuildLoot-Addon · Beta herunterladen';
-    button.onclick = () => openDownload();
-    const update = document.createElement('button');
-    update.type = 'button'; update.className = 'tool-btn addon-beta-trigger'; update.textContent = 'Addon / Sync aktualisieren';
-    update.onclick = () => openDownload(true);
-    const actions = document.createElement('div'); actions.className = 'addon-beta-actions'; actions.append(update, button);
-    host.before(actions);
-  });
+  document.querySelectorAll('[data-addon-download]').forEach(button => { button.onclick = () => openDownload(); });
   if (new URLSearchParams(location.search).get('addonBeta') === '1') { dialog.showModal(); input.focus(); }
   dialog.querySelector('form').addEventListener('submit', async event => {
     event.preventDefault(); if(submit.disabled)return;
