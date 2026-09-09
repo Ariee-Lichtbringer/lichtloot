@@ -42,3 +42,10 @@ assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:15,type:'Armor'}]]))[
 assert.match((await request()).calls[1].sql,/or exists \(select 1 from guildloot_era_logs/);
 assert.match((await request()).calls[1].sql,/and not \(exists/);
 assert.doesNotMatch((await request({logsExist:false})).calls[1].sql,/from guildloot_era_logs/);
+
+const {includeConfirmedAwards}=await import('../src/raid-archive.js');
+const confirmed={player:'Aeranor',server:'Everlook',p0Item:'Die zehrende Kälte',p1:'Die zehrende Kälte',p1ItemId:'23577',p0ItemReceived:true};
+const added=includeConfirmedAwards([], [confirmed]);assert.equal(added.length,1);assert.equal(added[0].time,null);assert.equal(added[0].source,'confirmed_award');
+assert.equal(includeConfirmedAwards(added,[confirmed]).length,1);
+assert.equal(includeConfirmedAwards([],[{...confirmed,p0ItemReceived:false}]).length,0);
+assert.equal(includeConfirmedAwards(added,[{...confirmed,server:'Lakeshire'}]).length,2);
