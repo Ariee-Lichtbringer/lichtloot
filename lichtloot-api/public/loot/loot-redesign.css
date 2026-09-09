@@ -168,3 +168,7 @@ body.loot-redesign #lootSaveReceipt #prioSaveStatus{font-size:12px;line-height:1
   body.loot-redesign:has(#prioCard.prios-closed):has(#lootSaveReceipt:not([hidden]))>.overlay>.header{max-width:1820px!important}
 }
 @media(max-width:1360px){body.loot-redesign #mainGrid>#lootSaveReceipt{grid-column:1!important;grid-row:auto}}
+
+body.loot-redesign.loot-stacked-content #mainGrid.grid{grid-template-columns:minmax(0,1fr)!important}
+body.loot-redesign.loot-stacked-content #mainGrid>#prioCard{grid-column:1!important;min-width:0}
+body.loot-redesign.loot-stacked-content #prioCard>#lootCard{margin:16px 0;min-width:0}
