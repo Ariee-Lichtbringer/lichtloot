@@ -9884,7 +9884,7 @@ function renderRaidArchive(){
         <td>${statusBadge(deletedGroup ? "gelöscht" : ["abgesagt","cancelled","canceled"].includes(normalize(raid.status||"")) ? "abgesagt" : "archiviert")}</td>
         <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
         <td>${renderRaidArchiveP0State(raid)}</td>
-        <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button>${!deletedGroup&&!raid.p0Only&&!['abgesagt','cancelled','canceled'].includes(normalize(raid.status||''))?`<button class="small-btn danger" type="button" onclick="markLeadershipRaidCancelled('${escapeAttr(raid.raidId || raid.id)}')">Raid abgesagt</button>`:''}</td>
+        <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button><button class="small-btn primary" type="button" onclick="openRaidArchive('${escapeAttr(raid.raidId || raid.id)}')">Raidloot</button>${!deletedGroup&&!raid.p0Only&&!['abgesagt','cancelled','canceled'].includes(normalize(raid.status||''))?`<button class="small-btn danger" type="button" onclick="markLeadershipRaidCancelled('${escapeAttr(raid.raidId || raid.id)}')">Raid abgesagt</button>`:''}</td>
       </tr>
     `).join("");
   };
@@ -11296,6 +11296,7 @@ function renderRaidHelperEventCard(raid, mode){
         ${mode === "current" ? `<button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${escapeHtml(raidDiscordSignupActionLabel(raid))}</button>` : ""}
         ${mode === "current" && raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Raidanmelder neu erstellen</button>` : ""}
         ${prioEnabled ? `<button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}')">Prios</button>` : ""}
+        ${mode === "past" || isArchived ? `<button class="small-btn primary" type="button" onclick="openRaidArchive('${escapeAttr(raidId)}')">Raidloot</button>` : ""}
         ${!isArchived ? `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raidId)}')">Archivieren</button>` : ""}
         <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
         <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
@@ -21884,5 +21885,6 @@ function escapeQuotes(value){
 <script src="zg-prio-attendance.js?v=20260905"></script>
 <script src="player-analysis.js?v=20260905-4"></script>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
+<script src="raid-archive.js"></script>
 </body>
 </html>
