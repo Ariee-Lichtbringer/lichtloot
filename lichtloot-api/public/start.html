@@ -2954,6 +2954,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .guildloot-sync-coming{margin:16px 0;padding:16px;border:1px solid #43505c;border-radius:12px;background:rgba(35,43,53,.55);color:#aab4bf}.guildloot-sync-coming>strong{font-size:17px}.guildloot-sync-coming strong span{display:inline-block;margin-left:8px;padding:3px 8px;border-radius:5px;background:#37404a;color:#c2c9d0;font-size:11px;text-transform:uppercase;letter-spacing:.6px}.guildloot-sync-coming p{margin:9px 0 12px;font-size:13px;line-height:1.5}.guildloot-sync-coming>div{display:flex;flex-wrap:wrap;gap:10px}.guildloot-sync-coming button:disabled{background:#353c44!important;border:1px solid #525a64!important;color:#9ca4ad!important;box-shadow:none!important;cursor:not-allowed;opacity:.7;padding:10px 16px;border-radius:8px;font:inherit}
 </style>
 <link rel="stylesheet" href="raid-cards-dashboard.css?v=1">
+<link rel="stylesheet" href="planner-stitch.css?v=20260909-1">
 </head>
 
 <body class="start-dashboard-body">
@@ -3157,35 +3158,38 @@ html,body{max-width:100%;overflow-x:hidden}
   <div id="raidleadLoginStatus" class="status">Nur für Raid-Ersteller und Raidlead.</div>
 </div>
 
-<div id="raidCreateBox" class="raid-create-box hidden">
+<div id="raidCreateBox" class="raid-create-box hidden" role="dialog" aria-modal="true" aria-labelledby="quickRaidHeading">
   <div class="raid-create-head">
-    <div class="raid-create-title"><span class="raid-create-title-icon">⚔️</span><div><h2>Schnell-Raid erstellen</h2><small>Kopfzeile festhalten und Fenster verschieben</small></div></div>
-    <button class="raidlead-close" onclick="toggleRaidCreate()">✕</button>
+    <div class="raid-create-title"><span class="raid-create-title-icon">⚔️</span><div><div class="quick-title-line"><h2 id="quickRaidHeading">Schnell-Raid erstellen</h2><span class="quick-prio-badge">Prio-Loot</span></div><small>Kopfzeile festhalten und Fenster verschieben</small></div></div>
+    <button class="raidlead-close" type="button" aria-label="Dialog schließen" onclick="toggleRaidCreate()">✕</button>
   </div>
 
-  <label>Raid auswählen</label>
+  <div class="quick-form-body">
+  <label for="createRaidSelect">Raid auswählen</label>
+  <div class="quick-select-wrap"><span aria-hidden="true">⚔</span>
   <select id="createRaidSelect" onchange="loadQuickRaidTemplates();renderQuickRaidPreview()">
-    <option value="mc">Molten Core</option>
-    <option value="bwl">Blackwing Lair</option>
-    <option value="aq40">Ahn'Qiraj 40</option>
-    <option value="naxx">Naxxramas</option>
-    <option value="zg">Zul Gurub</option>
-    <option value="aq20">Ahn'Qiraj 20</option>
-    <option value="ony">Onyxia</option>
-  </select>
+    <option value="mc">Molten Core (40er) – Classic Era</option>
+    <option value="bwl">Blackwing Lair (40er)</option>
+    <option value="aq40">Ahn’Qiraj (40er)</option>
+    <option value="naxx">Naxxramas (40er)</option>
+    <option value="zg">Zul’Gurub (20er)</option>
+    <option value="aq20">Ahn’Qiraj (20er)</option>
+    <option value="ony">Onyxia (40er)</option>
+  </select></div>
 
-  <label>Raid-Datum</label>
+  <div class="quick-date-grid"><div><div class="quick-field-head"><label for="createRaidDate">Raid-Datum</label><button type="button" onclick="setQuickRaidShortcut('today')">Heute</button></div>
   <input id="createRaidDate" type="date" onchange="renderQuickRaidPreview()">
 
-  <label>Raid-Uhrzeit</label>
+  </div><div><div class="quick-field-head"><label for="createRaidTime">Raid-Uhrzeit</label><span><button type="button" data-quick-time="19:30" onclick="setQuickRaidShortcut('19:30')">19:30</button><button type="button" data-quick-time="20:00" onclick="setQuickRaidShortcut('20:00')">20:00</button></span></div>
   <input id="createRaidTime" type="time" value="20:00" onchange="renderQuickRaidPreview()">
 
-  <label>Gilde</label>
-  <input id="createRaidGuild" type="text" placeholder="Gilde wird automatisch gesetzt" readonly>
+  </div></div><label for="createRaidGuild">Gilde / System</label><div class="quick-guild-field"><span aria-hidden="true">🛡</span>
+  <input id="createRaidGuild" type="text" placeholder="Gilde wird automatisch gesetzt" readonly><span class="quick-guild-state">● Verknüpft</span></div>
+  <div class="quick-block-heading">Automatisierungs-Bausteine</div>
 
   <label class="quick-raid-block">
     <input id="createDiscordSignup" type="checkbox" style="width:auto" onchange="toggleQuickRaidDiscordOptions()">
-    <span>Raidanmelder im Discord erstellen</span>
+    <span class="quick-block-copy"><span class="quick-block-title">Raidanmelder im Discord erstellen<em>Channel-Post</em></span><small>Erstellt die Raidanmeldung im ausgewählten Discord-Channel.</small></span>
   </label>
   <div id="quickRaidDiscordOptions" class="hidden">
     <label>Vorlage für diesen Raid</label>
@@ -3196,18 +3200,19 @@ html,body{max-width:100%;overflow-x:hidden}
   </div>
   <label class="quick-raid-block">
     <input id="createPrioId" type="checkbox" style="width:auto" checked onchange="syncQuickRaidBuildingBlocks()">
-    <span>PrioID erstellen</span>
+    <span class="quick-block-copy"><span class="quick-block-title">PrioID erstellen<em>Empfohlen</em></span><small>Erstellt eine Loot-Prio-Sitzung für diesen Raid.</small></span>
   </label>
   <label class="quick-raid-block">
     <input id="createPoSignup" type="checkbox" style="width:auto" onchange="syncQuickRaidBuildingBlocks()">
-    <span>P0-Anmelder im Discord erstellen</span>
+    <span class="quick-block-copy"><span class="quick-block-title">P0-Anmelder im Discord erstellen<em>Prioritäts-Slot</em></span><small>Aktiviert automatisch die dafür notwendige PrioID.</small></span>
   </label>
   <div id="quickRaidPoOptions" class="hidden">
     <label>Channel für den P0-Anmelder</label>
     <select id="createPoChannel" onchange="renderQuickRaidPreview()"><option value="">Channel wird geladen …</option></select>
   </div>
-  <div class="status">Die Bausteine können einzeln kombiniert werden. Ein P0-Anmelder aktiviert automatisch die dafür notwendige PrioID.</div>
+  <div class="status quick-info">ⓘ Die Bausteine können einzeln kombiniert werden. Ein P0-Anmelder aktiviert automatisch die dafür notwendige PrioID.</div>
 
+  </div><div class="quick-form-footer">
   <button class="copy-btn" style="width:100%;margin-top:12px" type="button" onclick="toggleQuickRaidPreview()">👁 Vorschau anzeigen</button>
   <div id="quickRaidPreview" class="quick-raid-preview hidden"><div class="quick-raid-preview-head"><strong>Discord-Vorschau</strong><button class="raidlead-close" type="button" onclick="toggleQuickRaidPreview()">✕</button></div><div id="quickRaidPreviewBody" class="quick-raid-preview-body"></div></div>
 
@@ -3215,7 +3220,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
   <div id="createRaidResult" class="status">
     Die ausgewählten Bausteine und der LeadPIN werden nach dem Erstellen angezeigt.
-  </div>
+  </div>  </div>
 </div>
 
 
@@ -3302,16 +3307,18 @@ html,body{max-width:100%;overflow-x:hidden}
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
         <div class="section-head buff-overview-head">
           <div>
-            <div class="section-title" id="buffOverviewTitle">Worldbuffs</div>
+            <div class="buff-title-line"><div class="section-title" id="buffOverviewTitle">Worldbuffs</div><span class="buff-era-badge">Classic Era</span></div>
             <p id="buffOverviewSubtitle">Buff-Termine aus Lichtbuff und Ticker.</p>
           </div>
           <div class="buff-overview-actions">
             <button class="right-inline-btn" onclick="loadBuffOverview(currentBuffOverviewType)">Neu laden</button>
             <button class="text-link-btn" onclick="goHomeView()">Dashboard anzeigen →</button>
+<button class="buff-register" id="buffRegisterButton" type="button" onclick="openPlannerRegistration()">＋ Buff eintragen / Werfer melden</button>
           </div>
         </div>
         <div class="buff-overview-search-row">
-          <input id="buffOverviewSearch" type="search" placeholder="Datum, Name, Buff oder Gilde suchen..." oninput="renderCurrentBuffOverview()">
+          <input id="buffOverviewSearch" type="search" placeholder="Datum, Name, Buff oder Gilde suchen..." oninput="renderCurrentBuffOverview()" aria-label="Buff-Termine durchsuchen">
+<div id="buffTypeFilters" class="buff-type-filters" aria-label="Buff filtern"></div>
         </div>
         <div id="buffOverviewContent" class="buff-overview-content"><div class="status">Noch keine Daten geladen.</div></div>
       </section>
@@ -3893,6 +3900,7 @@ function setStartNavActive(key){
 }
 
 function setDashboardCenterMode(mode){
+  document.body.classList.toggle("buff-planner-open",mode === "buff");
   const showDashboard=mode === "dashboard";
   ["nextRaidPanel","raidInstances"].forEach(id=>{
     const el=document.getElementById(id);
@@ -4050,6 +4058,7 @@ function refreshRaidCreateAccess(){
   box.querySelectorAll("select,input,button.tool-btn").forEach(el=>{
     el.disabled=!allowed;
   });
+  document.querySelectorAll("[data-quick-time],.quick-field-head button").forEach(el=>el.disabled=!allowed);
   const result=document.getElementById("createRaidResult");
   if(result && !allowed){
     result.innerHTML='<span class="warn">Zum Erstellen von Raids wende dich an die Gildenleitung.</span>';
@@ -5183,30 +5192,98 @@ async function getDashboardBuffEntries(kind,days){
     .sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b));
 }
 
+let plannerBuffFilter='all';
+function plannerBuffType(buff){
+  const b=String(buff||'').toLowerCase();
+  if(/songflower|liedblume|song/.test(b))return 'songflower';
+  if(/dmt|tribute|tribut|dire maul/.test(b))return 'dmt';
+  return dashboardBuffClass(buff)||'other';
+}
+function renderPlannerFilters(){
+  const root=document.getElementById('buffTypeFilters');
+  if(!root)return;
+  const items=currentBuffOverviewType==='hordenbuff'?[['all','Alle'],['rend','Rend']]:[['all','Alle'],['hakkar','ZG'],['ony','Onyxia'],['nef','Nefarian'],['songflower','Songflower'],['dmt','DMT / Tribute']];
+  root.innerHTML='<span>Filter:</span>'+items.map(([key,name])=>`<button type="button" class="${key} ${key===plannerBuffFilter?'active':''}" aria-pressed="${key===plannerBuffFilter}" onclick="setPlannerBuffFilter('${key}')">${name}</button>`).join('');
+}
+function setPlannerBuffFilter(key){plannerBuffFilter=key;renderPlannerFilters();renderCurrentBuffOverview();}
+function plannerCountdown(stamp){
+  const minutes=Math.ceil((stamp-Date.now())/60000);
+  if(minutes<=0)return 'jetzt';
+  if(minutes<60)return `in ${minutes} Min`;
+  if(minutes<1440)return `in ${Math.floor(minutes/60)} Std ${minutes%60} Min`;
+  return `in ${Math.floor(minutes/1440)} Tagen`;
+}
+function plannerCountdownMarkup(entry){
+  const stamp=dashboardWorldbuffTimestamp(entry);
+  return `<span data-buff-countdown="${stamp}">${plannerCountdown(stamp)}</span>`;
+}
+function plannerCaster(entry){return [entry.charakter,entry.uebernehmer].map(x=>String(x||'').trim()).filter(x=>x&&x!=='-').join(' → ');}
 function renderBuffRows(entries,kind){
   const filtered=filterDashboardBuffEntries(entries);
-  if(!filtered.length) return '<div class="buff-empty">Keine kommenden Termine gefunden.</div>';
-  const confirmed=filtered.filter(isDashboardBuffConfirmed).length;
-  const open=filtered.length-confirmed;
-  const confirmedPercent=filtered.length ? Math.round((confirmed/filtered.length)*100) : 0;
-  const openPercent=filtered.length ? Math.round((open/filtered.length)*100) : 0;
+  const confirmed=filtered.filter(isDashboardBuffConfirmed).length,open=filtered.length-confirmed;
+  const percent=filtered.length?Math.round(100*confirmed/filtered.length):0;
+  const upcoming=filtered.filter(e=>dashboardWorldbuffTimestamp(e)>=Date.now()).sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b));
+  const next=upcoming[0], helper=kind==='hordenbuff'?'Helfern':'Werfern';
+  const today=new Date().toDateString();
+  const ticker=upcoming.filter(e=>new Date(dashboardWorldbuffTimestamp(e)).toDateString()===today).slice(0,5);
   const grouped=groupDashboardBuffsByDate(filtered);
-  return `
-    <div class="buff-summary-grid">
-      <div class="buff-summary-card"><span class="buff-summary-icon">▣</span><span class="buff-summary-number">${safeHtml(String(filtered.length))}</span><span class="buff-summary-label"><strong>Buffs</strong>alle kommenden Termine</span></div>
-      <div class="buff-summary-card"><span class="buff-summary-icon">✓</span><span class="buff-summary-number">${safeHtml(String(confirmed))}</span><span class="buff-summary-label"><strong>bestätigt</strong>${safeHtml(String(confirmedPercent))}%</span></div>
-      <div class="buff-summary-card"><span class="buff-summary-icon">!</span><span class="buff-summary-number">${safeHtml(String(open))}</span><span class="buff-summary-label"><strong>offen</strong>${safeHtml(String(openPercent))}%</span></div>
-    </div>
-    <div class="buff-day-list">
-      ${grouped.map(group=>renderDashboardBuffDay(group,kind)).join("")}
-    </div>
-    <div class="buff-empty" style="text-align:center">Alle Zeiten in Serverzeit. Lichtbuffbot- und Worldbuffticker-Termine werden gemeinsam angezeigt.</div>
-  `;
+  const cards=[['total','▣',filtered.length,'Buffs','alle kommenden Termine'],['confirmed','✓',confirmed,'bestätigt',`${percent}% Deckung mit ${helper}`],['open','!',open,'offen',`${filtered.length?100-percent:0}% noch nicht bestätigt`]];
+  return `<div class="buff-planner-layout"><div class="buff-planner-main"><div class="buff-summary-grid">${cards.map(([cls,icon,num,label,sub])=>`<div class="buff-summary-card ${cls}"><span class="buff-summary-icon">${icon}</span><div><div class="buff-kpi-value"><strong>${num}</strong><span>${label}</span></div><small>${sub}</small></div></div>`).join('')}<div class="buff-summary-card next"><span class="buff-summary-icon">◷</span><div><small>Nächster Drop</small><strong class="buff-next-countdown">${next?plannerCountdownMarkup(next):'Kein Termin'}</strong><small>${next?safeHtml(formatRaidTimeForDisplay(next.uhrzeit)+' · '+dashboardBuffDisplayName(next.buff)+' · '+(next.gilde||'')):'Keine kommenden Buffs'}</small></div></div></div><div class="buff-day-list">${grouped.length?grouped.map(g=>renderDashboardBuffDay(g,kind)).join(''):'<div class="buff-empty">Keine kommenden Termine für diese Auswahl gefunden.</div>'}</div><p class="buff-source-note">Alle Zeiten in Serverzeit · ${kind==='hordenbuff'?'Hordenbuff-Liste':'Lichtbuff & Worldbuffticker'}</p></div><aside class="buff-planner-sidebar"><section class="buff-ticker"><div class="buff-ticker-heading"><h3>Live-Ticker (heute)</h3><button type="button" aria-label="Ticker aktualisieren" onclick="loadBuffOverview(currentBuffOverviewType)">↻</button></div>${ticker.length?ticker.map(e=>`<div class="buff-ticker-entry ${plannerBuffType(e.buff)}"><div><strong>${safeHtml(dashboardBuffDisplayName(e.buff))}</strong>${plannerCountdownMarkup(e)}</div><p>${safeHtml(formatRaidTimeForDisplay(e.uhrzeit)+' Uhr · '+(e.gilde||''))}</p><small>${kind==='hordenbuff'?'Helfer':'Werfer'}: <b>${safeHtml(plannerCaster(e)||'Noch offen')}</b></small><span class="buff-ticker-state">${safeHtml(dashboardBuffStatusLabel(e))}</span></div>`).join(''):'<p class="buff-ticker-empty">Für heute sind keine weiteren Buffs geplant.</p>'}</section><section class="buff-help"><span class="buff-help-icon">✦</span><h3>${kind==='hordenbuff'?'Helfer & Übernehmer':'Werfer melden'}</h3><p>${kind==='hordenbuff'?'Rend-Termine, Helfer und Übernehmer werden von der Gildenleitung verwaltet.':'Kopf oder Herz im Inventar? Wähle einen freien Termin und trage deinen Charakter als Werfer ein.'}</p><button type="button" class="buff-register" onclick="openPlannerRegistration()">${kind==='hordenbuff'?'Hordenbuff verwalten':'Buff anmelden'}</button></section><section class="buff-server-info"><h3>Terminstatus</h3><p><span class="buff-status-dot"></span> Offen – noch nicht bestätigt</p><p><span class="buff-status-dot confirmed"></span> Bestätigt – ${kind==='hordenbuff'?'Helfer':'Werfer'} zugewiesen</p></section></aside></div>`;
 }
+async function openPlannerRegistration(index){
+  if(currentBuffOverviewType==='hordenbuff'){
+    window.location.href=withGuildUrl('gildenleitung.html');return;
+  }
+  const entry=Number.isInteger(index)?currentBuffOverviewEntries[index]:null;
+  hydrateDashboardPlayerPin();
+  const pin=document.getElementById('myPriosPin')?.value.trim();
+  if(!pin){openAccountManagementCenter();const status=document.getElementById('dashboardMyStatus');if(status)status.textContent='Melde dich mit deinem Spieler-PIN an, um einen Worldbuff-Termin zu übernehmen.';return;}
+  await loadMyWorldbuffs();
+  openMyWorldbuffClaimModal();
+  if(entry){
+    const buff=document.getElementById('myWorldbuffClaimBuff');
+    if(buff)buff.value=normalizeMyWorldbuffBuff(entry.buff);
+    refreshMyWorldbuffClaimSlots();
+    const slot=(myWorldbuffOpenSlots||[]).find(s=>formatRaidDateForDisplay(s.datum)===formatRaidDateForDisplay(entry.datum)&&formatRaidTimeForDisplay(s.uhrzeit)===formatRaidTimeForDisplay(entry.uhrzeit)&&dashboardWorldbuffGuildKey(s.gilde)===dashboardWorldbuffGuildKey(entry.gilde));
+    if(slot){document.getElementById('myWorldbuffClaimSlot').value=getMyWorldbuffSlotValue(slot);updateMyWorldbuffClaimMeta();}
+  }
+}
+function setQuickRaidShortcut(value){
+  const field=document.getElementById(value==='today'?'createRaidDate':'createRaidTime');
+  if(!field||field.disabled)return;
+  if(value==='today'){const d=new Date();field.value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+  else field.value=value;
+  renderQuickRaidPreview();
+}
+setInterval(()=>{
+  if(!document.body.classList.contains('buff-planner-open'))return;
+  const nodes=document.querySelectorAll('[data-buff-countdown]');
+  let expired=false;
+  nodes.forEach(el=>{const stamp=Number(el.dataset.buffCountdown);if(stamp<Date.now())expired=true;else el.textContent=plannerCountdown(stamp);});
+  if(expired)renderCurrentBuffOverview();
+},30000);
+document.addEventListener('keydown',event=>{
+  const box=document.getElementById('raidCreateBox');
+  if(!box||box.classList.contains('hidden'))return;
+  const preview=document.getElementById('quickRaidPreview');
+  if(event.key==='Escape'){
+    event.preventDefault();
+    if(preview&&!preview.classList.contains('hidden'))toggleQuickRaidPreview();else toggleRaidCreate();
+  }
+  if(event.key==='Tab'){
+    const root=preview&&!preview.classList.contains('hidden')?preview:box;
+    const items=[...root.querySelectorAll('button,input,select,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(event.shiftKey&&(document.activeElement===first||!root.contains(document.activeElement))){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&(document.activeElement===last||!root.contains(document.activeElement))){event.preventDefault();first.focus();}
+  }
+});
 
 function filterDashboardBuffEntries(entries){
   const search=String(document.getElementById("buffOverviewSearch")?.value || "").trim().toLowerCase();
-  if(!search) return entries || [];
+  entries=(entries || []).filter(entry=>plannerBuffFilter === "all" || plannerBuffType(entry.buff) === plannerBuffFilter);
+  if(!search) return entries;
   const needle=dashboardWorldbuffTextKey(search);
   return (entries || []).filter(entry=>{
     const haystack=[
@@ -5239,34 +5316,18 @@ function groupDashboardBuffsByDate(entries){
 
 function renderDashboardBuffDay(group,kind){
   const parsed=parseActiveRaidDate(group.date);
-  const heading=(parsed ? dashboardBuffWeekdayLong(parsed)+", " : "") + (group.date || "-");
-  return `
-    <details class="buff-day-card" open>
-      <summary><span>▣ ${safeHtml(heading)}</span></summary>
-      <div>${(group.entries || []).map(entry=>renderDashboardBuffCardRow(entry,kind)).join("")}</div>
-    </details>
-  `;
+  const heading=(parsed?dashboardBuffWeekdayLong(parsed)+', ':'')+(group.date||'-');
+  const today=parsed&&parsed.toDateString()===new Date().toDateString();
+  return `<details class="buff-day-card" open><summary><span><i aria-hidden="true"></i>${safeHtml(heading)}<small>${group.entries.length} Termine</small></span><span>${today?'Heute ':''}<b aria-hidden="true">⌄</b></span></summary><div>${group.entries.map(e=>renderDashboardBuffCardRow(e,kind)).join('')}</div></details>`;
 }
-
 function renderDashboardBuffCardRow(entry,kind){
-  const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
-  const statusLabel=dashboardBuffStatusLabel(entry);
-  const confirmed=isDashboardBuffConfirmed(entry);
-  const guild=entry.gilde && !dashboardWorldbuffPlaceholderGuild(entry.gilde) ? entry.gilde : "-";
-  const isLichtbringer=dashboardWorldbuffGuildKey(guild) === "lichtbringer";
-  const showMissingNotice=isLichtbringer || kind === "hordenbuff";
-  const displayCaster=caster || (showMissingNotice ? (kind === "hordenbuff" ? "Helfer fehlt" : "Werfer fehlt") : "");
-  const displayStatus=(!isLichtbringer && statusLabel === "offen" && !caster) ? "" : statusLabel;
-  return `
-    <div class="buff-day-row">
-      <div class="buff-row-time">◷ ${safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))}</div>
-      <div>${renderDashboardBuffLabel(entry.buff)}</div>
-      <div class="buff-row-guild">♢ ${renderDashboardBuffGuild(guild)}</div>
-      <div class="buff-row-caster ${caster ? "" : "missing"}">${displayCaster ? "♙ "+safeHtml(displayCaster) : ""}</div>
-      <div class="buff-row-status">${displayStatus ? '<span class="buff-status-pill '+(confirmed ? "confirmed" : "open")+'"><span class="buff-status-dot"></span>'+safeHtml(displayStatus)+'</span>' : ""}</div>
-      <div class="buff-row-more">...</div>
-    </div>
-  `;
+  const caster=plannerCaster(entry),confirmed=isDashboardBuffConfirmed(entry);
+  const guild=entry.gilde&&!dashboardWorldbuffPlaceholderGuild(entry.gilde)?entry.gilde:'–';
+  const own=dashboardWorldbuffGuildKey(guild)===dashboardWorldbuffGuildKey(currentGuildInfo?.name||CURRENT_GUILD_BRAND.guildName);
+  const missing=!caster&&(kind==='hordenbuff'||dashboardWorldbuffGuildKey(guild)==='lichtbringer'||own);
+  const index=currentBuffOverviewEntries.indexOf(entry);
+  const type=plannerBuffType(entry.buff);
+  return `<div class="buff-day-row ${missing?'needs-caster':''} ${own?'own-guild':''}"><div class="buff-row-time">◷ <strong>${safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))}</strong></div><div><span class="buff-label ${type}"><span class="buff-letter">${type==='hakkar'?'Z':safeHtml(dashboardBuffDisplayName(entry.buff).slice(0,1))}</span>${safeHtml(dashboardBuffDisplayName(entry.buff))}</span></div><div class="buff-row-guild">◇ ${safeHtml(guild)}${own?'<small>Gilde</small>':''}</div><div class="buff-row-caster ${missing?'missing':''}">${caster?`<span>${kind==='hordenbuff'?'Helfer':'Werfer'}:</span> <b>${safeHtml(caster)}</b>`:missing?(kind==='hordenbuff'?'⚠ Helfer fehlt':'⚠ Werfer fehlt'):'Kein Werfer gemeldet'}</div><div class="buff-row-status"><span class="buff-status-pill ${confirmed?'confirmed':'open'}"><span class="buff-status-dot"></span>${safeHtml(dashboardBuffStatusLabel(entry))}</span></div><div class="buff-row-more">${missing?`<button type="button" class="buff-claim" onclick="openPlannerRegistration(${index})">＋ ${kind==='hordenbuff'?'Helfer zuweisen':'Werfer melden'}</button>`:''}<details class="buff-row-details"><summary aria-label="Termindetails">•••</summary><div>${safeHtml([entry.source,entry.notiz,entry.status].filter(Boolean).join(' · ')||'Keine weiteren Angaben')}</div></details></div></div>`;
 }
 
 function renderDashboardBuffGuild(guild){
@@ -5322,6 +5383,10 @@ let currentBuffOverviewType='worldbuff';
 let currentBuffOverviewEntries=[];
 async function showBuffOverview(kind){
   currentBuffOverviewType=kind === 'hordenbuff' ? 'hordenbuff' : 'worldbuff';
+  plannerBuffFilter='all';
+  renderPlannerFilters();
+  const register=document.getElementById('buffRegisterButton');
+  if(register)register.textContent=currentBuffOverviewType === 'hordenbuff' ? '＋ Hordenbuff verwalten / Helfer zuweisen' : '＋ Buff eintragen / Werfer melden';
   placeSidebarDrawers();
   const raidCreateBox=document.getElementById('raidCreateBox');
   const raidleadLoginBox=document.getElementById('raidleadLoginBox');
@@ -5345,9 +5410,11 @@ async function showBuffOverview(kind){
 async function loadBuffOverview(kind){
   const content=document.getElementById('buffOverviewContent');
   if(!content) return;
+  currentBuffOverviewEntries=[];
   content.innerHTML='<div class="buff-empty">Termine werden geladen …</div>';
   const targetKind=kind || currentBuffOverviewType;
   const entries=await getDashboardBuffEntries(targetKind,"all");
+  if(targetKind !== currentBuffOverviewType)return;
   currentBuffOverviewEntries=entries;
   content.innerHTML=renderBuffRows(currentBuffOverviewEntries,targetKind);
 }
@@ -10157,6 +10224,8 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     startMenuAction=sessionStorage.getItem("lichtlootStartMenuAction") || "";
     sessionStorage.removeItem("lichtlootStartMenuAction");
   }catch(error){}
+  const requestedPlannerView=new URLSearchParams(location.search).get("view");
+  if(["worldbuff","hordenbuff","create"].includes(requestedPlannerView))startMenuAction=requestedPlannerView;
   if(startMenuAction && startMenuAction!=="dashboard"){
     window.setTimeout(()=>{
       if(startMenuAction==="worldbuff" || startMenuAction==="hordenbuff") showBuffOverview(startMenuAction);
