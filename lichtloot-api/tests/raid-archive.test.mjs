@@ -13,7 +13,7 @@ async function request({logsExist=true,found=true,past=true,published=false}={})
  return {result,calls,status};
 }
 let {result,calls}=await request();assert.equal(result.hasLootLog,true);assert.equal(result.loot.length,1);assert.equal(result.prios[0].leadPin,undefined);
-assert.match(calls[0].sql,/guild_id=\$1/);assert.match(calls[0].sql,/raid_date < timezone/);assert.deepEqual(calls.at(-1).args,['guild-a','internal']);
+assert.match(calls[1].sql,/guild_id=\$1/);assert.match(calls[1].sql,/raid_date < timezone/);assert.deepEqual(calls.at(-1).args,['guild-a','internal']);
 ({result,calls}=await request({logsExist:false}));assert.equal(result.hasLootLog,false);assert.deepEqual(result.loot,[]);assert.equal(calls.length,2);
 assert.equal((await request({found:false})).status,404);
 console.log('raid archive: scoped reads, safe fields, missing logs and deduplication OK');
@@ -38,3 +38,7 @@ assert.equal(parseArchiveItemXml('<html>Failed</html>'),null);
 assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:7}]]))[0].category,'materials');
 assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:2}]]))[0].category,'equipment');
 assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:15,type:'Armor'}]]))[0].category,'other');
+
+assert.match((await request()).calls[1].sql,/or exists \(select 1 from guildloot_era_logs/);
+assert.match((await request()).calls[1].sql,/and not \(exists/);
+assert.doesNotMatch((await request({logsExist:false})).calls[1].sql,/from guildloot_era_logs/);

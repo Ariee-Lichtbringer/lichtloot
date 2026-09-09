@@ -31,10 +31,12 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const raidId = String(req.query.raidId || '');
       const current = req.query.scope === 'current';
       const offset = Math.max(0, Math.min(100000, Number.parseInt(req.query.offset,10)||0));
+      const exists = await query("select to_regclass('guildloot_era_logs') as logs");
+      const completed = exists.rows[0]?.logs ? 'exists (select 1 from guildloot_era_logs gl where gl.guild_id=raids.guild_id and gl.raid_id=raids.id)' : 'false';
       const result = await query(`select id, external_raid_id, name, raid_type, raid_date, raid_time, (raid_date < timezone('Europe/Berlin',now())::date) as past
         from raids where guild_id=$1 and deleted_at is null
-        and ($2<>'' or ($4=false and raid_date < timezone('Europe/Berlin',now())::date)
-          or ($4=true and raid_date >= timezone('Europe/Berlin',now())::date and lower(coalesce(status,'')) not in ('archiviert','archive','archived','abgesagt','cancelled','canceled')))
+        and ($2<>'' or ($4=false and (raid_date < timezone('Europe/Berlin',now())::date or ${completed}))
+          or ($4=true and raid_date >= timezone('Europe/Berlin',now())::date and not (${completed}) and lower(coalesce(status,'')) not in ('archiviert','archive','archived','abgesagt','cancelled','canceled')))
         and lower(coalesce(status,'')) not in ('gelöscht','geloescht','deleted')
         and ($2='' or external_raid_id=$2 or id::text=$2)
         order by raid_date desc, raid_time desc, id limit 101 offset $3`,[guild.id,raidId,raidId?0:offset,current]);
@@ -42,7 +44,6 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
         title:row.name||row.raid_type,type:row.raid_type,
         date:row.raid_date instanceof Date?row.raid_date.toISOString().slice(0,10):String(row.raid_date).slice(0,10),time:row.raid_time}));
       if (!raidId) {
-        const exists = await query("select to_regclass('guildloot_era_logs') as logs");
         const recorded = exists.rows[0]?.logs && result.rows.length ? await query(
           'select distinct raid_id from guildloot_era_logs where guild_id=$1 and raid_id=any($2::uuid[])',
           [guild.id,result.rows.slice(0,100).map(row=>row.id)]) : {rows:[]};
@@ -51,7 +52,6 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
         return res.json({success:true,raids,hasMore:result.rows.length>100});
       }
       if (!raids.length) return res.status(404).json({success:false,error:'Raid nicht gefunden.'});
-      const exists = await query("select to_regclass('guildloot_era_logs') as logs");
       const logs = exists.rows[0]?.logs ? await query('select payload from guildloot_era_logs where guild_id=$1 and raid_id=$2 order by created_at',[guild.id,result.rows[0].id]) : {rows:[]};
       const priorities = await getPublishedPrios({guildId:guild.id,query:{raidId:raids[0].id}});
       const priosVisible = result.rows[0].past === true || priorities.published === true;
