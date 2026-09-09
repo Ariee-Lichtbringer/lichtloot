@@ -1,3 +1,4 @@
+import { archiveItemMetadata } from './raid-archive-items.js';
 import { installRaidArchive } from './raid-archive.js';
 import { installAddonBetaAdmin } from './addon-beta-admin.js';
 import { installAddonBetaDownload } from './addon-beta-download.js';
@@ -633,7 +634,7 @@ app.get("/api/dashboard", async (req, res, next) => {
   }
 });
 
-installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:getRaidAnalysisItemMetadataByIds});
+installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.

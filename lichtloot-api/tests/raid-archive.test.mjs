@@ -32,3 +32,9 @@ assert.equal(decorateLoot(gold,[{...awards[0],server:'Lakeshire'}])[0].p0Receive
 assert.equal(decorateLoot(gold,[{...awards[0],p0Item:'Anderes Item'}])[0].p0Received,false);
 assert.equal(decorateLoot(gold,[],new Map([['1',{type:'Trade Goods'}]]))[0].category,'materials');
 console.log('Confirmed P0 recipient+realm+item matching and item categories OK');
+const {parseArchiveItemXml}=await import('../src/raid-archive-items.js');
+assert.deepEqual(parseArchiveItemXml('<quality id="0">Poor</quality><class id="15">Misc</class><icon displayId="0">inv_shoulder_04</icon>'),{quality:0,itemClass:15,iconUrl:'inv_shoulder_04'});
+assert.equal(parseArchiveItemXml('<html>Failed</html>'),null);
+assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:7}]]))[0].category,'materials');
+assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:2}]]))[0].category,'equipment');
+assert.equal(decorateLoot(gold,[],new Map([['1',{itemClass:15,type:'Armor'}]]))[0].category,'other');

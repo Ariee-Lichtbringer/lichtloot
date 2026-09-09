@@ -18,7 +18,7 @@ export function decorateLoot(loot, priorities, metadata = new Map()) {
     const award = awards.find(p=>norm(`${p.player}-${p.server}`) === norm(row.player)
       && (String(p.p0ItemId||'') === String(row.itemId) || norm(p.p0Item) === norm(row.item)));
     const kind = `${item.type||''} ${item.category||''} ${item.slot||''}`.toLowerCase();
-    const category = /trade goods|reagen|material|handwerks|handelsware/.test(kind) ? 'materials'
+    const category = [2,4].includes(item.itemClass) ? 'equipment' : [5,7].includes(item.itemClass) ? 'materials' : item.itemClass !== undefined ? 'other' : /trade goods|reagen|material|handwerks|handelsware/.test(kind) ? 'materials'
       : /armor|weapon|rüstung|waffe|kopf|head|chest|brust|hands|hände|finger|trinket|schmuck|neck|hals|feet|füße|legs|beine|shoulder|schulter|wrist|handgelenk|waist|taille|back|rücken|off.hand|shield|schild/.test(kind) ? 'equipment' : 'other';
     return {...row,iconUrl:item.iconUrl||'',quality:item.quality??'',category,
       p0Received:Boolean(award),p0Recipient:award?`${award.player}-${award.server}`:''};
