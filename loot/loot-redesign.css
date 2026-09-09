@@ -119,3 +119,20 @@ body.loot-redesign #lootList .prio-buttons{
 @media(max-width:600px){
   body.loot-redesign #lootList .prio-buttons{border-left:0;border-top:1px solid #344158;padding:8px 0 0;margin-top:2px}
 }
+
+/* Personal selection stays visible above the filtered loot catalog. */
+body.loot-redesign #lootOwnSelection{margin:0 0 14px;padding:12px;border:1px solid #e5bd6060;border-radius:8px;background:#e5bd6008}
+body.loot-redesign #lootOwnSelection h3{margin:0 0 9px;color:#e5bd60;font-size:13px;font-family:Inter,Arial,sans-serif}
+body.loot-redesign #lootOwnSelection .loot-selection-rows{display:grid;gap:5px}
+body.loot-redesign #lootOwnSelection .loot-selection-row{display:grid;grid-template-columns:38px minmax(0,1fr) 28px;align-items:center;gap:8px;min-height:34px;padding:5px 0;border-bottom:1px solid #293444}
+body.loot-redesign #lootOwnSelection .loot-selection-row:last-child{border-bottom:0}
+body.loot-redesign #lootOwnSelection .loot-selection-row>b{font-size:11px;color:#e5bd60}
+body.loot-redesign #lootOwnSelection .loot-selection-name{min-width:0;color:#94a3b8;font-size:12px;overflow-wrap:anywhere}
+body.loot-redesign #lootOwnSelection .item-with-icon{font-size:12px;min-width:0}
+body.loot-redesign #lootOwnSelection .item-icon{width:24px;height:24px}
+body.loot-redesign #lootOwnSelection .item-p0plus-line{display:none!important}
+body.loot-redesign #lootOwnSelection button{width:28px;height:28px;min-width:0;padding:0;margin:0;border:1px solid #455064;border-radius:5px;background:#101a2b;color:#e2e8f0;font-size:20px;cursor:pointer}
+body.loot-redesign #lootOwnSelection button:disabled{opacity:.25;cursor:default}
+body.loot-redesign #lootOwnSelection button:hover:not(:disabled){border-color:#f87171;color:#fca5a5}
+body.loot-redesign #lootOwnSelection button:focus-visible{outline:2px solid #67e8f9;outline-offset:2px}
+body.loot-redesign #lootOwnSelection>p{margin:9px 0 0;font:11px/1.5 Inter,Arial,sans-serif;color:#94a3b8}
