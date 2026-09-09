@@ -47,6 +47,10 @@
     panel.setAttribute('aria-labelledby', 'lootOwnSelectionTitle');
     panel.innerHTML = '<h3 id="lootOwnSelectionTitle">Deine Auswahl</h3><div class="loot-selection-rows"></div><p>Rechtsklick auf eine aktive Prio oder × entfernt die Auswahl. Änderungen mit „Prios speichern“ übernehmen.</p>';
     loot.querySelector('.search-box').before(panel);
+    const saveArea = loot.querySelector('.loot-save-area');
+    if (saveArea) panel.after(saveArea);
+    const saveStatus = byId('prioSaveStatus');
+    if (saveArea && saveStatus) saveArea.after(saveStatus);
 
     function values() {
       return ['p1', 'p2', 'p3'].map(key => ({ key, item: byId(key)?.value || '', id: window.getSelectedPrioItemId?.(key) || '' }));
