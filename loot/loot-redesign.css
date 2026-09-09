@@ -98,3 +98,24 @@ body.loot-redesign.loot-character-in-sidebar #mainGrid:has(#prioCard:not(.prios-
 body.loot-redesign #mainGrid:has(#prioCard:not(.prios-closed))>#prioCard{
   grid-column:1 / -1!important;width:100%!important;
 }
+
+/* Distinct loot rows; let P0 notes grow the row instead of touching the next item. */
+body.loot-redesign #lootList{gap:6px!important;padding-right:8px}
+body.loot-redesign #lootList .loot-item-row{
+  flex:0 0 auto;min-height:58px;height:auto!important;
+  padding:10px!important;gap:12px!important;
+  border:1px solid #2a374b!important;border-radius:7px!important;
+  background:#0d1726!important;
+}
+body.loot-redesign #lootList .loot-item-row:nth-child(even){background:#0a1321!important}
+body.loot-redesign #lootList .loot-item-row:hover{border-color:#e5bd6070!important;background:#152033!important}
+body.loot-redesign #lootList .loot-item-row>:first-child{min-width:0}
+body.loot-redesign #lootList .loot-name{line-height:1.45;overflow-wrap:anywhere}
+body.loot-redesign #lootList .item-p0plus-line{margin-top:7px!important;line-height:1.5!important;font-size:11px}
+body.loot-redesign #lootList .prio-buttons{
+  align-self:stretch;align-items:center;gap:5px!important;
+  padding-left:12px;border-left:1px solid #344158;
+}
+@media(max-width:600px){
+  body.loot-redesign #lootList .prio-buttons{border-left:0;border-top:1px solid #344158;padding:8px 0 0;margin-top:2px}
+}
