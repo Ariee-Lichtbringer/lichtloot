@@ -2,7 +2,7 @@
 'use strict';
 const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const params=new URLSearchParams(location.search),guild=params.get('guild')||'lichtloot';
-if(params.get('embed')==='1'){document.body.classList.add('embedded');let previous=0;const notify=()=>{const height=Math.ceil(document.body.scrollHeight);if(height!==previous){previous=height;parent.postMessage({type:'raid-archive-height',height},location.origin);}};new ResizeObserver(notify).observe(document.body);window.addEventListener('load',notify);}
+if(params.get('embed')==='1'){document.body.classList.add('embedded');let previous=0;const notify=()=>{const height=Math.ceil(document.body.getBoundingClientRect().height);if(height!==previous){previous=height;parent.postMessage({type:'raid-archive-height',height},location.origin);}};new ResizeObserver(notify).observe(document.body);window.addEventListener('load',notify);}
 const api='https://lichtloot-production.up.railway.app/api/public/raid-archive';
 let scope=params.get('scope')==='current'?'current':'past',raids=[],selectedType='',detailData=null,tab=params.get('tab')==='prios'?'prios':'loot',generation=0;
 const types={naxx:'Naxx',aq40:'AQ40',bwl:'BWL',mc:'MC',zg:'ZG',aq20:'AQ20',ony:'Onyxia'};
