@@ -226,14 +226,14 @@
     if(!title)return;
     const missingRows=activeRaidMissingSignupRows();
     const signature=missingRows.map(row=>[row?.player||row?.char,row?.className||row?.class,row?.note||row?.spec].join("|")).join(":");
-    if(existing?.dataset.signature===signature){if(title.nextElementSibling!==existing)title.after(existing);return;}
+    if(existing?.dataset.signature===signature){if(existing.parentElement!==title)title.append(existing);return;}
     existing?.remove();
     const box=document.createElement("section");
     box.id="lootPrioSignupSummary";
     box.className="loot-prio-signup-summary";
     box.dataset.signature=signature;
     box.innerHTML=`<div class="${missingRows.length?"has-missing":"complete"}"><strong>Fehlende Prioeinträge (${missingRows.length})</strong><span class="loot-missing-prio-chips">${missingRows.length?missingRows.map(row=>{const name=String(row?.player||row?.char||row?.playerName||row?.characterName||row?.name||""),className=String(row?.className||row?.class||""),spec=specializationInfo(row),fallbackIcon=CLASS_ICONS[className.toLowerCase()]||"inv_misc_questionmark";return `<span class="loot-missing-prio-chip"><img src="${specIconUrl(spec?.icon||fallbackIcon)}" alt=""><span><b style="color:${characterColor(className)}">${esc(name)}</b><small>${esc(spec?.label||className||"Skillung unbekannt")}</small></span></span>`;}).join(""):"Alle angemeldeten Charaktere haben eine Prio."}</span></div>`;
-    title.insertAdjacentElement("afterend",box);
+    title.append(box);
   }
   async function loadPrioSignupSummary(){
     const raidId=String(typeof currentRaidId!=="undefined"?currentRaidId:"").trim();
