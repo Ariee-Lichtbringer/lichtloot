@@ -149,7 +149,7 @@ body.loot-redesign #lootSaveReceipt #prioSaveStatus{font-size:12px;line-height:1
 @media(min-width:1361px){
   body.loot-redesign #mainGrid:has(#prioCard.prios-closed){align-items:stretch!important}
   body.loot-redesign #mainGrid>#prioCard.prios-closed{display:flex!important;flex-direction:column;align-self:stretch!important;min-height:0!important}
-  body.loot-redesign #prioCard.prios-closed>.table-scroll{height:0;min-height:0!important;max-height:none!important;flex:1 1 0;overflow:auto}
+  body.loot-redesign #prioCard.prios-closed>.table-scroll{height:auto!important;min-height:0!important;max-height:none!important;flex:0 0 auto!important;overflow:visible!important}
   body.loot-redesign #mainGrid:has(#prioCard.prios-closed)>#lootSaveReceipt{grid-column:2;grid-row:2}
 }
 @media(min-width:1701px){
@@ -181,3 +181,6 @@ body.loot-redesign #raidSignupPageBox .raid-signup-page-grid>*{min-width:0;max-w
 body.loot-redesign #lootPrioSignupSummary{width:100%;box-sizing:border-box;margin-top:16px}
 body.loot-redesign #prioCard .table-scroll{height:auto!important;max-height:none!important;overflow:visible!important}
 @media(max-width:800px){body.loot-redesign #raidSignupPageBox .raid-signup-page-grid{grid-template-columns:minmax(0,1fr)}}
+
+body.loot-redesign #mainGrid>#prioCard{height:auto!important;max-height:none!important;align-self:start!important}
+body.loot-redesign #prioCard>.table-scroll{flex:none!important;height:auto!important;max-height:none!important}
