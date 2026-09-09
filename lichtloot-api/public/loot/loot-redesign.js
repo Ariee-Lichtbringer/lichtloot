@@ -169,6 +169,7 @@
 
   function setupSavedSelection() {
     let pending='', restored='', dirty='';
+    const loaded=new Map(), applied=new Map();
     const context=()=>({guild:typeof currentGuildSlug==='function'?currentGuildSlug():'lichtloot',raid:typeof currentRaidId==='undefined'?'':String(currentRaidId),player:byId('playerName')?.value.trim()||'',server:byId('playerServer')?.value.trim()||'',pin:typeof getStoredLichtLootPlayerPin==='function'?getStoredLichtLootPlayerPin():byId('playerPin')?.value.trim()||''});
     const key=c=>JSON.stringify([c.guild,c.raid,c.player,c.server,c.pin]);
     const values=()=>JSON.stringify(['p1','p2','p3'].map(id=>byId(id)?.value||''));
@@ -176,17 +177,20 @@
     ['p1','p2','p3'].forEach(id=>byId(id)?.addEventListener('change',()=>dirty=key(context())));
     async function restore() {
       const c=context(),k=key(c);
-      if(!c.raid||!c.player||!c.server||!c.pin||k===pending||k===restored||k===dirty||typeof apiJsonp!=='function')return;
+      if(!c.raid||!c.player||!c.server||!c.pin||k===pending||k===dirty||typeof apiJsonp!=='function')return;
+      if(k===restored && applied.get(k)===values())return;
       const before=values();pending=k;
       try {
-        const data=await apiJsonp({action:'getPlayerPrioHistory',guild:c.guild,char:c.player,server:c.server,pin:c.pin});
+        const own=(typeof currentPublishedPrios==='undefined'?[]:currentPublishedPrios).find(e=>String(e.player||e.Spieler).toLowerCase()===c.player.toLowerCase()&&String(e.server||e.Server).toLowerCase()===c.server.toLowerCase());
+        const data=loaded.has(k)?{success:true,entries:[loaded.get(k)]}:own?.id?await apiJsonp({action:'getSavedPrioState',guild:c.guild,prioId:own.id,player:c.player,server:c.server,playerPin:c.pin}):await apiJsonp({action:'getPlayerPrioHistory',guild:c.guild,char:c.player,server:c.server,pin:c.pin});
+        if(data.entry)data.entries=[{...data.entry,raidId:c.raid,player:data.entry.character,p0Plus:own.p0Plus||own.P0Plus,p0Selected:own.p0Selected||own.P0Selected}];
         if(k!==key(context())||k===dirty||values()!==before||!data.success)return;
         const entry=(data.entries||[]).find(e=>(String(e.raidId)===c.raid||String(e.externalRaidId)===c.raid)&&String(e.player).toLowerCase()===c.player.toLowerCase()&&String(e.server).toLowerCase()===c.server.toLowerCase());
         if(!entry)return;
         ['p1','p2','p3'].forEach(id=>{const field=byId(id),value=String(entry[id]||'');if(!field)return;if(value&&field.options&&!Array.from(field.options).some(o=>o.value===value))field.add(new Option(value,value));field.value=value;});
         window.p0PlusWasClicked=['ja','true','1'].includes(String(entry.p0Plus).toLowerCase());
         window.p0WasClicked=window.p0PlusWasClicked||['ja','true','1'].includes(String(entry.p0Selected).toLowerCase());
-        restored=k;
+        restored=k;loaded.set(k,entry);applied.set(k,values());
         if(typeof renderSelectedPrioPreviews==='function')renderSelectedPrioPreviews();
         if(typeof updateActiveButtons==='function')updateActiveButtons();
       } catch {} finally {if(pending===k)pending='';}
@@ -216,8 +220,8 @@
     const loot = byId('lootCard');
     const selection = byId('lootOwnSelection');
     const saveArea = loot?.querySelector('.loot-save-area');
-    if (selection) card.insertBefore(selection, toolbar);
-    if (saveArea) card.insertBefore(saveArea, toolbar);
+    if (selection) toolbar.after(selection);
+    if (saveArea && selection) selection.after(saveArea);
     const saveStatus = byId('prioSaveStatus');
     if (saveStatus && saveArea && !byId('lootSaveReceipt')?.contains(saveStatus)) saveArea.after(saveStatus);
     const p0Heading = card.querySelector('th:nth-child(7)');
