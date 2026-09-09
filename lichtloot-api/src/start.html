@@ -2855,6 +2855,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 <link rel="stylesheet" href="start-navigation.css?v=20260907-1">
 <script defer src="start-navigation.js?v=20260907-1"></script>
+<link rel="stylesheet" href="raid-cards-dashboard.css?v=1">
 </head>
 
 <body class="start-dashboard-body">
@@ -3127,7 +3128,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span id="logsNavLabel">Logs & Analysen</span></button>
-          <button class="start-side-link" type="button" onclick="openRaidArchive()"><span aria-hidden="true">▤</span><span>Raidarchiv</span></button>
+          <button class="start-side-link" data-start-nav="archive" type="button" onclick="openRaidArchive()"><span aria-hidden="true">▤</span><span>Raidarchiv</span></button>
           <button class="start-side-link" data-start-nav="raidRules" onclick="toggleRaidRulesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span><span id="raidRulesArrow">›</span></button>
           <div id="raidRulesDrawer" class="prio-pages-drawer hidden">
             <button class="prio-page-link" onclick="showRaidRules('mc')"><span>Molten Core</span><span>MC</span></button>
@@ -3250,6 +3251,7 @@ html,body{max-width:100%;overflow-x:hidden}
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
+      <section class="dash-panel hidden" id="raidArchiveSection"><iframe id="raidArchiveFrame" title="Raidarchiv der ausgewählten Lootgilde" style="display:block;width:100%;min-height:850px;border:0" scrolling="no"></iframe></section>
       <section class="dash-panel logs-dashboard-section hidden" id="logsDashboardSection">
         <div class="logs-dashboard-hero">
           <div class="logs-dashboard-title">
@@ -3762,7 +3764,7 @@ function setStartNavActive(key){
     btn.classList.toggle("active", btn.dataset.startNav === key);
     btn.classList.toggle("is-soft-active", btn.dataset.startNav === key && key !== "dashboard");
   });
-  const groupByKey={worldbuff:"buffs",hordenbuff:"buffs",logs:"raidinfos",raidRules:"raidinfos",p0plus:"raidinfos",prioPages:"raidinfos",raidlead:"raidorga",create:"raidorga"};
+  const groupByKey={worldbuff:"buffs",hordenbuff:"buffs",logs:"raidinfos",archive:"raidinfos",raidRules:"raidinfos",p0plus:"raidinfos",prioPages:"raidinfos",raidlead:"raidorga",create:"raidorga"};
   const groupName=groupByKey[key];
   if(groupName){
     document.querySelector(`.start-side-group[data-start-group="${groupName}"]`)?.classList.remove("collapsed");
@@ -3775,6 +3777,7 @@ function setDashboardCenterMode(mode){
     const el=document.getElementById(id);
     if(el) el.classList.toggle("hidden", !showDashboard);
   });
+  document.getElementById("raidArchiveSection")?.classList.toggle("hidden",mode !== "archive");
   const logsPanel=document.getElementById("logsDashboardSection");
   if(logsPanel) logsPanel.classList.toggle("hidden", mode !== "logs");
   const buffPanel=document.getElementById("buffOverviewPanel");
@@ -5324,6 +5327,23 @@ function refreshStartDashboard(){
   }
 }
 
+function showRaidArchiveCenter(raidId="",tab="loot",scope="past"){
+  setDashboardCenterMode("archive");setStartNavActive("archive");
+  const frame=document.getElementById("raidArchiveFrame");
+  const url=new URL("raidarchiv.html",location.href);
+  url.search=new URLSearchParams({guild:CURRENT_GUILD_SLUG,embed:"1",scope,...(raidId?{raidId,tab}:{})});
+  if(frame.src!==url.href)frame.src=url.href;
+  document.getElementById("raidArchiveSection").scrollIntoView({behavior:"smooth",block:"start"});
+}
+window.addEventListener("message",event=>{
+ const frame=document.getElementById("raidArchiveFrame");
+ if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
+ if(event.data?.type==="raid-archive-height"&&Number.isFinite(event.data.height))frame.style.height=Math.min(100000,Math.max(600,event.data.height))+"px";
+});
+function dashboardArchiveRaidImage(key){
+ const type=String(key).startsWith("zg")?"zg":key;
+ return ["naxx","aq40","bwl","mc","zg","aq20","ony"].includes(type)?`images/raid-banners/${type}.jpg`:raidImagePath(key);
+}
 function showLogsDashboard(){
   configureDashboardLogView();
   setDashboardCenterMode("logs");
@@ -5536,7 +5556,7 @@ function renderDashboardLogAnalyses(entries){
     const bestPull=summary.bestPull||summary.bestFight||"–";
     const wclUrl=/^https?:\/\//i.test(String(entry.reportUrl||""))?entry.reportUrl:(entry.reportCode?`https://vanilla.warcraftlogs.com/reports/${encodeURIComponent(entry.reportCode)}`:"");
     return `<div class="log-dashboard-row">
-      <img class="log-dashboard-thumb" src="${safeAttr(raidImagePath(raidKey))}" alt="">
+      <img class="log-dashboard-thumb" src="${safeAttr(dashboardArchiveRaidImage(raidKey))}" alt="">
       <div class="log-dashboard-card-main"><strong>${safeHtml(raidName)}</strong><small>▣ ${safeHtml(formatRaidDateForDisplay(entry.raidDate||summary.raidDate||""))}${entry.reportCode?` · ${safeHtml(entry.reportCode)}`:""}</small><span>${players==null?"Spielerzahl offen":`${players} Spieler`}</span></div>
       <div class="log-dashboard-progress"><span class="log-dashboard-card-label">Bossfortschritt</span><strong>${kills==null?"–":kills} / ${bosses==null?"–":bosses}</strong><div class="log-dashboard-progress-track"><i style="width:${progress}%"></i></div><small>${bosses?progress+" %":"Noch nicht ermittelt"}</small></div>
       <div class="log-dashboard-metrics"><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Dauer</span><strong>${safeHtml(dashboardLogDuration(summary.durationMs||summary.duration))}</strong></div><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Tode</span><strong>${deaths==null?"–":deaths}</strong></div><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Bester Pull</span><strong>${safeHtml(bestPull)}</strong></div></div>
@@ -5578,7 +5598,7 @@ function renderLichtstatsReports(entries){
       entry.logUrl ? `<a class="wcl" href="${safeAttr(entry.logUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
     ].filter(Boolean).join("");
     return `<div class="log-dashboard-row">
-      <div class="log-dashboard-raid"><img src="${safeAttr(raidImagePath(raidKey))}" alt=""><div><strong>${safeHtml(entry.zone || entry.name || "Raid")}</strong><span>${safeHtml(entry.name || entry.logId || "")}</span></div></div>
+      <div class="log-dashboard-raid"><img src="${safeAttr(dashboardArchiveRaidImage(raidKey))}" alt=""><div><strong>${safeHtml(entry.zone || entry.name || "Raid")}</strong><span>${safeHtml(entry.name || entry.logId || "")}</span></div></div>
       <div class="log-dashboard-date">${safeHtml(formatRaidDateForDisplay(entry.raidDate || ""))}<br>${Number(entry.playerCount)||0} Spieler</div>
       <div class="log-dashboard-badges"><span class="log-badge ${badgeClass}">${safeHtml(statusLabel)}</span><span class="log-badge done">${Number(entry.bossKills)||0}/${Number(entry.totalBosses)||0} Bosse</span><span class="log-badge ${Number(entry.wipeCount)>0 ? "wait" : "done"}">${Number(entry.wipeCount)||0} Wipes</span></div>
       <div class="log-dashboard-actions">${actions || '<span class="log-badge wait">kein Link</span>'}</div>
@@ -9744,6 +9764,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
 <script src="/addon-beta-download.js?v=20260908-2"></script>
-<script src="raid-archive.js?v=20260909-2"></script>
+<script src="raid-archive.js?v=20260909-4"></script>
 </body>
 </html>
