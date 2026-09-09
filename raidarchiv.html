@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Raidarchiv · GuildLoot</title><link rel="icon" href="images/app-icon.svg"><link rel="stylesheet" href="raidarchiv.css?v=2"></head>
+<body>
+<header class="site-header"><a id="home" class="brand" href="start.html"><img src="images/app-icon.svg" alt="GuildLoot"><span>GUILD<span class="gold">LOOT</span><small>RAIDS · PRIORITÄTEN · BEUTE</small></span></a><a id="backHome" class="subtle" href="start.html">← Zur Startseite</a></header>
+<main><div class="eyebrow" id="guildLabel">DEINE GILDE</div><div class="page-title"><div><h1>Deine Raids. <span>Deine Beute.</span></h1><p>Priolisten und aufgezeichneter Loot an einem Ort.</p></div><span class="archive-symbol" aria-hidden="true">▤</span></div>
+<nav class="scope-tabs" aria-label="Raidzeitraum"><button data-scope="current">Aktuelle Raids</button><button data-scope="past">Raidarchiv</button></nav>
+<section id="overview"><div class="toolbar"><label class="search">⌕ <input id="raidSearch" type="search" placeholder="Raid oder Datum suchen …" aria-label="Raid oder Datum suchen"></label><div id="raidFilters" class="filters" aria-label="Instanzfilter"></div></div><div class="section-label"><h2 id="listHeading">Vergangene Raids</h2><span id="listCount"></span></div><div id="cards" class="cards" aria-live="polite"></div><button id="more" class="secondary" hidden>Weitere Raids laden</button></section>
+<section id="detail" hidden></section><p id="error" role="alert" hidden></p>
+<footer>GUILDLOOT <span>Dein Raid. Gemeinsam festgehalten.</span></footer></main>
+<script src="raidarchiv-page.js?v=2"></script></body></html>

@@ -21,3 +21,14 @@ console.log('raid archive: scoped reads, safe fields, missing logs and deduplica
 assert.equal((await request({past:false})).result.prios[0].p1,'gesetzt');
 assert.equal((await request({past:false,published:true})).result.prios[0].p1,'Item');
 assert.equal((await request({past:true})).result.prios[0].p1,'Item');
+
+const {decorateLoot}=await import('../src/raid-archive.js');
+const awards=[{player:'Ariee',server:'Everlook',p0Item:'Item',p0ItemReceived:true}];
+const metadata=new Map([['1',{quality:'epic',iconUrl:'inv_test',type:'Armor',slot:'Head'}]]);
+const gold=decorateLoot(archiveLoot([{sessionId:'a',receipts:[receipt]}]),awards,metadata);
+assert.equal(gold[0].p0Received,true);assert.equal(gold[0].p0Recipient,'Ariee-Everlook');assert.equal(gold[0].quality,'epic');assert.equal(gold[0].category,'equipment');
+assert.equal(decorateLoot(gold,[{...awards[0],p0ItemReceived:false}])[0].p0Received,false);
+assert.equal(decorateLoot(gold,[{...awards[0],server:'Lakeshire'}])[0].p0Received,false);
+assert.equal(decorateLoot(gold,[{...awards[0],p0Item:'Anderes Item'}])[0].p0Received,false);
+assert.equal(decorateLoot(gold,[],new Map([['1',{type:'Trade Goods'}]]))[0].category,'materials');
+console.log('Confirmed P0 recipient+realm+item matching and item categories OK');

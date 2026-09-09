@@ -1,4 +1,4 @@
-// Public archive: only past raids, explicit field allowlists, no credentials or raw exports.
+// Public raid overview: explicit field allowlists, no credentials or raw exports.
 export function archiveLoot(payloads) {
   const seen = new Set(), receipts = [];
   for (const payload of payloads) for (const row of payload.receipts || []) {
@@ -10,7 +10,21 @@ export function archiveLoot(payloads) {
   }
   return receipts.sort((a,b)=>a.time-b.time);
 }
-export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios}) {
+const norm = value => String(value||'').normalize('NFC').trim().toLocaleLowerCase('de-DE');
+export function decorateLoot(loot, priorities, metadata = new Map()) {
+  const awards = priorities.filter(p=>p.p0ItemReceived === true && p.p0Item);
+  return loot.map(row=>{
+    const item = metadata.get(String(row.itemId)) || {};
+    const award = awards.find(p=>norm(`${p.player}-${p.server}`) === norm(row.player)
+      && (String(p.p0ItemId||'') === String(row.itemId) || norm(p.p0Item) === norm(row.item)));
+    const kind = `${item.type||''} ${item.category||''} ${item.slot||''}`.toLowerCase();
+    const category = /trade goods|reagen|material|handwerks|handelsware/.test(kind) ? 'materials'
+      : /armor|weapon|rüstung|waffe|kopf|head|chest|brust|hands|hände|finger|trinket|schmuck|neck|hals|feet|füße|legs|beine|shoulder|schulter|wrist|handgelenk|waist|taille|back|rücken|off.hand|shield|schild/.test(kind) ? 'equipment' : 'other';
+    return {...row,iconUrl:item.iconUrl||'',quality:item.quality??'',category,
+      p0Received:Boolean(award),p0Recipient:award?`${award.player}-${award.server}`:''};
+  });
+}
+export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata=async()=>new Map()}) {
   app.get('/api/public/raid-archive', async(req,res,next)=>{
     try {
       const guild = await requireGuild(resolveGuildSlug(req.query.guild));
@@ -27,7 +41,15 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const raids = result.rows.slice(0,100).map(row=>({id:row.external_raid_id||row.id,
         title:row.name||row.raid_type,type:row.raid_type,
         date:row.raid_date instanceof Date?row.raid_date.toISOString().slice(0,10):String(row.raid_date).slice(0,10),time:row.raid_time}));
-      if (!raidId) return res.json({success:true,raids,hasMore:result.rows.length>100});
+      if (!raidId) {
+        const exists = await query("select to_regclass('guildloot_era_logs') as logs");
+        const recorded = exists.rows[0]?.logs && result.rows.length ? await query(
+          'select distinct raid_id from guildloot_era_logs where guild_id=$1 and raid_id=any($2::uuid[])',
+          [guild.id,result.rows.slice(0,100).map(row=>row.id)]) : {rows:[]};
+        const ids = new Set(recorded.rows.map(row=>String(row.raid_id)));
+        raids.forEach((raid,i)=>raid.hasLootLog=ids.has(String(result.rows[i].id)));
+        return res.json({success:true,raids,hasMore:result.rows.length>100});
+      }
       if (!raids.length) return res.status(404).json({success:false,error:'Raid nicht gefunden.'});
       const exists = await query("select to_regclass('guildloot_era_logs') as logs");
       const logs = exists.rows[0]?.logs ? await query('select payload from guildloot_era_logs where guild_id=$1 and raid_id=$2 order by created_at',[guild.id,result.rows[0].id]) : {rows:[]};
@@ -36,8 +58,11 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const prio = value => priosVisible ? value : (value ? 'gesetzt' : '–');
       const prios = (priorities.prios||[]).map(p=>({player:p.player,server:p.server,className:p.className,
         p1:prio(p.p1),p2:prio(p.p2),p3:prio(p.p3),p0:p.p0Item}));
+      const receipts=archiveLoot(logs.rows.map(row=>row.payload));
+      const metadata=await getItemMetadata([...new Set(receipts.map(row=>row.itemId))]);
+      const loot=decorateLoot(receipts,priorities.prios||[],metadata);
       res.setHeader('Cache-Control','no-store');
-      res.json({success:true,raid:raids[0],prios,priosVisible,hasLootLog:logs.rows.length>0,loot:archiveLoot(logs.rows.map(row=>row.payload))});
+      res.json({success:true,raid:raids[0],prios,priosVisible,hasLootLog:logs.rows.length>0,loot});
     } catch(error) { next(error); }
   });
 }
