@@ -4,11 +4,11 @@ const norm=v=>String(v??'').trim().normalize('NFC').toLowerCase();
 export const eraInstances={mc:409,bwl:469,ony:249,zg:309,'zg-mittwoch':309,'zg-prime':309,'zg-late':309,aq20:509,aq40:531,naxx:533};
 const str=(v,label,max=160)=>{if(typeof v!=='string'||!v.trim()||v.length>max||/[\u0000-\u001f]/.test(v))throw fail(`${label} ist ungültig.`);return v;};
 const num=(v,label,min,max)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw fail(`${label} ist ungültig.`);return v;};
-export function validateRaidExport(raw,{guild,raidId,instanceId}){
-  if(typeof raw!=='string'||Buffer.byteLength(raw)>1500000)throw fail('Export fehlt oder ist zu groß.');
+export function validateRaidExport(raw,{guild,raidId,instanceId,raidIdAliases=[]}){
+  if(typeof raw!=='string'||Buffer.byteLength(raw)>24000000)throw fail('Export fehlt oder ist zu groß.');
   let p;try{p=JSON.parse(raw);}catch{throw fail('Der Export enthält kein gültiges JSON.');}
   if(!p||!['guildloot.raid.v1','guildloot.raid.v2','guildloot.raid.v3'].includes(p.schema)||!Array.isArray(p.drops)||p.drops.length>5000)throw fail('Unbekanntes Exportformat.');
-  if(p.guild!==guild||p.raidId!==raidId||p.instanceId!==instanceId)throw fail('Der Export gehört zu einer anderen Gilde, Raid-ID oder Instanz.');
+  if(p.guild!==guild||(p.raidId!==raidId&&!raidIdAliases.includes(p.raidId))||p.instanceId!==instanceId)throw fail('Der Export gehört zu einer anderen Gilde, Raid-ID oder Instanz.');
   const now=Math.floor(Date.now()/1000)+86400;
   const out={schema:p.schema,addonVersion:str(p.addonVersion,'Addonversion',40),sessionId:str(p.sessionId,'Sitzungs-ID',200),guild,raidId,instanceId,
     raidName:str(p.raidName,'Raidname'),raidDate:str(p.raidDate,'Raiddatum',20),realm:str(p.realm,'Realm'),recorder:str(p.recorder,'Aufzeichner'),
@@ -53,6 +53,14 @@ export function validateRaidExport(raw,{guild,raidId,instanceId}){
       return {guid:str(e.guid,'Spieler-GUID',100),player:str(e.player,'Spieler',100),realm:str(e.realm,'Realm',100),evidence:e.evidence,firstSeen,lastSeen:num(e.lastSeen,'Letzte Sichtung',firstSeen,out.endedAt)};
     });
   }
+  for(const key of ['buffChecks','trades','chatEvidence']){
+    if(p[key]!==undefined){
+      const values=p[key];
+      if(!Array.isArray(values) && !(values && typeof values==='object' && Object.keys(values).length===0))throw fail('Ungültige Zusatzdaten: '+key);
+      if(Array.isArray(values)&&values.length>10000)throw fail('Zu viele Zusatzdaten: '+key);
+      out[key]=Array.isArray(values)?values:[];
+    }
+  }
   out.drops.sort((a,b)=>a.id.localeCompare(b.id));
   return out;
 }
@@ -86,7 +94,7 @@ export function createAddonRaidImport({pool,authorize,resolveTarget,writeAudit})
    await client.query('select pg_advisory_xact_lock(hashtext($1),hashtext($2))',[String(guild.id),'p0plus-review']);
    const raid=(await client.query(`select *,raid_date::text date_text from raids where guild_id=$1 and (id::text=$2 or external_raid_id=$2) for update`,[guild.id,String(params.raidId||'')])).rows[0];
    if(!raid)throw fail('Raid nicht gefunden.',404);
-   const payload=validateRaidExport(params.text,{guild:guild.slug,raidId:String(raid.external_raid_id||raid.id),instanceId:eraInstances[raid.raid_type]});
+   const payload=validateRaidExport(params.text,{guild:guild.slug,raidId:String(raid.external_raid_id||raid.id),raidIdAliases:[String(raid.id)],instanceId:eraInstances[raid.raid_type]});
    if(payload.raidDate!==raid.date_text)throw fail('Das Raiddatum des Exports passt nicht zum ausgewählten Raid.');
    const digest=createHash('sha256').update(JSON.stringify(payload)).digest('hex');
    const previous=(await client.query('select digest from guildloot_era_logs where guild_id=$1 and raid_id=$2 and session_id=$3',[guild.id,raid.id,payload.sessionId])).rows[0];
@@ -122,4 +130,13 @@ export function compareAttendance(addon,wcl){
  const confirmed=recorded||wcl==='participated';
  const label=(recorded?'Addon: teilgenommen':'Addon: nicht erfasst')+' · '+({participated:'WCL: teilgenommen',bench:'WCL: Bank',not_found:'WCL: nicht gefunden',ambiguous:'WCL: Name nicht eindeutig',no_data:'WCL: kein passendes Log'}[wcl]||'WCL: unbekannt');
  return {confirmed,needsReview:conflict||!confirmed,label:label+(conflict?' — Widerspruch prüfen':!confirmed?' — Teilnahme prüfen':'')};
+}
+
+// Raid-specific PINs authorize only the exact database row in the selected guild.
+export async function authorizeAddonRaidUpload({pool,authorizeMaster},guild,params){
+ const pin=String(params.leadPin||'').trim();
+ if(!pin||pin.length>100)throw fail('Plündermeister-PIN erforderlich.',403);
+ try { await authorizeMaster(guild,pin);return; } catch {}
+ const raid=(await pool.query('select lead_pin from raids where guild_id=$1 and (id::text=$2 or external_raid_id=$2)',[guild.id,String(params.raidId||'')])).rows[0];
+ if(!raid?.lead_pin||pin!==raid.lead_pin)throw fail('PIN passt nicht zu diesem Raid oder dieser Gilde.',403);
 }
