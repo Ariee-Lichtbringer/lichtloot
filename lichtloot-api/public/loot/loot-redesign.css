@@ -140,3 +140,31 @@ body.loot-redesign #lootOwnSelection>p{margin:9px 0 0;font:11px/1.5 Inter,Arial,
 /* Keep saving next to the personal selection, before the loot search. */
 body.loot-redesign #lootCard>.loot-save-area{order:0!important;padding:0!important;margin:0 0 14px!important;position:static!important}
 body.loot-redesign #lootCard>.loot-save-area>.btn{margin-top:0!important}
+
+/* The saved receipt is separate from the catalog and the priority table. */
+body.loot-redesign #lootSaveReceipt[hidden]{display:none!important}
+body.loot-redesign #lootSaveReceipt{align-self:start;min-width:0;overflow-wrap:anywhere}
+body.loot-redesign #lootSaveReceipt h2{font-size:17px!important;margin-bottom:12px!important}
+body.loot-redesign #lootSaveReceipt #prioSaveStatus{font-size:12px;line-height:1.7!important;margin:0!important}
+@media(min-width:1361px){
+  body.loot-redesign #mainGrid:has(#prioCard.prios-closed){align-items:stretch!important}
+  body.loot-redesign #mainGrid>#prioCard.prios-closed{display:flex!important;flex-direction:column;align-self:stretch!important;min-height:0!important}
+  body.loot-redesign #prioCard.prios-closed>.table-scroll{height:0;min-height:0!important;max-height:none!important;flex:1 1 0;overflow:auto}
+  body.loot-redesign #mainGrid:has(#prioCard.prios-closed)>#lootSaveReceipt{grid-column:2;grid-row:2}
+}
+@media(min-width:1701px){
+  body.loot-redesign.loot-character-in-sidebar #mainGrid.grid:has(#prioCard.prios-closed):has(#lootSaveReceipt:not([hidden])),
+  body.loot-redesign #mainGrid.grid:has(#prioCard.prios-closed):has(#lootSaveReceipt:not([hidden])){
+    grid-template-columns:minmax(370px,1fr) minmax(580px,780px) 280px!important;
+    max-width:1820px!important;
+  }
+  body.loot-redesign #mainGrid:has(#lootSaveReceipt:not([hidden]))>#lootSaveReceipt{grid-column:3;grid-row:1}
+  body.loot-redesign #mainGrid.grid:has(#prioCard:not(.prios-closed)):has(#lootSaveReceipt:not([hidden])){
+    grid-template-columns:minmax(0,1fr) 280px!important;
+  }
+  body.loot-redesign.loot-character-in-sidebar #mainGrid:has(#prioCard:not(.prios-closed)):has(#lootSaveReceipt:not([hidden]))>#prioCard,
+  body.loot-redesign #mainGrid:has(#prioCard:not(.prios-closed)):has(#lootSaveReceipt:not([hidden]))>#prioCard{grid-column:1!important}
+  body.loot-redesign #mainGrid:has(#prioCard:not(.prios-closed)):has(#lootSaveReceipt:not([hidden]))>#lootSaveReceipt{grid-column:2}
+  body.loot-redesign:has(#prioCard.prios-closed):has(#lootSaveReceipt:not([hidden]))>.overlay>.header{max-width:1820px!important}
+}
+@media(max-width:1360px){body.loot-redesign #mainGrid>#lootSaveReceipt{grid-column:1!important;grid-row:auto}}

@@ -143,9 +143,34 @@
     render();
   }
 
+  function setupReceipt() {
+    const grid = byId('mainGrid');
+    if (!grid || byId('lootSaveReceipt') || typeof window.getPrioSaveStatus !== 'function') return;
+    const receipt = document.createElement('aside');
+    receipt.id = 'lootSaveReceipt'; receipt.className = 'card'; receipt.hidden = true;
+    receipt.setAttribute('aria-labelledby', 'lootSaveReceiptTitle');
+    receipt.innerHTML = '<h2 id="lootSaveReceiptTitle">Speicherstatus</h2>';
+    grid.append(receipt);
+    const original = window.getPrioSaveStatus;
+    let observed;
+    function moveStatus() {
+      const status = original.apply(this, arguments);
+      if (status.parentElement !== receipt) receipt.append(status);
+      if (observed !== status) {
+        observed = status;
+        new MutationObserver(() => { receipt.hidden = !status.textContent.trim(); }).observe(status, { childList: true, subtree: true, characterData: true });
+      }
+      receipt.hidden = !status.textContent.trim();
+      return status;
+    }
+    window.getPrioSaveStatus = moveStatus;
+    moveStatus();
+  }
+
   function setup() {
     document.body.classList.add('loot-redesign');
     setupSelection();
+    setupReceipt();
     const card = byId('prioCard');
     if (!card || card.querySelector('.loot-prio-toolbar')) return;
     const toolbar = document.createElement('div');
