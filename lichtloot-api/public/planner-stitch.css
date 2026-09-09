@@ -152,3 +152,14 @@ body.raid-create-open:before{z-index:11000!important}
 #raidCreateBox{z-index:12000!important}
 body.raid-create-open #quickRaidPreview{z-index:12001!important}
 .quick-form-footer{max-height:45dvh;overflow:auto}
+/* Real buff artwork and consistent vector controls. */
+.planner-ui-icon{width:18px;height:18px;display:inline-block;flex-shrink:0;vertical-align:middle}
+#buffOverviewPanel .planner-wow-icon{width:24px;height:24px;object-fit:contain;display:inline-block;flex-shrink:0;border-radius:4px;vertical-align:middle}
+#buffOverviewPanel .buff-label{padding:3px 7px;gap:6px}
+#buffOverviewPanel .buff-summary-icon .planner-ui-icon{width:22px;height:22px}
+#buffOverviewPanel .buff-row-time{display:flex;align-items:center;gap:6px}
+#buffOverviewPanel .buff-row-time .planner-ui-icon,#buffOverviewPanel .buff-row-guild>.planner-ui-icon{width:14px;height:14px;color:#64748b}
+#buffOverviewPanel .buff-ticker-entry strong{display:flex;align-items:center;gap:7px}
+#buffOverviewPanel .buff-ticker-entry .planner-wow-icon{width:24px;height:24px}
+#raidCreateBox .raid-create-title-icon .planner-ui-icon{width:26px;height:26px}
+#raidCreateBox .quick-form-footer .copy-btn .planner-ui-icon{width:16px;height:16px;margin-right:5px}
