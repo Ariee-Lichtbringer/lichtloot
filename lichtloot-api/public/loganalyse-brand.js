@@ -12,6 +12,7 @@
     const guild = (data.guilds || []).find(entry => String(entry.slug || '').toLowerCase() === slug);
     if (!guild) return;
     if (guild.name) heading.querySelector('.kicker').textContent = guild.name;
+    document.dispatchEvent(new Event('analysis-brand-ready'));
     if (!guild.logoUrl) return;
     const logoUrl = new URL(guild.logoUrl, location.href);
     if (!['https:', 'http:'].includes(logoUrl.protocol)) return;
@@ -28,6 +29,7 @@
       while (heading.firstChild) copy.append(heading.firstChild);
       heading.classList.add('analysis-brand');
       heading.append(mark, copy);
+      document.dispatchEvent(new Event('analysis-brand-ready'));
     };
     img.src = logoUrl.href;
   } catch (_) {

@@ -276,16 +276,18 @@
     .profile-compare>span{color:#71869a;text-shadow:none}
     @media(max-width:700px){.player-modal-box{width:calc(100vw - 16px)}.player-modal-body{padding:10px}.profile-actions{align-items:stretch;flex-direction:column}.profile-raid-select{margin-left:0}.profile-raid-select select{width:100%}}
   </style>
-  <link rel="stylesheet" href="loganalyse-neon.css?v=20260905-depth2">
-  <script defer src="loganalyse-brand.js?v=20260905"></script>
+  <link rel="stylesheet" href="loganalyse-stitch.css?v=20260909-stitch2">
+  <script defer src="loganalyse-brand.js?v=20260909-stitch1"></script>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 </head>
-<body>
+<body class="stitch-analysis">
   <main class="shell">
+    <header id="compactAnalysisHeader" class="compact-analysis-header hidden"></header>
+    <header id="mobileAnalysisHeader" class="mobile-analysis-header hidden"></header>
     <header class="top">
       <div>
         <div class="kicker">LichtLoot</div>
-        <h1 id="pageTitle">Loganalyse</h1>
+        <div class="analysis-title-line"><h1 id="pageTitle">Loganalyse</h1><span id="raidClearBadge" class="raid-clear-badge hidden"></span></div>
         <p id="pageLead" class="lead">Direkte Auswertung des Warcraft-Logs-Reports in LichtLoot.</p>
         <div id="meta" class="meta"></div>
       </div>
@@ -317,17 +319,18 @@
       <div id="dashboardView" class="dashboard-grid">
         <section id="overviewControls" class="overview-controls"></section>
         <div class="dashboard-column">
-          <details id="playerPerformanceCard" class="data-card player-performance-card collapsible-card" open><summary><span>Spielerwerte</span><span class="summary-hint">Spaltenüberschriften sortieren die Tabelle</span></summary><div class="table-wrap" style="border:0;border-radius:0;max-height:none"><table id="playerPerformanceTable" class="data-table"></table></div></details>
+          <details id="playerPerformanceCard" class="data-card player-performance-card collapsible-card" open><summary><span>Spielerwerte</span><span class="summary-hint">Spaltenüberschriften sortieren die Tabelle</span></summary><div class="table-wrap" style="border:0;border-radius:0;max-height:none"><table id="playerPerformanceTable" class="data-table"></table></div><div id="mobilePlayerPerformance" class="mobile-player-performance"></div><div id="playerPerformanceFooter" class="player-performance-footer"></div></details>
           <details id="threatDetailCard" class="data-card collapsible-card hidden"><summary><span id="threatDetailTitle">Bedrohungsverlauf · interaktiver Vergleich</span></summary><div id="threatDetails" class="threat-details"></div></details>
         </div>
-        <aside class="dashboard-column">
-          <details class="data-card collapsible-card"><summary>Raid-Zusammenfassung</summary><div id="raidSummary"></div></details>
-          <details class="data-card collapsible-card"><summary>Klassenverteilung</summary><div id="classDistribution"></div></details>
-          <details class="data-card collapsible-card"><summary>Auffälligkeiten</summary><div id="dashboardWarnings" class="notice-list"></div></details>
+        <aside class="dashboard-column raid-insights">
+          <details class="data-card collapsible-card" open><summary>Raid-Zusammenfassung</summary><div id="raidSummary"></div></details>
+          <details class="data-card collapsible-card" open><summary>Klassenverteilung</summary><div id="classDistribution"></div></details>
+          <details class="data-card collapsible-card" open><summary>Auffälligkeiten</summary><div id="dashboardWarnings" class="notice-list"></div></details>
         </aside>
       </div>
       <div id="analysisDataView" class="analysis-data-view hidden"><div id="professionalView" class="professional-view"></div></div>
     </section>
+    <nav id="mobileAnalysisNav" class="mobile-analysis-nav hidden" aria-label="Mobile Raidanalyse"></nav>
   </main>
 
   <script>
@@ -336,7 +339,7 @@
     const currentGuild=String(params.get("guild")||"lichtloot").trim().toLowerCase();
     const leadershipLink=document.getElementById("leadershipLink");
     if(leadershipLink)leadershipLink.href=`gildenleitung.html?guild=${encodeURIComponent(currentGuild)}`;
-    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", rpbSelectedClasses:[], detailMode:"overview", modeSections:{}, rpbCategory:"abilities", consumableCategory:"all", overviewCategory:"damage", overviewFilterType:"all", overviewFilterValue:"", overviewMoreMetrics:false, overviewSortKey:"amount", overviewSortDirection:"desc", fightScope:"all", selectedFightIds:[], threatBossId:0, threatTargetId:"all", threatFocusPlayer:"", threatSelectedPlayers:[], gearShowAll:false, gearSearch:"", mode:params.get("id") ? "detail" : "list" };
+    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", rpbSelectedClasses:[], detailMode:"overview", modeSections:{}, rpbCategory:"abilities", consumableCategory:"all", overviewCategory:"damage", overviewFilterType:"all", overviewFilterValue:"", overviewMoreMetrics:false, overviewSearch:"", overviewShowAll:false, overviewSortKey:"amount", overviewSortDirection:"desc", fightScope:"all", selectedFightIds:[], threatBossId:0, threatTargetId:"all", threatFocusPlayer:"", threatSelectedPlayers:[], gearShowAll:false, gearSearch:"", mode:params.get("id") ? "detail" : "list" };
     let analysisProgressTimer=null;
     const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
     const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
@@ -469,7 +472,12 @@
     function visibleBossEncounters(){const source=state.detail?.rpb?.encounters||[];const raid=raidName(state.detail?.report||state.detail?.analysis||{});const names=RAID_BOSS_NAMES[raid]||[];const seen=new Set();return source.filter(fight=>{const value=key(fight.name);if(names.length&&!names.some(name=>value.includes(key(name))))return false;const marker=Number(fight.encounterId||0)||value;if(seen.has(marker))return false;seen.add(marker);return true;});}
     function isReportWideView(){return state.detailMode==="gear"||(state.detailMode==="cla"&&state.activeSection==="cla-validate");}
     function renderFightFilter(){
-      const root=document.getElementById("fightFilter");const encounters=visibleBossEncounters();if(!root)return;if(isReportWideView()){root.innerHTML='<div class="fight-filter-label">Datenbereich</div><div class="report-wide-notice"><strong>Gesamter Bericht</strong><span>Diese Ansicht basiert auf dem Ausrüstungs-Snapshot von Warcraft Logs und wird nicht durch die Bossauswahl gefiltert.</span></div>';return;}const chosen=state.selectedFightIds.length?encounters.filter(fight=>state.selectedFightIds.includes(Number(fight.id))):[];const duration=selectedFightDurationMs();const selectionLabel=chosen.length?`${chosen.length} ${chosen.length===1?'Boss':'Bosse'} ausgewählt · ${durationDisplay(duration)}`:state.fightScope==="boss"?`Alle Bosskämpfe · ${durationDisplay(duration)}`:state.fightScope==="trash"?`Trash · ${durationDisplay(duration)}`:`Gesamter Raid · ${durationDisplay(duration)}`;const bossSelection=state.fightScope==="trash"?"":`<details class="boss-selector" open><summary><span>Bosse auswählen</span><strong>${html(selectionLabel)}</strong></summary><div class="boss-selector-actions"><button type="button" onclick="setBossSelection('all')">Alle auswählen</button><button type="button" onclick="setBossSelection('none')">Auswahl aufheben</button></div><div class="boss-chips">${encounters.map(fight=>`<button class="fight-chip ${state.selectedFightIds.includes(Number(fight.id))?"active":""}" type="button" onclick="toggleBossFight(${Number(fight.id)})"><img src="${attr(bossImage(fight))}" alt=""><span class="fight-chip-copy"><span>${html(fight.name)}</span><small>${html(durationDisplay(fight.durationMs))} · ${Number(fight.deaths||0)} Tode</small></span></button>`).join("")||'<span class="sub">Keine Bosskämpfe erkannt.</span>'}</div></details>`;root.innerHTML=`<div class="fight-filter-label">Kampfbereich</div><div class="fight-scope">${[["all","Gesamter Raid"],["boss","Alle Bosskämpfe"],["trash","Trash"]].map(([id,label])=>`<button class="fight-chip ${state.fightScope===id&&!state.selectedFightIds.length?"active":""}" type="button" onclick="selectFightScope('${id}')">${html(label)}</button>`).join("")}<button class="fight-reset" type="button" onclick="resetAnalysisView()">Standardansicht</button></div>${bossSelection}`;if(matchMedia('(max-width:760px)').matches&&!state.selectedFightIds.length)root.querySelector('.boss-selector')?.removeAttribute('open');
+      const root=document.getElementById("fightFilter");const encounters=visibleBossEncounters();
+      if(isReportWideView()){root.innerHTML='<div class="report-wide-notice"><strong>Gesamter Bericht</strong><span>Diese Ansicht basiert auf dem Ausrüstungs-Snapshot von Warcraft Logs und wird nicht durch die Bossauswahl gefiltert.</span></div>';return;}
+      const scope=state.selectedFightIds.length?`${state.selectedFightIds.length} Bosse`:state.fightScope==="boss"?"Alle Bosskämpfe":state.fightScope==="trash"?"Trash":"Gesamter Raid";
+      const chosen=state.selectedFightIds;
+      const bossButtons=encounters.map(fight=>`<button class="fight-chip ${chosen.includes(Number(fight.id))?'active':''}" type="button" aria-pressed="${chosen.includes(Number(fight.id))}" onclick="toggleBossFight(${Number(fight.id)})" title="${attr(`${fight.name} · ${durationDisplay(fight.durationMs)} · ${Number(fight.deaths||0)} Tode`)}">${html(fight.name)}</button>`).join('');
+      root.innerHTML=`<div class="desktop-fight-scope"><span class="fight-filter-label">Kampfbereich:</span><div class="fight-scope">${[['all','Gesamter Raid'],['boss','Alle Bosskämpfe'],['trash','Trash']].map(([id,label])=>`<button class="fight-chip ${state.fightScope===id&&!chosen.length?'active':''}" type="button" aria-pressed="${state.fightScope===id&&!chosen.length}" onclick="selectFightScope('${id}')">${label}</button>`).join('')}<button class="fight-chip" type="button" onclick="resetAnalysisView()">Standardansicht</button></div><span class="fight-duration">${html(scope)} · <strong>${html(durationDisplay(selectedFightDurationMs()))}</strong></span></div><div class="desktop-boss-filter ${state.fightScope==='trash'?'hidden':''}"><span class="fight-filter-label">Bosse auswählen:</span><button type="button" onclick="setBossSelection('all')">Alle auswählen</button><button type="button" onclick="setBossSelection('none')">Auswahl aufheben</button><span class="boss-filter-divider"></span>${bossButtons||'<span class="sub">Keine Bosskämpfe erkannt.</span>'}</div><div class="mobile-boss-filter"><div><span>Bosskampf wählen</span><span>${encounters.filter(f=>f.kill!==false).length} von ${encounters.length} erledigt</span></div><div class="mobile-boss-carousel"><button type="button" class="fight-chip ${state.fightScope==='all'&&!chosen.length?'active':''}" onclick="selectFightScope('all')">Gesamter Raid (${encounters.filter(f=>f.kill!==false).length}/${encounters.length})</button>${bossButtons}</div></div>`;
     }
     function selectFightScope(scope){state.fightScope=scope;state.selectedFightIds=[];renderDetail();}
     function toggleBossFight(id){state.selectedFightIds=state.selectedFightIds.includes(id)?[]:[id];state.fightScope="boss";renderDetail();}
@@ -525,6 +533,8 @@
     }
     function renderList(){
       state.mode="list";
+      document.body.classList.remove("has-analysis-detail","rpb-detail","mobile-menu-open");
+      ["mobileAnalysisHeader","compactAnalysisHeader","mobileAnalysisNav","raidClearBadge"].forEach(id=>document.getElementById(id).classList.add("hidden"));
       document.querySelector(".filters")?.classList.remove("hidden");
       document.getElementById("detailView").classList.add("hidden");
       document.getElementById("listView").classList.remove("hidden");
@@ -574,6 +584,7 @@
     }
     function renderDetail(){
       const report=state.detail?.report||state.detail?.analysis||{};
+      document.body.classList.add("has-analysis-detail");
       document.querySelector(".filters")?.classList.add("hidden");
       document.getElementById("pageTitle").textContent=report.title||"Raid-Auswertung";
       document.getElementById("pageLead").textContent="Warcraft-Logs-Auswertung für Leistung, Fähigkeiten und Raidvorbereitung.";
@@ -584,6 +595,7 @@
         state.detail?.cla?'<span class="badge cla">Ausrüstung & Vorbereitung</span>':'',
         (state.detail?.rpb?.generatedAt||state.detail?.cla?.generatedAt)?`<span class="badge updated-badge">Aktualisiert ${html(new Date(state.detail?.rpb?.generatedAt||state.detail?.cla?.generatedAt).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))}</span>`:''
       ].filter(Boolean).join("");
+      renderStitchHeaders(report);
       const players=allPlayers();
       const sections=state.sections.length;
       const source=state.detail?.rpb||state.detail?.cla||{};
@@ -598,13 +610,19 @@
       const selectedBosses=state.selectedFightIds.length>0;
       const bossKills=selectedBosses?encounters.filter(fight=>fight.kill!==false).length:Number(report.bossKills??source.report?.bossKills??encounters.filter(fight=>fight.kill!==false).length);
       const bossTotal=selectedBosses?encounters.length:Number(report.totalBosses||source.report?.totalBosses||allEncounters.length);
-      document.getElementById("overviewCards").innerHTML=[
-        ["Bosse",state.fightScope==="trash"?"0 / 0":`${bossKills} / ${bossTotal||"–"}`],
-        [state.fightScope==="all"&&!state.selectedFightIds.length?"Gesamter Raid":"Dauer der Auswahl",durationDisplay(duration)],
-        ["Spieler",players.length],
-        ["Tode",deaths],
-        ["Worldbuffs",`${worldBuffPercent} %`]
-      ].map(([label,value])=>`<div class="overview-card"><span>${html(label)}</span><strong>${html(value)}</strong></div>`).join("");
+      const clearBadge=document.getElementById("raidClearBadge");
+      const complete=bossTotal>0&&bossKills>=bossTotal&&state.fightScope!=="trash";
+      clearBadge.textContent=`${bossKills}/${bossTotal} Clear`;
+      clearBadge.classList.toggle("hidden",!complete);
+      const fightTime=selectedFights().reduce((sum,fight)=>sum+Number(fight.durationMs||0),0);
+      const kpis=[
+        ["Bosse",state.fightScope==="trash"?"0 / 0":`${bossKills} / ${bossTotal||"–"}`,complete?"100% CLEAR":"FORTSCHRITT",complete?"Alle Bosse besiegt":"Erkannte Bosskämpfe"],
+        [state.fightScope==="all"&&!selectedBosses?"Gesamter Raid":"Dauer der Auswahl",durationDisplay(duration),"DAUER",fightTime?`Kampfzeit: ${durationDisplay(fightTime)}`:"Zeitraum des Berichts"],
+        ["Spieler",players.length,"IM RAID","Spieler in der Auswahl"],
+        ["Tode",deaths,"GESAMT",deaths===0?"Keine Tode erkannt":"In der aktuellen Auswahl"],
+        ["Worldbuffs",`${worldBuffPercent} %`,"DURCHSCHNITT","Anteil der erkannten Worldbuffs"]
+      ];
+      document.getElementById("overviewCards").innerHTML=kpis.map(([label,value,tag,note],index)=>`<div class="overview-card"><div class="kpi-heading"><span>${html(label)}</span><small class="kpi-tag">${html(tag)}</small></div><strong>${html(value)}</strong><p class="kpi-note">${html(note)}</p>${index===4?`<span class="mobile-worldbuff-ring" style="--buff-pct:${Math.max(0,Math.min(100,worldBuffPercent))}%"><span>${worldBuffPercent}%</span></span>`:''}</div>`).join("");
       renderFightFilter();
       renderDetailNav();
       renderDashboard(source,report,players,duration,deaths);
@@ -613,13 +631,47 @@
     function renderDetailNav(){
       const items=[["overview","Übersicht"],["summary","Raidgruppe"],["performance","Leistung"],["rpb","RPB"],["cla","CLA"],["preparation","Flasks & Consumables"],["gear","Ausrüstung"],["deaths","Tode"]];
       const duration=selectedFightDurationMs();const scope=isReportWideView()?"Gesamter Bericht":state.selectedFightIds.length?`${state.selectedFightIds.length} Bosse`:state.fightScope==="boss"?"Alle Bosskämpfe":state.fightScope==="trash"?"Trash":"Gesamter Raid";document.getElementById("detailNav").innerHTML=items.map(([id,label])=>{const explanation=id==="rpb"?'RPB: Rollen- und Klassenleistung aus Warcraft Logs':id==="cla"?'CLA: Ausrüstung, Buffs und weitere Logprüfungen':'';return`<button class="${state.detailMode===id?"active":""}" type="button" ${explanation?`title="${attr(explanation)}" aria-label="${attr(explanation)}"`:''} onclick="selectDetailMode('${id}')">${label}</button>`;}).join("")+`<span class="nav-selection">${html(scope)}${isReportWideView()?'':` · ${html(durationDisplay(duration))}`}</span>`;
+      document.getElementById("detailNav").insertAdjacentHTML('beforeend',`<a class="mobile-extra-link" href="raid-analyse.html?guild=${encodeURIComponent(currentGuild)}">Zur Übersicht</a><a class="mobile-extra-link" href="gildenleitung.html?guild=${encodeURIComponent(currentGuild)}">Gildenleitung</a>`);
+      const mobileNav=document.getElementById("mobileAnalysisNav");
+      mobileNav.classList.remove("hidden");
+      mobileNav.innerHTML=[["overview","Übersicht","◫"],["damage","DPS","↗"],["healing","Heilung","+"],["deaths","Tode","◇"],["more","Mehr","•••"]].map(([id,label,icon])=>{
+        const active=id==="overview"?state.detailMode==="overview"&&!['damage','healing'].includes(state.overviewCategory):id==="damage"||id==="healing"?state.detailMode==="overview"&&state.overviewCategory===id:id==="deaths"?state.detailMode==="deaths":state.detailMode!=="overview"&&state.detailMode!=="deaths";
+        return `<button type="button" class="${active?'active':''}" aria-pressed="${active}" onclick="selectMobileAnalysis('${id}')"><span aria-hidden="true">${analysisIcon(id)}</span>${label}</button>`;
+      }).join("");
       const overview=state.detailMode==="overview";
       document.getElementById("dashboardView").classList.toggle("hidden",!overview);
       document.getElementById("overviewCards").classList.toggle("hidden",!overview);
       document.getElementById("analysisDataView").classList.toggle("hidden",overview);
     }
+    function analysisIcon(name){
+      const paths={user:'<circle cx="12" cy="8" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',reload:'<path d="M3 4v5h5M21 20v-5h-5M3.6 9a9 9 0 0 1 15-5M20.4 15a9 9 0 0 1-15 5"/>',shield:'<path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 10 4 3 4-3"/>',overview:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',damage:'<path d="m14 3 7 0 0 7-12 12M21 3 4 20M3 14l7 7M2 22l3-3"/>',healing:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/>',deaths:'<path d="M8 19H6v-3a9 9 0 1 1 12 0v3h-2v3H8Z"/><circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/><path d="m12 15-1 2h2Z"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'};
+      return `<svg class="analysis-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.overview}</svg>`;
+    }
+    function renderStitchHeaders(report){
+      const rpb=state.detailMode==="rpb";
+      document.body.classList.toggle("rpb-detail",rpb);
+      const guildName=document.querySelector('.top .kicker')?.textContent||currentGuild;
+      const title=report.title||raidDisplayName(raidName(report));
+      const raid=raidName(report),duration=durationDisplay(selectedFightDurationMs());
+      const back=`raid-analyse.html?guild=${encodeURIComponent(currentGuild)}`;
+      document.getElementById("compactAnalysisHeader").classList.toggle("hidden",!rpb);
+      document.getElementById("compactAnalysisHeader").innerHTML=`<a href="${back}">← Zurück zur Reportliste</a><span class="compact-raid-badge">${html(raid)}</span><strong>Raid-Auswertung</strong><span class="compact-raid-title">· ${html(raidDisplayName(raid))}</span><span class="compact-duration">Gesamter Raid: <b>${html(duration)}</b></span><button type="button" onclick="reload()">↻ Neu laden</button>`;
+      const kills=Number(report.bossKills??state.detail?.rpb?.report?.bossKills??0),total=Number(report.totalBosses??state.detail?.rpb?.report?.totalBosses??0);
+      const logo=document.querySelector('.analysis-guild-logo img')?.getAttribute('src');
+      const mark=logo?`<img src="${attr(logo)}" alt="">`:analysisIcon('shield');
+      const stamp=state.detail?.rpb?.generatedAt||state.detail?.cla?.generatedAt;
+      const mobileHeader=document.getElementById("mobileAnalysisHeader");mobileHeader.classList.remove("hidden");
+      mobileHeader.innerHTML=`<div class="mobile-header-main"><div class="mobile-header-mark">${mark}</div><div class="mobile-header-title"><div><span>${html(guildName)}</span><small>${html(raid)}</small></div><h1>${html(title)}</h1>${total>0&&kills>=total?`<span class="mobile-clear">${kills}/${total} Clear</span>`:''}</div><button type="button" aria-label="Meine Leistung" title="Meine Leistung" onclick="openMyRaidPerformance()">${analysisIcon('user')}</button><button type="button" aria-label="Analyse aktualisieren" title="Analyse aktualisieren" onclick="reload()">${analysisIcon('reload')}</button></div><div class="mobile-header-meta"><span>${html(dateDisplay(report.raidDate||report.raid_date))} · Raid: <b>${html(duration)}</b></span>${stamp?`<span>Stand: ${html(new Date(stamp).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}))}</span>`:''}</div>`;
+    }
+    document.addEventListener('analysis-brand-ready',()=>{if(state.detail)renderStitchHeaders(state.detail.report||state.detail.analysis||{});});
+    function selectMobileAnalysis(mode){
+      if(mode==="more"){document.body.classList.toggle("mobile-menu-open");return;}
+      if(mode==="damage"||mode==="healing"){state.overviewCategory=mode;selectDetailMode("overview");}
+      else selectDetailMode(mode);
+    }
     function selectDetailMode(mode){
       if(["rpb","cla"].includes(state.detailMode)&&state.activeSection)state.modeSections[state.detailMode]=state.activeSection;
+      document.body.classList.remove("mobile-menu-open");
       state.detailMode=mode==="players"?"performance":(mode||"overview");
       if(state.modeSections[state.detailMode])state.activeSection=state.modeSections[state.detailMode];
       if(mode!=="overview"){
@@ -652,15 +704,24 @@
       if(category==="resources")return overviewSectionNumber(player.name,/general|casts/i,/mana|rage|energy|ressource/i);
       return 0;
     }
-    function selectOverviewCategory(category){state.overviewCategory=category||"damage";renderDetail();}
+    function selectOverviewCategory(category){state.overviewCategory=category||"damage";state.overviewShowAll=false;renderDetail();}
     function toggleOverviewMetrics(){state.overviewMoreMetrics=!state.overviewMoreMetrics;renderDetail();}
     function setOverviewSort(key){if(state.overviewSortKey===key)state.overviewSortDirection=state.overviewSortDirection==="desc"?"asc":"desc";else{state.overviewSortKey=key;state.overviewSortDirection=key==="name"||key==="class"?"asc":"desc";}renderDetail();}
     function setOverviewFilter(type,value=""){state.overviewFilterType=type||"all";state.overviewFilterValue=value||"";renderDetail();}
+    function setOverviewSearch(value){
+      state.overviewSearch=value;state.overviewShowAll=false;
+      const position=document.getElementById("overviewSearch")?.selectionStart;
+      renderDetail();
+      const input=document.getElementById("overviewSearch");input?.focus();
+      if(position!=null)try{input.setSelectionRange(position,position);}catch(_){}
+    }
+    function toggleOverviewPlayers(){state.overviewShowAll=!state.overviewShowAll;renderDetail();}
     function renderOverviewControls(players){
       const root=document.getElementById("overviewControls");if(!root)return players;
       const classes=CLASS_ORDER.filter(cls=>cls!=="Unknown"&&players.some(player=>player.className===cls));
       const playerOptions=players.slice().sort((a,b)=>a.name.localeCompare(b.name,"de"));
-      root.innerHTML=`<nav class="overview-metrics">${OVERVIEW_CATEGORIES.map(([id,label])=>`<button class="${state.overviewCategory===id?'active':''}" type="button" onclick="selectOverviewCategory('${id}')">${html(label)}</button>`).join("")}</nav><div class="overview-subfilters"><span class="fight-filter-label">Anzeigen</span><button class="${state.overviewFilterType==='all'?'active':''}" type="button" onclick="setOverviewFilter('all')">Alle Spieler</button><select aria-label="Klasse auswählen" onchange="setOverviewFilter('class',this.value)"><option value="">Klasse auswählen</option>${classes.map(cls=>`<option value="${attr(cls)}" ${state.overviewFilterType==='class'&&state.overviewFilterValue===cls?'selected':''}>${html(CLASS_LABEL[cls]||cls)}</option>`).join("")}</select><select aria-label="Spieler auswählen" onchange="setOverviewFilter('player',this.value)"><option value="">Spieler auswählen</option>${playerOptions.map(player=>`<option value="${attr(player.name)}" ${state.overviewFilterType==='player'&&state.overviewFilterValue===player.name?'selected':''}>${html(player.name)} · ${html(CLASS_LABEL[player.className]||player.className)}</option>`).join("")}</select></div>`;
+      root.innerHTML=`<nav class="overview-metrics">${OVERVIEW_CATEGORIES.map(([id,label])=>`<button class="${state.overviewCategory===id?'active':''}" type="button" onclick="selectOverviewCategory('${id}')">${html(label)}</button>`).join("")}</nav><div class="overview-subfilters"><input id="overviewSearch" type="search" aria-label="Spieler suchen" placeholder="Spieler suchen …" value="${attr(state.overviewSearch)}" oninput="setOverviewSearch(this.value)"><span class="fight-filter-label">Anzeigen</span><button class="${state.overviewFilterType==='all'?'active':''}" type="button" onclick="setOverviewFilter('all')">Alle Spieler</button><select aria-label="Klasse auswählen" onchange="setOverviewFilter('class',this.value)"><option value="">Klasse auswählen</option>${classes.map(cls=>`<option value="${attr(cls)}" ${state.overviewFilterType==='class'&&state.overviewFilterValue===cls?'selected':''}>${html(CLASS_LABEL[cls]||cls)}</option>`).join("")}</select><select aria-label="Spieler auswählen" onchange="setOverviewFilter('player',this.value)"><option value="">Spieler auswählen</option>${playerOptions.map(player=>`<option value="${attr(player.name)}" ${state.overviewFilterType==='player'&&state.overviewFilterValue===player.name?'selected':''}>${html(player.name)} · ${html(CLASS_LABEL[player.className]||player.className)}</option>`).join("")}</select></div>`;
+      if(state.overviewSearch.trim())players=players.filter(player=>key(player.name).includes(key(state.overviewSearch)));
       if(state.overviewFilterType==="class"&&state.overviewFilterValue)return players.filter(player=>player.className===state.overviewFilterValue);
       if(state.overviewFilterType==="player"&&state.overviewFilterValue)return players.filter(player=>player.name===state.overviewFilterValue);
       return players;
@@ -697,18 +758,39 @@
     }
     function renderDashboard(source,report,players,duration,deaths){
       const bossEncounters=visibleBossEncounters();const encounters=state.selectedFightIds.length?bossEncounters.filter(fight=>state.selectedFightIds.includes(Number(fight.id))):(state.fightScope==="trash"?[]:bossEncounters);
+      const raidPlayers=players;
       players=renderOverviewControls(players);
       const seconds=Math.max(1,duration/1000);
       const performancePlayers=state.overviewCategory==="overhealPercent"?players.filter(player=>/^(?:heiler|healer)$/.test(key(roleLabel(player)))):players;
       const values=performancePlayers.map(player=>({player,dps:Math.round(Number(player.damageDone||0)/seconds),hps:Math.round(Number(player.healingDone||0)/seconds),amount:overviewMetric(player,state.overviewCategory)}));
       const maxDps=Math.max(1,...values.map(item=>item.dps));const maxHps=Math.max(1,...values.map(item=>item.hps));
       const totalAmount=values.reduce((sum,item)=>sum+Math.max(0,item.amount),0);values.forEach(item=>item.share=totalAmount>0?item.amount*100/totalAmount:0);const sortValue=(item,key)=>({name:item.player.name,class:CLASS_LABEL[item.player.className]||item.player.className||"",amount:item.amount,share:item.share,dps:item.dps,hps:item.hps,activity:Number(item.player.activityPercent||0),deaths:Number(item.player.deaths||0)})[key];const direction=state.overviewSortDirection==="asc"?1:-1;const sorted=values.sort((a,b)=>{const left=sortValue(a,state.overviewSortKey),right=sortValue(b,state.overviewSortKey);const compared=typeof left==="string"?left.localeCompare(right,"de"):Number(left||0)-Number(right||0);return compared*direction||a.player.name.localeCompare(b.player.name,"de");});const highestAmount=Math.max(0,...sorted.map(item=>Number(item.amount||0)));const categoryLabel=OVERVIEW_CATEGORIES.find(item=>item[0]===state.overviewCategory)?.[1]||"Wert";const noData=!sorted.some(item=>item.amount>0);const sortHead=(key,label)=>`<button class="table-sort ${state.overviewSortKey===key?'active':''}" type="button" onclick="setOverviewSort('${key}')">${html(label)}${state.overviewSortKey===key?` ${state.overviewSortDirection==='asc'?'↑':'↓'}`:''}</button>`;
-      document.getElementById("playerPerformanceTable").innerHTML=`<thead><tr><th>${sortHead('name','Spieler')}</th><th>${sortHead('class','Klasse')}</th><th>${sortHead('amount',categoryLabel)}</th><th>${sortHead('share','Anteil')}</th><th>${sortHead('dps','DPS')}</th><th>${sortHead('hps','HPS')}</th><th>${sortHead('activity','Aktiv')}</th><th>${sortHead('deaths','Tode')}</th></tr></thead><tbody>${sorted.map(({player,dps,hps,amount,share})=>{const relativeWidth=highestAmount>0?Math.max(0,Number(amount||0))*96/highestAmount:0;const amountText=amount>0?(state.overviewCategory==='abilities'||state.overviewCategory==='overhealPercent'?`${Math.round(amount)} %`:shortNumber(amount)):'–';return `<tr><td><span class="overview-table-name"><img src="${attr(CLASS_ICON[player.className]||CLASS_ICON.Unknown)}" alt=""><button class="clickable-player" style="color:${CLASS_COLOR[player.className]||"#e2e8f0"}" type="button" onclick="openPlayerProfile(decodeURIComponent('${encodeURIComponent(player.name)}'))">${html(player.name)}</button></span></td><td>${html(CLASS_LABEL[player.className]||player.className||"–")}</td><td>${amountText}</td><td class="share-cell"><span class="share-label"><span>${share>0?share.toFixed(2).replace('.',',')+' %':'–'}</span></span><span class="share-bar"><i style="--bar-color:${CLASS_COLOR[player.className]||'#d8ad45'};width:${Math.min(96,relativeWidth)}%"></i></span></td><td>${dps?shortNumber(dps):'–'}</td><td>${hps?shortNumber(hps):'–'}</td><td>${Number(player.activityPercent||0)>0?Math.round(Number(player.activityPercent))+' %':'–'}</td><td>${Number(player.deaths||0)||'–'}</td></tr>`}).join("")}${noData?`<tr><td colspan="8"><div class="status">Für „${html(categoryLabel)}“ liegen in diesem Bericht noch keine belastbaren Einzelspielerwerte vor.</div></td></tr>`:""}</tbody>`;
+      const shown=state.overviewShowAll?sorted:sorted.slice(0,10);
+      const amountLabel=amount=>amount>0?(['abilities','overhealPercent'].includes(state.overviewCategory)?`${Math.round(amount)} %`:shortNumber(amount)):'–';
+      const shareLabel=share=>share>0?share.toFixed(2).replace('.',',')+' %':'–';
+      const playerButton=player=>`<button class="clickable-player" style="color:${CLASS_COLOR[player.className]||'#e2e8f0'}" type="button" onclick="openPlayerProfile(decodeURIComponent('${attr(encodeURIComponent(player.name))}'))">${html(player.name)}</button>`;
+      const bar=(player,amount)=>`<span class="share-bar"><i style="--bar-color:${CLASS_COLOR[player.className]||'#38bdf8'};width:${highestAmount>0?Math.min(100,Math.max(0,amount)*100/highestAmount):0}%"></i></span>`;
+      document.getElementById("playerPerformanceTable").innerHTML=`<thead><tr><th scope="col">#</th>${[['name','Spieler'],['class','Klasse'],['amount',categoryLabel],['share','Anteil'],['dps','DPS'],['hps','HPS'],['activity','Aktiv'],['deaths','Tode']].map(([name,label])=>`<th scope="col" ${state.overviewSortKey===name?`aria-sort="${state.overviewSortDirection==='asc'?'ascending':'descending'}"`:''}>${sortHead(name,label)}</th>`).join('')}</tr></thead><tbody>${shown.map(({player,dps,hps,amount,share},index)=>`<tr><td class="rank-cell">${index+1}</td><td><span class="overview-table-name"><img src="${attr(CLASS_ICON[player.className]||CLASS_ICON.Unknown)}" alt="">${playerButton(player)}</span></td><td><span class="class-tag" style="--class-color:${CLASS_COLOR[player.className]||'#94a3b8'}">${html(CLASS_LABEL[player.className]||player.className||"–")}</span></td><td class="amount-cell">${amountLabel(amount)}</td><td class="share-cell"><span class="share-label">${shareLabel(share)}</span>${bar(player,amount)}</td><td>${dps?shortNumber(dps):'–'}</td><td>${hps?shortNumber(hps):'–'}</td><td>${Math.round(Number(player.activityPercent||0))} %</td><td><span class="${Number(player.deaths||0)>0?'death-badge':''}">${Number(player.deaths||0)||'–'}</span></td></tr>`).join('')}${noData?`<tr><td colspan="9"><div class="status">${sorted.length?`Für „${html(categoryLabel)}“ liegen keine belastbaren Einzelspielerwerte vor.`:'Keine Spieler für diese Auswahl gefunden.'}</div></td></tr>`:''}</tbody>`;
+      document.getElementById("mobilePlayerPerformance").innerHTML=`<div class="mobile-sort"><span>${html(categoryLabel)}</span><button type="button" onclick="setOverviewSort('amount')">Wert ${state.overviewSortDirection==='asc'?'↑':'↓'}</button></div>${shown.map(({player,dps,hps,amount,share},index)=>`<article class="mobile-player-card"><div class="mobile-player-main"><span class="player-rank rank-${index+1}">#${index+1}</span><div class="mobile-player-name">${playerButton(player)}<small>${html(CLASS_LABEL[player.className]||player.className||"–")}</small></div><div class="mobile-player-amount"><strong>${amountLabel(amount)}</strong><small>${shareLabel(share)}</small></div></div>${bar(player,amount)}<div class="mobile-player-stats"><span>${shortNumber(dps)} DPS</span><span>${shortNumber(hps)} HPS</span><span>${Math.round(Number(player.activityPercent||0))}% Aktiv</span><span class="${Number(player.deaths||0)>0?'has-deaths':''}">${Number(player.deaths||0)} Tode</span></div></article>`).join('')}${noData?`<div class="status">${sorted.length?'Keine belastbaren Werte für diese Messung.':'Keine Spieler für diese Auswahl gefunden.'}</div>`:''}`;
+      document.getElementById("playerPerformanceFooter").innerHTML=`<span aria-live="polite">${shown.length?`Zeige 1–${shown.length}`:'0'} von ${sorted.length} Spielern</span>${sorted.length>10?`<button type="button" onclick="toggleOverviewPlayers()">${state.overviewShowAll?'Weniger anzeigen':`Alle ${sorted.length} Spieler anzeigen`} <span aria-hidden="true">⌄</span></button>`:''}`;
       const timelineCategories=new Set(["damage","damageTaken","healing","overhealPercent","threat"]);const threatCard=document.getElementById("threatDetailCard"),threatRoot=document.getElementById("threatDetails");if(threatCard&&threatRoot){const showTimeline=timelineCategories.has(state.overviewCategory);threatCard.classList.toggle("hidden",!showTimeline);if(showTimeline)renderThreatAnalysis(threatRoot,source,bossEncounters,state.overviewCategory);}
-      const firstEncounter=encounters[0],lastEncounter=encounters[encounters.length-1];
-      const durationLabel=(state.fightScope!=="all"||state.selectedFightIds.length)?"Dauer der Auswahl":"Gesamter Raid";document.getElementById("raidSummary").innerHTML=[["Raid",report.raid||"–"],["Datum",dateDisplay(report.raidDate||report.raid_date)],["Erster Boss",firstEncounter?.name||"–"],["Letzter Boss",lastEncounter?.name||"–"],[durationLabel,durationDisplay(duration)],["Tode",deaths]].map(([label,value])=>`<div class="summary-item"><span>${html(label)}</span><strong>${html(value)}</strong></div>`).join("");
-      const counts={};players.forEach(player=>counts[player.className||"Unknown"]=(counts[player.className||"Unknown"]||0)+1);document.getElementById("classDistribution").innerHTML=`<div class="class-chart"><div style="position:relative"><div class="donut"></div><span class="donut-value" style="inset:34px 0 0;text-align:center">${players.length}</span></div><div class="class-legend">${Object.entries(counts).map(([cls,count])=>`<span style="--class-color:${CLASS_COLOR[cls]||"#94a3b8"}">${html(CLASS_LABEL[cls]||cls)} · ${count}</span>`).join("")}</div></div>`;
-      const lowActivity=players.filter(player=>Number(player.activityPercent||0)>0&&Number(player.activityPercent)<80).length;const withoutBuffs=players.filter(player=>Number(player.worldBuffCount||0)===0).length;const repeatedDeaths=players.filter(player=>Number(player.deaths||0)>=2).length;const notices=[[withoutBuffs,`${withoutBuffs} Spieler ohne erkannte Worldbuffs.`],[lowActivity,`${lowActivity} Spieler unter 80 % Aktivität.`],[repeatedDeaths,`${repeatedDeaths} Spieler mindestens zweimal gestorben.`]];document.getElementById("dashboardWarnings").innerHTML=notices.filter(([count])=>count>0).map(([count,text],index)=>`<div class="notice ${index===2?"bad":""}"><span class="notice-mark">${index===2?"▲":"●"}</span><span>${html(text)}</span></div>`).join("")||'<div class="notice"><span class="notice-mark">✓</span><span>Keine Auffälligkeiten erkannt.</span></div>';
+      const kills=encounters.filter(fight=>fight.kill!==false&&Number(fight.durationMs)>0);
+      const fastest=kills.slice().sort((a,b)=>a.durationMs-b.durationMs)[0];
+      const critical=encounters.slice().sort((a,b)=>Number(b.deaths||0)-Number(a.deaths||0))[0];
+      const mvp=raidPlayers.slice().sort((a,b)=>Number(b.damageDone||0)-Number(a.damageDone||0))[0];
+      document.getElementById("raidSummary").innerHTML=[
+        ["Schnellster Kill",fastest?`${fastest.name} (${durationDisplay(fastest.durationMs)})`:"–"],
+        ["Meiste Tode",critical&&Number(critical.deaths)>0?`${critical.name} (${critical.deaths})`:"Keine Tode bei Bossen"],
+        ["Raid MVP · Schaden",mvp&&Number(mvp.damageDone)>0?`${mvp.name} (${shortNumber(mvp.damageDone)})`:"–"],
+        ["Zeitraum",durationDisplay(duration)]
+      ].map(([label,value])=>`<div class="summary-item"><span>${html(label)}</span><strong>${html(value)}</strong></div>`).join("");
+      const counts={};raidPlayers.forEach(player=>counts[player.className||"Unknown"]=(counts[player.className||"Unknown"]||0)+1);
+      document.getElementById("classDistribution").innerHTML=`<div class="class-distribution-list">${Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([cls,count])=>`<div class="class-distribution-row" style="--class-color:${CLASS_COLOR[cls]||'#94a3b8'}"><div><span>${html(CLASS_LABEL[cls]||cls)}</span><strong>${Math.round(count*100/Math.max(1,raidPlayers.length))}% <small>(${count} Spieler)</small></strong></div><span class="class-distribution-track"><i style="width:${count*100/Math.max(1,raidPlayers.length)}%"></i></span></div>`).join('')}</div>`;
+      const lowActivity=raidPlayers.filter(player=>Number(player.activityPercent||0)>0&&Number(player.activityPercent)<80).length;
+      const withoutBuffs=raidPlayers.filter(player=>Number(player.worldBuffCount||0)===0).length;
+      const repeatedDeaths=raidPlayers.filter(player=>Number(player.deaths||0)>=2).length;
+      const notices=[[withoutBuffs,"Worldbuffs",`${withoutBuffs} Spieler ohne erkannte Worldbuffs.`],[lowActivity,"Aktivität",`${lowActivity} Spieler unter 80 % Aktivität.`],[repeatedDeaths,"Wiederholte Tode",`${repeatedDeaths} Spieler mindestens zweimal gestorben.`]];
+      document.getElementById("dashboardWarnings").innerHTML=notices.filter(([count])=>count>0).map(([count,title,text])=>`<div class="notice ${title==='Wiederholte Tode'?'bad':''}"><span class="notice-mark">●</span><span><strong>${html(title)}</strong><span>${html(text)}</span></span></div>`).join('')||'<div class="notice good"><span class="notice-mark">✓</span><span>Keine Auffälligkeiten erkannt.</span></div>';
     }
     function playerSectionMetric(playerName,sectionPattern,rowPattern){
       for(const section of state.sections){
@@ -801,7 +883,7 @@ function renderClaGearModule(root,sections,section){const problems=section.id===
       ["abilities","","Fähigkeiten"],["cooldowns","","Klassen-Cooldowns"],
       ["statistics","","Kampfstatistik"],["efficiency","","Cooldown-Effizienz"]
     ];
-    function rpbCategoryMenu(){return `<nav class="module-menu rpb-category-menu">${RPB_CATEGORIES.map(([id,icon,label])=>`<button class="${state.rpbCategory===id?'active':''}" type="button" onclick="selectRpbCategory('${id}')"><span>${icon}</span><span>${html(label)}</span></button>`).join("")}</nav>`;}
+    function rpbCategoryMenu(){return `<nav class="module-menu rpb-category-menu" aria-label="RPB-Module"><h3>RPB Module</h3>${RPB_CATEGORIES.map(([id,icon,label])=>`<button class="${state.rpbCategory===id?'active':''}" type="button" onclick="selectRpbCategory('${id}')"><span>${icon}</span><span>${html(label)}</span></button>`).join("")}</nav>`;}
     function spellIconUrl(row){const value=String(row?.icon||"").trim();if(/^https?:\/\//i.test(value))return value;if(value)return `https://wow.zamimg.com/images/wow/icons/large/${value.replace(/\.jpg$/i,"")}.jpg`;return "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";}
     function consumableIconUrl(item){const name=key(`${item?.originalLabel||""} ${item?.label||""}`);const icons=[["major mana potion|erheblicher manatrank","inv_potion_76"],["major healing potion|erheblicher heiltrank","inv_potion_54"],["mighty rage potion|machtiger wuttrank","inv_potion_41"],["greater fire protection|großer feuerschutz","inv_potion_24"],["greater nature protection|großer naturschutz","inv_potion_22"],["greater shadow protection|großer schattenschutz","inv_potion_23"],["greater frost protection|großer frostschutz","inv_potion_20"],["greater arcane protection|großer arkanschutz","inv_potion_83"],["greater stoneshield|großer steinschild","inv_potion_69"],["limited invulnerability|begrenzter unverwundbarkeit","inv_potion_62"],["living action|lebhaften aktion","inv_potion_07"],["free action|freien aktion","inv_potion_04"],["demonic rune|damonische rune","inv_misc_rune_04"],["dark rune|dunkelrune","spell_shadow_sealofkings"],["healthstone|gesundheitsstein","inv_stone_04"],["mana ruby|manarubin","inv_misc_gem_sapphire_02"],["mana gem|manastein","inv_misc_gem_emerald_01"],["thistle tea|disteltee","inv_drink_milk_05"],["runecloth bandage|runenstoffverband","inv_misc_bandage_12"],["flask of the titans","inv_potion_62"],["supreme power","inv_potion_41"],["distilled wisdom","inv_potion_97"],["chromatic resistance","inv_potion_48"],["mageblood elixir|mageblood potion","inv_potion_45"],["major troll's blood elixir|major troll s blood elixir|major troll's blood potion|major troll s blood potion|erheblicher trollbluttrank","inv_potion_80"],["elixir of fortitude","inv_potion_43"],["greater arcane elixir","inv_potion_25"],["elixir of greater firepower|greater firepower","inv_potion_60"],["elixir of superior defense","inv_potion_66"],["elixir of the mongoose","inv_potion_32"],["elixir of shadow power|shadow power","inv_potion_46"],["juju chill","inv_misc_monsterscales_09"],["juju ember","inv_misc_monsterscales_15"],["juju might","inv_misc_monsterscales_07"],["juju power","inv_misc_monsterscales_11"],["winterfall firewater","inv_potion_92"],["weapon enhancement|waffenverstark","inv_potion_100"]];const match=icons.find(([pattern])=>new RegExp(pattern).test(name));return match?`https://wow.zamimg.com/images/wow/icons/large/${match[1]}.jpg`:spellIconUrl(item);}
     function rpbClassName(value){const wanted=key(value);const aliases={krieger:"Warrior",warrior:"Warrior",druid:"Druid",druide:"Druid",druiden:"Druid",paladin:"Paladin",paladine:"Paladin",paladine:"Paladin",rogue:"Rogue",schurke:"Rogue",schurken:"Rogue",hunter:"Hunter",jager:"Hunter",priester:"Priest",priest:"Priest",mage:"Mage",magier:"Mage",warlock:"Warlock",hexenmeister:"Warlock",shaman:"Shaman",schamane:"Shaman",schamanen:"Shaman"};return aliases[wanted]||"";}
@@ -860,7 +942,7 @@ function renderClaGearModule(root,sections,section){const problems=section.id===
       }else{
         content=rpbRowsAsMatrix((general?.rows||[]).filter(row=>row.type!=="header"),players);
       }
-      root.innerHTML=`<div class="module-shell">${rpbCategoryMenu()}<div class="rpb-category-content"><header class="module-heading"><span class="module-tag">RPB</span><h2>${html(title)}</h2><p>Rollen-Leistungsanalyse direkt aus Warcraft Logs.</p></header>${content}</div></div>`;
+      root.innerHTML=`<div class="module-shell">${rpbCategoryMenu()}<div class="rpb-category-content"><header class="module-heading"><span class="module-tag">RPB MODUS</span><h2>${html(title)}</h2><p>Rollen-Leistungsanalyse direkt aus Warcraft Logs · Cast-Frequenzen, Uptime &amp; Overhealing.</p></header>${content}</div></div>`;
     }
     function collapseWorldBuffMatrix(root){const legend=root.querySelector(".worldbuff-legend");const table=root.querySelector(".worldbuff-table-wrap");if(!legend||!table)return;const details=document.createElement("details");details.className="worldbuff-details";details.innerHTML='<summary>Worldbuffs pro Bosskampf anzeigen</summary><div class="worldbuff-details-body"></div>';legend.before(details);const body=details.querySelector(".worldbuff-details-body");body.append(legend,table);}
     function renderAnalysisModule(root,type){
@@ -981,7 +1063,7 @@ function renderClaGearModule(root,sections,section){const problems=section.id===
     }
     function selectSection(id){state.activeSection=id;state.activeClass="";renderDetail();}
     function selectClass(cls){state.activeClass=cls||"";renderClassTabs();renderTable();}
-    function resetAnalysisView(){state.fightScope="all";state.selectedFightIds=[];state.activeClass="";state.rpbSelectedClasses=[];state.overviewCategory="damage";state.overviewFilterType="all";state.overviewFilterValue="";state.overviewMoreMetrics=false;state.overviewSortKey="amount";state.overviewSortDirection="desc";state.rpbCategory="abilities";state.consumableCategory="all";state.threatBossId=0;state.threatTargetId="all";state.threatFocusPlayer="";state.threatSelectedPlayers=[];state.gearShowAll=false;state.gearSearch="";renderDetail();}
+    function resetAnalysisView(){state.fightScope="all";state.selectedFightIds=[];state.activeClass="";state.rpbSelectedClasses=[];state.overviewCategory="damage";state.overviewFilterType="all";state.overviewFilterValue="";state.overviewMoreMetrics=false;state.overviewSearch="";state.overviewShowAll=false;state.overviewSortKey="amount";state.overviewSortDirection="desc";state.rpbCategory="abilities";state.consumableCategory="all";state.threatBossId=0;state.threatTargetId="all";state.threatFocusPlayer="";state.threatSelectedPlayers=[];state.gearShowAll=false;state.gearSearch="";renderDetail();}
     function resetFilters(){document.getElementById("search").value="";document.getElementById("raidFilter").value="";state.activeClass="";renderCurrent();}
     function renderCurrent(){state.mode==="detail"?renderDetail():renderList();}
     function reload(){const button=document.getElementById("reloadButton");if(button)button.disabled=true;state.mode==="detail"?loadDetail(true).catch(error=>{if(button){button.disabled=false;button.textContent="Analyse aktualisieren";}showError(error);}):loadList().then(()=>{if(button)button.disabled=false;}).catch(error=>{if(button)button.disabled=false;showError(error);});}
