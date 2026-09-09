@@ -1,4 +1,4 @@
-import {createAddonRaidImport,planRaidImport,compareAttendance} from '../src/addon-raid-import.js';
+import {createAddonRaidImport,authorizeAddonRaidUpload,validateRaidExport,planRaidImport,compareAttendance} from '../src/addon-raid-import.js';
 import {loadRaidCompletion} from '../src/raid-completion.js';
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {createHmac} from 'node:crypto';
 const {PGlite}=await import(process.env.PGLITE_MODULE||'@electric-sql/pglite');const db=new PGlite();
@@ -54,4 +54,19 @@ assert.equal(Number((await db.query('select points from p0plus_points where char
 const saved=await reviewContext.transferP0PlusPoints({guildId:guild,query:{raid:'naxx',raidId:'RAID',reviewToken:preview.reviewToken,pointEdits:pointEdits.map(e=>({...e,attendanceConfirmed:true}))}});
 assert.equal(saved.awarded,2);assert.equal((await db.query('select * from p0plus_points where character_id=$1',[uuid(10)])).rows.length,0);
 console.log('Imported receipt flows through existing review; unknown attendance requires confirmation; points change only after review.');
+
+
+const alias=validateRaidExport(JSON.stringify({...payload,raidId:raid}),{guild:'test',raidId:'RAID',raidIdAliases:[raid],instanceId:533});assert.equal(alias.raidId,'RAID');
+assert.throws(()=>validateRaidExport(JSON.stringify({...payload,raidId:otherRaid}),{guild:'test',raidId:'RAID',raidIdAliases:[raid],instanceId:533}),/anderen/);
+const evidence=validateRaidExport(JSON.stringify({...payload,buffChecks:[{at:1,players:[]}],trades:[{id:'trade'}],chatEvidence:[{kind:'roll'}]}),{guild:'test',raidId:'RAID',instanceId:533});assert.equal(evidence.trades.length,1);assert.equal(evidence.buffChecks.length,1);
+await db.exec("alter table raids add column lead_pin text;update raids set lead_pin='test-lead' where external_raid_id='RAID'");
+const auth={pool,authorizeMaster:()=>{throw Error('not master');}};
+await authorizeAddonRaidUpload(auth,{id:guild},{raidId:'RAID',leadPin:'test-lead'});
+await authorizeAddonRaidUpload(auth,{id:guild},{raidId:raid,leadPin:'test-lead'});
+await assert.rejects(authorizeAddonRaidUpload(auth,{id:guild},{raidId:'OTHER',leadPin:'test-lead'}));
+await assert.rejects(authorizeAddonRaidUpload(auth,{id:uuid(999)},{raidId:'RAID',leadPin:'test-lead'}));
+await assert.rejects(authorizeAddonRaidUpload(auth,{id:guild},{raidId:'RAID',leadPin:''}));
+await authorizeAddonRaidUpload({pool,authorizeMaster:()=>{}},{id:guild},{raidId:'RAID',leadPin:'master'});
+console.log('Upload: canonical database alias, supplementary evidence and guild/raid-scoped PIN checks passed.');
+
 await db.close();

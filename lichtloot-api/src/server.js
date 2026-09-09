@@ -4,7 +4,7 @@ import { installAddonBetaAdmin } from './addon-beta-admin.js';
 import { installAddonBetaDownload } from './addon-beta-download.js';
 import {createRaidSheetBridge} from './raid-sheet-bridge.js';
 import { addonCalendar } from './addon-calendar.js';
-import { createAddonRaidImport, compareAttendance } from "./addon-raid-import.js";
+import { createAddonRaidImport,authorizeAddonRaidUpload, compareAttendance } from "./addon-raid-import.js";
 import { createPrioReceipts } from "./prio-receipts.js";
 import { installPrioHistory, installP0PlusNotices } from "./prio-history.js";
 import { searchGuildPlayers, publicPlayerPoints, attachPointItems } from "./player-search.js";
@@ -77,7 +77,10 @@ const lichtstatsApiToken = process.env.LICHTSTATS_API_TOKEN || "";
 const analyticsHashSecret = process.env.ANALYTICS_HASH_SECRET || masterCode;
 
 const addonRaidImport = createAddonRaidImport({pool,
-  authorize: (guild,params) => requireRaidleadP0MasterCodeForGuild(guild,params.masterCode),
+  authorize: async (guild,params) => {
+    if(params.action!=='uploadAddonRaid')return requireRaidleadP0MasterCodeForGuild(guild,params.masterCode);
+    return authorizeAddonRaidUpload({pool,authorizeMaster:requireRaidleadP0MasterCodeForGuild},guild,params);
+  },
   resolveTarget: resolveZgPointTarget,writeAudit: insertP0PlusAudit
 });
 async function addonAttendanceReview(guildId,raid,rows){
@@ -31948,8 +31951,8 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({...result, guild:guild.slug});
     }
 
-    if(action === "guildAddonRaidImport"){
-      requireRaidleadP0MasterCodeForGuild(guild,postParams.masterCode);
+    if(action === "guildAddonRaidImport" || action === "uploadAddonRaid"){
+      if(action === "guildAddonRaidImport")requireRaidleadP0MasterCodeForGuild(guild,postParams.masterCode);
       await dkpService.assertPrio(guild.id);
       enforceSecurityRateLimit(req,"addon-raid-import",20,60_000);
       await ensureP0PlusAuditSchema();
