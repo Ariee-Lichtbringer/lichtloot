@@ -167,7 +167,37 @@
     moveStatus();
   }
 
+  function setupSavedSelection() {
+    let pending='', restored='', dirty='';
+    const context=()=>({guild:typeof currentGuildSlug==='function'?currentGuildSlug():'lichtloot',raid:typeof currentRaidId==='undefined'?'':String(currentRaidId),player:byId('playerName')?.value.trim()||'',server:byId('playerServer')?.value.trim()||'',pin:typeof getStoredLichtLootPlayerPin==='function'?getStoredLichtLootPlayerPin():byId('playerPin')?.value.trim()||''});
+    const key=c=>JSON.stringify([c.guild,c.raid,c.player,c.server,c.pin]);
+    const values=()=>JSON.stringify(['p1','p2','p3'].map(id=>byId(id)?.value||''));
+    document.addEventListener('click',e=>{if(e.target.closest('.mini-btn,[data-clear-prio]'))dirty=key(context());},true);
+    ['p1','p2','p3'].forEach(id=>byId(id)?.addEventListener('change',()=>dirty=key(context())));
+    async function restore() {
+      const c=context(),k=key(c);
+      if(!c.raid||!c.player||!c.server||!c.pin||k===pending||k===restored||k===dirty||typeof apiJsonp!=='function')return;
+      const before=values();pending=k;
+      try {
+        const data=await apiJsonp({action:'getPlayerPrioHistory',guild:c.guild,char:c.player,server:c.server,pin:c.pin});
+        if(k!==key(context())||k===dirty||values()!==before||!data.success)return;
+        const entry=(data.entries||[]).find(e=>(String(e.raidId)===c.raid||String(e.externalRaidId)===c.raid)&&String(e.player).toLowerCase()===c.player.toLowerCase()&&String(e.server).toLowerCase()===c.server.toLowerCase());
+        if(!entry)return;
+        ['p1','p2','p3'].forEach(id=>{const field=byId(id),value=String(entry[id]||'');if(!field)return;if(value&&field.options&&!Array.from(field.options).some(o=>o.value===value))field.add(new Option(value,value));field.value=value;});
+        window.p0PlusWasClicked=['ja','true','1'].includes(String(entry.p0Plus).toLowerCase());
+        window.p0WasClicked=window.p0PlusWasClicked||['ja','true','1'].includes(String(entry.p0Selected).toLowerCase());
+        restored=k;
+        if(typeof renderSelectedPrioPreviews==='function')renderSelectedPrioPreviews();
+        if(typeof updateActiveButtons==='function')updateActiveButtons();
+      } catch {} finally {if(pending===k)pending='';}
+    }
+    ['loadPlayerData','loadPublishedPrios'].forEach(name=>{const original=window[name];if(typeof original!=='function')return;window[name]=function(...args){const result=original.apply(this,args);Promise.resolve(result).then(restore,()=>{});return result;};});
+    const table=byId('publishedTable');if(table)new MutationObserver(restore).observe(table,{childList:true,subtree:true});
+    restore();
+  }
+
   function setup() {
+    setupSavedSelection();
     document.body.classList.add('loot-redesign');
     setupSelection();
     setupReceipt();
