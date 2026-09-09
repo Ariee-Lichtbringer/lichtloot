@@ -1,3 +1,4 @@
+import { installRaidArchive } from './raid-archive.js';
 import { installAddonBetaAdmin } from './addon-beta-admin.js';
 import { installAddonBetaDownload } from './addon-beta-download.js';
 import {createRaidSheetBridge} from './raid-sheet-bridge.js';
@@ -631,6 +632,8 @@ app.get("/api/dashboard", async (req, res, next) => {
     next(error);
   }
 });
+
+installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.

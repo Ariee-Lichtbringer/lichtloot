@@ -3235,6 +3235,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span id="logsNavLabel">Logs & Analysen</span></button>
+          <button class="start-side-link" type="button" onclick="openRaidArchive()"><span aria-hidden="true">▤</span><span>Raidarchiv</span></button>
           <button class="start-side-link" data-start-nav="raidRules" onclick="toggleRaidRulesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span><span id="raidRulesArrow">›</span></button>
           <div id="raidRulesDrawer" class="prio-pages-drawer hidden">
             <button class="prio-page-link" onclick="showRaidRules('mc')"><span>Molten Core</span><span>MC</span></button>
@@ -10167,5 +10168,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <script src="/guildloot-personal-export.js?v=20260908-1"></script>
 <script src="/guildloot-home-export.js?v=20260908-1"></script>
 <script src="/addon-beta-download.js?v=20260908-2"></script>
+<script src="raid-archive.js"></script>
 </body>
 </html>
