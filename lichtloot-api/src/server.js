@@ -633,7 +633,7 @@ app.get("/api/dashboard", async (req, res, next) => {
   }
 });
 
-installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios});
+installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:getRaidAnalysisItemMetadataByIds});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
