@@ -17,10 +17,11 @@
   return [...needed.values()].sort((a,b)=>a.name.localeCompare(b.name,'de'));
  }
  let pending;
- function load(){if(!pending)pending=fetch('/data/profession-guides.json?v=20260907-1').then(r=>{if(!r.ok)throw Error('Der Berufe-Guide konnte nicht geladen werden.');return r.json();}).catch(e=>{pending=null;throw e;});return pending;}
+ function load(){if(!pending)pending=fetch('/data/profession-guides.json?v=20260909-icons').then(r=>{if(!r.ok)throw Error('Der Berufe-Guide konnte nicht geladen werden.');return r.json();}).catch(e=>{pending=null;throw e;});return pending;}
  let dialog,select,skill,body,opener;
  function close(){dialog?.close();if(opener?.isConnected)opener.focus();}
- function materials(rows){const list=el('ul','','profession-materials');for(const r of rows){const li=el('li');li.append(el('strong',r.quantity.toLocaleString('de-DE')+' × '),el('span',r.name));list.append(li);}return list;}
+ function icon(record){const img=el('img','','profession-item-icon');img.alt='';img.width=28;img.height=28;img.loading='lazy';const name=/^[a-z0-9_]+$/i.test(record?.icon||'')?record.icon:'inv_misc_questionmark';img.src='https://wow.zamimg.com/images/wow/icons/medium/'+name+'.jpg';img.addEventListener('error',()=>{img.src='https://wow.zamimg.com/images/wow/icons/medium/inv_misc_questionmark.jpg';},{once:true});return img;}
+ function materials(rows){const list=el('ul','','profession-materials');for(const r of rows){const li=el('li');li.append(icon(r),el('strong',r.quantity.toLocaleString('de-DE')+' × '),el('span',r.name));list.append(li);}return list;}
  async function render(){
   const requested=select.value;body.replaceChildren(el('p','Guide wird geladen …'));
   try{
@@ -39,7 +40,7 @@
    const list=el('div','','profession-steps');
    for(const step of steps){
     const card=el('details','','profession-step');card.open=step===steps[0];
-    card.append(el('summary',step.from+'–'+step.to+' · '+(step.recipe?.name||step.title)));
+    const heading=el('summary');if(step.recipe)heading.append(icon(step.recipe));heading.append(el('span',step.from+'–'+step.to+' · '+(step.recipe?.name||step.title)));card.append(heading);
     if(step.recipe){card.append(el('p','Planmenge: '+step.crafts+' Herstellungsversuche'),materials(step.materials));if(steps.some(next=>(next.materials||[]).some(m=>m.type===step.recipe.type&&m.id===step.recipe.id)))card.append(el('p','Dieses Zwischenprodukt für spätere Schritte aufheben.','profession-muted'));}
     else card.append(el('p',step.text));
     list.append(card);
