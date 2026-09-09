@@ -33,6 +33,23 @@ function renderTab(){const d=detailData;$('detail').querySelectorAll('.detail-ta
  ['lootSearch','category','p0Only'].forEach(id=>$(id).addEventListener('input',draw));draw();
 }
 async function openRaid(id,newTab='loot'){const turn=++generation;document.body.classList.add('show-detail');tab=newTab;route(id,tab);scopes();$('overview').hidden=true;$('detail').hidden=false;$('error').hidden=true;$('detail').innerHTML='<p class="subtle">Raiddetails werden geladen …</p>';try{const d=await fetchData({raidId:id});if(turn!==generation)return;detailData=d;renderDetail();}catch(e){if(turn===generation){$('detail').innerHTML='<button id="return" class="secondary">Zur Raidübersicht</button>';$('return').onclick=overview;error(e);}}}
+async function applyGuildBrand(){
+ const fallback=guild==='lichtloot'?'images/content.png':'images/guild-defaults/default-logo.webp';
+ const setLogo=url=>{const logo=$('guildLogo');logo.alt=`Logo ${$('brandName').textContent}`;logo.hidden=false;logo.onerror=()=>{logo.onerror=null;logo.src=fallback;};logo.src=url;};
+ $('brandName').textContent=guild==='lichtloot'?'LichtLoot':guild==='nachtloot'?'Die Nachtwächter':guild;
+ setLogo(fallback);
+ try{
+  const response=await fetch('https://lichtloot-production.up.railway.app/api/apps-script?action=listGuilds',{cache:'no-store'});
+  if(!response.ok)return;
+  const data=await response.json();const info=(data.guilds||[]).find(g=>String(g.slug).toLowerCase()===guild.toLowerCase());
+  if(!info)return;
+  const name=guild==='lichtloot'?'Lichtbringer':(info.name||guild);
+  $('brandName').textContent=name;$('guildLabel').textContent=name.toUpperCase();document.title=`Raidarchiv · ${name}`;
+  const saved=String(info.logoUrl||'').trim();const url=new URL(saved||fallback,location.href);
+  setLogo(['https:','http:'].includes(url.protocol)?url.href:fallback);
+ }catch{/* Keep this guild's fallback if branding is temporarily unavailable. */}
+}
+applyGuildBrand();
 $('home').href=$('backHome').href='start.html?'+new URLSearchParams({guild});$('guildLabel').textContent=guild==='lichtloot'?'LICHTBRINGER':guild==='nachtloot'?'DIE NACHTWÄCHTER':guild.toUpperCase();
 $('raidFilters').innerHTML=[['','Alle'],...Object.entries(types)].map(([key,label])=>`<button data-type="${key}" aria-pressed="${key===''}">${label}</button>`).join('');$('raidFilters').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedType=b.dataset.type;$('raidFilters').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderCards();});
 $('raidSearch').oninput=renderCards;document.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{scope=b.dataset.scope;overview();});$('more').onclick=async()=>{const turn=generation;$('more').disabled=true;try{const d=await fetchData({offset:raids.length});if(turn!==generation)return;raids.push(...d.raids);$('more').hidden=!d.hasMore;renderCards();}catch(e){if(turn===generation)error(e);}finally{$('more').disabled=false;}};
