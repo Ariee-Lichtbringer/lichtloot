@@ -1739,6 +1739,7 @@ body.random-prio .tooltip-p0{
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 <script src="loot-system.js?v=20260906-2"></script>
 <script src="server-selection.js?v=20260906-1"></script>
+<link rel="stylesheet" href="loot/loot-redesign.css?v=20260909-1">
 </head>
 
 <body class="raid-mc">
@@ -3763,11 +3764,14 @@ async function savePrio(){
       `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
       `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
 
-    if(pinInfo.generated){
-      showParticipantPinPopup(displayedPin);
-    }
+    window.showPrioSavedConfirmation(result.confirmation || {
+      player, raid: document.querySelector(".raid-page-title")?.textContent.replace(/\s*[–-]\s*Prio-Auswahl.*$/, "").trim() || RAID_NAME,
+      date: formatRaidDate(currentRaidDate), time: String(currentRaidTime || "").slice(0,5), prioPin: pin,
+      priorities: savedP0Selected ? [{label:isP0Plus ? "P0+" : "P0",item:p1}] : [p1,p2,p3].flatMap((item,index)=>item ? [{label:"P"+(index+1),item}] : []),
+      p0Selected: savedP0Selected, points: null
+    }, pinInfo.generated ? displayedPin : "");
 
-    await refreshAfterPrioSave();
+    await refreshAfterPrioSave().catch(error => console.warn("Prio gespeichert; Listenaktualisierung wird später erneut versucht.",error));
     renderCurrentPrios();
 
   }catch(error){
@@ -4018,6 +4022,7 @@ function filterPriosBySearch(prios){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -4052,6 +4057,7 @@ ${
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8271,6 +8277,7 @@ function loadP0PlusOverview(){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8295,6 +8302,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8604,6 +8612,7 @@ function loadP0PlusOverview(){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9470,6 +9479,7 @@ function renderPrioP0Points(prio){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9494,6 +9504,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9652,6 +9663,7 @@ function renderPrioP0Points(prio){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9677,6 +9689,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9704,6 +9717,7 @@ function renderPublishedItems(prios){
 
 /* === FINAL: P0+ Punkte-Spalte aus rechter Prioliste entfernt === */
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9728,6 +9742,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -10124,10 +10139,7 @@ function ownClosedPrioItemHtml(itemName){
 }
 
 function closedPrioCell(prio,itemName){
-  if(isOwnPublishedPrio(prio)){
-    return ownClosedPrioItemHtml(itemName);
-  }
-  return itemName ? '<span class="check">✓</span>' : '<span class="cross">✗</span>';
+  return itemName ? '<span class="check" aria-label="Prio eingetragen">✓</span>' : '<span class="prio-empty" aria-label="Keine Prio">–</span>';
 }
 
 function prioReportPayload(prio){
@@ -10439,6 +10451,7 @@ function renderCurrentPrios(){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -10466,6 +10479,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -10532,5 +10546,6 @@ function lichtlootFilterCurrentGuildP0Stores(){
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
+<script src="loot/loot-redesign.js?v=20260909-1"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
 import { addonUpdate } from './addon-update.js';
 import { archiveItemMetadata } from './raid-archive-items.js';
 import { installRaidArchive } from './raid-archive.js';
@@ -12812,6 +12813,7 @@ async function savePrio({ guildId, query: params }) {
   await dkpService.assertPrio(guildId);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
+  await ensureUnlinkedP0PlusSchema();
   // Schema work must finish before opening the save transaction. Running ALTER
   // statements through the pool while this transaction already holds raid locks
   // makes the request wait on itself until PostgreSQL cancels it.
@@ -13091,6 +13093,28 @@ async function savePrio({ guildId, query: params }) {
           source: "lichtloot_prio_saved"
         })
       : [];
+    let savedPoints = null;
+    if (p0Selected && p1) {
+      const pointResult = await client.query(
+        `select coalesce(sum(points),0)::numeric as points from (
+           select pp.points from p0plus_points pp join items i on i.id=pp.item_id
+           where pp.guild_id=$1 and pp.character_id=$2
+             and (i.id=$3 or (lower(i.name)=lower($6) and lower(i.raid_type)=any($7)))
+           union all
+           select up.points from unlinked_p0plus_points up join items i on i.id=up.item_id
+           where up.guild_id=$1 and lower(up.player_name)=lower($4) and lower(up.server)=lower($5)
+             and (i.id=$3 or (lower(i.name)=lower($6) and lower(i.raid_type)=any($7)))
+         ) own_points`, [guildId, character.id, p1.id, character.name, character.server,
+           p1.name, raidTypeSearchValues(p1.raid_type || savedRaid.raid_type)]
+      );
+      savedPoints = Number(pointResult.rows[0]?.points || 0);
+    }
+    const confirmation = buildPrioConfirmation({
+      raid: savedRaid, character, items: [p1,p2,p3], p0Selected, p0Plus: p0PlusSelected, points: savedPoints
+    });
+    const discordConfirmation = await queuePrioConfirmation(client, {
+      guildId, character, prioId: prioResult.rows[0].id, confirmation
+    });
     await client.query("commit");
     const missingPrioReminderRefresh = await enqueueRaidMissingPrioReminderRefresh(
       guildId,
@@ -13129,9 +13153,11 @@ async function savePrio({ guildId, query: params }) {
       guildId,
       linkedRaid,
       "lichtloot_prio_saved"
-    );
+    ).catch(error => ({ success: false, error: error.message || String(error) }));
     return {
       success: true,
+      confirmation,
+      discordConfirmation,
       characterPin: normalizePin(pin),
       playerPin: normalizePin(pin),
       tempPin: normalizePin(pin),
@@ -21282,6 +21308,15 @@ async function updatePlayerMailboxState({guildId,query:params}){
     do update set trashed=excluded.trashed,hidden=excluded.hidden`,[guildId,params.id,player.player_pin,folder,operation!=='restore',operation==='remove']);
   return {success:true};
 }
+async function getPrioSaveDmStatus({guildId,query:params}) {
+  requireMasterOrQueueToken(params);
+  return prioDmStatus(query,guildId,params);
+}
+async function completePrioSaveDm({guildId,query:params}) {
+  requireMasterOrQueueToken(params);
+  return prioDmStatus(query,guildId,params,true);
+}
+
 async function sendPlayerDiscordDm({guildId,query:params}){
   const sender=await requireMailboxPlayer(guildId,params),body=clean(params.body),title=clean(params.title)||'Discord-Nachricht';
   if(!body||body.length>1800||title.length>150)throw Object.assign(new Error("Bitte eine Nachricht mit höchstens 1.800 Zeichen und einen Betreff mit höchstens 150 Zeichen eingeben."),{statusCode:400});
@@ -31989,7 +32024,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json(await completeReportDm(query, guild.id, postParams));
     }
 
-    const mailboxHandlers={getPlayerMailRecipients,updatePlayerMailboxState,sendPlayerDiscordDm,getPlayerDiscordDmStatus,completePlayerDiscordDm,sendPlayerMessageFromPlayer,markPlayerMessageRead};
+    const mailboxHandlers={getPrioSaveDmStatus,completePrioSaveDm,getPlayerMailRecipients,updatePlayerMailboxState,sendPlayerDiscordDm,getPlayerDiscordDmStatus,completePlayerDiscordDm,sendPlayerMessageFromPlayer,markPlayerMessageRead};
     if(Object.hasOwn(mailboxHandlers,action)){
       const result=await mailboxHandlers[action]({guildId:guild.id,query:postParams});
       return res.json({...result,guild:guild.slug});

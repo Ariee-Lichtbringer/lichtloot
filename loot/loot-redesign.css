@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+body.loot-redesign{background:#070d18!important;color:#e2e8f0;font-family:Inter,Arial,sans-serif;--loot-accent:#e5bd60;--loot-border:#253142}
+body.loot-redesign>.overlay{backdrop-filter:none;padding-top:20px}
+body.loot-redesign .loot-side-shell{background:#0b1220;border:1px solid var(--loot-border);border-radius:12px;box-shadow:none}
+body.loot-redesign .header{padding:20px!important;margin-bottom:16px!important;min-height:0!important;background:#0b1220!important;border:1px solid var(--loot-border)!important;border-radius:12px!important;box-shadow:none!important}
+body.loot-redesign .raid-page-title{font-family:Cinzel,Georgia,serif;font-size:clamp(21px,2.1vw,34px)!important;color:var(--loot-accent);margin:0 0 6px!important}
+body.loot-redesign .card{padding:16px!important;border:1px solid var(--loot-border)!important;border-radius:12px!important;background:#0b1220!important;box-shadow:none!important;min-width:0}
+body.loot-redesign #mainGrid h2{font:700 21px Cinzel,Georgia,serif;color:var(--loot-accent);margin:0 0 12px}
+body.loot-redesign .player-input-card{max-width:none!important;padding:10px!important;border-color:var(--loot-border)!important;background:#080f1b!important;min-height:0!important}
+body.loot-redesign .header-tools{margin-top:10px!important;gap:8px!important}
+body.loot-redesign .header-actions{margin-top:8px!important}
+body.loot-redesign .header-actions .btn{width:auto!important;background:#101a2b!important;border:1px solid #455064!important;color:var(--loot-accent)!important}
+body.loot-redesign .loot-attendance-chip{padding:5px 8px;border-radius:5px;background:#0b1422}
+body.loot-redesign .loot-attendance-chip strong{font-size:13px}
+body.loot-redesign #mainGrid input,body.loot-redesign #mainGrid select{font-family:Inter,Arial,sans-serif;border:1px solid #334155;background:#070e19;border-radius:6px;min-height:34px}
+body.loot-redesign #mainGrid .search-box{margin:0 0 8px!important}
+body.loot-redesign #mainGrid .status{border-radius:6px;font-size:12px;padding:10px 12px;margin:10px 0;background:#111a26;border-color:#334155}
+body.loot-redesign #publishedStatus{border-left:3px solid var(--loot-accent);background:#e5bd600c!important}
+body.loot-redesign .loot-prio-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+body.loot-redesign .loot-prio-toolbar h2{margin:0!important;flex:1;white-space:nowrap}
+body.loot-redesign .loot-prio-toolbar>.btn,body.loot-redesign .loot-prio-toolbar .tool-btn{width:auto!important;min-height:32px;margin:0!important;padding:6px 10px;font-size:11px;background:#111b2a;border:1px solid #334155;border-radius:6px;color:#d5dfec}
+body.loot-redesign .loot-prio-toolbar .prio-export-main{margin:0;display:flex}
+body.loot-redesign #lootCard{display:flex;flex-direction:column}
+body.loot-redesign #lootCard>.loot-save-area{order:5;position:static;padding:10px 0 0!important;margin:0;background:#0b1220;z-index:2}
+body.loot-redesign .loot-save-area>.btn,body.loot-redesign .prio-saved-done{border:1px solid #e5bd60!important;background:linear-gradient(105deg,#f0ce78,#b88d34)!important;color:#15100a!important;min-height:40px;border-radius:6px;font-weight:700}
+body.loot-redesign #lootList{gap:0;max-height:620px!important}
+body.loot-redesign .loot-item-row{padding:9px 4px!important;gap:8px!important;grid-template-columns:minmax(0,1fr) auto!important;border:0!important;border-bottom:1px solid #243043!important;border-radius:0!important;background:transparent!important;min-height:49px}
+body.loot-redesign .loot-item-row .prio-buttons{gap:4px!important;flex-wrap:nowrap!important}
+body.loot-redesign .loot-item-row .mini-btn{min-width:29px;padding:5px!important;min-height:29px;border-radius:5px}
+body.loot-redesign .loot-item-row .item-icon{width:27px;height:27px;border-radius:5px}
+body.loot-redesign .loot-item-row .item-with-icon{font-size:12px;min-width:0}
+body.loot-redesign #prioCard .table-scroll{max-height:670px!important;padding:0}
+body.loot-redesign #prioCard table{width:100%;border-collapse:collapse;font-size:12px!important}
+body.loot-redesign #prioCard th{color:var(--loot-accent);background:#0b1220;position:sticky;top:0;z-index:1;font-size:10px;letter-spacing:.02em}
+body.loot-redesign #prioCard td,body.loot-redesign #prioCard th{padding:11px 8px!important;border-bottom:1px solid #293444;vertical-align:middle}
+body.loot-redesign #prioCard .own-prio-hint,body.loot-redesign #prioCard .live-prio-hint{display:block!important;font-size:10px!important;line-height:1.4;margin-top:3px;font-weight:500;color:var(--loot-accent)}
+body.loot-redesign #prioCard .own-prio-row{background:#e5bd6014;box-shadow:inset 2px 0 var(--loot-accent)}
+body.loot-redesign #prioCard .check{color:#34d399}
+body.loot-redesign #prioCard .prio-empty{color:#64748b}
+body.loot-redesign #prioCard .item-icon{width:25px;height:25px;border-radius:4px}
+body.loot-redesign #prioCard .item-with-icon{gap:7px;font-size:12px}
+body.loot-redesign #prioCard .prio-p0-choice{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+/* Closed priorities allocate just 36px each; publication restores item widths. */
+body.loot-redesign #prioCard.prios-closed table{min-width:580px!important;table-layout:fixed!important}
+body.loot-redesign #prioCard.prios-closed th:nth-child(1),body.loot-redesign #prioCard.prios-closed td:nth-child(1){width:32px!important}
+body.loot-redesign #prioCard.prios-closed th:nth-child(2),body.loot-redesign #prioCard.prios-closed td:nth-child(2){width:125px!important;overflow-wrap:anywhere}
+body.loot-redesign #prioCard.prios-closed th:nth-child(3),body.loot-redesign #prioCard.prios-closed td:nth-child(3){width:90px!important}
+body.loot-redesign #prioCard.prios-closed th:nth-child(n+4):nth-child(-n+6),body.loot-redesign #prioCard.prios-closed td:nth-child(n+4):nth-child(-n+6){width:36px!important;text-align:center!important;padding-left:2px!important;padding-right:2px!important}
+body.loot-redesign #prioCard.prios-closed th:nth-child(7),body.loot-redesign #prioCard.prios-closed td:nth-child(7){width:auto!important}
+body.loot-redesign #prioCard.prios-closed th:nth-child(8),body.loot-redesign #prioCard.prios-closed td:nth-child(8){width:78px!important}
+body.loot-redesign #prioCard td:nth-child(2) a{display:inline!important}
+body.loot-redesign #prioCard td:nth-child(2){line-height:1.4}
+body.loot-redesign #prioCard .report-btn{border-radius:5px}
+
+body.loot-redesign #prioSavedDialog{position:fixed;inset:0;margin:auto;color:#e2e8f0;background:#0b1421;border:1px solid #e5bd60;border-radius:12px;width:min(520px,calc(100vw - 28px));max-height:calc(100dvh - 28px);padding:24px;box-sizing:border-box;box-shadow:0 20px 80px #0009}
+#prioSavedDialog::backdrop{background:#020617b8;backdrop-filter:blur(2px)}
+#prioSavedDialog form{margin:0}
+#prioSavedDialog h2{font:700 22px Cinzel,Georgia,serif;color:#6ee7b7;margin:0 28px 12px 0;line-height:1.5}
+#prioSavedDialog p{font:13px/1.6 Inter,Arial,sans-serif}
+#prioSavedDialog .prio-saved-close{position:absolute;right:12px;top:10px;background:transparent;border:0;color:#e5bd60;font-size:26px;cursor:pointer}
+#prioSavedDialog .prio-saved-meta{display:grid;grid-template-columns:100px minmax(0,1fr);gap:9px 14px;font-size:13px;margin:22px 0}
+#prioSavedDialog dt{color:#94a3b8}#prioSavedDialog dd{margin:0;overflow-wrap:anywhere}
+#prioSavedDialog .prio-saved-items{display:grid;gap:8px}
+#prioSavedDialog .prio-saved-item{display:flex;align-items:center;gap:12px;padding:14px;background:#e5bd600a;border:1px solid #e5bd6055;border-radius:7px;font-size:13px}
+#prioSavedDialog .prio-saved-item b{padding:5px 8px;border-radius:4px;background:#e5bd60;color:#15100a;white-space:nowrap}
+#prioSavedDialog .prio-saved-item span{overflow-wrap:anywhere;color:#e9d5ff}
+#prioSavedDialog .prio-saved-points{font-weight:600;color:#e5bd60}
+#prioSavedDialog .prio-saved-pin{border:1px solid #334155;padding:10px;border-radius:6px}
+#prioSavedDialog .prio-saved-done{width:100%;margin-top:14px;cursor:pointer}
+#prioSavedDialog button:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
+@media(min-width:1251px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(370px,.9fr) minmax(580px,1.65fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard{grid-column:1!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:2!important}}
+@media(max-width:1250px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard,body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:1!important}body.loot-redesign #lootList{max-height:430px!important}}
+@media(max-width:600px){body.loot-redesign>.overlay{padding:12px!important}body.loot-redesign .header,body.loot-redesign .card{padding:12px!important}body.loot-redesign #mainGrid h2{font-size:18px}.loot-prio-toolbar h2{flex-basis:100%!important}body.loot-redesign .loot-item-row{grid-template-columns:minmax(0,1fr)!important}body.loot-redesign .loot-item-row .prio-buttons{justify-content:flex-end!important}body.loot-redesign #prioSavedDialog{position:fixed;inset:0;margin:auto;padding:18px}}
+
+body.loot-redesign #prioCard .prio-p0-choice>strong{font-size:10px;padding:3px 5px;border:1px solid #e5bd6050;border-radius:4px;color:#e5bd60;white-space:nowrap}
+@media(min-width:1101px){body.loot-redesign .loot-side-shell{width:220px!important}body.loot-redesign:not(.random-prio)>.overlay{padding-left:258px!important}}

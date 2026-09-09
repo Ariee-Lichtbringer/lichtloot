@@ -1759,6 +1759,7 @@ body.random-prio .random-prio-home{width:min(1600px,100%);margin:0 auto 18px;dis
 <script src="../loot-system.js?v=20260906-2"></script>
 <link rel="stylesheet" href="../start-navigation.css?v=20260907-2">
 <script defer src="../start-navigation.js?v=20260907-2"></script>
+<link rel="stylesheet" href="loot-redesign.css?v=20260909-1">
 </head>
 
 <body class="raid-aq20 p0-only">
@@ -3909,11 +3910,14 @@ async function savePrio(){
       `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
       `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
 
-    if(pinInfo.generated){
-      showParticipantPinPopup(displayedPin);
-    }
+    window.showPrioSavedConfirmation(result.confirmation || {
+      player, raid: document.querySelector(".raid-page-title")?.textContent.replace(/\s*[–-]\s*Prio-Auswahl.*$/, "").trim() || RAID_NAME,
+      date: formatRaidDate(currentRaidDate), time: String(currentRaidTime || "").slice(0,5), prioPin: pin,
+      priorities: savedP0Selected ? [{label:isP0Plus ? "P0+" : "P0",item:p1}] : [p1,p2,p3].flatMap((item,index)=>item ? [{label:"P"+(index+1),item}] : []),
+      p0Selected: savedP0Selected, points: null
+    }, pinInfo.generated ? displayedPin : "");
 
-    await refreshAfterPrioSave();
+    await refreshAfterPrioSave().catch(error => console.warn("Prio gespeichert; Listenaktualisierung wird später erneut versucht.",error));
     // Die API hat die Speicherung bestätigt. Ein eventuell noch gecachter
     // Listenabruf darf den Eintrag deshalb nicht als lokalen Entwurf zeigen.
     const confirmedPrio={
@@ -4192,6 +4196,7 @@ function filterPriosBySearch(prios){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -4226,6 +4231,7 @@ ${
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8417,6 +8423,7 @@ function loadP0PlusOverview(){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8441,6 +8448,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -8750,6 +8758,7 @@ function loadP0PlusOverview(){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9635,6 +9644,7 @@ function renderPrioP0Points(prio){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9659,6 +9669,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9780,7 +9791,7 @@ function renderPrioP0Choice(prio){
 
   return `
     <div class="prio-p0-choice">
-      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+ gewählt" : "P0 gewählt"}</strong>
+      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+" : "P0"}</strong>
       ${itemHtml(itemName)}
     </div>
   `;
@@ -9814,6 +9825,7 @@ function renderPrioP0Points(prio){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9839,6 +9851,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9866,6 +9879,7 @@ function renderPublishedItems(prios){
 
 /* === FINAL: P0+ Punkte-Spalte aus rechter Prioliste entfernt === */
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9890,6 +9904,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -9965,7 +9980,7 @@ function renderPrioP0Choice(prio){
 
   return `
     <div class="prio-p0-choice">
-      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+ gewählt" : "P0 gewählt"}</strong>
+      <strong>${["ja","true","1"].includes(String(prio.P0Plus ?? prio.p0Plus ?? "").toLowerCase()) ? "P0+" : "P0"}</strong>
       ${itemHtml(itemName)}
     </div>
   `;
@@ -10287,10 +10302,7 @@ function ownClosedPrioItemHtml(itemName){
 }
 
 function closedPrioCell(prio,itemName){
-  if(isOwnPublishedPrio(prio)){
-    return ownClosedPrioItemHtml(itemName);
-  }
-  return itemName ? '<span class="check">✓</span>' : '<span class="cross">✗</span>';
+  return itemName ? '<span class="check" aria-label="Prio eingetragen">✓</span>' : '<span class="prio-empty" aria-label="Keine Prio">–</span>';
 }
 
 function prioReportPayload(prio){
@@ -10626,6 +10638,7 @@ function renderCurrentPrios(){
 }
 
 function renderPublishedChecks(prios){
+  document.getElementById("prioCard")?.classList.add("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -10653,6 +10666,7 @@ function renderPublishedChecks(prios){
 }
 
 function renderPublishedItems(prios){
+  document.getElementById("prioCard")?.classList.remove("prios-closed");
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
@@ -10725,7 +10739,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="../pin-visibility.js"></script>
 <script src="prio-receipt.js?v=20260908"></script>
 <script src="p0-selection-fix.js?v=20260906-itemid"></script>
-<script src="player-gear-popup.js?v=20260906-realm"></script>
+<script src="player-gear-popup.js?v=20260909-prio-label"></script>
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260907-search-news-2" defer></script>
@@ -10734,5 +10748,6 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="../guildloot-all-points.js?v=20260908-3"></script>
 <script src="../guildloot-personal-export.js?v=20260908-1"></script>
 <script src="../guildloot-participant-export.js?v=20260908-2"></script>
+<script src="loot-redesign.js?v=20260909-1"></script>
 </body>
 </html>
