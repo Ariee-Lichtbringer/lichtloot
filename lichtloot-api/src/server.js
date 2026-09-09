@@ -1,3 +1,4 @@
+import { addonUpdate } from './addon-update.js';
 import { archiveItemMetadata } from './raid-archive-items.js';
 import { installRaidArchive } from './raid-archive.js';
 import { installAddonBetaAdmin } from './addon-beta-admin.js';
@@ -32339,6 +32340,11 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ success: saved.success !== false, guild: guild.slug, status: "geöffnet" });
     }
 
+    if(action === "getAddonUpdate"){
+      const characters=await getCharactersByPin(guild.id,postParams.pin);
+      if(!characters.some(c=>c.name===postParams.character&&c.server===postParams.server))return res.status(403).json({success:false,error:"Spieler-Login erforderlich."});
+      res.set('Cache-Control','no-store');return res.json(await addonUpdate());
+    }
     if (action === "getRaidSheetSnapshots" || action === "getRaidSheetImages") {
       const characters=await getCharactersByPin(guild.id,postParams.pin);
       if(!characters.length)return res.status(403).json({success:false,error:"Spieler-PIN erforderlich."});

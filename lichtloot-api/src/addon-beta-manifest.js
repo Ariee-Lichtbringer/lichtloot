@@ -1,23 +1,23 @@
 export const betaArtifacts = {
   "windows": {
-    "name": "GuildLoot-Sync-0.3.1-Windows-Setup.exe",
+    "name": "GuildLoot-Sync-0.3.5-Windows-Setup.exe",
     "type": "application/octet-stream",
-    "size": 112548836,
-    "sha256": "ebcb005c90e42f37f550e11b62985dc6fb3f8844d294cc7f7d1c79be65cf8566",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.1/GuildLoot-Sync-0.3.1-Windows-Setup.exe.enc"
+    "size": 115585588,
+    "sha256": "2c195877d3b56fdcc679d67cdf7d2951a55702b0ef447a7d3234bde0d96b019d",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.5/GuildLoot-Sync-0.3.5-Windows-Setup.exe.enc"
   },
   "mac-arm64": {
-    "name": "GuildLoot-Sync-0.3.1-mac-Apple-Silicon.pkg",
+    "name": "GuildLoot-Sync-0.3.5-mac-Apple-Silicon.pkg",
     "type": "application/octet-stream",
-    "size": 129918409,
-    "sha256": "caaf441423e435388157a2ad087a20811cb6c21505371cec7a320778afc23902",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.1/GuildLoot-Sync-0.3.1-mac-Apple-Silicon.pkg.enc"
+    "size": 129936316,
+    "sha256": "8568e4952df992d9b56443e25ad0a42c3be64580994daac7b075643663f5e8b7",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.5/GuildLoot-Sync-0.3.5-mac-Apple-Silicon.pkg.enc"
   },
   "mac-x64": {
-    "name": "GuildLoot-Sync-0.3.1-mac-Intel.pkg",
+    "name": "GuildLoot-Sync-0.3.5-mac-Intel.pkg",
     "type": "application/octet-stream",
-    "size": 135447242,
-    "sha256": "c7020075ce4411356d2327473dd02ff5b4c9a8ade68a350166cf265a35b31f62",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.1/GuildLoot-Sync-0.3.1-mac-Intel.pkg.enc"
+    "size": 135496900,
+    "sha256": "27150610a02bebe454ee4868a132693d547e50d9bf75b500d70198346f6548f5",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.5/GuildLoot-Sync-0.3.5-mac-Intel.pkg.enc"
   }
 };
