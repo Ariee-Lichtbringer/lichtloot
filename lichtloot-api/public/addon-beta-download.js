@@ -12,7 +12,7 @@
   document.body.append(dialog);
   const input = dialog.querySelector('input'), status = dialog.querySelector('[role=status]'), submit = dialog.querySelector('[type=submit]');
   const platform=dialog.querySelector('select');
-  const names={windows:'GuildLoot-Sync-0.3.5-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-0.3.5-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-0.3.5-mac-Intel.pkg',addon:'GuildLootEra-0.21.0-beta.zip'};
+  const names={windows:'GuildLoot-Sync-0.3.5-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-0.3.5-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-0.3.5-mac-Intel.pkg',addon:'GuildLootEra-0.21.1-beta.zip'};
   platform.value=/Win/i.test(navigator.platform)?'windows':'';
   let controller;
   dialog.querySelector('[data-close]').onclick = () => dialog.close();
