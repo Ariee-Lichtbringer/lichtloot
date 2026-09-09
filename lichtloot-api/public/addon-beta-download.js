@@ -8,7 +8,7 @@
   const dialog = document.createElement('dialog');
   dialog.className = 'addon-beta-dialog';
   dialog.setAttribute('aria-labelledby', 'addonBetaTitle');
-  dialog.innerHTML = `<form><h2 id="addonBetaTitle">Beta Testversion</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option><option value="addon">Nur WoW-Addon · ZIP (ohne Sync)</option></select><label for="addonBetaPin">Bitte PIN eingeben</label><input id="addonBetaPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{8}" minlength="8" maxlength="8" required aria-describedby="addonBetaHint" autofocus><p id="addonBetaHint">GuildLoot Sync 0.3.5 enthält Addon 0.21.0-beta. Vorhandene Gildenprofile bleiben beim Update erhalten. Lade den Installer herunter und öffne ihn anschließend. In Sync wählst du „Addon installieren / aktualisieren“ und deinen WoW-Ordner.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
+  dialog.innerHTML = `<form><h2 id="addonBetaTitle">Beta Testversion</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option><option value="addon">Nur WoW-Addon · ZIP (ohne Sync)</option></select><label for="addonBetaPin">Bitte PIN eingeben</label><input id="addonBetaPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{8}" minlength="8" maxlength="8" required aria-describedby="addonBetaHint" autofocus><p id="addonBetaHint">GuildLoot Sync 0.3.5 enthält Addon 0.21.0-beta. Vorhandene Gildenprofile bleiben beim Update erhalten. Lade den Installer herunter und öffne ihn anschließend. Schließe die bisherige Sync-App vor der Installation. In der neuen Sync-App wählst du „Addon installieren / aktualisieren“ und startest danach WoW vollständig neu. Verwende die bisherige Beta-PIN für den Download.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
   document.body.append(dialog);
   const input = dialog.querySelector('input'), status = dialog.querySelector('[role=status]'), submit = dialog.querySelector('[type=submit]');
   const platform=dialog.querySelector('select');
@@ -18,11 +18,20 @@
   dialog.querySelector('[data-close]').onclick = () => dialog.close();
   dialog.addEventListener('close', () => { controller?.abort(); input.value = ''; });
   dialog.addEventListener('click', event => { if(event.target === dialog){ const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close(); } });
+  function openDownload(update = false) {
+    dialog.querySelector('#addonBetaTitle').textContent = update ? 'Addon / Sync aktualisieren' : 'Beta Testversion';
+    status.textContent = ''; input.value = ''; dialog.showModal(); input.focus();
+  }
+  document.querySelectorAll('[data-addon-update]').forEach(button => { button.onclick = () => openDownload(true); });
   hosts.forEach(host => {
     const button = document.createElement('button');
     button.type = 'button'; button.className = 'tool-btn addon-beta-trigger'; button.textContent = 'GuildLoot-Addon · Beta herunterladen';
-    button.onclick = () => { status.textContent = ''; input.value = ''; dialog.showModal(); input.focus(); };
-    host.before(button);
+    button.onclick = () => openDownload();
+    const update = document.createElement('button');
+    update.type = 'button'; update.className = 'tool-btn addon-beta-trigger'; update.textContent = 'Addon / Sync aktualisieren';
+    update.onclick = () => openDownload(true);
+    const actions = document.createElement('div'); actions.className = 'addon-beta-actions'; actions.append(update, button);
+    host.before(actions);
   });
   if (new URLSearchParams(location.search).get('addonBeta') === '1') { dialog.showModal(); input.focus(); }
   dialog.querySelector('form').addEventListener('submit', async event => {
