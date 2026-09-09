@@ -173,3 +173,11 @@ body.loot-redesign #lootSaveReceipt #prioSaveStatus{font-size:12px;line-height:1
 body.loot-redesign #prioCard>#lootOwnSelection{margin-bottom:12px}
 body.loot-redesign #prioCard>.loot-save-area{margin:0 0 24px;padding:0}
 body.loot-redesign #prioCard>.loot-save-area .btn{width:100%}
+
+body.loot-redesign :has(>#raidSignupPageBox){flex-wrap:wrap!important}
+body.loot-redesign #raidSignupPageBox{flex:1 0 100%!important;width:100%!important;min-width:0;box-sizing:border-box;grid-column:1/-1!important}
+body.loot-redesign #raidSignupPageBox .raid-signup-page-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+body.loot-redesign #raidSignupPageBox .raid-signup-page-grid>*{min-width:0;max-width:100%}
+body.loot-redesign #lootPrioSignupSummary{width:100%;box-sizing:border-box;margin-top:16px}
+body.loot-redesign #prioCard .table-scroll{height:auto!important;max-height:none!important;overflow:visible!important}
+@media(max-width:800px){body.loot-redesign #raidSignupPageBox .raid-signup-page-grid{grid-template-columns:minmax(0,1fr)}}

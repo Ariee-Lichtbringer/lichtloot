@@ -201,6 +201,7 @@
     document.body.classList.add('loot-redesign');
     setupSelection();
     setupReceipt();
+    byId('guildlootParticipantRaidExport')?.closest('details')?.remove();
     const card = byId('prioCard');
     if (!card || card.querySelector('.loot-prio-toolbar')) return;
     const toolbar = document.createElement('div');
