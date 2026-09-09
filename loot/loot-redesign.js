@@ -213,7 +213,12 @@
     const exportButtons = card.querySelector('.prio-export-main');
     if (exportButtons) toolbar.append(exportButtons);
     const loot = byId('lootCard');
-    if (loot) { toolbar.after(loot); document.body.classList.add('loot-stacked-content'); }
+    const selection = byId('lootOwnSelection');
+    const saveArea = loot?.querySelector('.loot-save-area');
+    if (selection) card.insertBefore(selection, toolbar);
+    if (saveArea) card.insertBefore(saveArea, toolbar);
+    const saveStatus = byId('prioSaveStatus');
+    if (saveStatus && saveArea && !byId('lootSaveReceipt')?.contains(saveStatus)) saveArea.after(saveStatus);
     const p0Heading = card.querySelector('th:nth-child(7)');
     if (p0Heading) p0Heading.textContent = 'P0 / P0+';
   }
