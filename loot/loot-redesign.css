@@ -69,9 +69,32 @@ body.loot-redesign #prioSavedDialog{position:fixed;inset:0;margin:auto;color:#e2
 #prioSavedDialog .prio-saved-pin{border:1px solid #334155;padding:10px;border-radius:6px}
 #prioSavedDialog .prio-saved-done{width:100%;margin-top:14px;cursor:pointer}
 #prioSavedDialog button:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
-@media(min-width:1251px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(370px,.9fr) minmax(580px,1.65fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard{grid-column:1!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:2!important}}
-@media(max-width:1250px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard,body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:1!important}body.loot-redesign #lootList{max-height:430px!important}}
+@media(min-width:1361px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(370px,.9fr) minmax(580px,1.65fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard{grid-column:1!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:2!important}}
+@media(max-width:1360px){body.loot-redesign.loot-character-in-sidebar #mainGrid.grid,body.loot-redesign #mainGrid.grid{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}body.loot-redesign.loot-character-in-sidebar #mainGrid>#lootCard,body.loot-redesign.loot-character-in-sidebar #mainGrid>#prioCard{grid-column:1!important}body.loot-redesign #lootList{max-height:430px!important}}
 @media(max-width:600px){body.loot-redesign>.overlay{padding:12px!important}body.loot-redesign .header,body.loot-redesign .card{padding:12px!important}body.loot-redesign #mainGrid h2{font-size:18px}.loot-prio-toolbar h2{flex-basis:100%!important}body.loot-redesign .loot-item-row{grid-template-columns:minmax(0,1fr)!important}body.loot-redesign .loot-item-row .prio-buttons{justify-content:flex-end!important}body.loot-redesign #prioSavedDialog{position:fixed;inset:0;margin:auto;padding:18px}}
 
 body.loot-redesign #prioCard .prio-p0-choice>strong{font-size:10px;padding:3px 5px;border:1px solid #e5bd6050;border-radius:4px;color:#e5bd60;white-space:nowrap}
-@media(min-width:1101px){body.loot-redesign .loot-side-shell{width:220px!important}body.loot-redesign:not(.random-prio)>.overlay{padding-left:258px!important}}
+@media(min-width:1101px){body.loot-redesign .loot-side-shell{width:300px!important}body.loot-redesign:not(.random-prio)>.overlay{padding-left:338px!important}}
+
+/* Keep the closed list compact instead of giving all spare space to P0/P0+. */
+@media(min-width:1361px){
+  body.loot-redesign.loot-character-in-sidebar #mainGrid.grid:has(#prioCard.prios-closed),
+  body.loot-redesign #mainGrid.grid:has(#prioCard.prios-closed){
+    grid-template-columns:minmax(370px,1fr) minmax(580px,780px)!important;
+    max-width:1460px!important;
+    margin-left:0!important;margin-right:auto!important;
+  }
+  body.loot-redesign:has(#prioCard.prios-closed)>.overlay>.header{
+    max-width:1460px!important;margin-left:0!important;margin-right:auto!important;
+  }
+}
+
+/* Published priorities use the full content area for all item columns. */
+body.loot-redesign #mainGrid.grid:has(#prioCard:not(.prios-closed)){
+  grid-template-columns:minmax(0,1fr)!important;max-width:none!important;
+}
+body.loot-redesign #mainGrid:has(#prioCard:not(.prios-closed))>#lootCard{display:none!important}
+body.loot-redesign.loot-character-in-sidebar #mainGrid:has(#prioCard:not(.prios-closed))>#prioCard,
+body.loot-redesign #mainGrid:has(#prioCard:not(.prios-closed))>#prioCard{
+  grid-column:1 / -1!important;width:100%!important;
+}
