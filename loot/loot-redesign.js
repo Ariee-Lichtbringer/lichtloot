@@ -212,6 +212,8 @@
     if (refresh) { refresh.textContent = '↻ Aktualisieren'; toolbar.append(refresh); }
     const exportButtons = card.querySelector('.prio-export-main');
     if (exportButtons) toolbar.append(exportButtons);
+    const loot = byId('lootCard');
+    if (loot) { toolbar.after(loot); document.body.classList.add('loot-stacked-content'); }
     const p0Heading = card.querySelector('th:nth-child(7)');
     if (p0Heading) p0Heading.textContent = 'P0 / P0+';
   }

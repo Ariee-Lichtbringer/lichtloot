@@ -222,11 +222,11 @@
   function renderPrioSignupSummary(){
     const existing=document.getElementById("lootPrioSignupSummary");
     if(!prioSignupSummaryEnabled){existing?.remove();return;}
-    const title=document.querySelector("#prioCard h2");
+    const title=document.getElementById("raidSignupPageBox");
     if(!title)return;
     const missingRows=activeRaidMissingSignupRows();
     const signature=missingRows.map(row=>[row?.player||row?.char,row?.className||row?.class,row?.note||row?.spec].join("|")).join(":");
-    if(existing?.dataset.signature===signature)return;
+    if(existing?.dataset.signature===signature){if(title.nextElementSibling!==existing)title.after(existing);return;}
     existing?.remove();
     const box=document.createElement("section");
     box.id="lootPrioSignupSummary";
@@ -237,14 +237,16 @@
   }
   async function loadPrioSignupSummary(){
     const raidId=String(typeof currentRaidId!=="undefined"?currentRaidId:"").trim();
-    if(!raidId){prioSignupSummaryEnabled=false;prioSignupSummaryRows=[];prioSignupSummaryRaidId="";renderPrioSignupSummary();return;}
+    if(!raidId)return;
     if(prioSignupSummaryRaidId===raidId){renderPrioSignupSummary();return;}
     prioSignupSummaryRaidId=raidId;
     try{
       const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,t:Date.now()});
+      if(raidId!==String(typeof currentRaidId!=="undefined"?currentRaidId:"").trim())return;
+      if(!result?.success){prioSignupSummaryRaidId="";return;}
       prioSignupSummaryEnabled=Boolean(result?.success&&result?.raid?.raidHelperEnabled!==false&&!result?.raid?.p0Only);
       prioSignupSummaryRows=prioSignupSummaryEnabled?[...(result.signups||[]),...(result.externalSignups||[])]:[];
-    }catch(error){prioSignupSummaryEnabled=false;prioSignupSummaryRows=[];}
+    }catch(error){prioSignupSummaryRaidId="";return;}
     renderPrioSignupSummary();
   }
 
