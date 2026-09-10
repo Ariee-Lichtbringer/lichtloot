@@ -11,7 +11,7 @@
   }
   async function refresh(){
     if(busy||document.hidden)return;busy=true;
-    try{const response=await fetch('raid-news.json',{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.items))return;const entries=data.items.filter(e=>e&&typeof e.title==='string').slice(0,12);if(!entries.length)return;const key=JSON.stringify(entries);if(key===last)return;
+    try{const response=await fetch('raid-news.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.items))return;const entries=data.items.filter(e=>e&&typeof e.title==='string').slice(0,12);if(!entries.length)return;const key=JSON.stringify(entries);if(key===last)return;
       // Keep a focused link in place; apply the feed update on the next refresh.
       if(windowEl.contains(document.activeElement))return;
       const track=document.createElement('div');track.className='raid-news-track';

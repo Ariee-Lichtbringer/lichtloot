@@ -9,6 +9,13 @@
       "publishedAt": "2026-09-10T14:52:00+02:00"
     },
     {
+      "id": "bimmi-hymne",
+      "kind": "music",
+      "title": "Bimmis Lichtbringer-Hymne",
+      "text": "Jetzt auf YouTube anhören ♫",
+      "url": "https://www.youtube.com/watch?v=EkNDiPCyIHQ"
+    },
+    {
       "id": "news-0",
       "kind": "news",
       "title": "Neu: Raidarchiv auf der Startseite",
@@ -77,13 +84,6 @@
       "title": "Aktuelle Charakteransicht aus der Armory",
       "text": "Ausrüstung, Charakterwerte und Item-Tooltips in deiner Charakteransicht ansehen.",
       "action": "gear-planner"
-    },
-    {
-      "id": "bimmi-hymne",
-      "kind": "music",
-      "title": "Bimmis Lichtbringer-Hymne",
-      "text": "Jetzt auf YouTube anhören ♫",
-      "url": "https://www.youtube.com/watch?v=EkNDiPCyIHQ"
     }
   ]
 }
