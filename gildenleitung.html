@@ -19188,7 +19188,7 @@ function openPoReleaseRequestReview(index){
       const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,sendRejectionDm:button.dataset.sendRejectionDm==="true",screenshotConfirmed:Boolean(backdrop.querySelector("[data-screenshot-confirmed]")?.checked),manualOverride:Boolean(backdrop.querySelector("[data-manual-override]")?.checked),reviewNote,reviewedBy:"Gildenleitung"});
       if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");
       backdrop.remove();
-      setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":result.rejectionDelivery==="discord"?"Antrag abgelehnt. Die Begründung wird per Discord-DM an den Spieler gesendet.":result.rejectionDelivery==="nachtloot_mailbox"?"Antrag abgelehnt. Da kein Discord-Name verknüpft ist, wurde die Begründung ins NachtLoot-Postfach des Spielers gelegt.":"Antrag abgelehnt.","good");
+      setStatus(button.dataset.decision==="approved"?(result.approvalDmQueued?"Antrag freigegeben. Die Bestätigung wird per Discord-DM an den Spieler gesendet.":"Antrag freigegeben. Keine Discord-DM möglich: Für den Charakter ist kein Discord-Account verknüpft."):result.rejectionDelivery==="discord"?"Antrag abgelehnt. Die Begründung wird per Discord-DM an den Spieler gesendet.":result.rejectionDelivery==="nachtloot_mailbox"?"Antrag abgelehnt. Da kein Discord-Name verknüpft ist, wurde die Begründung ins NachtLoot-Postfach des Spielers gelegt.":"Antrag abgelehnt.","good");
       await loadP0ReleasePanel();
     }catch(error){
       const message=error.message||"Antrag konnte nicht bearbeitet werden.";
