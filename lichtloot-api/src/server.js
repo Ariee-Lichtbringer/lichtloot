@@ -5766,7 +5766,7 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
       }
     }
   }
-  const sendRejectionDm=decision==="rejected"&&["true","1","yes","ja"].includes(clean(params.sendRejectionDm).toLowerCase());
+  const sendRejectionDm=decision==="rejected";
   let reviewDmTarget=null;
   if(sendRejectionDm||decision==="approved"){
     if(sendRejectionDm&&!clean(params.reviewNote)){const error=new Error("Bitte einen Ablehnungsgrund für die Discord-Nachricht eintragen.");error.statusCode=400;throw error;}
