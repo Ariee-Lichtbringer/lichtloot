@@ -67,7 +67,9 @@
     if(!side.querySelector('.sidebar-account-entry')){
       const entry=document.createElement('button');entry.type='button';entry.className='sidebar-account-entry';
       entry.append('Mein ');const label=document.createElement('span');label.dataset.guildBrand='lootName';label.textContent=document.querySelector('[data-guild-brand="lootName"]')?.textContent||'LichtLoot';entry.append(label);
-      entry.addEventListener('click',()=>window.openAccountManagementCenter());side.querySelector('.start-sidebar-logo').after(entry);
+      entry.addEventListener('click',()=>window.openAccountManagementCenter());
+      const logo=side.querySelector('.start-sidebar-logo');
+      (logo.closest('a')||logo).after(entry);
     }
     side.querySelectorAll('.start-side-group-toggle').forEach(button=>button.setAttribute('aria-expanded',String(!button.parentElement.classList.contains('collapsed'))));
     const slug=new URLSearchParams(location.search).get('guild')||'';
