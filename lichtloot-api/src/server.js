@@ -12851,7 +12851,7 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if ((!raidResult || !raidResult.rows.length) && prioPin) {
+    if (!externalRaidId && (!raidResult || !raidResult.rows.length) && prioPin) {
       raidResult = await client.query(
         `select id, external_raid_id, name, raid_type, raid_date, raid_time,
                 raid_pin, player_link, discord_channel_id, status
@@ -12865,25 +12865,13 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if ((!raidResult || !raidResult.rows.length) && prioPin) {
-      raidResult = await client.query(
-        `select id, external_raid_id, name, raid_type, raid_date, raid_time,
-                raid_pin, player_link, discord_channel_id, status
-         from raids
-         where guild_id = $1
-           and raid_pin = $2
-         order by updated_at desc
-         limit 1`,
-        [guildId, prioPin]
-      );
-    }
 
     if (!raidResult || !raidResult.rows.length) {
       let p0OnlyEvent = null;
       if (externalRaidId.toUpperCase().startsWith("P0-")) {
         p0OnlyEvent = await findP0OnlyEvent(guildId, { raidId: externalRaidId });
       }
-      if (!p0OnlyEvent && prioPin) {
+      if (!p0OnlyEvent && !externalRaidId && prioPin) {
         p0OnlyEvent = await findP0OnlyEvent(guildId, {
           playerPin: prioPin,
           raid: raidType
@@ -12946,6 +12934,12 @@ async function savePrio({ guildId, query: params }) {
     }
 
     const savedRaidForSignupCheck = raidResult.rows[0];
+    // A stale client must never save an AQ40 selection into a Naxx raid.
+    if (raidType && !raidTypeSearchValues(raidType).includes(String(savedRaidForSignupCheck.raid_type || "").toLowerCase())) {
+      const error = new Error("Der Raid gehört nicht zu dieser Prioseite. Bitte öffne den aktuellen Raid-Link erneut.");
+      error.statusCode = 409;
+      throw error;
+    }
     const pureP0Event = clean(savedRaidForSignupCheck.external_raid_id).toUpperCase().startsWith("P0-")
       ? await findP0OnlyEvent(guildId, { raidId: savedRaidForSignupCheck.external_raid_id })
       : null;
@@ -22768,7 +22762,7 @@ async function findRaid(guildId, params) {
 
   const clauses = ["guild_id = $1", "deleted_at is null"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
-  if (raidType && (leadPin || prioPin) && !raidId) {
+  if (raidType) {
     values.push(raidTypeSearchValues(raidType));
     clauses.push(`lower(raid_type) = any($${values.length})`);
   }
@@ -22782,18 +22776,6 @@ async function findRaid(guildId, params) {
     values
   );
 
-  if (!result.rows.length && prioPin) {
-    result = await query(
-      `select *
-       from raids
-       where guild_id = $1
-         and upper(trim(coalesce(raid_pin, ''))) = upper(trim($2))
-         and deleted_at is null
-       order by raid_date desc, created_at desc
-       limit 1`,
-      [guildId, prioPin]
-    );
-  }
 
   return result.rows[0] || null;
 }

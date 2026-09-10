@@ -184,3 +184,18 @@ body.loot-redesign #prioCard .table-scroll{height:auto!important;max-height:none
 
 body.loot-redesign #mainGrid>#prioCard{height:auto!important;max-height:none!important;align-self:start!important}
 body.loot-redesign #prioCard>.table-scroll{flex:none!important;height:auto!important;max-height:none!important}
+
+/* Both scroll areas reach their card's bottom, including pure P0 signups
+   without the regular raid-signup section. Header height may differ. */
+@media(min-width:1361px){
+  body.loot-redesign #mainGrid:has(#prioCard.prios-closed)>#lootCard{
+    display:flex;flex-direction:column;min-height:0;align-self:stretch!important;
+  }
+  body.loot-redesign #mainGrid:has(#prioCard.prios-closed)>#lootCard>#lootList{
+    flex:1 1 620px;height:620px;min-height:0;max-height:none!important;
+    margin-bottom:0;overflow:auto;
+  }
+  body.loot-redesign #mainGrid:has(#prioCard.prios-closed)>#lootCard>:not(#lootList),
+  body.loot-redesign #prioCard.prios-closed>:not(.table-scroll){flex-shrink:0}
+  body.loot-redesign #prioCard.prios-closed>.table-scroll{margin-bottom:0}
+}
