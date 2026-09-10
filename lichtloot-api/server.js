@@ -6,6 +6,9 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, p0Pool, p0Query, query, requireGuild } from "./db.js";
 
+import { createCharacterProfessions } from "./src/character-professions.js";
+const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
+
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
@@ -28236,6 +28239,14 @@ app.post("/api/combat-log/import", async (req, res, next) => {
 app.post("/api/apps-script", async (req, res, next) => {
   try {
     const action = clean(req.body?.action || req.query?.action);
+    if (action === "saveCharacterProfessions" || action === "getCharacterProfessions") {
+      const params = req.body || {};
+      const guild = await requireGuild(resolveGuildSlug(params.guild));
+      requireMatchingGuildId(guild, params);
+      const result = await characterProfessions(guild, params, action === "saveCharacterProfessions");
+      return res.json(result);
+    }
+
     if (clean(req.body?.masterCode || req.query?.masterCode)) {
       await loadMasterCodeOverrides();
     }
