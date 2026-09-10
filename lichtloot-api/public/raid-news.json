@@ -1,0 +1,8 @@
+{
+  "items": [
+    {"id":"addon-0213","kind":"update","title":"Addon 0.21.3-beta wartet auf CurseForge-Freigabe","text":"Nach der Freigabe in CurseForge aktualisieren. Für die neuen Gildenregeln zusätzlich GuildLoot Sync 0.3.9 installieren.","url":"https://www.curseforge.com/wow/addons/guildloot-classic-era/files/all"},
+    {"id":"sync-039","kind":"news","title":"GuildLoot Sync 0.3.9 ist verfügbar","text":"Gildenregeln für Prios und P0/P0+ werden jetzt ins Addon übertragen.","action":"addon"},
+    {"id":"addon-lists","kind":"news","title":"Mehr Übersicht im Addon","text":"Acht Priozeilen, Sortierung nach Klasse und Nummerierung – neu in 0.21.3.","action":"addon"},
+    {"id":"archive","kind":"news","title":"Raidarchiv & Berufe skillen","text":"Vergangene Raids nachlesen und deinen Beruf von 1 bis 300 planen.","action":"news"}
+  ]
+}
