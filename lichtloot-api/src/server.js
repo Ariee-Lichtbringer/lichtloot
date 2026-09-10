@@ -1,3 +1,4 @@
+import { createCharacterProfessions } from "./character-professions.js";
 import { createSupportDiscordReplies } from "./support-discord-replies.js";
 import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
 import { addonUpdate } from './addon-update.js';
@@ -69,6 +70,7 @@ const gmailApi = createGmailApi({query});
 const supportDiscordReplies = createSupportDiscordReplies({query,ensureNotices:()=>supportNotices.ensure(),ensureMembers:ensureDiscordChannelSchema});
 const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensureSupportReplySchema});
 const raidSheetBridge=createRaidSheetBridge(query);
+const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -31745,6 +31747,13 @@ app.post("/api/combat-log/import", async (req, res, next) => {
 app.post("/api/apps-script", async (req, res, next) => {
   try {
     const action = clean(req.body?.action || req.query?.action);
+    if (action === "saveCharacterProfessions" || action === "getCharacterProfessions") {
+      const params = req.body || {};
+      const guild = await requireGuild(resolveGuildSlug(params.guild));
+      requireMatchingGuildId(guild, params);
+      return res.json(await characterProfessions(guild, params, action === "saveCharacterProfessions"));
+    }
+
     if (clean(req.body?.masterCode || req.query?.masterCode)) {
       await loadMasterCodeOverrides();
     }
