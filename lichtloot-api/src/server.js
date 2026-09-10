@@ -1,3 +1,4 @@
+import { createSupportDiscordReplies } from "./support-discord-replies.js";
 import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
 import { addonUpdate } from './addon-update.js';
 import { archiveItemMetadata } from './raid-archive-items.js';
@@ -65,6 +66,7 @@ const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,p
 let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
 const gmailApi = createGmailApi({query});
+const supportDiscordReplies = createSupportDiscordReplies({query,ensureNotices:()=>supportNotices.ensure(),ensureMembers:ensureDiscordChannelSchema});
 const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensureSupportReplySchema});
 const raidSheetBridge=createRaidSheetBridge(query);
 const app = express();
@@ -31847,6 +31849,13 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({success:true,...await (action==='platformGmailVerify'?gmailApi.verify():gmailApi.status())});
     }
 
+    if (action === "platformGetSupportDiscordReplies" || action === "platformSendSupportDiscordReply") {
+      enforceSecurityRateLimit(req, 'platform-support-discord-reply', 30, 15 * 60 * 1000);
+      requirePlatformMasterCode(req.body.masterCode);
+      if (!isUuid(clean(req.body.id))) return res.status(400).json({success:false,error:'Ungültige Supportmeldung.'});
+      await ensureSupportTicketSchema();
+      return res.json(await (action === "platformGetSupportDiscordReplies" ? supportDiscordReplies.history(clean(req.body.id)) : supportDiscordReplies.send(req.body)));
+    }
     if (action === "platformGetSupportReplies" || action === "platformSendSupportReply") {
       enforceSecurityRateLimit(req, 'platform-support-reply', 30, 15 * 60 * 1000);
       res.set('Cache-Control','no-store');
