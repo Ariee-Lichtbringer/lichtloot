@@ -10267,7 +10267,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     sessionStorage.removeItem("lichtlootStartMenuAction");
   }catch(error){}
   const requestedPlannerView=new URLSearchParams(location.search).get("view");
-  if(["worldbuff","hordenbuff","create"].includes(requestedPlannerView))startMenuAction=requestedPlannerView;
+  if(["worldbuff","hordenbuff","create","addon"].includes(requestedPlannerView))startMenuAction=requestedPlannerView;
   if(startMenuAction && startMenuAction!=="dashboard"){
     window.setTimeout(()=>{
       if(startMenuAction==="worldbuff" || startMenuAction==="hordenbuff") showBuffOverview(startMenuAction);
@@ -10276,6 +10276,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
       else if(startMenuAction==="raidlead") toggleRaidleadLogin();
       else if(startMenuAction==="create") toggleRaidCreate();
       else if(startMenuAction==="account") openAccountManagementCenter();
+      else if(startMenuAction==="addon") showAddonGuide();
     },120);
   }
   document.addEventListener("click",event=>{
