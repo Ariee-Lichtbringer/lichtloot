@@ -9,11 +9,11 @@
   const dialog = document.createElement('dialog');
   dialog.className = 'addon-beta-dialog';
   dialog.setAttribute('aria-labelledby', 'addonBetaTitle');
-  dialog.innerHTML = `<form><h2 id="addonBetaTitle">GuildLoot Sync herunterladen</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option></select><p id="addonBetaHint">Kostenlos und ohne Download-PIN · Sync 0.3.9</p><ol class="sync-download-steps"><li>Installer herunterladen und öffnen. Eine laufende Sync-App vorher beenden.</li><li>In Sync „Vorhandenes Addon verbinden“ wählen, wenn du es über CurseForge installiert hast.</li><li>Gildenprofil mit deinem Spieler-PIN verbinden, synchronisieren und in WoW /reload eingeben.</li></ol><p class="sync-download-note">Deine vorhandenen Gildenprofile bleiben beim Update erhalten.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
+  dialog.innerHTML = `<form><h2 id="addonBetaTitle">GuildLoot Sync herunterladen</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option></select><p id="addonBetaHint">Kostenlos und ohne Download-PIN · Sync 0.3.10</p><ol class="sync-download-steps"><li>Installer herunterladen und öffnen. Eine laufende Sync-App vorher beenden.</li><li>In Sync „Vorhandenes Addon verbinden“ wählen, wenn du es über CurseForge installiert hast.</li><li>Gildenprofil mit deinem Spieler-PIN verbinden, synchronisieren und in WoW /reload eingeben.</li></ol><p class="sync-download-note"><strong>Update einer vorhandenen Version:</strong> Sync schließen → heruntergeladene Installationsdatei ausführen → Sync wieder öffnen. Die bisherige Version wird ersetzt. Deine Gildenprofile und Einstellungen bleiben erhalten. Nur herunterladen reicht nicht aus.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
   document.body.append(dialog);
   const status = dialog.querySelector('[role=status]'), submit = dialog.querySelector('[type=submit]');
   const platform=dialog.querySelector('select');
-  const names={windows:'GuildLoot-Sync-0.3.9-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-0.3.9-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-0.3.9-mac-Intel.pkg'};
+  const names={windows:'GuildLoot-Sync-0.3.10-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-0.3.10-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-0.3.10-mac-Intel.pkg'};
   platform.value=/Win/i.test(navigator.platform)?'windows':'';
   let controller;
   dialog.querySelector('[data-close]').onclick = () => dialog.close();
@@ -36,7 +36,7 @@
       if(!response.ok){ const data = await response.json().catch(()=>({})); throw new Error(data.error || 'Download fehlgeschlagen. Bitte erneut versuchen.'); }
       const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement('a');
       link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
-      status.textContent = 'Download fertig. Öffne '+filename+' in deinen Downloads und folge der Installation. GuildLoot Sync startet danach.';
+      status.textContent = 'Download fertig. Öffne '+filename+' in deinen Downloads und folge der Installation. Öffne GuildLoot Sync anschließend wieder.';
     } catch(error) { if(error.name !== 'AbortError') {status.textContent = error.message;} }
     finally { submit.disabled = false; platform.disabled=false; }
   });
