@@ -2956,6 +2956,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <link rel="stylesheet" href="raid-cards-dashboard.css?v=1">
 <link rel="stylesheet" href="planner-stitch.css?v=20260909-icons1">
 <link rel="stylesheet" href="/account-refresh.css?v=20260909-2">
+<link rel="stylesheet" href="addon-guide.css?v=20260910">
 </head>
 
 <body class="start-dashboard-body">
@@ -3301,7 +3302,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div id="mobileLootLoginStatus" class="mobile-loot-login-status" aria-live="polite"></div>
       </form>
     </section>
-    <header class="start-header"><div><div class="start-title-row"><div><div class="start-kicker">Raidübersicht</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><a class="buymeacoffee-support header-coffee" href="https://buymeacoffee.com/lichtloot" target="_blank" rel="noopener noreferrer" aria-label="LichtLoot auf Buy Me a Coffee unterstützen"><img src="images/buymeacoffee-lichtloot.png" alt="Kaffeebecher"><span><strong>Kaffee für LichtLoot ☕</strong><small>Damit der Server wacher bleibt als der Raid.</small></span><b aria-hidden="true">›</b></a><div id="lichtlootRaidRecords" class="raid-records-header" aria-label="Serverrekorde der Lichtbringer"><div class="raid-records-header-icon" aria-hidden="true">🏆</div><div class="raid-records-header-copy"><strong>Unsere Serverrekorde</strong><div class="raid-records-list"><span>Onyxia <b>1:19 Min.</b></span><span>MC <b>24 Min.</b></span><span>BWL <b>30 Min.</b></span><span>AQ40 <b>54 Min.</b></span><span>Naxxramas <b>1:52 Std.</b></span></div></div></div></div></div><div class="start-header-actions"><button id="headerBackRaids" class="header-back-raids hidden" type="button" onclick="goHomeView()">← Zurück zu den Raids</button></div></header>
+    <header class="start-header"><div><div class="start-title-row"><div><div class="start-kicker">Raidübersicht</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><a class="buymeacoffee-support header-coffee" href="https://buymeacoffee.com/lichtloot" target="_blank" rel="noopener noreferrer" aria-label="LichtLoot auf Buy Me a Coffee unterstützen"><img src="images/buymeacoffee-lichtloot.png" alt="Kaffeebecher"><span><strong>Kaffee für LichtLoot ☕</strong><small>Damit der Server wacher bleibt als der Raid.</small></span><b aria-hidden="true">›</b></a><button type="button" class="buymeacoffee-support header-coffee addon-guide-launch" onclick="showAddonGuide()"><img src="images/addon-guide/curseforge.svg" alt=""><span><strong>GuildLoot Addon</strong><small>Download &amp; Installation</small></span><b aria-hidden="true">›</b></button><div id="lichtlootRaidRecords" class="raid-records-header" aria-label="Serverrekorde der Lichtbringer"><div class="raid-records-header-icon" aria-hidden="true">🏆</div><div class="raid-records-header-copy"><strong>Unsere Serverrekorde</strong><div class="raid-records-list"><span>Onyxia <b>1:19 Min.</b></span><span>MC <b>24 Min.</b></span><span>BWL <b>30 Min.</b></span><span>AQ40 <b>54 Min.</b></span><span>Naxxramas <b>1:52 Std.</b></span></div></div></div></div></div><div class="start-header-actions"><button id="headerBackRaids" class="header-back-raids hidden" type="button" onclick="goHomeView()">← Zurück zu den Raids</button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/raid-templates/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -3367,7 +3368,26 @@ html,body{max-width:100%;overflow-x:hidden}
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
-      <section class="dash-panel hidden" id="raidArchiveSection"><iframe id="raidArchiveFrame" title="Raidarchiv der ausgewählten Lootgilde" style="display:block;width:100%;min-height:850px;border:0" scrolling="no"></iframe></section>
+      <section class="dash-panel hidden addon-guide" id="addonGuideSection" aria-labelledby="addonGuideTitle">
+<div class="ag-eyebrow">GuildLoot · Classic Era · Beta</div>
+<h2 id="addonGuideTitle" tabindex="-1">Deine Gilde. Im Spiel.</h2>
+<p>Prios, P0+-Punkte, Raidtermine und Raidsheets direkt in World of Warcraft. GuildLoot Sync verbindet das Addon mit deinen Gildenprofilen auf LichtLoot.</p>
+<div class="ag-actions"><button type="button" data-addon-download>↓ Addon &amp; Sync herunterladen</button><button type="button" disabled><img src="images/addon-guide/curseforge.svg" alt="">CurseForge · bald verfügbar</button></div>
+<p>Aktuell: <strong>GuildLoot Sync 0.3.7 · Addon 0.21.2-beta</strong>. Für den Download benötigst du die Beta-PIN. Der CurseForge-Link wird hier später freigeschaltet.</p>
+<div class="ag-note"><strong>Für den Start reicht GuildLoot Sync.</strong> Das Addon ist bereits enthalten und kann damit installiert werden. Die separate Sync-App muss für den automatischen Datenaustausch geöffnet bleiben.</div>
+<div class="ag-step"><h3>1 · Sync herunterladen und installieren</h3><ol><li>Öffne den Download oben. Wähle <strong>Windows</strong>, <strong>Mac mit Apple-Chip</strong> oder <strong>Mac mit Intel</strong> und gib die <strong>Beta-PIN für den Download</strong> ein.</li><li>Bei einem Update: Beende die bisherige GuildLoot-Sync-App vollständig. Öffne anschließend die heruntergeladene <strong>.exe</strong> oder <strong>.pkg</strong> und folge der Installation. Vorhandene Gildenprofile bleiben erhalten.</li><li>Öffne GuildLoot Sync.</li></ol></div>
+<div class="ag-step"><h3>2 · Addon mit WoW verbinden</h3><ol><li>Klicke in Sync auf <strong>„Addon installieren / aktualisieren“</strong>.</li><li>Wähle deinen <strong>World-of-Warcraft-Ordner</strong> oder den darin enthaltenen Ordner <strong>_classic_era_</strong>. Bestätige mit <strong>„Ordner auswählen“</strong>.</li><li>Starte WoW nach der ersten Installation oder einem Addon-Update <strong>vollständig neu</strong>.</li></ol><p>Typische Installationsorte:</p><p>Windows: <code>C:\Program Files (x86)\World of Warcraft\_classic_era_</code><br>Mac: <code>/Applications/World of Warcraft/_classic_era_</code></p><div class="ag-note">Im Ordnerdialog werden nur Ordner angezeigt. Wenn du im Addon-Ordner nur „Media“ siehst, bedeutet das nicht, dass Dateien fehlen. Du wählst einen <strong>Ordner</strong> aus, keine einzelne Lua-Datei.</div></div>
+<div class="ag-step"><h3>3 · Deine Gilde und Charaktere laden</h3><ol><li>Wähle unter <strong>„GuildLoot-Gilde“</strong> deine Gilde.</li><li>Trage deinen <strong>Spieler-PIN</strong> von LichtLoot ein und klicke auf <strong>„Charaktere laden“</strong>. Das ist <strong>nicht die Beta-PIN</strong> vom Download.</li><li>Wähle deine Charaktere und speichere das Gildenprofil. Weitere Gilden kannst du als eigene Profile hinzufügen.</li><li>Klicke auf <strong>„Jetzt synchronisieren“</strong>. Nach einem erfolgreichen Abruf gibst du in WoW <code>/reload</code> ein. Mit <code>/gle</code> öffnest du das Addon.</li></ol><figure class="ag-sync"><a href="images/addon-guide/sync.png" target="_blank" rel="noopener"><img loading="lazy" src="images/addon-guide/sync.png" alt="GuildLoot Sync mit Gildenprofilen, Ordnerauswahl und automatischer Aktualisierung"></a><figcaption>So sieht die verbundene Sync-App aus. Klicke auf das Bild, um es größer zu öffnen.</figcaption></figure></div>
+<div class="ag-step"><h3>4 · Im Alltag synchronisieren</h3><p>Lass Sync geöffnet und aktiviere bei Bedarf <strong>„Alle 30 Sekunden aktualisieren“</strong>. Mit <strong>„GuildLoot Sync beim Anmelden starten“</strong> öffnet sich die App beim Anmelden am Computer. Wird die App beendet, endet auch die automatische Synchronisierung.</p><p><strong>Neue Daten ansehen:</strong> Abruf in Sync abwarten → in WoW <code>/reload</code>.</p><p><strong>Prios oder Anmeldung im Addon absenden:</strong> Absenden → <code>/reload</code> → Sync überträgt an die Website → nach dem Abruf erneut <code>/reload</code>, um die Bestätigung zu laden.</p></div>
+<div class="ag-step"><h3>Das erwartet dich im Addon</h3><div class="ag-gallery"><figure><a href="images/addon-guide/profil.png" target="_blank" rel="noopener"><img loading="lazy" src="images/addon-guide/profil.png" alt="Dein persönlicher Überblick"></a><figcaption><strong>Dein persönlicher Überblick</strong> · Eigene Prios, P0+-Punkte und Freigaben.</figcaption></figure><figure><a href="images/addon-guide/prios.png" target="_blank" rel="noopener"><img loading="lazy" src="images/addon-guide/prios.png" alt="Raids und Prios"></a><figcaption><strong>Raids und Prios</strong> · Anmeldung, Loot-Auswahl und aktuelle Prioliste.</figcaption></figure><figure><a href="images/addon-guide/raidsheet.png" target="_blank" rel="noopener"><img loading="lazy" src="images/addon-guide/raidsheet.png" alt="Raidsheets"></a><figcaption><strong>Raidsheets</strong> · Boss-Taktiken und Rollen in einem eigenen Fenster.</figcaption></figure></div><p>Beispielansichten aus der Beta. Der Kalender bietet außerdem eine Wochenübersicht mit Filtern für deine Raids, Resetzeiten und Worldbuffs.</p></div>
+<div class="ag-step"><h3>Addon schon installiert?</h3><p>Wenn du das Addon per ZIP oder später über CurseForge installierst, wähle in Sync <strong>„Vorhandenes Addon verbinden“</strong> und den Ordner <code>_classic_era_/Interface/AddOns/GuildLootEra</code>. Danach richtest du dein Gildenprofil wie oben ein.</p><p>Für die manuelle Installation wählst du im Download <strong>„Nur WoW-Addon · ZIP“</strong>. Entpacke den enthaltenen Ordner <code>GuildLootEra</code> nach <code>_classic_era_/Interface/AddOns/</code> und starte WoW neu. CurseForge wird künftig das Addon installieren und aktualisieren; für die automatische Verbindung zur Website wird weiterhin Sync benötigt.</p></div>
+<div class="ag-step"><h3>Wenn etwas nicht klappt</h3>
+<details><summary>„Die lokale Datei konnte nicht gelesen oder geschrieben werden“</summary><p>Prüfe zuerst den ausgewählten WoW-Ordner und ob du dort Dateien schreiben darfst. Beende WoW und Sync und öffne Sync erneut. Unter Windows kann bei fehlenden Schreibrechten im Programme-Ordner ein Start von Sync als Administrator helfen. Bleibt der Fehler bestehen, melde den genauen Text und den gewählten Ordner über „Fehler melden“.</p></details>
+<details><summary>Das Setup meldet, dass die alte App noch läuft</summary><p>Beende GuildLoot Sync vollständig, auch eine eventuell noch laufende Instanz im Hintergrund. Starte den Computer bei Bedarf neu und führe das Setup erneut aus. Wenn die Installation weiter scheitert, melde die genaue Fehlermeldung. Lösche deine gespeicherten Gildenprofile nicht.</p></details>
+<details><summary>Neue Daten oder Worldbuffs fehlen</summary><p>Installiere die aktuelle Sync-Version und starte die Sync-App neu. Ein /reload in WoW startet die Sync-App nicht neu. Prüfe das richtige Gildenprofil, klicke auf „Jetzt synchronisieren“ und gib nach dem erfolgreichen Abruf /reload ein. Kontrolliere im Kalender die gewählte Woche und den Filter „Worldbuffs“.</p></details>
+<details><summary>WoW zeigt das Addon nicht an</summary><p>Prüfe den Ordner _classic_era_/Interface/AddOns/GuildLootEra. Die .toc-Datei muss direkt darin liegen, nicht in einem weiteren verschachtelten GuildLootEra-Ordner. Starte WoW vollständig neu und aktiviere GuildLoot Era in der Addon-Liste.</p></details>
+</div></section>
+<section class="dash-panel hidden" id="raidArchiveSection"><iframe id="raidArchiveFrame" title="Raidarchiv der ausgewählten Lootgilde" style="display:block;width:100%;min-height:850px;border:0" scrolling="no"></iframe></section>
       <section class="dash-panel logs-dashboard-section hidden" id="logsDashboardSection">
         <div class="logs-dashboard-hero">
           <div class="logs-dashboard-title">
@@ -3898,7 +3918,16 @@ function setStartNavActive(key){
   }
 }
 
+function showAddonGuide(){
+  goHomeView();
+  setDashboardCenterMode("addon");
+  setStartNavActive("addon");
+  document.getElementById("addonGuideTitle").focus({preventScroll:true});
+  document.getElementById("addonGuideSection").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function setDashboardCenterMode(mode){
+  document.getElementById("addonGuideSection")?.classList.toggle("hidden",mode !== "addon");
   document.body.classList.toggle("buff-planner-open",mode === "buff");
   const showDashboard=mode === "dashboard";
   ["nextRaidPanel","raidInstances"].forEach(id=>{
@@ -3914,7 +3943,7 @@ function setDashboardCenterMode(mode){
   if(accountPanel) accountPanel.classList.toggle("hidden", mode !== "account");
   const rulesPanel=document.getElementById("raidRulesPanel");
   if(rulesPanel) rulesPanel.classList.toggle("hidden", mode !== "raidRules");
-  document.getElementById("headerBackRaids")?.classList.toggle("hidden", mode !== "account");
+  document.getElementById("headerBackRaids")?.classList.toggle("hidden", mode !== "account" && mode !== "addon");
 }
 
 function positionGlobalGuildMenu(anchor){
