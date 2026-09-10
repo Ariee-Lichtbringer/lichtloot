@@ -21,7 +21,8 @@ export function installAddonBetaDownload(app, {
       return res.download(downloaded, artifact.name, {headers:{'Content-Type':artifact.type}}, error => {
         if (error && !res.headersSent) res.status(503).json({error:'Das Installationspaket konnte nicht heruntergeladen werden. Bitte erneut versuchen.'});
       });
-    } catch {
+    } catch (error) {
+      console.warn('Sync installer download failed:', error.message);
       res.status(503).json({error:'Das Installationspaket ist gerade nicht verfügbar. Bitte erneut versuchen.'});
     }
   });

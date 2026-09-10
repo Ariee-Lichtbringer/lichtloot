@@ -56,6 +56,6 @@ export function createCharacterProfessions({query,pool,getCharactersByPin}){
    }catch(e){await db.query('rollback');throw e;}finally{db.release();}
   }
   const result=await query('select character_id,snapshot from character_profession_snapshots where guild_id=$1 and character_id=any($2::uuid[])',[guild.id,owned.map(c=>c.id)]);
-  return {success:true,guild:guild.slug,characters:owned.map(c=>({player:c.name,realm:c.server,snapshot:result.rows.find(r=>r.character_id===c.id)?.snapshot||null}))};
+  return {success:true,guild:guild.slug,characters:owned.map(c=>({player:c.name,realm:c.server,className:c.className||'',snapshot:result.rows.find(r=>r.character_id===c.id)?.snapshot||null}))};
  };
 }
