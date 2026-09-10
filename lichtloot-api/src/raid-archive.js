@@ -66,7 +66,7 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       if (!raids.length) return res.status(404).json({success:false,error:'Raid nicht gefunden.'});
       const logs = exists.rows[0]?.logs ? await query('select payload from guildloot_era_logs where guild_id=$1 and raid_id=$2 order by created_at',[guild.id,result.rows[0].id]) : {rows:[]};
       const priorities = await getPublishedPrios({guildId:guild.id,query:{raidId:raids[0].id}});
-      const priosVisible = result.rows[0].past === true || priorities.published === true;
+      const priosVisible = result.rows[0].past === true || logs.rows.length > 0 || priorities.published === true;
       const prio = value => priosVisible ? value : (value ? 'gesetzt' : '–');
       const prios = (priorities.prios||[]).map(p=>({player:p.player,server:p.server,className:p.className,
         p1:prio(p.p1),p2:prio(p.p2),p3:prio(p.p3),p0:p.p0Item}));

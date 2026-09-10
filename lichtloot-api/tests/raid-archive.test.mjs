@@ -18,7 +18,7 @@ assert.match(calls[1].sql,/guild_id=\$1/);assert.match(calls[1].sql,/raid_date <
 assert.equal((await request({found:false})).status,404);
 console.log('raid archive: scoped reads, safe fields, missing logs and deduplication OK');
 
-assert.equal((await request({past:false})).result.prios[0].p1,'gesetzt');
+assert.equal((await request({past:false,logsExist:false})).result.prios[0].p1,'gesetzt');
 assert.equal((await request({past:false,published:true})).result.prios[0].p1,'Item');
 assert.equal((await request({past:true})).result.prios[0].p1,'Item');
 
@@ -49,3 +49,5 @@ const added=includeConfirmedAwards([], [confirmed]);assert.equal(added.length,1)
 assert.equal(includeConfirmedAwards(added,[confirmed]).length,1);
 assert.equal(includeConfirmedAwards([],[{...confirmed,p0ItemReceived:false}]).length,0);
 assert.equal(includeConfirmedAwards(added,[{...confirmed,server:'Lakeshire'}]).length,2);
+
+assert.equal((await request({past:false,published:false})).result.prios[0].p1,'Item');
