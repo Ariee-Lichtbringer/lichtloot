@@ -1,8 +1,89 @@
 {
   "items": [
-    {"id":"addon-0213","kind":"update","title":"Addon 0.21.3-beta wartet auf CurseForge-Freigabe","text":"Nach der Freigabe in CurseForge aktualisieren. Für die neuen Gildenregeln zusätzlich GuildLoot Sync 0.3.9 installieren.","url":"https://www.curseforge.com/wow/addons/guildloot-classic-era/files/all"},
-    {"id":"sync-039","kind":"news","title":"GuildLoot Sync 0.3.9 ist verfügbar","text":"Gildenregeln für Prios und P0/P0+ werden jetzt ins Addon übertragen.","action":"addon"},
-    {"id":"addon-lists","kind":"news","title":"Mehr Übersicht im Addon","text":"Acht Priozeilen, Sortierung nach Klasse und Nummerierung – neu in 0.21.3.","action":"addon"},
-    {"id":"archive","kind":"news","title":"Raidarchiv & Berufe skillen","text":"Vergangene Raids nachlesen und deinen Beruf von 1 bis 300 planen.","action":"news"}
+    {
+      "id": "addon-0213",
+      "kind": "update",
+      "title": "10.09.2026 · 14:52 Uhr — Neue Aktualisierung steht bereit",
+      "text": "GuildLoot Addon 0.21.3-beta auf CurseForge aktualisieren →",
+      "url": "https://www.curseforge.com/wow/addons/guildloot-classic-era/files/all",
+      "publishedAt": "2026-09-10T14:52:00+02:00"
+    },
+    {
+      "id": "news-0",
+      "kind": "news",
+      "title": "Neu: Raidarchiv auf der Startseite",
+      "text": "Vergangene Raids und ihre Lootübersichten direkt auf der Startseite ansehen.",
+      "action": "raid-archive"
+    },
+    {
+      "id": "news-1",
+      "kind": "news",
+      "title": "Neu: Berufe skillen",
+      "text": "Deinen Beruf von 1 bis 300 planen – mit Rezepten, Materialien und Ausbildungshinweisen.",
+      "action": "professions"
+    },
+    {
+      "id": "news-2",
+      "kind": "news",
+      "title": "Tier-Sets finden: T3 und T2,5 mit Materialien und Quests",
+      "text": "T3 und T2,5 samt Materialien, Quests und Token-Belohnungen finden.",
+      "action": "search"
+    },
+    {
+      "id": "news-3",
+      "kind": "news",
+      "title": "Itemvergleich und persönliche Vormerkliste",
+      "text": "Items mit deiner Ausrüstung vergleichen und für deinen Charakter vormerken.",
+      "action": "search"
+    },
+    {
+      "id": "news-4",
+      "kind": "news",
+      "title": "Neu: Funktionen, Items und Spieler suchen",
+      "text": "Funktionen, Gegenstände und Spieler über die zentrale Suche finden.",
+      "action": "search"
+    },
+    {
+      "id": "news-5",
+      "kind": "news",
+      "title": "Fehler oder Probleme? Bitte den Support nutzen",
+      "text": "Probleme mit Beschreibung und Screenshot über „Support · Fehler melden“ melden.",
+      "action": "support"
+    },
+    {
+      "id": "news-6",
+      "kind": "news",
+      "title": "Random-Raids und unabhängige Priolisten",
+      "text": "Spontane Raids und Priolisten mit eigener PrioPIN und LeadPIN erstellen.",
+      "action": "random-create"
+    },
+    {
+      "id": "news-7",
+      "kind": "news",
+      "title": "Ausrüstungsplaner mit Blizzard Armory",
+      "text": "Dein Wunsch-Gear planen und Items in deine Prioliste übernehmen.",
+      "action": "gear-planner"
+    },
+    {
+      "id": "news-8",
+      "kind": "news",
+      "title": "Talentbäume, Setboni und Verzauberungen",
+      "text": "Talentbäume, Setboni und Verzauberungen im Ausrüstungsplaner berücksichtigen.",
+      "action": "gear-planner"
+    },
+    {
+      "id": "news-9",
+      "kind": "news",
+      "title": "Aktuelle Charakteransicht aus der Armory",
+      "text": "Ausrüstung, Charakterwerte und Item-Tooltips in deiner Charakteransicht ansehen.",
+      "action": "gear-planner"
+    },
+    {
+      "id": "bimmi-hymne",
+      "kind": "music",
+      "title": "Bimmis Lichtbringer-Hymne",
+      "text": "Jetzt auf YouTube anhören ♫",
+      "url": "https://www.youtube.com/watch?v=EkNDiPCyIHQ"
+    }
   ]
 }

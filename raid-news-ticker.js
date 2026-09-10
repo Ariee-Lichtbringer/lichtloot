@@ -4,10 +4,10 @@
   pause.addEventListener('click',()=>{const paused=root.dataset.paused!=='true';root.dataset.paused=String(paused);pause.textContent=paused?'▶':'Ⅱ';pause.setAttribute('aria-label',paused?'Newsticker fortsetzen':'Newsticker pausieren');pause.setAttribute('aria-pressed',String(paused));});
   function item(entry){
     let href;
-    try{const url=new URL(entry.url);if(url.protocol==='https:'&&url.hostname==='www.curseforge.com')href=url.href;}catch{}
+    try{const url=new URL(entry.url);if(url.protocol==='https:'&&['www.curseforge.com','www.youtube.com'].includes(url.hostname))href=url.href;}catch{}
     const el=document.createElement(href?'a':'button');el.className='raid-news-item';el.dataset.kind=entry.kind==='update'?'update':'news';
-    if(href){el.href=href;el.target='_blank';el.rel='noopener noreferrer';const icon=document.createElement('img');icon.src='images/addon-guide/curseforge.svg';icon.alt='CurseForge';el.append(icon);}else{el.type='button';el.addEventListener('click',()=>{if(entry.action==='addon')window.showAddonGuide?.();else window.openLichtlootNews?.();});}
-    const title=document.createElement('strong');title.textContent=String(entry.title||'Neuigkeit').slice(0,180);const body=document.createElement('span');body.textContent='· '+String(entry.text||'').slice(0,350);el.append(title,body);return el;
+    if(href){el.href=href;el.target='_blank';el.rel='noopener noreferrer';if(new URL(href).hostname==='www.curseforge.com'){const icon=document.createElement('img');icon.src='images/addon-guide/curseforge.svg';icon.alt='CurseForge';el.append(icon);}}else{el.type='button';el.addEventListener('click',()=>{if(entry.action==='addon')window.showAddonGuide?.();else if(['raid-archive','professions','search','support','random-create','gear-planner'].includes(entry.action))window.openLichtlootNewsFeature?.(entry.action);else window.openLichtlootNews?.();});}
+    const title=document.createElement('strong');title.textContent=String(entry.title||'Neuigkeit').slice(0,180);const body=document.createElement('span');body.textContent='· '+String(entry.text||'').slice(0,350);el.append(title);if(entry.text)el.append(body);return el;
   }
   async function refresh(){
     if(busy||document.hidden)return;busy=true;
