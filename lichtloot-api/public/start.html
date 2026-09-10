@@ -3038,11 +3038,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <button class="tool-btn" onclick="loadMyPrios()">Prios anzeigen</button>
     </div>
 
-    <section class="guildloot-addon-hub" aria-label="Addon und Synchronisierung">
-  <div class="addon-hub-head"><div><span class="addon-hub-eyebrow">GUILDLOOT IM SPIEL</span><h3>Deine Gilde. Auch in WoW.</h3><p>Prios, Punkte und Raidtermine mit deinem Addon verbinden.</p></div><span class="addon-hub-version">Sync 0.3.9 · Beta</span></div>
-  <div class="addon-hub-body"><div><div class="addon-hub-actions"><a class="tool-btn addon-hub-primary" href="https://www.curseforge.com/wow/addons/guildloot-classic-era" target="_blank" rel="noopener noreferrer">Addon auf CurseForge ↗</a><button type="button" class="tool-btn" data-addon-download>GuildLoot Sync herunterladen</button></div><p class="addon-hub-note">Deine Gildenprofile bleiben beim Aktualisieren erhalten.</p></div><ol class="addon-hub-steps"><li><span>1</span>Addon über CurseForge installieren</li><li><span>2</span>Vorhandenes Addon in Sync verbinden</li><li><span>3</span>Synchronisieren und /reload</li></ol></div>
-  <div class="addon-hub-export" id="guildlootMyExport"></div>
-</section>
+    
     <div id="myPriosStatus" class="status">Gib deinen SpielerPin ein. Danach werden alle Charaktere mit diesem Pin geladen.</div>
     <div id="myWorldbuffBox" class="my-worldbuff-box hidden">
       <div class="my-worldbuff-head">
@@ -3339,11 +3335,7 @@ html,body{max-width:100%;overflow-x:hidden}
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
           <div class="account-private-row"><div id="startPoLoginCallout" class="account-private-pin hidden" aria-live="polite"><div class="account-private-pin-badge" aria-hidden="true">P0!</div><div class="account-private-pin-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Nur hier sichtbar. Beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><section class="character-overview-card account-current-raids"><div class="character-overview-head"><strong>Meine Raidanmeldungen</strong><small>Ausgewählter Charakter · Prios</small></div><div id="dashboardCharacterRaidCards" class="character-raid-list"><div class="character-overview-empty">Noch kein Charakter ausgewählt.</div></div></section><button class="account-guild-switch" type="button" onclick="openGlobalGuildMenuFromAccount(event)"><img src="images/content.png" data-account-guild-logo alt=""><span><small>Aktive Lootgilde · wechseln</small><strong data-guild-brand="guildName">Lichtbringer</strong></span><b aria-hidden="true">⌄</b></button></div>
-          <section class="guildloot-addon-hub" aria-label="Addon und Synchronisierung">
-  <div class="addon-hub-head"><div><span class="addon-hub-eyebrow">GUILDLOOT IM SPIEL</span><h3>Deine Gilde. Auch in WoW.</h3><p>Prios, Punkte und Raidtermine mit deinem Addon verbinden.</p></div><span class="addon-hub-version">Sync 0.3.9 · Beta</span></div>
-  <div class="addon-hub-body"><div><div class="addon-hub-actions"><a class="tool-btn addon-hub-primary" href="https://www.curseforge.com/wow/addons/guildloot-classic-era" target="_blank" rel="noopener noreferrer">Addon auf CurseForge ↗</a><button type="button" class="tool-btn" data-addon-download>GuildLoot Sync herunterladen</button></div><p class="addon-hub-note">Deine Gildenprofile bleiben beim Aktualisieren erhalten.</p></div><ol class="addon-hub-steps"><li><span>1</span>Addon über CurseForge installieren</li><li><span>2</span>Vorhandenes Addon in Sync verbinden</li><li><span>3</span>Synchronisieren und /reload</li></ol></div>
-  <div class="addon-hub-export" id="guildlootDashboardExport"></div>
-</section>
+          
           <div class="mein-lichtloot-tiles" aria-label="Account-Bereiche">
             <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')"><img src="images/dashboard-icons/admin.jpg" alt=""><span>Charaktere & Prios</span><small>Charakter wählen, Prios ansehen und Twinks verwalten.</small></button>
             <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="openRaidCalendarModal()"><img src="images/dashboard-icons/dashboard.jpg" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
