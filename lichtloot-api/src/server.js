@@ -5374,9 +5374,9 @@ async function requireNachtlootGuild(guildId) {
 
 function poRequestRequirements(type, raid, className, specialization) {
   const source = "https://docs.google.com/spreadsheets/d/136_vXW_p3Z3CMGuXkRkv4hftcxW02p2QO_YMb7OaVfA/edit?gid=1777084015#gid=1777084015";
-  if (type === "recruit") return { title:"Aufhebung Rekrutenstatus", rule:"Verzauberungen Rekrut (P2/P3)", source, checks:["Armory-Link und Screenshot prüfen", "Vorgeschriebene Rekruten-Verzauberungen für Klasse und Raid erfüllt"] };
-  if (type === "p1p3") return { title:"P1–P3 Freigabe", rule:"Verzauberungen Fullraider (P1–P3)", source, checks:["Armory-Link und Screenshot prüfen", "Fullraider-Verzauberungen für Klasse und Raid erfüllt"] };
-  return { title:`P0 Freigabe ${String(raid || "").toUpperCase()}`, rule:"P0 Gear-Voraussetzungen und bestmögliche Verzauberungen", source, className:clean(className), specialization:clean(specialization), checks:["Armory-Link und Screenshot prüfen", "Gear-Voraussetzungen für Klasse/Skillung erfüllt", "Bestmögliche Verzauberungen auf allen relevanten Slots"] };
+  if (type === "recruit") return { title:"Aufhebung Rekrutenstatus", rule:"Verzauberungen Rekrut (P2/P3)", source, checks:["Ausrüstung in der 3D-Charakteransicht prüfen", "Vorgeschriebene Rekruten-Verzauberungen für Klasse und Raid erfüllt"] };
+  if (type === "p1p3") return { title:"P1–P3 Freigabe", rule:"Verzauberungen Fullraider (P1–P3)", source, checks:["Ausrüstung in der 3D-Charakteransicht prüfen", "Fullraider-Verzauberungen für Klasse und Raid erfüllt"] };
+  return { title:`P0 Freigabe ${String(raid || "").toUpperCase()}`, rule:"P0 Gear-Voraussetzungen und bestmögliche Verzauberungen", source, className:clean(className), specialization:clean(specialization), checks:["Ausrüstung in der 3D-Charakteransicht prüfen", "Gear-Voraussetzungen für Klasse/Skillung erfüllt", "Bestmögliche Verzauberungen auf allen relevanten Slots"] };
 }
 
 const classicArmoryCheckCache=new Map();
@@ -5663,6 +5663,22 @@ async function evaluateNachtlootArmory(entry){
   try{const [characterData,equipmentData,statsData]=await Promise.all([classicArmoryPost("",params),classicArmoryPost("/equipment",params),classicArmoryPost("/stats",params)]);const value=evaluateNachtlootArmoryData({entry,character:characterData.character,equipment:equipmentData.equipment||[],stats:statsData.stats||{},spellBonuses:equipmentData.spell_bonuses||{}});classicArmoryCheckCache.set(cacheKey,{value,expiresAt:Date.now()+10*60*1000});return value;}catch(error){return{success:false,passed:false,error:error.message||"ClassicArmory konnte nicht geprüft werden."};}
 }
 
+async function notifyPoRequestReceived(guildId, request, character) {
+  const linked=await query(`select dpl.discord_user_id,p.player_pin,g.slug,g.name as guild_name from characters c join guilds g on g.id=c.guild_id left join players p on p.id=c.player_id left join discord_player_links dpl on dpl.guild_id=c.guild_id and dpl.player_id=c.player_id where c.guild_id=$1 and c.id=$2 limit 1`,[guildId,character.id]);
+  const target=linked.rows[0];if(!target)return "";
+  const names={lichtloot:"Lichtbringer",lichtbringer:"Lichtbringer",nachtloot:"Die Nachtwächter"};
+  const guildName=clean(target.guild_name)&&clean(target.guild_name).toLowerCase()!==clean(target.slug).toLowerCase()?clean(target.guild_name):(names[target.slug]||clean(target.guild_name)||target.slug);
+  if(clean(target.discord_user_id)) {
+    await enqueueBotUpdate({guildId,type:"po_release_received_notice",payload:{discordUserId:clean(target.discord_user_id),guildSlug:target.slug,guildName,character:character.name,server:character.server,requestId:request.id,requestType:request.request_type,raid:request.raid_type}});
+    return "discord";
+  }
+  if(clean(target.player_pin)) {
+    await query(`insert into player_messages(guild_id,player_pin,title,body,raid_name,sender) values($1,$2,$3,$4,$5,$6)`,[guildId,target.player_pin,"PO-Antrag eingegangen",`Dein PO-Antrag für ${character.name} ist bei ${guildName} eingegangen. Du erhältst eine Nachricht, sobald er geprüft wurde.`,clean(request.raid_type).toUpperCase(),"PO Bot"]);
+    return "mailbox";
+  }
+  return "";
+}
+
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
   const eraConfig = await getGuildEraConfiguration(guildId);
@@ -5685,9 +5701,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
     throw error;
   }
   const armoryUrl = clean(params.armoryUrl) || `https://worldofwarcraft.blizzard.com/de-de/classic1x/eu/armory/character/${encodeURIComponent(clean(character.server).toLowerCase())}/${encodeURIComponent(clean(character.name).toLowerCase())}`;
-  const screenshotData = clean(params.screenshotData);
-  if (!screenshotData) { const error = new Error("Bitte einen Screenshot hochladen."); error.statusCode = 400; throw error; }
-  if (screenshotData && !/^data:image\/(png|jpe?g|webp);base64,/i.test(screenshotData)) { const error = new Error("Screenshot-Format ist ungültig."); error.statusCode = 400; throw error; }
+  const screenshotData = ""; // Current character gear replaces screenshot uploads.
   const requirements = poRequestRequirements(requestType, selectedRaid, clean(params.className) || character.class_name, params.specialization);
   const result = await query(
     `insert into po_release_requests (guild_id, character_id, request_type, raid_type, specialization, armory_url, screenshot_data, requirements)
@@ -5701,7 +5715,8 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
     const messageTemplate=(await notificationMessageTemplate(guildId,poNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_releases").catch(()=>""));
     await enqueueBotUpdate({guildId,type:"po_release_request_notice",payload:{targets:notificationTargets,messageTemplate,character:character.name||"",server:character.server||"",className:character.class_name||"",requestType,raid:selectedRaid||"",requestId:request.id}}).catch(error=>console.warn("PO-Freigabehinweis konnte nicht queued werden:",error.message||error));
   }
-  return { success:true, request };
+  const receiptDelivery=await notifyPoRequestReceived(guildId,request,character).catch(error=>{console.warn("PO-Eingangsbestätigung konnte nicht vorgemerkt werden:",error.message||error);return "";});
+  return { success:true, request, receiptDelivery };
 }
 
 async function getPoReleaseRequests({ guildId, query: params = {}, management = false }) {
@@ -5720,7 +5735,7 @@ async function getPoReleaseRequests({ guildId, query: params = {}, management = 
     `select r.*, c.name, c.server, c.class_name from po_release_requests r join characters c on c.id=r.character_id
      where r.guild_id=$1 ${clause} order by case when r.status='pending' then 0 else 1 end, r.created_at desc`, values
   );
-  const entries=await Promise.all(result.rows.map(async row=>{const entry={id:row.id,characterId:row.character_id,name:row.name,server:row.server,className:row.class_name,requestType:row.request_type,raid:row.raid_type||"",specialization:row.specialization||"",armoryUrl:row.armory_url||"",screenshotData:row.screenshot_data||"",requirements:row.requirements||{},status:row.status,reviewNote:row.review_note||"",reviewedBy:row.reviewed_by||"",reviewedAt:row.reviewed_at||"",createdAt:row.created_at};entry.armoryEvaluation=entry.armoryUrl?await evaluateNachtlootArmory(entry):{success:false,passed:false,error:"Armory-Link fehlt."};return entry;}));
+  const entries=await Promise.all(result.rows.map(async row=>{const entry={id:row.id,characterId:row.character_id,name:row.name,server:row.server,className:row.class_name,requestType:row.request_type,raid:row.raid_type||"",specialization:row.specialization||"",armoryUrl:row.armory_url||"",requirements:row.requirements||{},status:row.status,reviewNote:row.review_note||"",reviewedBy:row.reviewed_by||"",reviewedAt:row.reviewed_at||"",createdAt:row.created_at};entry.armoryEvaluation=entry.armoryUrl?await evaluateNachtlootArmory(entry):{success:false,passed:false,error:"Armory-Link fehlt."};return entry;}));
   return { success:true,entries };
 }
 
@@ -5736,9 +5751,9 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   if(decision==="rejected"&&request.status==="approved"){const error=new Error("Bitte die bestehende Freigabe zuerst in der Freigabetabelle zurücknehmen.");error.statusCode=400;throw error;}
   if (decision === "approved") {
     const manualOverride=["true","1","yes","ja"].includes(clean(params.manualOverride).toLowerCase());
-    if(!manualOverride&&!["true","1","yes","ja"].includes(clean(params.screenshotConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass Screenshot und Armory-Ausrüstung übereinstimmen.");error.statusCode=400;throw error;}
-    if (!manualOverride&&(!clean(request.armory_url) || !clean(request.screenshot_data))) {
-      const error = new Error("Freigabe nicht möglich: Armory-Link und Screenshot müssen vollständig vorliegen.");
+    if(!manualOverride&&!["true","1","yes","ja"].includes(clean(params.gearConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass die Ausrüstung in der Charakter-Direktansicht geprüft wurde.");error.statusCode=400;throw error;}
+    if (!manualOverride&&!clean(request.armory_url)) {
+      const error = new Error("Freigabe nicht möglich: Der Charakter muss der Armory zugeordnet sein.");
       error.statusCode = 400;
       throw error;
     }
