@@ -26,7 +26,7 @@ import { createDkpService, lootSystem } from "./dkp.js";
 import {createSupportNotices,SUPPORT_NOTICE_TEXT,SEARCH_NEWS_VERSION} from "./support-notices.js";
 import { createSupportInbox } from "./support-inbox.js";
 import { createGmailApi } from "./gmail-api.js";
-import { validateSupportScreenshot, supportPageUrl } from "./support-attachments.js";
+import { validateSupportScreenshot, supportPageUrl, supportReplyScreenshot } from "./support-attachments.js";
 import { loadRaidCompletion } from "./raid-completion.js";
 import { createRaidTaskReviewService } from "./raid-task-review.js";
 import { queueActiveSignupRefresh, mergeP0PostIdentity } from "./active-signup-refresh.js";
@@ -2605,10 +2605,11 @@ async function ensureSupportReplySchema() {
     created_at timestamptz not null default now(), sent_at timestamptz
   )`);
   await query("alter table platform_support_replies add column if not exists gmail_message_id text not null default '',add column if not exists gmail_thread_id text not null default ''");
+  await query("alter table platform_support_replies add column if not exists screenshot_name text not null default '',add column if not exists screenshot_hash text not null default ''");
   await query('create index if not exists idx_support_replies_ticket on platform_support_replies(ticket_id,created_at)');
 }
 function normalizeSupportReply(row) {
-  return {direction:'outgoing',id:row.id,ticketId:row.ticket_id,recipient:row.recipient,sender:row.sender,subject:row.subject,message:row.message,
+  return {screenshotName:row.screenshot_name||'',direction:'outgoing',id:row.id,ticketId:row.ticket_id,recipient:row.recipient,sender:row.sender,subject:row.subject,message:row.message,
     status:row.status==='sending' && Date.now()-new Date(row.created_at).getTime()>300000?'unknown':row.status,
     error:row.error,createdAt:new Date(row.created_at).toISOString(),sentAt:row.sent_at?new Date(row.sent_at).toISOString():''};
 }
@@ -2623,6 +2624,7 @@ async function getPlatformSupportReplies({body={}}) {
 }
 async function sendPlatformSupportReply({body={}}) {
   requirePlatformMasterCode(body.masterCode);
+  const screenshot=supportReplyScreenshot(body);
   const id=clean(body.id),requestId=clean(body.requestId),subject=clean(body.subject),message=clean(body.message);
   if(!isUuid(id)||!isUuid(requestId)||!subject||subject.length>180||/[\r\n]/.test(subject)||!message||message.length>10000)
     throw Object.assign(Error('Bitte einen Betreff (max. 180 Zeichen) und eine Antwort (max. 10.000 Zeichen) eingeben.'),{statusCode:400});
@@ -2630,7 +2632,7 @@ async function sendPlatformSupportReply({body={}}) {
   // A repeated HTTP request must never trigger a second SMTP submission.
   const existing=(await query('select * from platform_support_replies where id=$1',[requestId])).rows[0];
   if(existing){
-    if(existing.ticket_id!==id||existing.subject!==subject||existing.message!==message)throw Object.assign(Error('Dieser Versandvorgang gehört zu einer anderen Antwort. Bitte den Verlauf prüfen.'),{statusCode:409});
+    if(existing.ticket_id!==id||existing.subject!==subject||existing.message!==message||(existing.screenshot_hash||'')!==screenshot.hash||(existing.screenshot_name||'')!==screenshot.name)throw Object.assign(Error('Dieser Versandvorgang gehört zu einer anderen Antwort. Bitte den Verlauf prüfen.'),{statusCode:409});
     return {success:true,reply:normalizeSupportReply(existing)};
   }
   const ticket=(await query('select contact_email from platform_support_tickets where id=$1',[id])).rows[0];
@@ -2639,14 +2641,14 @@ async function sendPlatformSupportReply({body={}}) {
   const recipient=clean(ticket.contact_email),sender=clean(process.env.GMAIL_USER);
   if(!/^[^\s@<>;,]+@[^\s@<>;,]+\.[^\s@<>;,]+$/.test(recipient))throw Object.assign(Error('Für diese Meldung ist keine gültige E-Mail-Adresse hinterlegt.'),{statusCode:400});
   if(!sender)throw Object.assign(Error('Der Gmail-Versand ist nicht eingerichtet.'),{statusCode:503});
-  const claimed=await query(`insert into platform_support_replies(id,ticket_id,recipient,sender,subject,message)
-    values($1,$2,$3,$4,$5,$6) on conflict(id) do nothing returning *`,[requestId,id,recipient,sender,subject,message]);
+  const claimed=await query(`insert into platform_support_replies(id,ticket_id,recipient,sender,subject,message,screenshot_name,screenshot_hash)
+    values($1,$2,$3,$4,$5,$6,$7,$8) on conflict(id) do nothing returning *`,[requestId,id,recipient,sender,subject,message,screenshot.name,screenshot.hash]);
   if(!claimed.rows.length)return sendPlatformSupportReply({body});
   let status='sent',error='',gmailId='',gmailThread='';
   try{
     const previous=await supportInbox.latest(id);
     const result=await gmailApi.sendMail({from:{name:'GuildLoot Support',address:sender},to:recipient,replyTo:sender,
-      messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message,...(previous?.rfc_id?{inReplyTo:previous.rfc_id,references:previous.rfc_id,threadId:previous.thread_id}:{})});
+      messageId:`<support-reply-${requestId}@lichtloot.de>`,subject,text:message,attachments:screenshot.attachments,...(previous?.rfc_id?{inReplyTo:previous.rfc_id,references:previous.rfc_id,threadId:previous.thread_id}:{})});
     gmailId=result.messageId||'';gmailThread=result.threadId||'';
     if(result.rejected?.length||!result.accepted?.length){status='failed';error='Der Mailserver hat die Empfängeradresse nicht angenommen.';}
   }catch(e){
@@ -31905,7 +31907,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       requirePlatformMasterCode(req.body.masterCode);
       if (!isUuid(clean(req.body.id))) return res.status(400).json({success:false,error:'Ungültige Supportmeldung.'});
       await ensureSupportTicketSchema();
-      return res.json(await (action === "platformGetSupportDiscordReplies" ? supportDiscordReplies.history(clean(req.body.id)) : supportDiscordReplies.send(req.body)));
+      return res.json(await (action === "platformGetSupportDiscordReplies" ? supportDiscordReplies.history(clean(req.body.id), req.body.recipientContact) : supportDiscordReplies.send(req.body)));
     }
     if (action === "platformGetSupportReplies" || action === "platformSendSupportReply") {
       enforceSecurityRateLimit(req, 'platform-support-reply', 30, 15 * 60 * 1000);

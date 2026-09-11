@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 const MAX_BYTES=5*1024*1024;
 export function validateSupportScreenshot(value) {
   if(value==null||value==='')return '';
@@ -10,3 +11,12 @@ export function validateSupportScreenshot(value) {
   return value;
 }
 export function supportPageUrl(value){try{const url=new URL(String(value||''));return ['http:','https:'].includes(url.protocol)?(url.origin+url.pathname).slice(0,500):'';}catch{return '';}}
+
+export function supportReplyScreenshot(body={}) {
+  const data=validateSupportScreenshot(body.screenshotData);
+  if(!data)return {data:'',name:'',hash:'',attachments:[]};
+  const type=data.slice(5,data.indexOf(';')),extension=type==='image/jpeg'?'jpg':type==='image/webp'?'webp':'png';
+  const name=String(body.screenshotName||'screenshot').replace(/\.[^.]*$/,'').replace(/[^a-zA-Z0-9_ -]/g,'_').slice(0,80)||'screenshot';
+  const filename=name+'.'+extension,content=Buffer.from(data.split(',')[1],'base64');
+  return {data,name:filename,hash:createHash('sha256').update(content).digest('hex'),attachments:[{filename,content,contentType:type}]};
+}

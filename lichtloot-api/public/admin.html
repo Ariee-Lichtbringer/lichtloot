@@ -42,6 +42,7 @@
 <div class="reply-actions"><button type="button" id="replyNew" hidden onclick="startNewSupportReply()">Neuer Entwurf nach Gmail-Prüfung</button><button type="button" onclick="closeSupportReply()">Entwurf schließen</button><button type="submit" id="replySend" class="reply-send">E-Mail senden</button></div>
 <section class="reply-history"><div class="reply-heading"><h3>E-Mail-Verlauf</h3><button type="button" id="replyRefresh" onclick="refreshReplyHistory()">Verlauf aktualisieren</button></div><div class="reply-inbox-actions"><button type="button" id="replySync" onclick="syncSupportInbox()">Antworten abrufen</button><button type="button" id="replyRead" hidden onclick="readSupportInbox()">Angezeigte Antworten als gelesen markieren</button></div><p id="replyInboxStatus" role="status"></p><div id="replyHistory"></div></section>
 </form></dialog>
+<script src="support-reply-screenshot.js?v=20260911-1"></script>
 <script>
 const API_URL="https://lichtloot-production.up.railway.app/api/apps-script",PUBLIC_URL=location.protocol==="file:"?"https://lichtloot.de":location.origin;let applications=[],supportTickets=[],overview={guilds:[],daily:[],pages:[],campaigns:[]};
 const code=()=>document.getElementById("platformCode").value.trim(),esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
@@ -77,14 +78,15 @@ function connectGmail(){if(!code())return;const form=document.createElement('for
 
 const replyDrafts=new Map();let activeReplyTicket=null,replySending=false,replyLoadVersion=0;
 const replyLabels={sending:'Versand läuft',sent:'An Gmail zum Versand übergeben',failed:'Versand abgelehnt',unknown:'Versandstatus unklar'};
-function rememberReplyDraft(){if(!activeReplyTicket||replySending)return;const old=replyDrafts.get(activeReplyTicket)||{};replyDrafts.set(activeReplyTicket,{...old,subject:document.getElementById('replySubject').value,message:document.getElementById('replyMessage').value});}
+const emailScreenshot=createSupportReplyScreenshot(document.getElementById('supportReplyForm'),'replyScreenshot',()=>rememberReplyDraft());
+function rememberReplyDraft(){if(!activeReplyTicket||replySending)return;const old=replyDrafts.get(activeReplyTicket)||{};replyDrafts.set(activeReplyTicket,{...old,...emailScreenshot.data,subject:document.getElementById('replySubject').value,message:document.getElementById('replyMessage').value});}
 function startNewSupportReply(){if(replySending)return;if(!confirm('Bitte zuerst den Gmail-Ordner „Gesendet“ prüfen. Einen neuen, leeren Antwortentwurf öffnen?'))return;replyDrafts.delete(activeReplyTicket);openSupportReply(activeReplyTicket);}
 function closeSupportReply(){if(replySending)return;rememberReplyDraft();document.getElementById('supportReplyDialog').close();activeReplyTicket=null;replyLoadVersion++;}
 let supportIncomingVisible=[];
 function showSupportConversation(result){
  supportIncomingVisible=(result.incoming||[]).filter(r=>r.unread).map(r=>r.id);
  const rows=[...(result.replies||[]),...(result.incoming||[])].sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
- document.getElementById('replyHistory').innerHTML=rows.length?rows.map(r=>r.direction==='incoming'?`<article class="reply-history-item reply-incoming"><div><strong>↙ Antwort vom Spieler</strong>${r.unread?' <span class="pill support-new">Neu</span>':''} · ${esc(new Date(r.createdAt).toLocaleString('de-DE'))}</div><small>Von ${esc(r.sender)}</small><details ${r.unread?'open':''}><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.attachments?`<p>${Number(r.attachments)} Anhang/Anhänge – bitte in Gmail öffnen.</p>`:''}</article>`:`<article class="reply-history-item"><div><strong>↗ ${esc(replyLabels[r.status]||r.status)}</strong> · ${esc(new Date(r.sentAt||r.createdAt).toLocaleString('de-DE'))}</div><small>An ${esc(r.recipient)}</small><details><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.error?`<p>${esc(r.error)}</p>`:''}</article>`).join(''):'<p>Noch keine E-Mail-Nachrichten zu diesem Ticket.</p>';
+ document.getElementById('replyHistory').innerHTML=rows.length?rows.map(r=>r.direction==='incoming'?`<article class="reply-history-item reply-incoming"><div><strong>↙ Antwort vom Spieler</strong>${r.unread?' <span class="pill support-new">Neu</span>':''} · ${esc(new Date(r.createdAt).toLocaleString('de-DE'))}</div><small>Von ${esc(r.sender)}</small><details ${r.unread?'open':''}><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.attachments?`<p>${Number(r.attachments)} Anhang/Anhänge – bitte in Gmail öffnen.</p>`:''}</article>`:`<article class="reply-history-item"><div><strong>↗ ${esc(replyLabels[r.status]||r.status)}</strong> · ${esc(new Date(r.sentAt||r.createdAt).toLocaleString('de-DE'))}</div><small>An ${esc(r.recipient)}</small><details><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.screenshotName?`<p>📎 ${esc(r.screenshotName)}</p>`:''}${r.error?`<p>${esc(r.error)}</p>`:''}</article>`).join(''):'<p>Noch keine E-Mail-Nachrichten zu diesem Ticket.</p>';
  document.getElementById('replyRead').hidden=!supportIncomingVisible.length;
  document.getElementById('replyInboxStatus').textContent=result.sync?.error|| (result.sync?.lastSuccess?'Eingang zuletzt geprüft: '+new Date(result.sync.lastSuccess).toLocaleString('de-DE'):'Der E-Mail-Eingang wurde noch nicht geprüft.');
 }
@@ -102,10 +104,11 @@ setInterval(async()=>{if(document.hidden||!code()||replySending)return;
  try{if(activeReplyTicket){const id=activeReplyTicket,result=await api('platformGetSupportReplies',{id});if(id===activeReplyTicket)showSupportConversation(result);}if(!supportSaving.size&&!document.getElementById('supportPanel').classList.contains('hidden'))await refreshSupport();}catch(e){/* Manual refresh reports failures while preserving drafts. */}
 },60000);
 
-function showReplyHistory(replies){document.getElementById('replyHistory').innerHTML=replies.length?replies.map(r=>`<article class="reply-history-item"><div><strong>${esc(replyLabels[r.status]||r.status)}</strong> · ${esc(new Date(r.sentAt||r.createdAt).toLocaleString('de-DE'))}</div><small>An ${esc(r.recipient)}</small><details><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.error?`<p>${esc(r.error)}</p>`:''}</article>`).join(''):'<p>Noch keine Antworten aus der Administration.</p>';}
+function showReplyHistory(replies){document.getElementById('replyHistory').innerHTML=replies.length?replies.map(r=>`<article class="reply-history-item"><div><strong>${esc(replyLabels[r.status]||r.status)}</strong> · ${esc(new Date(r.sentAt||r.createdAt).toLocaleString('de-DE'))}</div><small>An ${esc(r.recipient)}</small><details><summary>${esc(r.subject)}</summary><div class="reply-history-message">${esc(r.message)}</div></details>${r.screenshotName?`<p>📎 ${esc(r.screenshotName)}</p>`:''}${r.error?`<p>${esc(r.error)}</p>`:''}</article>`).join(''):'<p>Noch keine Antworten aus der Administration.</p>';}
 async function openSupportReply(id){
  if(replySending)return;const ticket=supportTickets.find(t=>t.id===id);if(!ticket)return;if(activeReplyTicket&&activeReplyTicket!==id)rememberReplyDraft();selectedSupportId=id;renderSupportSelection();
  activeReplyTicket=id;const version=++replyLoadVersion,dialog=document.getElementById('supportReplyDialog'),draft=replyDrafts.get(id);
+ emailScreenshot.reset(draft);emailScreenshot.lock(!!draft?.requestId);
  document.getElementById('replyTicketTitle').textContent=ticket.subject;
  document.getElementById('replySubject').value=draft?.subject||('Re: '+ticket.subject).slice(0,180);
  document.getElementById('replyMessage').value=draft?.message||'';
@@ -126,21 +129,22 @@ async function openSupportReply(id){
 async function refreshReplyHistory(){rememberReplyDraft();await openSupportReply(activeReplyTicket);}
 async function submitSupportReply(event){
  event.preventDefault();if(replySending||!activeReplyTicket)return;
+ if(emailScreenshot.busy){document.getElementById('replyStatus').textContent='Bitte warten, bis der Screenshot geladen ist.';return;}
  const form=document.getElementById('supportReplyForm');if(!form.reportValidity())return;
  rememberReplyDraft();const id=activeReplyTicket,draft=replyDrafts.get(id);
  if(!draft.subject.trim()||!draft.message.trim()){document.getElementById('replyStatus').textContent='Bitte Betreff und Antwort eingeben.';return;}
  // Keep this key and payload across connection errors; checking again cannot send twice.
  if(!draft.requestId)draft.requestId=crypto.randomUUID();
- replySending=true;document.getElementById('replyStatus').textContent='Antwort wird gesendet …';
+ replySending=true;emailScreenshot.lock(true);document.getElementById('replyStatus').textContent='Antwort wird gesendet …';
  form.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=true);
  try{const result=await api('platformSendSupportReply',{id,...draft});
  const r=result.reply;document.getElementById('replyStatus').textContent=r.status==='sent'?'Antwort an Gmail zum Versand übergeben.':r.error||replyLabels[r.status];
- if(r.status==='sent'){replyDrafts.delete(id);document.getElementById('replyMessage').value='';}
+ if(r.status==='sent'){emailScreenshot.reset();replyDrafts.delete(id);document.getElementById('replyMessage').value='';}
  else if(r.status==='failed'){delete draft.requestId;}
  try{const history=await api('platformGetSupportReplies',{id});showSupportConversation(history);}catch(e){document.getElementById('replyStatus').textContent+=' Der Verlauf konnte nicht aktualisiert werden.';}
  }catch(e){document.getElementById('replyStatus').textContent=e.message+' Dein Entwurf bleibt erhalten. „Versand prüfen“ prüft denselben Vorgang ohne Doppelversand.';}
  finally{replySending=false;form.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=false);
- const pending=replyDrafts.get(id)?.requestId;document.getElementById('replySend').textContent=pending?'Versand prüfen':'E-Mail senden';
+ const pending=replyDrafts.get(id)?.requestId;emailScreenshot.lock(!!pending);document.getElementById('replySend').textContent=pending?'Versand prüfen':'E-Mail senden';
  document.getElementById('replyNew').hidden=!pending;document.getElementById('replySubject').disabled=!!pending;document.getElementById('replyMessage').disabled=!!pending;}
 }
 window.addEventListener('beforeunload',event=>{if(replySending||[...replyDrafts.values()].some(d=>d.message?.trim())){event.preventDefault();event.returnValue='';}});
@@ -275,5 +279,5 @@ initializeAdminLayout();
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260909-archive-professions" defer></script>
 <script src="/addon-beta-admin.js?v=20260908-1"></script>
-<script src="support-discord-reply.js?v=20260910-1"></script>
+<script src="support-discord-reply.js?v=20260911-screenshot-1"></script>
 </body></html>
