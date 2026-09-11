@@ -1,6 +1,20 @@
 {
   "items": [
     {
+      "id": "guildloot-raidcheck-20260911",
+      "kind": "news",
+      "title": "Neu: GuildLoot RaidCheck",
+      "text": "Persönliche Packlisten für deine Raids: Verbrauchsgegenstände und Ausrüstung mit Soll-Mengen prüfen. Im Addon mit /glcheck öffnen.",
+      "action": "addon"
+    },
+    {
+      "id": "guildloot-armor-requests-20260911",
+      "kind": "news",
+      "title": "T2,5- und T3-Rüstungsteile beantragen",
+      "text": "Rüstungsteile, Token und Materialien direkt über MeinGuildLoot → Charaktere → Rüstungsteile beantragen oder im GuildLoot-Addon anfragen.",
+      "action": "armor-requests"
+    },
+    {
       "id": "addon-0213",
       "kind": "update",
       "title": "10.09.2026 · 14:52 Uhr — Neue Aktualisierung steht bereit",

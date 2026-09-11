@@ -6,12 +6,12 @@
     let href;
     try{const url=new URL(entry.url);if(url.protocol==='https:'&&['www.curseforge.com','www.youtube.com'].includes(url.hostname))href=url.href;}catch{}
     const el=document.createElement(href?'a':'button');el.className='raid-news-item';el.dataset.kind=entry.kind==='update'?'update':'news';
-    if(href){el.href=href;el.target='_blank';el.rel='noopener noreferrer';if(new URL(href).hostname==='www.curseforge.com'){const icon=document.createElement('img');icon.src='images/addon-guide/curseforge.svg';icon.alt='CurseForge';el.append(icon);}}else{el.type='button';el.addEventListener('click',()=>{if(entry.action==='addon')window.showAddonGuide?.();else if(['raid-archive','professions','search','support','random-create','gear-planner'].includes(entry.action))window.openLichtlootNewsFeature?.(entry.action);else window.openLichtlootNews?.();});}
+    if(href){el.href=href;el.target='_blank';el.rel='noopener noreferrer';if(new URL(href).hostname==='www.curseforge.com'){const icon=document.createElement('img');icon.src='images/addon-guide/curseforge.svg';icon.alt='CurseForge';el.append(icon);}}else{el.type='button';el.addEventListener('click',()=>{if(entry.action==='armor-requests'){window.openMyPriosTwinksFromDashboard?.();window.showMeinLichtLootSection?.('chars');document.querySelector('[data-character-manage-tile=armor]')?.click();}else if(entry.action==='addon')window.showAddonGuide?.();else if(['raid-archive','professions','search','support','random-create','gear-planner'].includes(entry.action))window.openLichtlootNewsFeature?.(entry.action);else window.openLichtlootNews?.();});}
     const title=document.createElement('strong');title.textContent=String(entry.title||'Neuigkeit').slice(0,180);const body=document.createElement('span');body.textContent='· '+String(entry.text||'').slice(0,350);el.append(title);if(entry.text)el.append(body);return el;
   }
   async function refresh(){
     if(busy||document.hidden)return;busy=true;
-    try{const response=await fetch('raid-news.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.items))return;const entries=data.items.filter(e=>e&&typeof e.title==='string').slice(0,12);if(!entries.length)return;const key=JSON.stringify(entries);if(key===last)return;
+    try{const response=await fetch('raid-news.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.items))return;const entries=data.items.filter(e=>e&&typeof e.title==='string').slice(0,16);if(!entries.length)return;const key=JSON.stringify(entries);if(key===last)return;
       // Keep a focused link in place; apply the feed update on the next refresh.
       if(windowEl.contains(document.activeElement))return;
       const track=document.createElement('div');track.className='raid-news-track';
