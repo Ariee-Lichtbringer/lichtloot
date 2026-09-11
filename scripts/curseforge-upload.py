@@ -20,8 +20,8 @@ def request(url,token,data=None,content_type='application/json',github=False):
 def validate():
     config=json.loads((ROOT/'addon-release/release.json').read_text())
     assert config['projectId']==1689420,'Wrong project'
-    version=config['version'];assert re.fullmatch(r'\d+\.\d+\.\d+-beta',version),'Invalid beta version'
-    assert config['releaseType']=='beta' and config['gameVersion']=='1.15.9','Review game compatibility before changing it'
+    version=config['version'];assert re.fullmatch(r'\d+\.\d+\.\d+(?:-beta)?',version),'Invalid addon version'
+    assert config['releaseType']=='release' and config['gameVersion']=='1.15.9','Review game compatibility before changing it'
     data=(ROOT/'addon-release/GuildLootEra.zip').read_bytes()
     assert hashlib.sha256(data).hexdigest()==config['sha256'],'ZIP checksum mismatch'
     with zipfile.ZipFile(ROOT/'addon-release/GuildLootEra.zip') as archive:
@@ -50,15 +50,24 @@ def main():
     if os.environ.get('PUBLISH')!='true':print('Validation only; no upload requested.');return
     assert os.environ.get('GITHUB_REPOSITORY')=='Ariee-Lichtbringer/lichtloot','Wrong repository'
     gh=os.environ['GH_TOKEN'];ref='refs/tags/curseforge-upload/'+config['version']
+    existing=config.get('existingFile')
+    if existing:
+        assert existing['version']==config['version'] and existing['sha256']==config['sha256'],'For a new version, remove existingFile from release.json'
+        assert isinstance(existing['id'],int) and existing['id']>0,'Invalid existing file ID'
+        metadata={'fileID':existing['id'],'releaseType':'release'}
     # Reserve before POST: even an uncertain response must not cause a double upload.
-    request('https://api.github.com/repos/Ariee-Lichtbringer/lichtloot/git/refs',gh,json.dumps({'ref':ref,'sha':os.environ['GITHUB_SHA']}).encode(),github=True)
+    if not existing:
+        request('https://api.github.com/repos/Ariee-Lichtbringer/lichtloot/git/refs',gh,json.dumps({'ref':ref,'sha':os.environ['GITHUB_SHA']}).encode(),github=True)
     boundary='GuildLoot'+uuid.uuid4().hex
     payload=(f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n'.encode()+json.dumps(metadata).encode()+f'\r\n--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="GuildLootEra-{config["version"]}.zip"\r\nContent-Type: application/zip\r\n\r\n'.encode()+data+f'\r\n--{boundary}--\r\n'.encode())
-    result=request(CF+'/api/projects/1689420/upload-file',token,payload,'multipart/form-data; boundary='+boundary)
+    if existing:
+        payload=(f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n'.encode()+json.dumps(metadata).encode()+f'\r\n--{boundary}--\r\n'.encode())
+    result=request(CF+'/api/projects/1689420/'+('update-file' if existing else 'upload-file'),token,payload,'multipart/form-data; boundary='+boundary)
+    if existing:assert result.get('id')==existing['id'],'Unexpected updated file ID'
     assert isinstance(result.get('id'),int),'Upload response missing file ID; check CurseForge before retrying'
-    receipt={'version':config['version'],'projectId':1689420,'fileId':result['id'],'sha256':config['sha256'],'url':'https://www.curseforge.com/wow/addons/guildloot-classic-era/files/'+str(result['id'])}
+    receipt={'operation':'updated' if existing else 'uploaded','releaseType':'release','version':config['version'],'projectId':1689420,'fileId':result['id'],'sha256':config['sha256'],'url':'https://www.curseforge.com/wow/addons/guildloot-classic-era/files/'+str(result['id'])}
     (ROOT/'curseforge-result.json').write_text(json.dumps(receipt,indent=2))
-    summary='Uploaded '+config['version']+': '+receipt['url']+'\nCurseForge approval may still be pending.\n'
+    summary=('Updated release type for ' if existing else 'Uploaded ')+config['version']+': '+receipt['url']+'\nCurseForge approval may still be pending.\n'
     print(summary)
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(summary)

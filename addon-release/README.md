@@ -6,7 +6,7 @@ For each approved release, update GuildLootEra.zip, CHANGELOG.md and release.jso
 
 Actions → Publish GuildLoot to CurseForge → Run workflow defaults to validation only; enable the publish checkbox for an explicitly requested upload.
 
-The workflow validates the clean ZIP and TOC, verifies the CurseForge connection, selects Classic Era 1.15.9 and publishes a beta with its changelog. A curseforge-upload/VERSION tag reserves each version before the external upload. Re-running an already reserved version stops before sending another file. If a network failure occurs, inspect CurseForge and the workflow receipt before any retry. Never delete a reservation without checking whether its file was received.
+The workflow validates the clean ZIP and TOC, verifies the CurseForge connection, selects Classic Era 1.15.9 and publishes a Release with its changelog. A curseforge-upload/VERSION tag reserves each version before the external upload. Re-running an already reserved version stops before sending another file. If a network failure occurs, inspect CurseForge and the workflow receipt before any retry. Never delete a reservation without checking whether its file was received.
 
 Successful uploads store the CurseForge file ID and URL in a workflow artifact and the run summary. CurseForge may still need to approve the file.
 
@@ -14,3 +14,7 @@ No secret belongs in this folder. Update the manifest game version and compatibi
 
 API: https://support.curseforge.com/support/solutions/articles/9000197321
 Classic Era version-type mapping: https://github.com/BigWigsMods/packager/blob/master/release.sh
+
+Default CurseForge channel: Release. The version string may retain -beta while the addon is in beta; CurseForge uses releaseType, not the filename, to select the update channel.
+
+The current existingFile entry points to the already uploaded 0.24.8-beta file. Matching version and SHA-256 cause an idempotent metadata-only update to Release without uploading the ZIP again. When preparing a NEW addon version, remove existingFile; retaining it with different content or version deliberately fails.
