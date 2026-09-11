@@ -3444,9 +3444,9 @@ async function setGuildNotificationSetting({guildId,query:params}){
   await ensureGuildNotificationSettingsSchema();
   const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","notify_po_release_granted","raid_status_changes","po_reviewers"]);
   const notificationKey=clean(params.notificationKey||params.key);
-  const allowedLootMasterKey=/^loot_master:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  const allowedPoReleaseGrantedKey=/^notify_po_release_granted:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  const allowedLootMasterKey=/^loot_master:(mc|bwl|ony|zg|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|ony|zg|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  const allowedPoReleaseGrantedKey=/^notify_po_release_granted:(mc|bwl|ony|zg|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
   if(!allowed.has(notificationKey)&&!allowedLootMasterKey&&!allowedPoReleaseKey&&!allowedPoReleaseGrantedKey){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
   let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
   targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
