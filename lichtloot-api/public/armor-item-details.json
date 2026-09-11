@@ -1,0 +1,2598 @@
+{
+  "22490": {
+    "raid": "naxx",
+    "itemId": "22490",
+    "name": "Kopfstück des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_helmet_15",
+    "iconName": "inv_helmet_15",
+    "slot": "Kopf",
+    "type": "Leder",
+    "boss": "Thaddius",
+    "tooltip": "Kopfstück des Traumwandlers | Wird beim Aufheben gebunden | Kopf | Leder | 205 Rüstung | +25 Ausdauer | +31 Intelligenz | +20 Willenskraft | Haltbarkeit 70 / 70 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 66. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 97 | 88",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22491": {
+    "raid": "naxx",
+    "itemId": "22491",
+    "name": "Schiftung des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_14",
+    "iconName": "inv_shoulder_14",
+    "slot": "Schulter",
+    "type": "Leder",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schiftung des Traumwandlers | Wird beim Aufheben gebunden | Schulter | Leder | 186 Rüstung | +18 Ausdauer | +22 Intelligenz | +12 Willenskraft | Haltbarkeit 70 / 70 | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 48. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 8 | 38",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22488": {
+    "raid": "naxx",
+    "itemId": "22488",
+    "name": "Tunika des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_15",
+    "iconName": "inv_chest_chain_15",
+    "slot": "Brust",
+    "type": "Leder",
+    "boss": "Four Horsemen",
+    "tooltip": "Tunika des Traumwandlers | Wird beim Aufheben gebunden | Brust | Leder | 262 Rüstung | +29 Ausdauer | +29 Intelligenz | +19 Willenskraft | Haltbarkeit 120 / 120 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 66. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 5 | 71",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22495": {
+    "raid": "naxx",
+    "itemId": "22495",
+    "name": "Handgelenksschutz des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_bracer_02",
+    "iconName": "inv_bracer_02",
+    "slot": "Handgelenke",
+    "type": "Leder",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Handgelenksschutz des Traumwandlers | Wird beim Aufheben gebunden | Handgelenke | Leder | 111 Rüstung | +14 Ausdauer | +16 Intelligenz | Haltbarkeit 40 / 40 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 40. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 77 | 21",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22493": {
+    "raid": "naxx",
+    "itemId": "22493",
+    "name": "Handschützer des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_25",
+    "iconName": "inv_gauntlets_25",
+    "slot": "Hände",
+    "type": "Leder",
+    "boss": "Maexxna",
+    "tooltip": "Handschützer des Traumwandlers | Wird beim Aufheben gebunden | Hände | Leder | 158 Rüstung | +17 Ausdauer | +22 Intelligenz | +16 Willenskraft | Haltbarkeit 40 / 40 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 72 | 40",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22494": {
+    "raid": "naxx",
+    "itemId": "22494",
+    "name": "Gurt des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_belt_22",
+    "iconName": "inv_belt_22",
+    "slot": "Taille",
+    "type": "Leder",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gurt des Traumwandlers | Wird beim Aufheben gebunden | Taille | Leder | 142 Rüstung | +14 Ausdauer | +23 Intelligenz | +13 Willenskraft | Haltbarkeit 40 / 40 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 51. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 74 | 81",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22489": {
+    "raid": "naxx",
+    "itemId": "22489",
+    "name": "Beinschützer des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_15",
+    "iconName": "inv_pants_mail_15",
+    "slot": "Beine",
+    "type": "Leder",
+    "boss": "Loatheb",
+    "tooltip": "Beinschützer des Traumwandlers | Wird beim Aufheben gebunden | Beine | Leder | 221 Rüstung | +22 Ausdauer | +26 Intelligenz | +20 Willenskraft | Haltbarkeit 90 / 90 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 66. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 25 | 83",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22492": {
+    "raid": "naxx",
+    "itemId": "22492",
+    "name": "Stiefel des Traumwandlers",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_05",
+    "iconName": "inv_boots_chain_05",
+    "slot": "Füße",
+    "type": "Leder",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Stiefel des Traumwandlers | Wird beim Aufheben gebunden | Füße | Leder | 171 Rüstung | +20 Ausdauer | +20 Intelligenz | +14 Willenskraft | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 46. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Gewandung des Traumwandlers (0/9) | Stiefel des Traumwandlers | Gurt des Traumwandlers | Handschützer des Traumwandlers | Kopfstück des Traumwandlers | Beinschützer des Traumwandlers | Schiftung des Traumwandlers | Tunika des Traumwandlers | Handgelenksschutz des Traumwandlers | Ring des Traumwandlers | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück. | 11 | 65",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22438": {
+    "raid": "naxx",
+    "itemId": "22438",
+    "name": "Kopfstück des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_helmet_15",
+    "iconName": "inv_helmet_15",
+    "slot": "Kopf",
+    "type": "Kette",
+    "boss": "Thaddius",
+    "tooltip": "Kopfstück des Gruftpirschers | Wird beim Aufheben gebunden | Kopf | Kette | 449 Rüstung | +31 Beweglichkeit | +30 Ausdauer | +12 Intelligenz | Haltbarkeit 85 / 85 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 15 | 21",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22439": {
+    "raid": "naxx",
+    "itemId": "22439",
+    "name": "Schiftung des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_14",
+    "iconName": "inv_shoulder_14",
+    "slot": "Schulter",
+    "type": "Kette",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schiftung des Gruftpirschers | Wird beim Aufheben gebunden | Schulter | Kette | 406 Rüstung | +29 Beweglichkeit | +23 Ausdauer | +10 Intelligenz | Haltbarkeit 85 / 85 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 19 | 97",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22436": {
+    "raid": "naxx",
+    "itemId": "22436",
+    "name": "Tunika des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_15",
+    "iconName": "inv_chest_chain_15",
+    "slot": "Brust",
+    "type": "Kette",
+    "boss": "Four Horsemen",
+    "tooltip": "Tunika des Gruftpirschers | Wird beim Aufheben gebunden | Brust | Kette | 576 Rüstung | +45 Beweglichkeit | +27 Ausdauer | +15 Intelligenz | Haltbarkeit 140 / 140 | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 33 | 11",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22443": {
+    "raid": "naxx",
+    "itemId": "22443",
+    "name": "Handgelenksschutz des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_bracer_02",
+    "iconName": "inv_bracer_02",
+    "slot": "Handgelenke",
+    "type": "Kette",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Handgelenksschutz des Gruftpirschers | Wird beim Aufheben gebunden | Handgelenke | Kette | 242 Rüstung | +26 Beweglichkeit | +16 Ausdauer | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 57 | 82",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22441": {
+    "raid": "naxx",
+    "itemId": "22441",
+    "name": "Handschützer des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_25",
+    "iconName": "inv_gauntlets_25",
+    "slot": "Hände",
+    "type": "Kette",
+    "boss": "Maexxna",
+    "tooltip": "Handschützer des Gruftpirschers | Wird beim Aufheben gebunden | Hände | Kette | 346 Rüstung | +24 Beweglichkeit | +21 Ausdauer | +15 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 52 | 5",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22442": {
+    "raid": "naxx",
+    "itemId": "22442",
+    "name": "Gurt des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_belt_22",
+    "iconName": "inv_belt_22",
+    "slot": "Taille",
+    "type": "Kette",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gurt des Gruftpirschers | Wird beim Aufheben gebunden | Taille | Kette | 311 Rüstung | +23 Beweglichkeit | +22 Ausdauer | +12 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 54 | 94",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22437": {
+    "raid": "naxx",
+    "itemId": "22437",
+    "name": "Beinschützer des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_15",
+    "iconName": "inv_pants_mail_15",
+    "slot": "Beine",
+    "type": "Kette",
+    "boss": "Loatheb",
+    "tooltip": "Beinschützer des Gruftpirschers | Wird beim Aufheben gebunden | Beine | Kette | 484 Rüstung | +42 Beweglichkeit | +26 Ausdauer | +10 Intelligenz | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 95 | 99",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22440": {
+    "raid": "naxx",
+    "itemId": "22440",
+    "name": "Stiefel des Gruftpirschers",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_05",
+    "iconName": "inv_boots_chain_05",
+    "slot": "Füße",
+    "type": "Kette",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Stiefel des Gruftpirschers | Wird beim Aufheben gebunden | Füße | Kette | 372 Rüstung | +33 Beweglichkeit | +19 Ausdauer | +8 Intelligenz | Haltbarkeit 70 / 70 | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Rüstung des Gruftpirschers (0/9) | Stiefel des Gruftpirschers | Gurt des Gruftpirschers | Handschützer des Gruftpirschers | Kopfstück des Gruftpirschers | Beinschützer des Gruftpirschers | Schiftung des Gruftpirschers | Tunika des Gruftpirschers | Handgelenksschutz des Gruftpirschers | Ring des Gruftpirschers | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20. | 23 | 91",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22498": {
+    "raid": "naxx",
+    "itemId": "22498",
+    "name": "Frostfeuerreif",
+    "quality": "Episch",
+    "icon": "inv_crown_01",
+    "iconName": "inv_crown_01",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "Thaddius",
+    "tooltip": "Frostfeuerreif | Wird beim Aufheben gebunden | Kopf | Stoff | 108 Rüstung | +22 Ausdauer | +23 Intelligenz | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 35. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 43 | 16",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22499": {
+    "raid": "naxx",
+    "itemId": "22499",
+    "name": "Frostfeuerschulterpolster",
+    "quality": "Episch",
+    "icon": "inv_shoulder_25",
+    "iconName": "inv_shoulder_25",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Frostfeuerschulterpolster | Wird beim Aufheben gebunden | Schulter | Stoff | 97 Rüstung | +17 Ausdauer | +18 Intelligenz | +9 Willenskraft | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 76 | 69",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22496": {
+    "raid": "naxx",
+    "itemId": "22496",
+    "name": "Frostfeuerrobe",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_43",
+    "iconName": "inv_chest_cloth_43",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "Four Horsemen",
+    "tooltip": "Frostfeuerrobe | Wird beim Aufheben gebunden | Brust | Stoff | 138 Rüstung | +21 Ausdauer | +27 Intelligenz | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 47. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 13. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 21 | 73",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22503": {
+    "raid": "naxx",
+    "itemId": "22503",
+    "name": "Frostfeuerbindungen",
+    "quality": "Episch",
+    "icon": "inv_bracer_13",
+    "iconName": "inv_bracer_13",
+    "slot": "Handgelenke",
+    "type": "Stoff",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Frostfeuerbindungen | Wird beim Aufheben gebunden | Handgelenke | Stoff | 58 Rüstung | +14 Ausdauer | +15 Intelligenz | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 18 | 79",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22501": {
+    "raid": "naxx",
+    "itemId": "22501",
+    "name": "Frostfeuerhandschuhe",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_17",
+    "iconName": "inv_gauntlets_17",
+    "slot": "Hände",
+    "type": "Stoff",
+    "boss": "Maexxna",
+    "tooltip": "Frostfeuerhandschuhe | Wird beim Aufheben gebunden | Hände | Stoff | 83 Rüstung | +17 Ausdauer | +19 Intelligenz | +10 Willenskraft | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 1 | 16",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22502": {
+    "raid": "naxx",
+    "itemId": "22502",
+    "name": "Frostfeuergürtel",
+    "quality": "Episch",
+    "icon": "inv_belt_03",
+    "iconName": "inv_belt_03",
+    "slot": "Taille",
+    "type": "Stoff",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Frostfeuergürtel | Wird beim Aufheben gebunden | Taille | Stoff | 75 Rüstung | +19 Ausdauer | +21 Intelligenz | +10 Willenskraft | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 16 | 86",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22497": {
+    "raid": "naxx",
+    "itemId": "22497",
+    "name": "Frostfeuergamaschen",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_05",
+    "iconName": "inv_pants_cloth_05",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Loatheb",
+    "tooltip": "Frostfeuergamaschen | Wird beim Aufheben gebunden | Beine | Stoff | 116 Rüstung | +25 Ausdauer | +26 Intelligenz | +10 Willenskraft | Haltbarkeit 75 / 75 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 46. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 91 | 14",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22500": {
+    "raid": "naxx",
+    "itemId": "22500",
+    "name": "Frostfeuersandalen",
+    "quality": "Episch",
+    "icon": "inv_boots_fabric_01",
+    "iconName": "inv_boots_fabric_01",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Frostfeuersandalen | Wird beim Aufheben gebunden | Füße | Stoff | 89 Rüstung | +17 Ausdauer | +18 Intelligenz | +10 Willenskraft | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Frostfeuerornat (0/9) | Frostfeuergürtel | Frostfeuerbindungen | Frostfeuerreif | Frostfeuerhandschuhe | Frostfeuergamaschen | Frostfeuerrobe | Frostfeuersandalen | Frostfeuerschulterpolster | Frostfeuerring | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. (Procchance: 20%) | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. (Procchance: 20%) | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht. (Procchance: 15%) | 79 | 30",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22428": {
+    "raid": "naxx",
+    "itemId": "22428",
+    "name": "Kopfstück der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_helmet_15",
+    "iconName": "inv_helmet_15",
+    "slot": "Kopf",
+    "type": "Platte",
+    "boss": "Thaddius",
+    "tooltip": "Kopfstück der Erlösung | Wird beim Aufheben gebunden | Kopf | Platte | 800 Rüstung | +28 Ausdauer | +26 Intelligenz | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 64. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 72 | 25",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22429": {
+    "raid": "naxx",
+    "itemId": "22429",
+    "name": "Schiftung der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_shoulder_14",
+    "iconName": "inv_shoulder_14",
+    "slot": "Schulter",
+    "type": "Platte",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schiftung der Erlösung | Wird beim Aufheben gebunden | Schulter | Platte | 722 Rüstung | +22 Ausdauer | +20 Intelligenz | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 40. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 3",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22425": {
+    "raid": "naxx",
+    "itemId": "22425",
+    "name": "Tunika der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_15",
+    "iconName": "inv_chest_chain_15",
+    "slot": "Brust",
+    "type": "Platte",
+    "boss": "Four Horsemen",
+    "tooltip": "Tunika der Erlösung | Wird beim Aufheben gebunden | Brust | Platte | 1027 Rüstung | +25 Ausdauer | +31 Intelligenz | Haltbarkeit 165 / 165 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 37 | 67",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22424": {
+    "raid": "naxx",
+    "itemId": "22424",
+    "name": "Handgelenksschutz der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_bracer_02",
+    "iconName": "inv_bracer_02",
+    "slot": "Handgelenke",
+    "type": "Platte",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Handgelenksschutz der Erlösung | Wird beim Aufheben gebunden | Handgelenke | Platte | 431 Rüstung | +22 Ausdauer | +15 Intelligenz | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 31. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 7 | 19",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22426": {
+    "raid": "naxx",
+    "itemId": "22426",
+    "name": "Handschützer der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_25",
+    "iconName": "inv_gauntlets_25",
+    "slot": "Hände",
+    "type": "Platte",
+    "boss": "Maexxna",
+    "tooltip": "Handschützer der Erlösung | Wird beim Aufheben gebunden | Hände | Platte | 615 Rüstung | +23 Ausdauer | +22 Intelligenz | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 10 | 99",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22431": {
+    "raid": "naxx",
+    "itemId": "22431",
+    "name": "Gurt der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_belt_22",
+    "iconName": "inv_belt_22",
+    "slot": "Taille",
+    "type": "Platte",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gurt der Erlösung | Wird beim Aufheben gebunden | Taille | Platte | 554 Rüstung | +19 Ausdauer | +29 Intelligenz | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 40. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 20 | 55",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22427": {
+    "raid": "naxx",
+    "itemId": "22427",
+    "name": "Beinschützer der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_15",
+    "iconName": "inv_pants_mail_15",
+    "slot": "Beine",
+    "type": "Platte",
+    "boss": "Loatheb",
+    "tooltip": "Beinschützer der Erlösung | Wird beim Aufheben gebunden | Beine | Platte | 861 Rüstung | +30 Ausdauer | +31 Intelligenz | Haltbarkeit 120 / 120 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 25 | 83",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22430": {
+    "raid": "naxx",
+    "itemId": "22430",
+    "name": "Stiefel der Erlösung",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_05",
+    "iconName": "inv_boots_chain_05",
+    "slot": "Füße",
+    "type": "Platte",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Stiefel der Erlösung | Wird beim Aufheben gebunden | Füße | Platte | 662 Rüstung | +22 Ausdauer | +18 Intelligenz | Haltbarkeit 75 / 75 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Rüstung der Erlösung (0/9) | Stiefel der Erlösung | Gurt der Erlösung | Handschützer der Erlösung | Kopfstück der Erlösung | Beinschützer der Erlösung | Schiftung der Erlösung | Tunika der Erlösung | Handgelenksschutz der Erlösung | Ring der Erlösung | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200. | 5 | 62",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22514": {
+    "raid": "naxx",
+    "itemId": "22514",
+    "name": "Reif des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_crown_01",
+    "iconName": "inv_crown_01",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "Thaddius",
+    "tooltip": "Reif des Glaubens | Wird beim Aufheben gebunden | Kopf | Stoff | 108 Rüstung | +22 Ausdauer | +22 Intelligenz | +22 Willenskraft | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 75. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 9 | 69",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22515": {
+    "raid": "naxx",
+    "itemId": "22515",
+    "name": "Schulterpolster des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_shoulder_25",
+    "iconName": "inv_shoulder_25",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schulterpolster des Glaubens | Wird beim Aufheben gebunden | Schulter | Stoff | 97 Rüstung | +17 Ausdauer | +18 Intelligenz | +17 Willenskraft | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 51. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 37 | 3",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22512": {
+    "raid": "naxx",
+    "itemId": "22512",
+    "name": "Robe des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_43",
+    "iconName": "inv_chest_cloth_43",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "Four Horsemen",
+    "tooltip": "Robe des Glaubens | Wird beim Aufheben gebunden | Brust | Stoff | 138 Rüstung | +26 Ausdauer | +27 Intelligenz | +21 Willenskraft | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 64. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 2 | 90",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22519": {
+    "raid": "naxx",
+    "itemId": "22519",
+    "name": "Bindungen des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_bracer_13",
+    "iconName": "inv_bracer_13",
+    "slot": "Handgelenke",
+    "type": "Stoff",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Bindungen des Glaubens | Wird beim Aufheben gebunden | Handgelenke | Stoff | 58 Rüstung | +11 Ausdauer | +15 Intelligenz | +17 Willenskraft | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 40. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 11 | 9",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22517": {
+    "raid": "naxx",
+    "itemId": "22517",
+    "name": "Handschuhe des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_17",
+    "iconName": "inv_gauntlets_17",
+    "slot": "Hände",
+    "type": "Stoff",
+    "boss": "Maexxna",
+    "tooltip": "Handschuhe des Glaubens | Wird beim Aufheben gebunden | Hände | Stoff | 83 Rüstung | +16 Ausdauer | +21 Intelligenz | +22 Willenskraft | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 40. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 45 | 51",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22518": {
+    "raid": "naxx",
+    "itemId": "22518",
+    "name": "Gürtel des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_belt_08",
+    "iconName": "inv_belt_08",
+    "slot": "Taille",
+    "type": "Stoff",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gürtel des Glaubens | Wird beim Aufheben gebunden | Taille | Stoff | 75 Rüstung | +18 Ausdauer | +23 Intelligenz | +17 Willenskraft | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 48. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 9 | 17",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22513": {
+    "raid": "naxx",
+    "itemId": "22513",
+    "name": "Gamaschen des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_05",
+    "iconName": "inv_pants_cloth_05",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Loatheb",
+    "tooltip": "Gamaschen des Glaubens | Wird beim Aufheben gebunden | Beine | Stoff | 116 Rüstung | +25 Ausdauer | +26 Intelligenz | +28 Willenskraft | Haltbarkeit 75 / 75 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 66. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 75 | 74",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22516": {
+    "raid": "naxx",
+    "itemId": "22516",
+    "name": "Sandalen des Glaubens",
+    "quality": "Episch",
+    "icon": "inv_boots_fabric_01",
+    "iconName": "inv_boots_fabric_01",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Sandalen des Glaubens | Wird beim Aufheben gebunden | Füße | Stoff | 89 Rüstung | +19 Ausdauer | +22 Intelligenz | +13 Willenskraft | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 44. | Gewänder des Glaubens (0/9) | Gürtel des Glaubens | Bindungen des Glaubens | Reif des Glaubens | Handschuhe des Glaubens | Gamaschen des Glaubens | Robe des Glaubens | Sandalen des Glaubens | Schulterpolster des Glaubens | Ring des Glaubens | (2) Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | (4) Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | (6) Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | (8) Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht. (Procchance: 5%) | 39 | 58",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22478": {
+    "raid": "naxx",
+    "itemId": "22478",
+    "name": "Helm der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_helmet_58",
+    "iconName": "inv_helmet_58",
+    "slot": "Kopf",
+    "type": "Leder",
+    "boss": "Thaddius",
+    "tooltip": "Helm der Knochensense | Wird beim Aufheben gebunden | Kopf | Leder | 205 Rüstung | +18 Stärke | +30 Beweglichkeit | +29 Ausdauer | Haltbarkeit 70 / 70 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 29 | 5",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22479": {
+    "raid": "naxx",
+    "itemId": "22479",
+    "name": "Schulterstücke der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_shoulder_29",
+    "iconName": "inv_shoulder_29",
+    "slot": "Schulter",
+    "type": "Leder",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schulterstücke der Knochensense | Wird beim Aufheben gebunden | Schulter | Leder | 186 Rüstung | +22 Stärke | +22 Beweglichkeit | +15 Ausdauer | Haltbarkeit 70 / 70 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 45 | 95",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22476": {
+    "raid": "naxx",
+    "itemId": "22476",
+    "name": "Brustplatte der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_chest_plate02",
+    "iconName": "inv_chest_plate02",
+    "slot": "Brust",
+    "type": "Leder",
+    "boss": "Four Horsemen",
+    "tooltip": "Brustplatte der Knochensense | Wird beim Aufheben gebunden | Brust | Leder | 262 Rüstung | +29 Ausdauer | Haltbarkeit 120 / 120 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: +80 Angriffskraft. | Anlegen: Verbessert Eure Trefferchance um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 52 | 32",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22483": {
+    "raid": "naxx",
+    "itemId": "22483",
+    "name": "Armschienen der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_bracer_15",
+    "iconName": "inv_bracer_15",
+    "slot": "Handgelenke",
+    "type": "Leder",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Armschienen der Knochensense | Wird beim Aufheben gebunden | Handgelenke | Leder | 111 Rüstung | +26 Beweglichkeit | +14 Ausdauer | Haltbarkeit 40 / 40 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 31 | 32",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22481": {
+    "raid": "naxx",
+    "itemId": "22481",
+    "name": "Stulpen der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_28",
+    "iconName": "inv_gauntlets_28",
+    "slot": "Hände",
+    "type": "Leder",
+    "boss": "Maexxna",
+    "tooltip": "Stulpen der Knochensense | Wird beim Aufheben gebunden | Hände | Leder | 158 Rüstung | +20 Ausdauer | Haltbarkeit 40 / 40 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +66 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 26 | 58",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22482": {
+    "raid": "naxx",
+    "itemId": "22482",
+    "name": "Taillenschutz der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_belt_27",
+    "iconName": "inv_belt_27",
+    "slot": "Taille",
+    "type": "Leder",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Taillenschutz der Knochensense | Wird beim Aufheben gebunden | Taille | Leder | 142 Rüstung | +23 Stärke | +24 Beweglichkeit | +20 Ausdauer | Haltbarkeit 40 / 40 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 28 | 92",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22477": {
+    "raid": "naxx",
+    "itemId": "22477",
+    "name": "Beinplatten der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_pants_plate_05",
+    "iconName": "inv_pants_plate_05",
+    "slot": "Beine",
+    "type": "Leder",
+    "boss": "Loatheb",
+    "tooltip": "Beinplatten der Knochensense | Wird beim Aufheben gebunden | Beine | Leder | 221 Rüstung | +31 Stärke | +32 Beweglichkeit | +25 Ausdauer | Haltbarkeit 90 / 90 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 64 | 18",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22480": {
+    "raid": "naxx",
+    "itemId": "22480",
+    "name": "Sabatons der Knochensense",
+    "quality": "Episch",
+    "icon": "inv_boots_plate_06",
+    "iconName": "inv_boots_plate_06",
+    "slot": "Füße",
+    "type": "Leder",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Sabatons der Knochensense | Wird beim Aufheben gebunden | Füße | Leder | 171 Rüstung | +18 Ausdauer | Haltbarkeit 60 / 60 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +64 Angriffskraft. | Rüstung der Knochensense (0/9) | Armschienen der Knochensense | Brustplatte der Knochensense | Stulpen der Knochensense | Helm der Knochensense | Beinplatten der Knochensense | Schulterstücke der Knochensense | Sabatons der Knochensense | Taillenschutz der Knochensense | Ring der Knochensense | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. (500ms Abklingzeit) | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält. | 49 | 22",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22467": {
+    "raid": "naxx",
+    "itemId": "22467",
+    "name": "Schiftung des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_shoulder_14",
+    "iconName": "inv_shoulder_14",
+    "slot": "Schulter",
+    "type": "Kette",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schiftung des Erdspalters | Wird beim Aufheben gebunden | Schulter | Kette | 406 Rüstung | +24 Ausdauer | +19 Intelligenz | Haltbarkeit 85 / 85 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 51 | 9",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22464": {
+    "raid": "naxx",
+    "itemId": "22464",
+    "name": "Tunika des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_15",
+    "iconName": "inv_chest_chain_15",
+    "slot": "Brust",
+    "type": "Kette",
+    "boss": "Four Horsemen",
+    "tooltip": "Tunika des Erdspalters | Wird beim Aufheben gebunden | Brust | Kette | 576 Rüstung | +26 Ausdauer | +32 Intelligenz | Haltbarkeit 140 / 140 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 12 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 48 | 92",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22471": {
+    "raid": "naxx",
+    "itemId": "22471",
+    "name": "Handgelenksschutz des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_bracer_02",
+    "iconName": "inv_bracer_02",
+    "slot": "Handgelenke",
+    "type": "Kette",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Handgelenksschutz des Erdspalters | Wird beim Aufheben gebunden | Handgelenke | Kette | 242 Rüstung | +17 Ausdauer | +18 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 1 | 27",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22469": {
+    "raid": "naxx",
+    "itemId": "22469",
+    "name": "Handschützer des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_25",
+    "iconName": "inv_gauntlets_25",
+    "slot": "Hände",
+    "type": "Kette",
+    "boss": "Maexxna",
+    "tooltip": "Handschützer des Erdspalters | Wird beim Aufheben gebunden | Hände | Kette | 346 Rüstung | +21 Ausdauer | +28 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 35. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 74 | 91",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22470": {
+    "raid": "naxx",
+    "itemId": "22470",
+    "name": "Gurt des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_belt_22",
+    "iconName": "inv_belt_22",
+    "slot": "Taille",
+    "type": "Kette",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gurt des Erdspalters | Wird beim Aufheben gebunden | Taille | Kette | 311 Rüstung | +18 Ausdauer | +25 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 98 | 46",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22465": {
+    "raid": "naxx",
+    "itemId": "22465",
+    "name": "Beinschützer des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_15",
+    "iconName": "inv_pants_mail_15",
+    "slot": "Beine",
+    "type": "Kette",
+    "boss": "Loatheb",
+    "tooltip": "Beinschützer des Erdspalters | Wird beim Aufheben gebunden | Beine | Kette | 484 Rüstung | +28 Ausdauer | +30 Intelligenz | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 9 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 26 | 88",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22468": {
+    "raid": "naxx",
+    "itemId": "22468",
+    "name": "Stiefel des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_05",
+    "iconName": "inv_boots_chain_05",
+    "slot": "Füße",
+    "type": "Kette",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Stiefel des Erdspalters | Wird beim Aufheben gebunden | Füße | Kette | 372 Rüstung | +20 Ausdauer | +25 Intelligenz | Haltbarkeit 70 / 70 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 55 | 4",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22506": {
+    "raid": "naxx",
+    "itemId": "22506",
+    "name": "Reif des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_crown_01",
+    "iconName": "inv_crown_01",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "Thaddius",
+    "tooltip": "Reif des verseuchten Herzens | Wird beim Aufheben gebunden | Kopf | Stoff | 108 Rüstung | +28 Ausdauer | +25 Intelligenz | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 86 | 76",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22507": {
+    "raid": "naxx",
+    "itemId": "22507",
+    "name": "Schulterpolster des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_shoulder_25",
+    "iconName": "inv_shoulder_25",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schulterpolster des verseuchten Herzens | Wird beim Aufheben gebunden | Schulter | Stoff | 97 Rüstung | +22 Ausdauer | +12 Intelligenz | Haltbarkeit 60 / 60 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 16 | 23",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22504": {
+    "raid": "naxx",
+    "itemId": "22504",
+    "name": "Robe des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_43",
+    "iconName": "inv_chest_cloth_43",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "Four Horsemen",
+    "tooltip": "Robe des verseuchten Herzens | Wird beim Aufheben gebunden | Brust | Stoff | 138 Rüstung | +27 Ausdauer | +22 Intelligenz | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 51. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 65 | 86",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22511": {
+    "raid": "naxx",
+    "itemId": "22511",
+    "name": "Bindungen des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_bracer_13",
+    "iconName": "inv_bracer_13",
+    "slot": "Handgelenke",
+    "type": "Stoff",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Bindungen des verseuchten Herzens | Wird beim Aufheben gebunden | Handgelenke | Stoff | 58 Rüstung | +23 Ausdauer | +14 Intelligenz | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 34 | 7",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22509": {
+    "raid": "naxx",
+    "itemId": "22509",
+    "name": "Handschuhe des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_17",
+    "iconName": "inv_gauntlets_17",
+    "slot": "Hände",
+    "type": "Stoff",
+    "boss": "Maexxna",
+    "tooltip": "Handschuhe des verseuchten Herzens | Wird beim Aufheben gebunden | Hände | Stoff | 83 Rüstung | +25 Ausdauer | +17 Intelligenz | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 30 | 23",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22510": {
+    "raid": "naxx",
+    "itemId": "22510",
+    "name": "Gürtel des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_belt_03",
+    "iconName": "inv_belt_03",
+    "slot": "Taille",
+    "type": "Stoff",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Gürtel des verseuchten Herzens | Wird beim Aufheben gebunden | Taille | Stoff | 75 Rüstung | +23 Ausdauer | +12 Intelligenz | Haltbarkeit 35 / 35 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 34. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 32 | 15",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22505": {
+    "raid": "naxx",
+    "itemId": "22505",
+    "name": "Gamaschen des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_05",
+    "iconName": "inv_pants_cloth_05",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Loatheb",
+    "tooltip": "Gamaschen des verseuchten Herzens | Wird beim Aufheben gebunden | Beine | Stoff | 116 Rüstung | +30 Ausdauer | +25 Intelligenz | Haltbarkeit 75 / 75 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 37. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 45 | 17",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22508": {
+    "raid": "naxx",
+    "itemId": "22508",
+    "name": "Sandalen des verseuchten Herzens",
+    "quality": "Episch",
+    "icon": "inv_boots_fabric_01",
+    "iconName": "inv_boots_fabric_01",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Sandalen des verseuchten Herzens | Wird beim Aufheben gebunden | Füße | Stoff | 89 Rüstung | +20 Ausdauer | +16 Intelligenz | Haltbarkeit 50 / 50 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Roben des verseuchten Herzens (0/9) | Gürtel des verseuchten Herzens | Bindungen des verseuchten Herzens | Reif des verseuchten Herzens | Handschuhe des verseuchten Herzens | Gamaschen des verseuchten Herzens | Robe des verseuchten Herzens | Sandalen des verseuchten Herzens | Schulterpolster des verseuchten Herzens | Ring des verseuchten Herzens | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%. | 18 | 78",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22418": {
+    "raid": "naxx",
+    "itemId": "22418",
+    "name": "Helm des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_helmet_58",
+    "iconName": "inv_helmet_58",
+    "slot": "Kopf",
+    "type": "Platte",
+    "boss": "Thaddius",
+    "tooltip": "Helm des Schreckenspanzers | Wird beim Aufheben gebunden | Kopf | Platte | 800 Rüstung | +21 Stärke | +45 Ausdauer | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verteidigung +14. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 96",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22419": {
+    "raid": "naxx",
+    "itemId": "22419",
+    "name": "Schulterstücke des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_29",
+    "iconName": "inv_shoulder_29",
+    "slot": "Schulter",
+    "type": "Platte",
+    "boss": "Grobbulus / Patchwerk / Gluth",
+    "tooltip": "Schulterstücke des Schreckenspanzers | Wird beim Aufheben gebunden | Schulter | Platte | 722 Rüstung | +16 Stärke | +29 Ausdauer | Haltbarkeit 100 / 100 | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht den Blockwert Eures Schilds um 21. | Anlegen: Verteidigung +9. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 29 | 11",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22416": {
+    "raid": "naxx",
+    "itemId": "22416",
+    "name": "Brustplatte des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_chest_plate02",
+    "iconName": "inv_chest_plate02",
+    "slot": "Brust",
+    "type": "Platte",
+    "boss": "Four Horsemen",
+    "tooltip": "Brustplatte des Schreckenspanzers | Wird beim Aufheben gebunden | Brust | Platte | 1027 Rüstung | +21 Stärke | +43 Ausdauer | Haltbarkeit 165 / 165 | Benötigt Stufe 60 | Anlegen: Verteidigung +13. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 2%. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 88 | 87",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22423": {
+    "raid": "naxx",
+    "itemId": "22423",
+    "name": "Armschienen des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_bracer_15",
+    "iconName": "inv_bracer_15",
+    "slot": "Handgelenke",
+    "type": "Platte",
+    "boss": "Grand Widow Faerlina / Anub'Rekhan / Gluth",
+    "tooltip": "Armschienen des Schreckenspanzers | Wird beim Aufheben gebunden | Handgelenke | Platte | 431 Rüstung | +14 Stärke | +28 Ausdauer | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Verteidigung +5. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 5 | 27",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22421": {
+    "raid": "naxx",
+    "itemId": "22421",
+    "name": "Stulpen des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_gauntlets_28",
+    "iconName": "inv_gauntlets_28",
+    "slot": "Hände",
+    "type": "Platte",
+    "boss": "Maexxna",
+    "tooltip": "Stulpen des Schreckenspanzers | Wird beim Aufheben gebunden | Hände | Platte | 615 Rüstung | +17 Stärke | +27 Ausdauer | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Verteidigung +9. | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schilds um 21. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 39 | 74",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22422": {
+    "raid": "naxx",
+    "itemId": "22422",
+    "name": "Taillenschutz des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_belt_27",
+    "iconName": "inv_belt_27",
+    "slot": "Taille",
+    "type": "Platte",
+    "boss": "Noth the Plaguebringer / Heigan the Unclean / Gluth",
+    "tooltip": "Taillenschutz des Schreckenspanzers | Wird beim Aufheben gebunden | Taille | Platte | 554 Rüstung | +20 Stärke | +26 Ausdauer | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Erhöht den Blockwert Eures Schildes um 18. | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Verteidigung +9. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 3 | 34",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22417": {
+    "raid": "naxx",
+    "itemId": "22417",
+    "name": "Beinplatten des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_pants_plate_05",
+    "iconName": "inv_pants_plate_05",
+    "slot": "Beine",
+    "type": "Platte",
+    "boss": "Loatheb",
+    "tooltip": "Beinplatten des Schreckenspanzers | Wird beim Aufheben gebunden | Beine | Platte | 861 Rüstung | +23 Stärke | +37 Ausdauer | Haltbarkeit 120 / 120 | Benötigt Stufe 60 | Anlegen: Verteidigung +13. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Erhöht den Blockwert Eures Schilds um 32. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 64 | 20",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22420": {
+    "raid": "naxx",
+    "itemId": "22420",
+    "name": "Sabatons des Schreckenspanzers",
+    "quality": "Episch",
+    "icon": "inv_boots_plate_06",
+    "iconName": "inv_boots_plate_06",
+    "slot": "Füße",
+    "type": "Platte",
+    "boss": "Instructor Razuvious / Gothik the Harvester / Gluth",
+    "tooltip": "Sabatons des Schreckenspanzers | Wird beim Aufheben gebunden | Füße | Platte | 662 Rüstung | +15 Stärke | +34 Ausdauer | Haltbarkeit 75 / 75 | Benötigt Stufe 60 | Anlegen: Verteidigung +9. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Schlachtrüstung des Schreckenspanzers (0/9) | Armschienen des Schreckenspanzers | Brustplatte des Schreckenspanzers | Stulpen des Schreckenspanzers | Taillenschutz des Schreckenspanzers | Helm des Schreckenspanzers | Beinplatten des Schreckenspanzers | Schulterstücke des Schreckenspanzers | Sabatons des Schreckenspanzers | Ring des Schreckenspanzers | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird. | 31 | 73",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22466": {
+    "raid": "naxx",
+    "itemId": "22466",
+    "name": "Kopfstück des Erdspalters",
+    "quality": "Episch",
+    "icon": "inv_helmet_15",
+    "iconName": "inv_helmet_15",
+    "slot": "Kopf",
+    "type": "Kette",
+    "boss": "Thaddius",
+    "tooltip": "Kopfstück des Erdspalters | Wird beim Aufheben gebunden | Kopf | Kette | 449 Rüstung | +26 Ausdauer | +30 Intelligenz | Haltbarkeit 85 / 85 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 68. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Der Erdspalter (0/9) | Stiefel des Erdspalters | Gurt des Erdspalters | Handschützer des Erdspalters | Kopfstück des Erdspalters | Beinschützer des Erdspalters | Schiftung des Erdspalters | Tunika des Erdspalters | Handgelenksschutz des Erdspalters | Ring des Erdspalters | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. (Procchance: 10%) | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist. | 49",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "21355": {
+    "raid": "aq40",
+    "itemId": "21355",
+    "name": "Stiefel der Genesis",
+    "quality": "Episch",
+    "icon": "inv_boots_cloth_07",
+    "iconName": "inv_boots_cloth_07",
+    "slot": "Füße",
+    "type": "Leder",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Stiefel der Genesis | Wird beim Aufheben gebunden | Füße | Leder | 158 Rüstung | +12 Stärke | +13 Beweglichkeit | +14 Ausdauer | +14 Intelligenz | +6 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Gewandung der Genesis (0/5) | Stiefel der Genesis | Helm der Genesis | Schulterpolster der Genesis | Beinkleider der Genesis | Weste der Genesis | (3) Set: Verteidigung +15. | (3) Set: +150 Rüstung. | (5) Set: Reduziert die Abklingzeit von 'Wiedergeburt' um 10 Minuten. | 85 | 80",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21353": {
+    "raid": "aq40",
+    "itemId": "21353",
+    "name": "Helm der Genesis",
+    "quality": "Episch",
+    "icon": "inv_helmet_06",
+    "iconName": "inv_helmet_06",
+    "slot": "Kopf",
+    "type": "Leder",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Helm der Genesis | Wird beim Aufheben gebunden | Kopf | Leder | 192 Rüstung | +15 Stärke | +12 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +12 Willenskraft | Haltbarkeit 70 / 70 | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Gewandung der Genesis (0/5) | Stiefel der Genesis | Helm der Genesis | Schulterpolster der Genesis | Beinkleider der Genesis | Weste der Genesis | (3) Set: Verteidigung +15. | (3) Set: +150 Rüstung. | (5) Set: Reduziert die Abklingzeit von 'Wiedergeburt' um 10 Minuten. | 73 | 1",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21354": {
+    "raid": "aq40",
+    "itemId": "21354",
+    "name": "Schulterpolster der Genesis",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Leder",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schulterpolster der Genesis | Wird beim Aufheben gebunden | Schulter | Leder | 172 Rüstung | +15 Stärke | +14 Beweglichkeit | +15 Ausdauer | +13 Intelligenz | +6 Willenskraft | Haltbarkeit 70 / 70 | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Gewandung der Genesis (0/5) | Stiefel der Genesis | Helm der Genesis | Schulterpolster der Genesis | Beinkleider der Genesis | Weste der Genesis | (3) Set: Verteidigung +15. | (3) Set: +150 Rüstung. | (5) Set: Reduziert die Abklingzeit von 'Wiedergeburt' um 10 Minuten. | 83 | 58",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21356": {
+    "raid": "aq40",
+    "itemId": "21356",
+    "name": "Beinkleider der Genesis",
+    "quality": "Episch",
+    "icon": "inv_pants_leather_01",
+    "iconName": "inv_pants_leather_01",
+    "slot": "Beine",
+    "type": "Leder",
+    "boss": "Ouro / Quest",
+    "tooltip": "Beinkleider der Genesis | Wird beim Aufheben gebunden | Beine | Leder | 207 Rüstung | +12 Stärke | +12 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +9 Willenskraft | Haltbarkeit 90 / 90 | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewandung der Genesis (0/5) | Stiefel der Genesis | Helm der Genesis | Schulterpolster der Genesis | Beinkleider der Genesis | Weste der Genesis | (3) Set: Verteidigung +15. | (3) Set: +150 Rüstung. | (5) Set: Reduziert die Abklingzeit von 'Wiedergeburt' um 10 Minuten. | 7 | 51",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21357": {
+    "raid": "aq40",
+    "itemId": "21357",
+    "name": "Weste der Genesis",
+    "quality": "Episch",
+    "icon": "inv_chest_leather_08",
+    "iconName": "inv_chest_leather_08",
+    "slot": "Brust",
+    "type": "Leder",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Weste der Genesis | Wird beim Aufheben gebunden | Brust | Leder | 253 Rüstung | +13 Stärke | +12 Beweglichkeit | +24 Ausdauer | +24 Intelligenz | +11 Willenskraft | Haltbarkeit 120 / 120 | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Gewandung der Genesis (0/5) | Stiefel der Genesis | Helm der Genesis | Schulterpolster der Genesis | Beinkleider der Genesis | Weste der Genesis | (3) Set: Verteidigung +15. | (3) Set: +150 Rüstung. | (5) Set: Reduziert die Abklingzeit von 'Wiedergeburt' um 10 Minuten. | 81 | 76",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21365": {
+    "raid": "aq40",
+    "itemId": "21365",
+    "name": "Fußschützer des Hetzers",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_08",
+    "iconName": "inv_boots_chain_08",
+    "slot": "Füße",
+    "type": "Kette",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Fußschützer des Hetzers | Wird beim Aufheben gebunden | Füße | Kette | 340 Rüstung | +31 Beweglichkeit | +16 Ausdauer | +8 Intelligenz | +6 Willenskraft | Haltbarkeit 70 / 70 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 6. | Gewand des Hetzers (0/5) | Diadem des Hetzers | Fußschützer des Hetzers | Halsberge des Hetzers | Gamaschen des Hetzers | Schulterstücke des Hetzers | (3) Set: Reduziert die Manakosten von 'Arkaner Schuss' um 10%. (Procchance: 20%) | (5) Set: Reduziert die Abklingzeit von 'Schnellfeuer' um 2 Minuten. (Procchance: 20%) | 51 | 68",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21366": {
+    "raid": "aq40",
+    "itemId": "21366",
+    "name": "Diadem des Hetzers",
+    "quality": "Episch",
+    "icon": "inv_helmet_73",
+    "iconName": "inv_helmet_73",
+    "slot": "Kopf",
+    "type": "Kette",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Diadem des Hetzers | Wird beim Aufheben gebunden | Kopf | Kette | 416 Rüstung | +29 Beweglichkeit | +26 Ausdauer | +18 Intelligenz | +10 Willenskraft | Haltbarkeit 85 / 85 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12. | Gewand des Hetzers (0/5) | Diadem des Hetzers | Fußschützer des Hetzers | Halsberge des Hetzers | Gamaschen des Hetzers | Schulterstücke des Hetzers | (3) Set: Reduziert die Manakosten von 'Arkaner Schuss' um 10%. (Procchance: 20%) | (5) Set: Reduziert die Abklingzeit von 'Schnellfeuer' um 2 Minuten. (Procchance: 20%) | 69 | 39",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21367": {
+    "raid": "aq40",
+    "itemId": "21367",
+    "name": "Schulterstücke des Hetzers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_36",
+    "iconName": "inv_shoulder_36",
+    "slot": "Schulter",
+    "type": "Kette",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schulterstücke des Hetzers | Wird beim Aufheben gebunden | Schulter | Kette | 384 Rüstung | +26 Beweglichkeit | +24 Ausdauer | +11 Intelligenz | +5 Willenskraft | Haltbarkeit 85 / 85 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 6. | Gewand des Hetzers (0/5) | Diadem des Hetzers | Fußschützer des Hetzers | Halsberge des Hetzers | Gamaschen des Hetzers | Schulterstücke des Hetzers | (3) Set: Reduziert die Manakosten von 'Arkaner Schuss' um 10%. (Procchance: 20%) | (5) Set: Reduziert die Abklingzeit von 'Schnellfeuer' um 2 Minuten. (Procchance: 20%) | 76 | 26",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21368": {
+    "raid": "aq40",
+    "itemId": "21368",
+    "name": "Gamaschen des Hetzers",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_11",
+    "iconName": "inv_pants_mail_11",
+    "slot": "Beine",
+    "type": "Kette",
+    "boss": "Ouro / Quest",
+    "tooltip": "Gamaschen des Hetzers | Wird beim Aufheben gebunden | Beine | Kette | 448 Rüstung | +36 Beweglichkeit | +22 Ausdauer | +14 Intelligenz | +10 Willenskraft | Haltbarkeit 105 / 105 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 9. | Gewand des Hetzers (0/5) | Diadem des Hetzers | Fußschützer des Hetzers | Halsberge des Hetzers | Gamaschen des Hetzers | Schulterstücke des Hetzers | (3) Set: Reduziert die Manakosten von 'Arkaner Schuss' um 10%. (Procchance: 20%) | (5) Set: Reduziert die Abklingzeit von 'Schnellfeuer' um 2 Minuten. (Procchance: 20%) | 56 | 30",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21370": {
+    "raid": "aq40",
+    "itemId": "21370",
+    "name": "Halsberge des Hetzers",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_04",
+    "iconName": "inv_chest_chain_04",
+    "slot": "Brust",
+    "type": "Kette",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Halsberge des Hetzers | Wird beim Aufheben gebunden | Brust | Kette | 553 Rüstung | +39 Beweglichkeit | +26 Ausdauer | +15 Intelligenz | +7 Willenskraft | Haltbarkeit 140 / 140 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 9. | Gewand des Hetzers (0/5) | Diadem des Hetzers | Fußschützer des Hetzers | Halsberge des Hetzers | Gamaschen des Hetzers | Schulterstücke des Hetzers | (3) Set: Reduziert die Manakosten von 'Arkaner Schuss' um 10%. (Procchance: 20%) | (5) Set: Reduziert die Abklingzeit von 'Schnellfeuer' um 2 Minuten. (Procchance: 20%) | 97 | 87",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21344": {
+    "raid": "aq40",
+    "itemId": "21344",
+    "name": "Stiefel des Mysteriums",
+    "quality": "Episch",
+    "icon": "inv_boots_cloth_03",
+    "iconName": "inv_boots_cloth_03",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Stiefel des Mysteriums | Wird beim Aufheben gebunden | Füße | Stoff | 82 Rüstung | +15 Ausdauer | +15 Intelligenz | +6 Willenskraft | Haltbarkeit 50 / 50 | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewänder des Mysteriums (0/5) | Stiefel des Mysteriums | Reif des Mysteriums | Gamaschen des Mysteriums | Roben des Mysteriums | Schulterpolster des Mysteriums | (3) Set: Gewährt eine Chance von 30%, beim Wirken von 'Blizzard' nicht unterbrochen werden zu können. | (5) Set: Gewährt 20 Sek. lang eine erhöhte Zaubertrefferchance von +5%, wenn einem Eurer Zauber widerstanden wird. | 84 | 53",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21347": {
+    "raid": "aq40",
+    "itemId": "21347",
+    "name": "Reif des Mysteriums",
+    "quality": "Episch",
+    "icon": "inv_helmet_06",
+    "iconName": "inv_helmet_06",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Reif des Mysteriums | Wird beim Aufheben gebunden | Kopf | Stoff | 100 Rüstung | +24 Ausdauer | +24 Intelligenz | +12 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Gewänder des Mysteriums (0/5) | Stiefel des Mysteriums | Reif des Mysteriums | Gamaschen des Mysteriums | Roben des Mysteriums | Schulterpolster des Mysteriums | (3) Set: Gewährt eine Chance von 30%, beim Wirken von 'Blizzard' nicht unterbrochen werden zu können. | (5) Set: Gewährt 20 Sek. lang eine erhöhte Zaubertrefferchance von +5%, wenn einem Eurer Zauber widerstanden wird. | 81 | 70",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21345": {
+    "raid": "aq40",
+    "itemId": "21345",
+    "name": "Schulterpolster des Mysteriums",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schulterpolster des Mysteriums | Wird beim Aufheben gebunden | Schulter | Stoff | 89 Rüstung | +16 Ausdauer | +12 Intelligenz | +4 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewänder des Mysteriums (0/5) | Stiefel des Mysteriums | Reif des Mysteriums | Gamaschen des Mysteriums | Roben des Mysteriums | Schulterpolster des Mysteriums | (3) Set: Gewährt eine Chance von 30%, beim Wirken von 'Blizzard' nicht unterbrochen werden zu können. | (5) Set: Gewährt 20 Sek. lang eine erhöhte Zaubertrefferchance von +5%, wenn einem Eurer Zauber widerstanden wird. | 98 | 95",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21343": {
+    "raid": "aq40",
+    "itemId": "21343",
+    "name": "Roben des Mysteriums",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_11",
+    "iconName": "inv_chest_cloth_11",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Roben des Mysteriums | Wird beim Aufheben gebunden | Brust | Stoff | 133 Rüstung | +19 Ausdauer | +23 Intelligenz | +7 Willenskraft | Haltbarkeit 100 / 100 | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 39. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 20. | Gewänder des Mysteriums (0/5) | Stiefel des Mysteriums | Reif des Mysteriums | Gamaschen des Mysteriums | Roben des Mysteriums | Schulterpolster des Mysteriums | (3) Set: Gewährt eine Chance von 30%, beim Wirken von 'Blizzard' nicht unterbrochen werden zu können. | (5) Set: Gewährt 20 Sek. lang eine erhöhte Zaubertrefferchance von +5%, wenn einem Eurer Zauber widerstanden wird. | 48 | 50",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21388": {
+    "raid": "aq40",
+    "itemId": "21388",
+    "name": "Schienbeinschützer des Rächers",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_07",
+    "iconName": "inv_boots_chain_07",
+    "slot": "Füße",
+    "type": "Platte",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schienbeinschützer des Rächers | Wird beim Aufheben gebunden | Füße | Platte | 604 Rüstung | +18 Stärke | +13 Beweglichkeit | +18 Ausdauer | +14 Intelligenz | +6 Willenskraft | Haltbarkeit 75 / 75 | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 14. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Schlachtrüstung des Rächers (0/5) | Brustplatte des Rächers | Krone des Rächers | Schienbeinschützer des Rächers | Beinschützer des Rächers | Schulterstücke des Rächers | (3) Set: Erhöht die Dauer Eurer Richturteile um 20%. | (5) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 71. | 56 | 19",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21387": {
+    "raid": "aq40",
+    "itemId": "21387",
+    "name": "Krone des Rächers",
+    "quality": "Episch",
+    "icon": "inv_helmet_72",
+    "iconName": "inv_helmet_72",
+    "slot": "Kopf",
+    "type": "Platte",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Krone des Rächers | Wird beim Aufheben gebunden | Kopf | Platte | 739 Rüstung | +20 Stärke | +12 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +12 Willenskraft | Haltbarkeit 100 / 100 | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Schlachtrüstung des Rächers (0/5) | Brustplatte des Rächers | Krone des Rächers | Schienbeinschützer des Rächers | Beinschützer des Rächers | Schulterstücke des Rächers | (3) Set: Erhöht die Dauer Eurer Richturteile um 20%. | (5) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 71. | 81 | 53",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21391": {
+    "raid": "aq40",
+    "itemId": "21391",
+    "name": "Schulterstücke des Rächers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_35",
+    "iconName": "inv_shoulder_35",
+    "slot": "Schulter",
+    "type": "Platte",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schulterstücke des Rächers | Wird beim Aufheben gebunden | Schulter | Platte | 659 Rüstung | +18 Stärke | +14 Beweglichkeit | +15 Ausdauer | +13 Intelligenz | +6 Willenskraft | Haltbarkeit 100 / 100 | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 14. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Schlachtrüstung des Rächers (0/5) | Brustplatte des Rächers | Krone des Rächers | Schienbeinschützer des Rächers | Beinschützer des Rächers | Schulterstücke des Rächers | (3) Set: Erhöht die Dauer Eurer Richturteile um 20%. | (5) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 71. | 61 | 45",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21389": {
+    "raid": "aq40",
+    "itemId": "21389",
+    "name": "Brustplatte des Rächers",
+    "quality": "Episch",
+    "icon": "inv_chest_plate03",
+    "iconName": "inv_chest_plate03",
+    "slot": "Brust",
+    "type": "Platte",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Brustplatte des Rächers | Wird beim Aufheben gebunden | Brust | Platte | 985 Rüstung | +23 Stärke | +12 Beweglichkeit | +24 Ausdauer | +24 Intelligenz | +11 Willenskraft | Haltbarkeit 165 / 165 | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Schlachtrüstung des Rächers (0/5) | Brustplatte des Rächers | Krone des Rächers | Schienbeinschützer des Rächers | Beinschützer des Rächers | Schulterstücke des Rächers | (3) Set: Erhöht die Dauer Eurer Richturteile um 20%. | (5) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 71. | 94 | 63",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21349": {
+    "raid": "aq40",
+    "itemId": "21349",
+    "name": "Fußlappen des Orakels",
+    "quality": "Episch",
+    "icon": "inv_boots_cloth_07",
+    "iconName": "inv_boots_cloth_07",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Fußlappen des Orakels | Wird beim Aufheben gebunden | Füße | Stoff | 112 Rüstung | +20 Ausdauer | +17 Intelligenz | +12 Willenskraft | Haltbarkeit 50 / 50 | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Gewänder des Orakels (0/5) | Fußlappen des Orakels | Mantel des Orakels | Tiara des Orakels | Beinkleider des Orakels | Tunika des Orakels | (3) Set: Gewährt eine Chance von 20%, dass Ihr selbst um 10% des Betrages geheilt werdet, den Ihr bei anderen heilt. (Procchance: 20%) | (5) Set: Erhöht die Wirkungsdauer von 'Erneuern' um 3 Sekunden. | 58 | 5",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21348": {
+    "raid": "aq40",
+    "itemId": "21348",
+    "name": "Tiara des Orakels",
+    "quality": "Episch",
+    "icon": "inv_helmet_06",
+    "iconName": "inv_helmet_06",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Tiara des Orakels | Wird beim Aufheben gebunden | Kopf | Stoff | 150 Rüstung | +22 Ausdauer | +22 Intelligenz | +16 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Gewänder des Orakels (0/5) | Fußlappen des Orakels | Mantel des Orakels | Tiara des Orakels | Beinkleider des Orakels | Tunika des Orakels | (3) Set: Gewährt eine Chance von 20%, dass Ihr selbst um 10% des Betrages geheilt werdet, den Ihr bei anderen heilt. (Procchance: 20%) | (5) Set: Erhöht die Wirkungsdauer von 'Erneuern' um 3 Sekunden. | 28 | 26",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21350": {
+    "raid": "aq40",
+    "itemId": "21350",
+    "name": "Mantel des Orakels",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Mantel des Orakels | Wird beim Aufheben gebunden | Schulter | Stoff | 119 Rüstung | +21 Ausdauer | +20 Intelligenz | +8 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Gewänder des Orakels (0/5) | Fußlappen des Orakels | Mantel des Orakels | Tiara des Orakels | Beinkleider des Orakels | Tunika des Orakels | (3) Set: Gewährt eine Chance von 20%, dass Ihr selbst um 10% des Betrages geheilt werdet, den Ihr bei anderen heilt. (Procchance: 20%) | (5) Set: Erhöht die Wirkungsdauer von 'Erneuern' um 3 Sekunden. | 59 | 83",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21352": {
+    "raid": "aq40",
+    "itemId": "21352",
+    "name": "Beinkleider des Orakels",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_07",
+    "iconName": "inv_pants_cloth_07",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Ouro / Quest",
+    "tooltip": "Beinkleider des Orakels | Wird beim Aufheben gebunden | Beine | Stoff | 157 Rüstung | +23 Ausdauer | +24 Intelligenz | +14 Willenskraft | Haltbarkeit 75 / 75 | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Gewänder des Orakels (0/5) | Fußlappen des Orakels | Mantel des Orakels | Tiara des Orakels | Beinkleider des Orakels | Tunika des Orakels | (3) Set: Gewährt eine Chance von 20%, dass Ihr selbst um 10% des Betrages geheilt werdet, den Ihr bei anderen heilt. (Procchance: 20%) | (5) Set: Erhöht die Wirkungsdauer von 'Erneuern' um 3 Sekunden. | 15 | 14",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21351": {
+    "raid": "aq40",
+    "itemId": "21351",
+    "name": "Gewänder des Orakels",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_10",
+    "iconName": "inv_chest_cloth_10",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Tunika des Orakels | Wird beim Aufheben gebunden | Brust | Stoff | 183 Rüstung | +23 Ausdauer | +26 Intelligenz | +15 Willenskraft | Haltbarkeit 100 / 100 | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Gewänder des Orakels (0/5) | Fußlappen des Orakels | Mantel des Orakels | Tiara des Orakels | Beinkleider des Orakels | Tunika des Orakels | (3) Set: Gewährt eine Chance von 20%, dass Ihr selbst um 10% des Betrages geheilt werdet, den Ihr bei anderen heilt. (Procchance: 20%) | (5) Set: Erhöht die Wirkungsdauer von 'Erneuern' um 3 Sekunden. | 2 | 53",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21359": {
+    "raid": "aq40",
+    "itemId": "21359",
+    "name": "Stiefel des Todesboten",
+    "quality": "Episch",
+    "icon": "inv_boots_08",
+    "iconName": "inv_boots_08",
+    "slot": "Füße",
+    "type": "Leder",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Stiefel des Todesboten | Wird beim Aufheben gebunden | Füße | Leder | 158 Rüstung | +14 Stärke | +26 Beweglichkeit | +17 Ausdauer | Haltbarkeit 60 / 60 | Klassen: Schurke | Völker: Mensch, Orc, Zwerg, Nachtelf, Untoter, Tauren, Gnom, Troll | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Umarmung des Todesboten (0/5) | Stiefel des Todesboten | Helm des Todesboten | Schiftung des Todesboten | Gamaschen des Todesboten | Weste des Todesboten | (3) Set: Reduziert die Abklingzeit von 'Entrinnen' um 1 Minute(n). | (5) Set: Der von 'Ausweiden' zugefügte Schaden wird um 15% erhöht. | 94 | 59",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21360": {
+    "raid": "aq40",
+    "itemId": "21360",
+    "name": "Helm des Todesboten",
+    "quality": "Episch",
+    "icon": "inv_helmet_04",
+    "iconName": "inv_helmet_04",
+    "slot": "Kopf",
+    "type": "Leder",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Helm des Todesboten | Wird beim Aufheben gebunden | Kopf | Leder | 192 Rüstung | +25 Stärke | +29 Beweglichkeit | +27 Ausdauer | Haltbarkeit 70 / 70 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Umarmung des Todesboten (0/5) | Stiefel des Todesboten | Helm des Todesboten | Schiftung des Todesboten | Gamaschen des Todesboten | Weste des Todesboten | (3) Set: Reduziert die Abklingzeit von 'Entrinnen' um 1 Minute(n). | (5) Set: Der von 'Ausweiden' zugefügte Schaden wird um 15% erhöht. | 90 | 81",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21361": {
+    "raid": "aq40",
+    "itemId": "21361",
+    "name": "Schiftung des Todesboten",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Leder",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schiftung des Todesboten | Wird beim Aufheben gebunden | Schulter | Leder | 172 Rüstung | +18 Stärke | +27 Beweglichkeit | +15 Ausdauer | Haltbarkeit 70 / 70 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Umarmung des Todesboten (0/5) | Stiefel des Todesboten | Helm des Todesboten | Schiftung des Todesboten | Gamaschen des Todesboten | Weste des Todesboten | (3) Set: Reduziert die Abklingzeit von 'Entrinnen' um 1 Minute(n). | (5) Set: Der von 'Ausweiden' zugefügte Schaden wird um 15% erhöht. | 14 | 83",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21362": {
+    "raid": "aq40",
+    "itemId": "21362",
+    "name": "Gamaschen des Todesboten",
+    "quality": "Episch",
+    "icon": "inv_pants_leather_07",
+    "iconName": "inv_pants_leather_07",
+    "slot": "Beine",
+    "type": "Leder",
+    "boss": "Ouro / Quest",
+    "tooltip": "Gamaschen des Todesboten | Wird beim Aufheben gebunden | Beine | Leder | 207 Rüstung | +18 Stärke | +38 Beweglichkeit | +25 Ausdauer | Haltbarkeit 90 / 90 | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Umarmung des Todesboten (0/5) | Stiefel des Todesboten | Helm des Todesboten | Schiftung des Todesboten | Gamaschen des Todesboten | Weste des Todesboten | (3) Set: Reduziert die Abklingzeit von 'Entrinnen' um 1 Minute(n). | (5) Set: Der von 'Ausweiden' zugefügte Schaden wird um 15% erhöht. | 52 | 40",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21364": {
+    "raid": "aq40",
+    "itemId": "21364",
+    "name": "Weste des Todesboten",
+    "quality": "Episch",
+    "icon": "inv_chest_leather_08",
+    "iconName": "inv_chest_leather_08",
+    "slot": "Brust",
+    "type": "Leder",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Weste des Todesboten | Wird beim Aufheben gebunden | Brust | Leder | 253 Rüstung | +19 Stärke | +37 Beweglichkeit | +28 Ausdauer | Haltbarkeit 120 / 120 | Klassen: Schurke | Völker: Mensch, Orc, Zwerg, Nachtelf, Untoter, Tauren, Gnom, Troll | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Umarmung des Todesboten (0/5) | Stiefel des Todesboten | Helm des Todesboten | Schiftung des Todesboten | Gamaschen des Todesboten | Weste des Todesboten | (3) Set: Reduziert die Abklingzeit von 'Entrinnen' um 1 Minute(n). | (5) Set: Der von 'Ausweiden' zugefügte Schaden wird um 15% erhöht. | 49 | 62",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21373": {
+    "raid": "aq40",
+    "itemId": "21373",
+    "name": "Fußschützer des Sturmrufers",
+    "quality": "Episch",
+    "icon": "inv_boots_chain_07",
+    "iconName": "inv_boots_chain_07",
+    "slot": "Füße",
+    "type": "Kette",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Fußschützer des Sturmrufers | Wird beim Aufheben gebunden | Füße | Kette | 340 Rüstung | +12 Stärke | +9 Beweglichkeit | +14 Ausdauer | +14 Intelligenz | +6 Willenskraft | Haltbarkeit 70 / 70 | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 22. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewand des Sturmrufers (0/5) | Diadem des Sturmrufers | Fußschützer des Sturmrufers | Halsberge des Sturmrufers | Gamaschen des Sturmrufers | Schulterstücke des Sturmrufers | (3) Set: Eure Zauber 'Blitzschlag', 'Kettenblitzschlag' und 'Schock' haben eine Chance von 20%, 8 Sek. lang den Schaden von Zaubern zusätzlich um 50 Naturschaden zu erhöhen. (Procchance: 20%) | (5) Set: Die Zauberzeit von 'Kettenheilung' wird um 0.4 Sekunden reduziert. | 67",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21372": {
+    "raid": "aq40",
+    "itemId": "21372",
+    "name": "Diadem des Sturmrufers",
+    "quality": "Episch",
+    "icon": "inv_helmet_73",
+    "iconName": "inv_helmet_73",
+    "slot": "Kopf",
+    "type": "Kette",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Diadem des Sturmrufers | Wird beim Aufheben gebunden | Kopf | Kette | 416 Rüstung | +12 Stärke | +8 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +12 Willenskraft | Haltbarkeit 85 / 85 | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Gewand des Sturmrufers (0/5) | Diadem des Sturmrufers | Fußschützer des Sturmrufers | Halsberge des Sturmrufers | Gamaschen des Sturmrufers | Schulterstücke des Sturmrufers | (3) Set: Eure Zauber 'Blitzschlag', 'Kettenblitzschlag' und 'Schock' haben eine Chance von 20%, 8 Sek. lang den Schaden von Zaubern zusätzlich um 50 Naturschaden zu erhöhen. (Procchance: 20%) | (5) Set: Die Zauberzeit von 'Kettenheilung' wird um 0.4 Sekunden reduziert. | 4 | 45",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21376": {
+    "raid": "aq40",
+    "itemId": "21376",
+    "name": "Schulterstücke des Sturmrufers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Kette",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schulterstücke des Sturmrufers | Wird beim Aufheben gebunden | Schulter | Kette | 371 Rüstung | +10 Stärke | +10 Beweglichkeit | +15 Ausdauer | +13 Intelligenz | +6 Willenskraft | Haltbarkeit 85 / 85 | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Gewand des Sturmrufers (0/5) | Diadem des Sturmrufers | Fußschützer des Sturmrufers | Halsberge des Sturmrufers | Gamaschen des Sturmrufers | Schulterstücke des Sturmrufers | (3) Set: Eure Zauber 'Blitzschlag', 'Kettenblitzschlag' und 'Schock' haben eine Chance von 20%, 8 Sek. lang den Schaden von Zaubern zusätzlich um 50 Naturschaden zu erhöhen. (Procchance: 20%) | (5) Set: Die Zauberzeit von 'Kettenheilung' wird um 0.4 Sekunden reduziert. | 8 | 61",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21375": {
+    "raid": "aq40",
+    "itemId": "21375",
+    "name": "Gamaschen des Sturmrufers",
+    "quality": "Episch",
+    "icon": "inv_pants_mail_10",
+    "iconName": "inv_pants_mail_10",
+    "slot": "Beine",
+    "type": "Kette",
+    "boss": "Ouro / Quest",
+    "tooltip": "Gamaschen des Sturmrufers | Wird beim Aufheben gebunden | Beine | Kette | 448 Rüstung | +12 Stärke | +9 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +12 Willenskraft | Haltbarkeit 105 / 105 | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Gewand des Sturmrufers (0/5) | Diadem des Sturmrufers | Fußschützer des Sturmrufers | Halsberge des Sturmrufers | Gamaschen des Sturmrufers | Schulterstücke des Sturmrufers | (3) Set: Eure Zauber 'Blitzschlag', 'Kettenblitzschlag' und 'Schock' haben eine Chance von 20%, 8 Sek. lang den Schaden von Zaubern zusätzlich um 50 Naturschaden zu erhöhen. (Procchance: 20%) | (5) Set: Die Zauberzeit von 'Kettenheilung' wird um 0.4 Sekunden reduziert. | 84 | 79",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21374": {
+    "raid": "aq40",
+    "itemId": "21374",
+    "name": "Halsberge des Sturmrufers",
+    "quality": "Episch",
+    "icon": "inv_chest_chain_13",
+    "iconName": "inv_chest_chain_13",
+    "slot": "Brust",
+    "type": "Kette",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Halsberge des Sturmrufers | Wird beim Aufheben gebunden | Brust | Kette | 553 Rüstung | +11 Stärke | +10 Beweglichkeit | +24 Ausdauer | +24 Intelligenz | +11 Willenskraft | Haltbarkeit 140 / 140 | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Gewand des Sturmrufers (0/5) | Diadem des Sturmrufers | Fußschützer des Sturmrufers | Halsberge des Sturmrufers | Gamaschen des Sturmrufers | Schulterstücke des Sturmrufers | (3) Set: Eure Zauber 'Blitzschlag', 'Kettenblitzschlag' und 'Schock' haben eine Chance von 20%, 8 Sek. lang den Schaden von Zaubern zusätzlich um 50 Naturschaden zu erhöhen. (Procchance: 20%) | (5) Set: Die Zauberzeit von 'Kettenheilung' wird um 0.4 Sekunden reduziert. | 20 | 80",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21338": {
+    "raid": "aq40",
+    "itemId": "21338",
+    "name": "Fußlappen des Verdammnisrufers",
+    "quality": "Episch",
+    "icon": "inv_boots_cloth_02",
+    "iconName": "inv_boots_cloth_02",
+    "slot": "Füße",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Fußlappen des Verdammnisrufers | Wird beim Aufheben gebunden | Füße | Stoff | 82 Rüstung | +20 Ausdauer | +16 Intelligenz | +3 Willenskraft | Haltbarkeit 50 / 50 | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Roben des Verdammnisrufers (0/5) | Reif des Verdammnisrufers | Fußlappen des Verdammnisrufers | Mantel des Verdammnisrufers | Roben des Verdammnisrufers | Beinkleider des Verdammnisrufers | (3) Set: Der Schaden von 'Feuerbrand' wird um 5% erhöht. | (5) Set: Verringert die Manakosten Eures Zaubers 'Schattenblitz' um 15%. | 73 | 95",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21337": {
+    "raid": "aq40",
+    "itemId": "21337",
+    "name": "Reif des Verdammnisrufers",
+    "quality": "Episch",
+    "icon": "inv_helmet_06",
+    "iconName": "inv_helmet_06",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Reif des Verdammnisrufers | Wird beim Aufheben gebunden | Kopf | Stoff | 100 Rüstung | +27 Ausdauer | +24 Intelligenz | +6 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Roben des Verdammnisrufers (0/5) | Reif des Verdammnisrufers | Fußlappen des Verdammnisrufers | Mantel des Verdammnisrufers | Roben des Verdammnisrufers | Beinkleider des Verdammnisrufers | (3) Set: Der Schaden von 'Feuerbrand' wird um 5% erhöht. | (5) Set: Verringert die Manakosten Eures Zaubers 'Schattenblitz' um 15%. | 46 | 61",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21335": {
+    "raid": "aq40",
+    "itemId": "21335",
+    "name": "Mantel des Verdammnisrufers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_03",
+    "iconName": "inv_shoulder_03",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Mantel des Verdammnisrufers | Wird beim Aufheben gebunden | Schulter | Stoff | 89 Rüstung | +20 Ausdauer | +11 Intelligenz | +4 Willenskraft | Haltbarkeit 60 / 60 | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Roben des Verdammnisrufers (0/5) | Reif des Verdammnisrufers | Fußlappen des Verdammnisrufers | Mantel des Verdammnisrufers | Roben des Verdammnisrufers | Beinkleider des Verdammnisrufers | (3) Set: Der Schaden von 'Feuerbrand' wird um 5% erhöht. | (5) Set: Verringert die Manakosten Eures Zaubers 'Schattenblitz' um 15%. | 68",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21336": {
+    "raid": "aq40",
+    "itemId": "21336",
+    "name": "Beinkleider des Verdammnisrufers",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_02",
+    "iconName": "inv_pants_cloth_02",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Ouro / Quest",
+    "tooltip": "Beinkleider des Verdammnisrufers | Wird beim Aufheben gebunden | Beine | Stoff | 107 Rüstung | +28 Ausdauer | +24 Intelligenz | +9 Willenskraft | Haltbarkeit 75 / 75 | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 34. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Roben des Verdammnisrufers (0/5) | Reif des Verdammnisrufers | Fußlappen des Verdammnisrufers | Mantel des Verdammnisrufers | Roben des Verdammnisrufers | Beinkleider des Verdammnisrufers | (3) Set: Der Schaden von 'Feuerbrand' wird um 5% erhöht. | (5) Set: Verringert die Manakosten Eures Zaubers 'Schattenblitz' um 15%. | 26 | 15",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21334": {
+    "raid": "aq40",
+    "itemId": "21334",
+    "name": "Roben des Verdammnisrufers",
+    "quality": "Episch",
+    "icon": "inv_chest_cloth_12",
+    "iconName": "inv_chest_cloth_12",
+    "slot": "Brust",
+    "type": "Stoff",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Roben des Verdammnisrufers | Wird beim Aufheben gebunden | Brust | Stoff | 133 Rüstung | +23 Ausdauer | +17 Intelligenz | +7 Willenskraft | Haltbarkeit 100 / 100 | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 41. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 20. | Roben des Verdammnisrufers (0/5) | Reif des Verdammnisrufers | Fußlappen des Verdammnisrufers | Mantel des Verdammnisrufers | Roben des Verdammnisrufers | Beinkleider des Verdammnisrufers | (3) Set: Der Schaden von 'Feuerbrand' wird um 5% erhöht. | (5) Set: Verringert die Manakosten Eures Zaubers 'Schattenblitz' um 15%. | 14 | 7",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21333": {
+    "raid": "aq40",
+    "itemId": "21333",
+    "name": "Schienbeinschützer des Eroberers",
+    "quality": "Episch",
+    "icon": "inv_boots_plate_05",
+    "iconName": "inv_boots_plate_05",
+    "slot": "Füße",
+    "type": "Platte",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schienbeinschützer des Eroberers | Wird beim Aufheben gebunden | Füße | Platte | 604 Rüstung | +21 Stärke | +17 Beweglichkeit | +23 Ausdauer | Haltbarkeit 75 / 75 | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verteidigung +4. | Schlachtrüstung des Eroberers (0/5) | Brustplatte des Eroberers | Krone des Eroberers | Schienbeinschützer des Eroberers | Beinschützer des Eroberers | Schiftung des Eroberers | (3) Set: Verringert die Wutkosten aller Kriegerfähigkeiten der Kategorie 'Ruf' um 35%. | (5) Set: Erhöht die Dauer des Verlangsamungseffekts von 'Donnerknall' um 50%. | 65 | 19",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21329": {
+    "raid": "aq40",
+    "itemId": "21329",
+    "name": "Krone des Eroberers",
+    "quality": "Episch",
+    "icon": "inv_helmet_72",
+    "iconName": "inv_helmet_72",
+    "slot": "Kopf",
+    "type": "Platte",
+    "boss": "The Twin Emperors / Quest",
+    "tooltip": "Krone des Eroberers | Wird beim Aufheben gebunden | Kopf | Platte | 739 Rüstung | +29 Stärke | +18 Beweglichkeit | +34 Ausdauer | Haltbarkeit 100 / 100 | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verteidigung +6. | Schlachtrüstung des Eroberers (0/5) | Brustplatte des Eroberers | Krone des Eroberers | Schienbeinschützer des Eroberers | Beinschützer des Eroberers | Schiftung des Eroberers | (3) Set: Verringert die Wutkosten aller Kriegerfähigkeiten der Kategorie 'Ruf' um 35%. | (5) Set: Erhöht die Dauer des Verlangsamungseffekts von 'Donnerknall' um 50%. | 30 | 37",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21330": {
+    "raid": "aq40",
+    "itemId": "21330",
+    "name": "Schiftung des Eroberers",
+    "quality": "Episch",
+    "icon": "inv_shoulder_35",
+    "iconName": "inv_shoulder_35",
+    "slot": "Schulter",
+    "type": "Platte",
+    "boss": "AQ40 Token / Quest",
+    "tooltip": "Schiftung des Eroberers | Wird beim Aufheben gebunden | Schulter | Platte | 659 Rüstung | +20 Stärke | +16 Beweglichkeit | +21 Ausdauer | Haltbarkeit 100 / 100 | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verteidigung +4. | Anlegen: Verbessert Eure Trefferchance um 1%. | Schlachtrüstung des Eroberers (0/5) | Brustplatte des Eroberers | Krone des Eroberers | Schienbeinschützer des Eroberers | Beinschützer des Eroberers | Schiftung des Eroberers | (3) Set: Verringert die Wutkosten aller Kriegerfähigkeiten der Kategorie 'Ruf' um 35%. | (5) Set: Erhöht die Dauer des Verlangsamungseffekts von 'Donnerknall' um 50%. | 59 | 87",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21332": {
+    "raid": "aq40",
+    "itemId": "21332",
+    "name": "Beinschützer des Eroberers",
+    "quality": "Episch",
+    "icon": "inv_pants_plate_03",
+    "iconName": "inv_pants_plate_03",
+    "slot": "Beine",
+    "type": "Platte",
+    "boss": "Ouro / Quest",
+    "tooltip": "Beinschützer des Eroberers | Wird beim Aufheben gebunden | Beine | Platte | 796 Rüstung | +33 Stärke | +21 Beweglichkeit | +24 Ausdauer | Haltbarkeit 120 / 120 | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verteidigung +6. | Anlegen: Verbessert Eure Trefferchance um 1%. | Schlachtrüstung des Eroberers (0/5) | Brustplatte des Eroberers | Krone des Eroberers | Schienbeinschützer des Eroberers | Beinschützer des Eroberers | Schiftung des Eroberers | (3) Set: Verringert die Wutkosten aller Kriegerfähigkeiten der Kategorie 'Ruf' um 35%. | (5) Set: Erhöht die Dauer des Verlangsamungseffekts von 'Donnerknall' um 50%. | 15 | 29",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21331": {
+    "raid": "aq40",
+    "itemId": "21331",
+    "name": "Brustplatte des Eroberers",
+    "quality": "Episch",
+    "icon": "inv_chest_plate12",
+    "iconName": "inv_chest_plate12",
+    "slot": "Brust",
+    "type": "Platte",
+    "boss": "C'Thun / Quest",
+    "tooltip": "Brustplatte des Eroberers | Wird beim Aufheben gebunden | Brust | Platte | 985 Rüstung | +34 Stärke | +24 Beweglichkeit | +38 Ausdauer | Haltbarkeit 165 / 165 | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verteidigung +6. | Schlachtrüstung des Eroberers (0/5) | Brustplatte des Eroberers | Krone des Eroberers | Schienbeinschützer des Eroberers | Beinschützer des Eroberers | Schiftung des Eroberers | (3) Set: Verringert die Wutkosten aller Kriegerfähigkeiten der Kategorie 'Ruf' um 35%. | (5) Set: Erhöht die Dauer des Verlangsamungseffekts von 'Donnerknall' um 50%. | 2 | 63",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21346": {
+    "raid": "aq40",
+    "itemId": "21346",
+    "name": "Gamaschen des Mysteriums",
+    "quality": "Episch",
+    "icon": "inv_pants_cloth_08",
+    "iconName": "inv_pants_cloth_08",
+    "slot": "Beine",
+    "type": "Stoff",
+    "boss": "Ouro / Quest",
+    "tooltip": "Gamaschen des Mysteriums | Wird beim Aufheben gebunden | Beine | Stoff | 107 Rüstung | +21 Ausdauer | +26 Intelligenz | +8 Willenskraft | Haltbarkeit 75 / 75 | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 34. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Gewänder des Mysteriums (0/5) | Stiefel des Mysteriums | Reif des Mysteriums | Gamaschen des Mysteriums | Roben des Mysteriums | Schulterpolster des Mysteriums | (3) Set: Gewährt eine Chance von 30%, beim Wirken von 'Blizzard' nicht unterbrochen werden zu können. | (5) Set: Gewährt 20 Sek. lang eine erhöhte Zaubertrefferchance von +5%, wenn einem Eurer Zauber widerstanden wird. | 72 | 86",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "21390": {
+    "raid": "aq40",
+    "itemId": "21390",
+    "name": "Beinschützer des Rächers",
+    "quality": "Episch",
+    "icon": "inv_pants_plate_02",
+    "iconName": "inv_pants_plate_02",
+    "slot": "Beine",
+    "type": "Platte",
+    "boss": "Ouro / Quest",
+    "tooltip": "Beinschützer des Rächers | Wird beim Aufheben gebunden | Beine | Platte | 796 Rüstung | +21 Stärke | +12 Beweglichkeit | +22 Ausdauer | +22 Intelligenz | +9 Willenskraft | Haltbarkeit 120 / 120 | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Schlachtrüstung des Rächers (0/5) | Brustplatte des Rächers | Krone des Rächers | Schienbeinschützer des Rächers | Beinschützer des Rächers | Schulterstücke des Rächers | (3) Set: Erhöht die Dauer Eurer Richturteile um 20%. | (5) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 71. | 9 | 52",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "22360": {
+    "raid": "naxx",
+    "itemId": "22360",
+    "name": "Entweihtes Kopfstück",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailhelm",
+    "iconName": "inv_misc_desecrated_mailhelm",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Thaddius",
+    "tooltip": "Entweihtes Kopfstück | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22373": {
+    "raid": "naxx",
+    "itemId": "22373",
+    "name": "Kampfzerschlissenes Lederstück",
+    "quality": "Selten",
+    "icon": "inv_misc_wartornscrap_leather",
+    "iconName": "inv_misc_wartornscrap_leather",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Trash",
+    "tooltip": "Kampfzerschlissenes Lederstück",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "15407": {
+    "itemId": "15407",
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "icon": "inv_misc_pelt_bear_03",
+    "quality": "common",
+    "tooltip": "Geschmeidiger unverwüstlicher Balg\nGegenstandsstufe 50\nMaximaler Stapel: 20Verkaufspreis: 5"
+  },
+  "20725": {
+    "itemId": "20725",
+    "name": "Nexuskristall",
+    "icon": "inv_enchant_shardnexuslarge",
+    "quality": "epic",
+    "tooltip": "Nexuskristall\nGegenstandsstufe 60\nMaximaler Stapel: 20"
+  },
+  "22361": {
+    "raid": "naxx",
+    "itemId": "22361",
+    "name": "Entweihte Schiftung",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailshoulder",
+    "iconName": "inv_misc_desecrated_mailshoulder",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Schiftung | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22350": {
+    "raid": "naxx",
+    "itemId": "22350",
+    "name": "Entweihte Tunika",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailchest",
+    "iconName": "inv_misc_desecrated_mailchest",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "The Four Horsemen",
+    "tooltip": "Entweihte Tunika | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22362": {
+    "raid": "naxx",
+    "itemId": "22362",
+    "name": "Entweihter Handgelenksschutz",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailbracer",
+    "iconName": "inv_misc_desecrated_mailbracer",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Gluth",
+    "tooltip": "Entweihter Handgelenksschutz | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "12363": {
+    "raid": "aq20",
+    "itemId": "12363",
+    "name": "Arkankristall",
+    "quality": "Selten",
+    "icon": "inv_misc_gem_topaz_01",
+    "iconName": "inv_misc_gem_topaz_01",
+    "slot": "",
+    "type": "Handwerksmaterial",
+    "boss": "Trash",
+    "tooltip": "",
+    "raids": [
+      "aq20",
+      "zg",
+      "raid"
+    ]
+  },
+  "22364": {
+    "raid": "naxx",
+    "itemId": "22364",
+    "name": "Entweihte Handschützer",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailglove",
+    "iconName": "inv_misc_desecrated_mailglove",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Handschützer | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22363": {
+    "raid": "naxx",
+    "itemId": "22363",
+    "name": "Entweihter Gurt",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailbelt",
+    "iconName": "inv_misc_desecrated_mailbelt",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Gluth",
+    "tooltip": "Entweihter Gurt | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "14342": {
+    "itemId": "14342",
+    "name": "Mondstoff",
+    "icon": "inv_fabric_moonrag_01",
+    "quality": "common",
+    "tooltip": "Mondstoff\nGegenstandsstufe 55\nMaximaler Stapel: 20Verkaufspreis: 40"
+  },
+  "22359": {
+    "raid": "naxx",
+    "itemId": "22359",
+    "name": "Entweihte Beinschützer",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailpants",
+    "iconName": "inv_misc_desecrated_mailpants",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Loatheb",
+    "tooltip": "Entweihte Beinschützer | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22365": {
+    "raid": "naxx",
+    "itemId": "22365",
+    "name": "Entweihte Stiefel",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_mailboots",
+    "iconName": "inv_misc_desecrated_mailboots",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Gluth",
+    "tooltip": "Entweihte Stiefel | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22374": {
+    "raid": "naxx",
+    "itemId": "22374",
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quality": "Selten",
+    "icon": "inv_misc_wartornscrap_chain",
+    "iconName": "inv_misc_wartornscrap_chain",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Trash",
+    "tooltip": "Kampfzerschlissenes Kettenstück",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "12360": {
+    "itemId": "12360",
+    "name": "Arkanitbarren",
+    "icon": "inv_misc_stonetablet_05",
+    "quality": "uncommon",
+    "tooltip": "Arkanitbarren\nGegenstandsstufe 55\nMaximaler Stapel: 20Verkaufspreis: 50"
+  },
+  "22367": {
+    "raid": "naxx",
+    "itemId": "22367",
+    "name": "Entweihter Reif",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothhelm",
+    "iconName": "inv_misc_desecrated_clothhelm",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Thaddius",
+    "tooltip": "Entweihter Reif | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22376": {
+    "raid": "naxx",
+    "itemId": "22376",
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quality": "Selten",
+    "icon": "inv_misc_wartornscrap_cloth",
+    "iconName": "inv_misc_wartornscrap_cloth",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Trash",
+    "tooltip": "Kampfzerschlissenes Stoffstück",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22368": {
+    "raid": "naxx",
+    "itemId": "22368",
+    "name": "Entweihte Schulterpolster",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothshoulder",
+    "iconName": "inv_misc_desecrated_clothshoulder",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Gluth",
+    "tooltip": "Entweihte Schulterpolster | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22351": {
+    "raid": "naxx",
+    "itemId": "22351",
+    "name": "Entweihte Robe",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothchest",
+    "iconName": "inv_misc_desecrated_clothchest",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Robe | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22369": {
+    "raid": "naxx",
+    "itemId": "22369",
+    "name": "Entweihte Bindungen",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothbracer",
+    "iconName": "inv_misc_desecrated_clothbracer",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Anub'Rekhan",
+    "tooltip": "Entweihte Bindungen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22371": {
+    "raid": "naxx",
+    "itemId": "22371",
+    "name": "Entweihte Handschuhe",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothglove",
+    "iconName": "inv_misc_desecrated_clothglove",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Handschuhe | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22370": {
+    "raid": "naxx",
+    "itemId": "22370",
+    "name": "Entweihter Gürtel",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothbelt",
+    "iconName": "inv_misc_desecrated_clothbelt",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Noth the Plaguebringer",
+    "tooltip": "Entweihter Gürtel | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22366": {
+    "raid": "naxx",
+    "itemId": "22366",
+    "name": "Entweihte Gamaschen",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothpants",
+    "iconName": "inv_misc_desecrated_clothpants",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Loatheb",
+    "tooltip": "Entweihte Gamaschen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22372": {
+    "raid": "naxx",
+    "itemId": "22372",
+    "name": "Entweihte Sandalen",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_clothboots",
+    "iconName": "inv_misc_desecrated_clothboots",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Sandalen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22375": {
+    "raid": "naxx",
+    "itemId": "22375",
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quality": "Selten",
+    "icon": "inv_misc_wartornscrap_plate",
+    "iconName": "inv_misc_wartornscrap_plate",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Trash",
+    "tooltip": "Kampfzerschlissenes Plattenstück",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22353": {
+    "raid": "naxx",
+    "itemId": "22353",
+    "name": "Entweihter Helm",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_platehelm",
+    "iconName": "inv_misc_desecrated_platehelm",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Thaddius",
+    "tooltip": "Entweihter Helm | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22354": {
+    "raid": "naxx",
+    "itemId": "22354",
+    "name": "Entweihte Schulterstücke",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_plateshoulder",
+    "iconName": "inv_misc_desecrated_plateshoulder",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Patchwerk",
+    "tooltip": "Entweihte Schulterstücke | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22349": {
+    "raid": "naxx",
+    "itemId": "22349",
+    "name": "Entweihte Brustplatte",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_platechest",
+    "iconName": "inv_misc_desecrated_platechest",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "The Four Horsemen",
+    "tooltip": "Entweihte Brustplatte | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22355": {
+    "raid": "naxx",
+    "itemId": "22355",
+    "name": "Entweihte Armschienen",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_platebracer",
+    "iconName": "inv_misc_desecrated_platebracer",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Anub'Rekhan",
+    "tooltip": "Entweihte Armschienen | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22357": {
+    "raid": "naxx",
+    "itemId": "22357",
+    "name": "Entweihte Stulpen",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_plategloves",
+    "iconName": "inv_misc_desecrated_plategloves",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Maexxna",
+    "tooltip": "Entweihte Stulpen | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22356": {
+    "raid": "naxx",
+    "itemId": "22356",
+    "name": "Entweihter Taillenschutz",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_platebelt",
+    "iconName": "inv_misc_desecrated_platebelt",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Noth the Plaguebringer",
+    "tooltip": "Entweihter Taillenschutz | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22352": {
+    "raid": "naxx",
+    "itemId": "22352",
+    "name": "Entweihte Beinplatten",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_platepants",
+    "iconName": "inv_misc_desecrated_platepants",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "Loatheb",
+    "tooltip": "Entweihte Beinplatten | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "22358": {
+    "raid": "naxx",
+    "itemId": "22358",
+    "name": "Entweihte Sabatons",
+    "quality": "Episch",
+    "icon": "inv_misc_desecrated_plateboots",
+    "iconName": "inv_misc_desecrated_plateboots",
+    "slot": "",
+    "type": "Plunder",
+    "boss": "",
+    "tooltip": "Entweihte Sabatons | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "raids": [
+      "naxx"
+    ]
+  },
+  "20932": {
+    "raid": "aq40",
+    "itemId": "20932",
+    "name": "Dominanzbindungen der Qiraji",
+    "quality": "Episch",
+    "icon": "inv_qiraj_bindingsdominance",
+    "iconName": "inv_qiraj_bindingsdominance",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Princess Huhuran",
+    "tooltip": "Dominanzbindungen der Qiraji | Wird beim Aufheben gebunden | Klassen: Paladin, Schamane, Magier, Hexenmeister, Druide",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20878": {
+    "raid": "aq40",
+    "itemId": "20878",
+    "name": "Götze der Wiedergeburt",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_rebirth",
+    "iconName": "inv_qirajidol_rebirth",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze der Wiedergeburt | Klassen: Paladin, Priester, Schamane, Hexenmeister, Druide",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20858": {
+    "raid": "aq20",
+    "itemId": "20858",
+    "name": "Steinskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_stone",
+    "iconName": "inv_scarab_stone",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Trash",
+    "tooltip": "Steinskarabäus",
+    "raids": [
+      "aq20",
+      "aq40"
+    ]
+  },
+  "20860": {
+    "raid": "aq20",
+    "itemId": "20860",
+    "name": "Silberskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_silver",
+    "iconName": "inv_scarab_silver",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Trash",
+    "tooltip": "Silberskarabäus",
+    "raids": [
+      "aq20",
+      "aq40"
+    ]
+  },
+  "20930": {
+    "raid": "aq40",
+    "itemId": "20930",
+    "name": "Vek'lors Diadem",
+    "quality": "Episch",
+    "icon": "inv_bracer_18",
+    "iconName": "inv_bracer_18",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Twin Emperors",
+    "tooltip": "Vek'lors Diadem | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schurke, Schamane, Druide",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20879": {
+    "raid": "aq40",
+    "itemId": "20879",
+    "name": "Götze des Lebens",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_life",
+    "iconName": "inv_qirajidol_life",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze des Lebens | Klassen: Paladin, Jäger, Priester, Schamane, Druide",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20859": {
+    "raid": "aq40",
+    "itemId": "20859",
+    "name": "Goldskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_gold",
+    "iconName": "inv_scarab_gold",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Goldskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20863": {
+    "raid": "aq40",
+    "itemId": "20863",
+    "name": "Tonskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_clay",
+    "iconName": "inv_scarab_clay",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Tonskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20881": {
+    "raid": "aq40",
+    "itemId": "20881",
+    "name": "Götze des Kampfes",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_strife",
+    "iconName": "inv_qirajidol_strife",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze des Kampfes | Klassen: Paladin, Jäger, Schurke, Schamane, Druide",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20864": {
+    "raid": "aq40",
+    "itemId": "20864",
+    "name": "Knochenskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_bone",
+    "iconName": "inv_scarab_bone",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Knochenskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20931": {
+    "raid": "aq40",
+    "itemId": "20931",
+    "name": "Haut des großen Sandwurms",
+    "quality": "Episch",
+    "icon": "inv_qiraj_skinsandworm",
+    "iconName": "inv_qiraj_skinsandworm",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ouro",
+    "tooltip": "Haut des großen Sandwurms | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Hexenmeister, Druide",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20882": {
+    "raid": "aq40",
+    "itemId": "20882",
+    "name": "Götze des Krieges",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_war",
+    "iconName": "inv_qirajidol_war",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze des Krieges | Klassen: Krieger, Jäger, Schurke, Druide",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20862": {
+    "raid": "aq40",
+    "itemId": "20862",
+    "name": "Kristallskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_crystal",
+    "iconName": "inv_scarab_crystal",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Kristallskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20933": {
+    "raid": "aq40",
+    "itemId": "20933",
+    "name": "Hülle des alten Gottes",
+    "quality": "Episch",
+    "icon": "inv_qiraj_huskoldgod",
+    "iconName": "inv_qiraj_huskoldgod",
+    "slot": "",
+    "type": "Quest",
+    "boss": "C'Thun",
+    "tooltip": "Hülle des alten Gottes | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister, Druide",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20861": {
+    "raid": "aq40",
+    "itemId": "20861",
+    "name": "Bronzeskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_bronze",
+    "iconName": "inv_scarab_bronze",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Bronzeskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20865": {
+    "raid": "aq40",
+    "itemId": "20865",
+    "name": "Elfenbeinskarabäus",
+    "quality": "Ungewöhnlich",
+    "icon": "inv_scarab_ivory",
+    "iconName": "inv_scarab_ivory",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Elfenbeinskarabäus",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20928": {
+    "raid": "aq40",
+    "itemId": "20928",
+    "name": "Befehlsbindungen der Qiraji",
+    "quality": "Episch",
+    "icon": "inv_qiraj_bindingscommand",
+    "iconName": "inv_qiraj_bindingscommand",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Princess Huhuran",
+    "tooltip": "Befehlsbindungen der Qiraji | Wird beim Aufheben gebunden | Klassen: Krieger, Jäger, Schurke, Priester",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20874": {
+    "raid": "aq40",
+    "itemId": "20874",
+    "name": "Götze der Sonne",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_sun",
+    "iconName": "inv_qirajidol_sun",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze der Sonne | Klassen: Krieger, Jäger, Schurke, Magier",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20929": {
+    "raid": "aq40",
+    "itemId": "20929",
+    "name": "Knochenpanzer des alten Gottes",
+    "quality": "Episch",
+    "icon": "inv_qiraj_carapaceoldgod",
+    "iconName": "inv_qiraj_carapaceoldgod",
+    "slot": "",
+    "type": "Quest",
+    "boss": "C'Thun",
+    "tooltip": "Knochenpanzer des alten Gottes | Wird beim Aufheben gebunden | Klassen: Krieger, Paladin, Jäger, Schurke, Schamane",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20926": {
+    "raid": "aq40",
+    "itemId": "20926",
+    "name": "Vek'nilashs Reif",
+    "quality": "Episch",
+    "icon": "inv_bracer_18",
+    "iconName": "inv_bracer_18",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Twin Emperors",
+    "tooltip": "Vek'nilashs Reif | Wird beim Aufheben gebunden | Klassen: Krieger, Priester, Magier, Hexenmeister",
+    "raids": [
+      "aq40"
+    ]
+  },
+  "20875": {
+    "raid": "aq20",
+    "itemId": "20875",
+    "name": "Götze der Nacht",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_night",
+    "iconName": "inv_qirajidol_night",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze der Nacht | Klassen: Krieger, Schurke, Magier, Hexenmeister",
+    "raids": [
+      "aq20",
+      "aq40"
+    ]
+  },
+  "20876": {
+    "raid": "aq40",
+    "itemId": "20876",
+    "name": "Götze des Todes",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_death",
+    "iconName": "inv_qirajidol_death",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze des Todes | Klassen: Krieger, Priester, Magier, Hexenmeister",
+    "raids": [
+      "aq40",
+      "aq20"
+    ]
+  },
+  "20877": {
+    "raid": "aq20",
+    "itemId": "20877",
+    "name": "Götze der Weisen",
+    "quality": "Selten",
+    "icon": "inv_qirajidol_sage",
+    "iconName": "inv_qirajidol_sage",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ahn'Qiraj scarabs",
+    "tooltip": "Götze der Weisen | Klassen: Paladin, Priester, Schamane, Magier, Hexenmeister",
+    "raids": [
+      "aq20",
+      "aq40"
+    ]
+  },
+  "20927": {
+    "raid": "aq40",
+    "itemId": "20927",
+    "name": "Ouros intakte Haut",
+    "quality": "Episch",
+    "icon": "inv_qiraj_ourohide",
+    "iconName": "inv_qiraj_ourohide",
+    "slot": "",
+    "type": "Quest",
+    "boss": "Ouro",
+    "tooltip": "Ouros intakte Haut | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke, Priester, Magier",
+    "raids": [
+      "aq40"
+    ]
+  }
+}
