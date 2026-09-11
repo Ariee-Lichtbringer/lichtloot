@@ -10406,6 +10406,21 @@ async function getPoLinkedCharacters({ guildId, query: params }) {
   };
 }
 
+async function unlinkPoDiscordAccount({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const discordUserId = clean(params.discordUserId);
+  if (!discordUserId) {
+    const error = new Error("Discord-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  await query(
+    `delete from discord_player_links where guild_id = $1 and discord_user_id = $2`,
+    [guildId, discordUserId]
+  );
+  return { success: true, linked: false, characters: [] };
+}
+
 async function linkPoDiscordAccount({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const discordUserId = clean(params.discordUserId || params.userId);
@@ -32197,6 +32212,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
       const linked = await getPoLinkedCharacters({ guildId: guild.id, query: postParams });
       return res.json({ ...linked, guild: guild.slug, guildId: guild.id });
+    }
+
+    if (action === "lichtbotUnlinkDiscordAccount") {
+      const result = await unlinkPoDiscordAccount({ guildId: guild.id, query: postParams });
+      return res.json({ ...result, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "lichtbotLinkDiscordAccount") {
