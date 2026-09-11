@@ -1,13 +1,15 @@
 (function(){
   'use strict';
   let activeGuild=null,observer=null;
-  const bidsURL=new URL('dkp-loot-bids.js?v=20260911-1',document.currentScript.src).href;
-  let bidsLoading=null;
+  const bidsURL=new URL('dkp-loot-bids.js?v=20260911-layout1',document.currentScript.src).href;
+  let bidsLoading=null,layoutLoading=null;
+  const layoutURL=new URL('dkp-raid-layout.js?v=20260911-1',document.currentScript.src).href;
+  function applyLayout(){if(!document.getElementById('mainGrid'))return;if(window.GuildLootRaidLayout){window.GuildLootRaidLayout.apply();return;}if(!document.documentElement.classList.contains('guild-dkp'))return;if(!layoutLoading)layoutLoading=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=layoutURL;s.onload=resolve;s.onerror=reject;document.head.append(s);});layoutLoading.then(()=>window.GuildLootRaidLayout?.apply()).catch(()=>{});}
   function applyBids(){
-    if(window.GuildLootBids){window.GuildLootBids.apply(activeGuild);return;}
+    if(window.GuildLootBids){window.GuildLootBids.apply(activeGuild);applyLayout();return;}
     if(!document.documentElement.classList.contains('guild-dkp'))return;
     if(!bidsLoading)bidsLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=bidsURL;script.onload=resolve;script.onerror=()=>{script.remove();bidsLoading=null;reject(new Error('DKP-Gebote konnten nicht geladen werden.'));};document.head.append(script);});
-    bidsLoading.then(()=>window.GuildLootBids?.apply(activeGuild)).catch(()=>{const link=document.getElementById('guildDkpLink');if(link)link.textContent='DKP-Gebote: bitte Seite neu laden · DKP-Konten öffnen →';});
+    bidsLoading.then(()=>{window.GuildLootBids?.apply(activeGuild);applyLayout();}).catch(()=>{const link=document.getElementById('guildDkpLink');if(link)link.textContent='DKP-Gebote: bitte Seite neu laden · DKP-Konten öffnen →';});
   }
   function catalogButtons(){
     if(!document.documentElement.classList.contains('guild-dkp'))return;

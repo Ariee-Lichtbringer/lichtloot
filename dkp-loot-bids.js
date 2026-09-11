@@ -10,6 +10,7 @@
   const pin=()=>manualPin||(typeof getStoredLichtLootPlayerPin==='function'?getStoredLichtLootPlayerPin():'');
   const el=id=>document.getElementById(id);
   function message(t){const node=el('dkpBidsStatus');if(node)node.textContent=t;const reload=el('dkpBidsRefresh');if(reload)reload.textContent=dirty?'Entwurf verwerfen & aktualisieren':'Aktualisieren';}
+  function notify(){window.dispatchEvent(new Event('guildloot:dkp-state'));}
   function styles(){
     if(el('dkpBidsStyle'))return;
     const s=document.createElement('style');s.id='dkpBidsStyle';s.textContent=`
@@ -40,12 +41,12 @@
     draft.forEach(b=>{if(b.item)names.add(b.item);});return [...names].sort((a,b)=>a.localeCompare(b,'de'));
   }
   function renderDraft(){
-    el('dkpStartRows').innerHTML=draft.map((b,i)=>`<div class="dkp-bid-row" data-slot="${i}"><label>Item ${i+1}<input name="item" list="dkpItemNames" maxlength="200" value="${esc(b.item)}" placeholder="Links auswählen oder Item suchen" aria-label="Startgebot Item ${i+1}"></label><div class="dkp-amount-line"><label>Startgebot (DKP)<input name="amount" type="number" min="0.01" max="9999999.99" step="0.01" value="${esc(b.amount)}" aria-label="DKP für Item ${i+1}"></label><button type="button" data-remove="${i}" aria-label="Startgebot ${i+1} entfernen">Entfernen</button></div></div>`).join('');
+    el('dkpStartRows').innerHTML=draft.map((b,i)=>`<details class="dkp-bid-row" data-slot="${i}"><summary><strong>${b.item?esc(b.item):'+ Startgebot '+(i+1)+' konfigurieren'}</strong><small>${b.amount?'Startgebot: '+fmt(b.amount)+' DKP':'Item und Betrag wählen'}</small></summary><label>Item ${i+1}<input name="item" list="dkpItemNames" maxlength="200" value="${esc(b.item)}" placeholder="Links auswählen oder Item suchen" aria-label="Startgebot Item ${i+1}"></label><div class="dkp-amount-line"><label>Startgebot (DKP)<input name="amount" type="number" min="0.01" max="9999999.99" step="0.01" value="${esc(b.amount)}" aria-label="DKP für Item ${i+1}"></label><button type="button" data-remove="${i}" aria-label="Startgebot ${i+1} entfernen">Entfernen</button></div></details>`).join('');
     el('dkpItemNames').innerHTML=itemNames().map(n=>`<option value="${esc(n)}"></option>`).join('');
-    el('dkpStartForm').querySelectorAll('input').forEach(input=>input.oninput=()=>{const b=draft[Number(input.closest('[data-slot]').dataset.slot)];b[input.name]=input.value;dirty=true;message('Noch nicht gespeichert.');});
+    el('dkpStartForm').querySelectorAll('input').forEach(input=>input.oninput=()=>{const b=draft[Number(input.closest('[data-slot]').dataset.slot)];b[input.name]=input.value;const summary=input.closest('[data-slot]').querySelector('summary');if(summary){summary.querySelector('strong').textContent=b.item||'Item auswählen';summary.querySelector('small').textContent=b.amount?'Startgebot: '+fmt(b.amount)+' DKP':'Item und Betrag wählen';}dirty=true;message('Noch nicht gespeichert.');});
     el('dkpStartForm').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{draft[Number(b.dataset.remove)]={item:'',amount:''};dirty=true;renderDraft();message('Entfernt. Mit „Startgebote speichern“ übernehmen.');});
   }
-  function chooseTab(next){tab=next;el('dkpStartSection').hidden=tab!=='start';el('dkpLiveSection').hidden=tab!=='live';panel.querySelectorAll('[role=tab]').forEach(b=>{const active=b.dataset.tab===tab;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;});}
+  function chooseTab(next){tab=next;el('dkpStartSection').hidden=document.body.classList.contains('dkp-raid-manager')?false:tab!=='start';el('dkpLiveSection').hidden=document.body.classList.contains('dkp-raid-manager')?false:tab!=='live';panel.querySelectorAll('[role=tab]').forEach(b=>{const active=b.dataset.tab===tab;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;});}
   function renderAuctions(){
     const own=data.accounts.find(a=>a.id===character);
     el('dkpFreePoints').textContent=own?`${fmt(own.balance)} DKP · ${fmt(own.reserved)} gebunden · ${fmt(own.balance-own.reserved)} frei`:'';
@@ -62,11 +63,12 @@
     el('dkpGuildWishes').innerHTML=(data.startBids||[]).filter(b=>b.bids.length).map(b=>`<div class="dkp-guild-wish"><strong>${esc(b.name)} · ${esc(b.server)}</strong>${b.bids.map(w=>`<div>${esc(w.item)} · ${fmt(w.amount)} DKP</div>`).join('')}</div>`).join('')||'<p>Noch keine Startgebote für diesen Raid gespeichert.</p>';
   }
   function render(){
-    if(!data){panel.innerHTML='<h2>DKP-Gebote</h2><p>Speichere bis zu drei Startgebote oder biete in laufenden Auktionen mit.</p><form id="dkpBidsLogin"><label>SpielerLogin<input name="pin" type="password" autocomplete="current-password" required></label><button type="submit">Anmelden</button></form><p id="dkpBidsStatus" role="status"></p>';el('dkpBidsLogin').onsubmit=e=>{e.preventDefault();manualPin=e.target.elements.pin.value.trim();refresh();};return;}
+    const detachedLive=el('dkpLiveSection');if(detachedLive&&!panel.contains(detachedLive))detachedLive.remove();
+    if(!data){panel.innerHTML='<h2>DKP-Gebote</h2><p>Speichere bis zu drei Startgebote oder biete in laufenden Auktionen mit.</p><form id="dkpBidsLogin"><label>SpielerLogin<input name="pin" type="password" autocomplete="current-password" required></label><button type="submit">Anmelden</button></form><p id="dkpBidsStatus" role="status"></p>';el('dkpBidsLogin').onsubmit=e=>{e.preventDefault();manualPin=e.target.elements.pin.value.trim();refresh();};notify();return;}
     const own=data.accounts.filter(a=>data.own.includes(a.id));
     panel.innerHTML=`<h2>DKP-Gebote</h2><label>Charakter<select id="dkpBidCharacter">${own.map(a=>`<option value="${esc(a.id)}" ${a.id===character?'selected':''}>${esc(a.name)} · ${esc(a.server)}</option>`).join('')}</select></label><p id="dkpFreePoints"></p><div class="dkp-tabs" role="tablist" aria-label="DKP-Gebote"><button type="button" id="dkpStartTab" role="tab" data-tab="start" aria-controls="dkpStartSection">Startgebote</button><button type="button" id="dkpLiveTab" role="tab" data-tab="live" aria-controls="dkpLiveSection">Laufende Auktionen</button></div><section id="dkpStartSection" role="tabpanel" aria-labelledby="dkpStartTab"><p>Bis zu drei Items pro Charakter und Raid vormerken. Startgebote reservieren keine Punkte und bieten nicht automatisch mit.</p><form id="dkpStartForm"><div id="dkpStartRows"></div><datalist id="dkpItemNames"></datalist><button type="submit">Startgebote speichern</button></form><details><summary>Startgebote der Gilde · ${esc(raid.toUpperCase())}</summary><div id="dkpGuildWishes"></div></details></section><section id="dkpLiveSection" role="tabpanel" aria-labelledby="dkpLiveTab"><p>Offene Auktionen deiner Gilde. Ein passendes Startgebot wird als Betrag vorgeschlagen. Erst „Verbindlich bieten“ gibt das Gebot ab.</p><div id="dkpAuctionList"></div></section><p id="dkpBidsStatus" role="status" aria-live="polite"></p><button type="button" id="dkpBidsRefresh">Aktualisieren</button>`;
     panel.querySelectorAll('[role=tab]').forEach(b=>{b.onclick=()=>chooseTab(b.dataset.tab);b.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();chooseTab(e.key==='Home'?'start':e.key==='End'?'live':tab==='start'?'live':'start');el(tab==='start'?'dkpStartTab':'dkpLiveTab').focus();}};});
-    el('dkpBidCharacter').onchange=e=>{if(dirty){e.target.value=character;message('Bitte Änderungen erst speichern oder mit „Aktualisieren“ verwerfen.');return;}character=e.target.value;loadDraft();renderDraft();renderAuctions();};
+    el('dkpBidCharacter').onchange=e=>{if(dirty){e.target.value=character;message('Bitte Änderungen erst speichern oder mit „Aktualisieren“ verwerfen.');return;}character=e.target.value;loadDraft();renderDraft();renderAuctions();notify();};
     el('dkpBidsRefresh').onclick=()=>{if(dirty){dirty=false;loadDraft();renderDraft();}refresh(true);};
     el('dkpStartForm').onsubmit=e=>{e.preventDefault();const bids=draft.filter(b=>b.item.trim()).map(b=>({item:b.item.trim(),amount:b.amount}));if(draft.some(b=>!b.item.trim()&&b.amount)){message('Bitte zu jedem Betrag ein Item auswählen.');return;}if(bids.some(b=>!b.amount||Number(b.amount)<=0)){message('Bitte für jedes Item ein positives DKP-Gebot eintragen.');return;}mutate({action:'saveStartBids',characterId:character,raid,bids,revision},'Startgebote gespeichert.');};
     renderDraft();renderAuctions();renderGuildWishes();chooseTab(tab);
@@ -81,16 +83,16 @@
       const first=!data||sessionPin!==credentials;data=next;sessionPin=credentials;
       if(first){const own=data.accounts.filter(a=>data.own.includes(a.id));character=own.find(a=>a.name===el('playerName')?.value)?.id||own[0]?.id||'';loadDraft();render();}
       else{if(force&&!dirty){loadDraft();renderDraft();}if(!el('dkpAuctionList').contains(document.activeElement))renderAuctions();renderGuildWishes();}
-      if(force)message('Aktualisiert.');
+      notify();if(force)message('Aktualisiert.');
     }catch(error){if(token===epoch){message(error.message);}}
     finally{loading=false;}
   }
   async function mutate(payload,success){
     if(busy||loading)return;busy=true;const token=epoch,key=JSON.stringify(payload);if(!pending.has(key))pending.set(key,crypto.randomUUID());
-    panel.querySelectorAll('button,input,select').forEach(b=>b.disabled=true);message('Wird gespeichert …');
+    document.querySelectorAll('#dkpLootBids button,#dkpLootBids input,#dkpLootBids select,#dkpLiveSection button,#dkpLiveSection input').forEach(b=>b.disabled=true);message('Wird gespeichert …');
     try{const result=await api({...payload,requestId:pending.get(key)});if(token!==epoch)return;pending.delete(key);if(payload.action==='saveStartBids'){revision=result.revision;dirty=false;}message(success);}
     catch(error){if(token===epoch)message(error.message);}
-    finally{busy=false;if(token===epoch){panel.querySelectorAll('button,input,select').forEach(b=>b.disabled=false);await refresh();}}
+    finally{busy=false;if(token===epoch){document.querySelectorAll('#dkpLootBids button,#dkpLootBids input,#dkpLootBids select,#dkpLiveSection button,#dkpLiveSection input').forEach(b=>b.disabled=false);await refresh();}}
   }
   function addItem(item){
     if(!data){message('Bitte zuerst mit deinem SpielerLogin anmelden.');panel.scrollIntoView({block:'center',behavior:'smooth'});return;}
@@ -98,7 +100,7 @@
     const existing=draft.findIndex(b=>b.item===item),slot=existing>=0?existing:draft.findIndex(b=>!b.item);
     if(slot<0){message('Bereits drei Items ausgewählt. Entferne zuerst ein Startgebot.');return;}
     if(existing<0){draft[slot]={item,amount:''};dirty=true;renderDraft();}
-    chooseTab('start');panel.scrollIntoView({block:'center',behavior:'smooth'});panel.querySelector(`[data-slot="${slot}"] input[name=amount]`).focus();message('DKP-Betrag eintragen und Startgebote speichern.');
+    chooseTab('start');const entry=panel.querySelector(`[data-slot="${slot}"]`);if(entry)entry.open=true;panel.scrollIntoView({block:'center',behavior:'smooth'});panel.querySelector(`[data-slot="${slot}"] input[name=amount]`).focus();message('DKP-Betrag eintragen und Startgebote speichern.');
   }
   function catalog(){
     if(!enabled())return;
@@ -120,9 +122,9 @@
     new MutationObserver(update).observe(overlay,{attributes:true,attributeFilter:['class']});update();
   }
   let initialized=false;
-  window.GuildLootBids={apply(slug){
+  window.GuildLootBids={snapshot:()=>({guild,data,character}),apply(slug){
     if(guild!==slug){guild=slug;epoch++;data=null;dirty=false;manualPin='';pending.clear();if(panel){render();refresh();}}
-    styles();
+    styles();window.GuildLootRaidLayout?.apply();
     if(!enabled()){document.querySelectorAll('.raid-page-title').forEach(h=>h.childNodes.forEach(n=>{if(n._prioText)n.textContent=n._prioText;}));document.querySelectorAll('[data-prio-text]').forEach(n=>{n.textContent=n.dataset.prioText;});return;}
     if(!initialized){initialized=true;if(raid&&el('mainGrid')){panel=document.createElement('div');panel.id='dkpLootBids';panel.className='card info-card dkp-bids';el('mainGrid').append(panel);render();refresh();setInterval(()=>{if(!document.hidden)refresh();},15000);}overview();new MutationObserver(catalog).observe(document.body,{childList:true,subtree:true});}
     catalog();
