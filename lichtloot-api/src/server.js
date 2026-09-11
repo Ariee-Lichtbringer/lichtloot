@@ -1,3 +1,4 @@
+import { createArmorRequests } from "./armor-requests.js";
 import { createCharacterProfessions } from "./character-professions.js";
 import { createSupportDiscordReplies } from "./support-discord-replies.js";
 import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
@@ -70,6 +71,7 @@ const gmailApi = createGmailApi({query});
 const supportDiscordReplies = createSupportDiscordReplies({query,ensureNotices:()=>supportNotices.ensure(),ensureMembers:ensureDiscordChannelSchema});
 const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensureSupportReplySchema});
 const raidSheetBridge=createRaidSheetBridge(query);
+const armorRequests=createArmorRequests({pool,query});
 const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
 const app = express();
 app.set("trust proxy", 1);
@@ -1454,6 +1456,7 @@ const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.webp";
 
 function defaultGuildLayoutForSlug(slug) {
   return {
+    armorRequestChannelId: slug === "lichtloot" ? "1390681277992272024" : "",
     lootSystem: "prio",
     raidImages: {},
     onboarding: {
@@ -2807,7 +2810,7 @@ async function saveGuildSetupChannels({ query: params = {}, body = {} }) {
   const values={...params,...body};
   const application=await requireCompletedGuildSetupToken(values.token);
   const guild=await requireGuild(resolveGuildSlug(application.guild_slug));
-  const allowedKeys=["raidAnnouncementChannelId","worldbuffChannelId","hordenbuffChannelId","worldbuffBackupChannelId","p0PlusBackupChannelId","logSourceChannelId","logAnalysisChannelId"];
+  const allowedKeys=["armorRequestChannelId","raidAnnouncementChannelId","worldbuffChannelId","hordenbuffChannelId","worldbuffBackupChannelId","p0PlusBackupChannelId","logSourceChannelId","logAnalysisChannelId"];
   const incoming=values.channels&&typeof values.channels==="object"&&!Array.isArray(values.channels)?values.channels:{};
   const channelIds=allowedKeys.map(key=>clean(incoming[key])).filter(Boolean);
   if(!clean(incoming.raidAnnouncementChannelId)||!clean(incoming.worldbuffChannelId)){const error=new Error("Raidanmelder- und Worldbuff-Channel sind Pflichtfelder.");error.statusCode=400;throw error;}
@@ -32266,6 +32269,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetPoReleaseRequests") {
       const list = await getPoReleaseRequests({ guildId: guild.id, query: postParams, management: true });
       return res.json({ ...list, guild: guild.slug });
+    }
+    if (action === "getArmorRequestCatalog" || action === "getArmorRequestStatus" || action === "submitArmorRequest") {
+      enforceSecurityRateLimit(req,"armor-requests",90,60*1000);
+      res.set("Cache-Control","no-store");
+      return res.json(await armorRequests.handle(guild, postParams));
     }
     if (action === "submitPoReleaseRequest") {
       const saved = await submitPoReleaseRequest({ guildId: guild.id, query: postParams });

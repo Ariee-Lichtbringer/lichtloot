@@ -9052,6 +9052,7 @@ function renderLootLayoutPanel(){
               <select id="layoutRaidAnnouncementChannelId">${layoutChannelSelectOptions(layout.raidAnnouncementChannelId || "")}</select>
               <span class="muted">Standardchannel für neue Raid- und Discord-Anmelder.</span>
             </div>
+            <div class="field"><label>Rüstungsteile beantragen</label><select id="layoutArmorRequestChannelId">${layoutChannelSelectOptions(layout.armorRequestChannelId ?? (CURRENT_GUILD_SLUG === "lichtloot" ? "1390681277992272024" : ""))}</select><small>Der PO Bot postet hier Anfragen für T3- und T2,5-Materialien aus der Gildenbank.</small></div>
             <div class="field">
               <label>Hordenbuff-Channel</label>
               <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>
@@ -9320,6 +9321,7 @@ async function saveLootLayoutPanel(){
     logAnalysisAq40ChannelId: layoutFieldValue("layoutLogAnalysisAq40ChannelId"),
     logAnalysisNaxxChannelId: layoutFieldValue("layoutLogAnalysisNaxxChannelId"),
 
+    armorRequestChannelId: layoutFieldValue("layoutArmorRequestChannelId"),
     raidAnnouncementChannelId: layoutFieldValue("layoutRaidAnnouncementChannelId"),
     warcraftLogsGuildId: layoutFieldValue("layoutWarcraftLogsGuildId").replace(/\D/g,"")
   };
