@@ -4460,6 +4460,7 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   const request = found.rows[0]; if (!request) { const error=new Error("Antrag wurde nicht gefunden."); error.statusCode=404; throw error; }
   await authorizePoClassManagement(guildId, params, request.class_name);
   const reviewer=clean(params.reviewedBy || params.reviewer || "Gildenleitung");
+  if(decision==="rejected"&&request.status==="approved"){const error=new Error("Bitte die bestehende Freigabe zuerst in der Freigabetabelle zurücknehmen.");error.statusCode=400;throw error;}
   if (decision === "approved") {
     const manualOverride=["true","1","yes","ja"].includes(clean(params.manualOverride).toLowerCase());
     if(!manualOverride&&!["true","1","yes","ja"].includes(clean(params.screenshotConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass Screenshot und Armory-Ausrüstung übereinstimmen.");error.statusCode=400;throw error;}
@@ -4492,27 +4493,27 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
       }
     }
   }
-  const sendRejectionDm=decision==="rejected"&&["true","1","yes","ja"].includes(clean(params.sendRejectionDm).toLowerCase());
+  const sendRejectionDm=decision==="rejected";
   let rejectionDmTarget=null;
-  if(sendRejectionDm){
-    if(!clean(params.reviewNote)){const error=new Error("Bitte einen Ablehnungsgrund für die Discord-Nachricht eintragen.");error.statusCode=400;throw error;}
+  if(sendRejectionDm||decision==="approved"){
+    if(sendRejectionDm&&!clean(params.reviewNote)){const error=new Error("Bitte einen Ablehnungsgrund für die Discord-Nachricht eintragen.");error.statusCode=400;throw error;}
     const linked=await query(`select dpl.discord_user_id,dpl.discord_name,p.player_pin,g.slug,g.name as guild_name,c.server from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id left join lateral (select discord_user_id,discord_name from discord_player_links where guild_id=p.guild_id and character_id=c.id order by updated_at desc,created_at desc limit 1) dpl on true where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,request.character_id]);
     rejectionDmTarget=linked.rows[0]||null;
   }
   const updated=await query(`update po_release_requests set status=$3,review_note=$4,reviewed_by=$5,reviewed_at=now(),updated_at=now() where guild_id=$1 and id=$2 returning *`,[guildId,id,decision,clean(params.reviewNote),reviewer]);
   let rejectionDelivery="";
-  if(sendRejectionDm&&rejectionDmTarget){
+  if(rejectionDmTarget){
     const raid=normalizePoReleaseRaid(request.raid_type),requestLabel=request.request_type==="recruit"?`Aufhebung Rekrutenstatus ${raid.toUpperCase()}`:request.request_type==="p1p3"?`P1–P3 Freigabe ${raid.toUpperCase()}`:`P0-Freigabe ${raid.toUpperCase()}`;
     if(clean(rejectionDmTarget.discord_user_id)){
-      await enqueueBotUpdate({guildId,type:"po_rejection_notice",payload:{guildSlug:rejectionDmTarget.slug,guildName:rejectionDmTarget.guild_name||rejectionDmTarget.slug,discordUserId:rejectionDmTarget.discord_user_id,discordName:rejectionDmTarget.discord_name||"",player:request.name||"",server:rejectionDmTarget.server||"",item:requestLabel,raid,reason:clean(params.reviewNote),requestId:id,createdAt:new Date().toISOString()}});
+      await enqueueBotUpdate({guildId,type:decision==="approved"?"po_release_granted_notice":"po_rejection_notice",payload:{guildSlug:rejectionDmTarget.slug,guildName:rejectionDmTarget.guild_name||rejectionDmTarget.slug,discordUserId:rejectionDmTarget.discord_user_id,discordName:rejectionDmTarget.discord_name||"",player:request.name||"",server:rejectionDmTarget.server||"",item:requestLabel,raid,raidLabel:requestLabel,character:request.name||"",className:request.class_name||"",decision:"granted",reason:clean(params.reviewNote),requestId:id,createdAt:new Date().toISOString()}});
       rejectionDelivery="discord";
     }else if(clean(rejectionDmTarget.player_pin)){
-      await query(`insert into player_messages(guild_id,player_pin,title,body,raid_name,sender) values($1,$2,$3,$4,$5,$6)`,[guildId,rejectionDmTarget.player_pin,`${requestLabel} abgelehnt`,`Dein Antrag „${requestLabel}“ für ${request.name||"deinen Charakter"} wurde abgelehnt.\n\nBegründung:\n${clean(params.reviewNote)}\n\nLG\nGildenleitung`,raid.toUpperCase(),"Gildenleitung"]);
+      await query(`insert into player_messages(guild_id,player_pin,title,body,raid_name,sender) values($1,$2,$3,$4,$5,$6)`,[guildId,rejectionDmTarget.player_pin,`${requestLabel} ${decision==="approved"?"freigegeben":"abgelehnt"}`,`Dein Antrag „${requestLabel}“ für ${request.name||"deinen Charakter"} wurde ${decision==="approved"?"freigegeben":"abgelehnt"}.\n\nNotiz:\n${clean(params.reviewNote)}\n\nLG\nGildenleitung`,raid.toUpperCase(),"Gildenleitung"]);
       rejectionDelivery="nachtloot_mailbox";
     }
   }
   p0ReleaseCache=null;
-  return { success:true,request:updated.rows[0],rejectionDmQueued:rejectionDelivery==="discord",rejectionDelivery };
+  return { success:true,request:updated.rows[0],notificationDelivery:rejectionDelivery,rejectionDmQueued:sendRejectionDm&&rejectionDelivery==="discord",rejectionDelivery:sendRejectionDm?rejectionDelivery:"" };
 }
 
 async function deletePoReleaseRequest({ guildId, query: params = {} }) {
