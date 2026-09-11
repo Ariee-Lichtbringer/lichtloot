@@ -1529,6 +1529,15 @@ body.show-mylichtloot .account-creation-panel{display:none}
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 <script src="server-selection.js?v=20260906-1"></script>
 <script src="loot-system.js?v=20260906-2"></script>
+
+<style>
+.portal-nav .portal-addon-download{align-self:center;gap:12px;height:auto;min-height:58px;padding:8px 14px;border:1px solid rgba(250,204,21,.6);border-radius:11px;background:linear-gradient(120deg,rgba(250,204,21,.10),rgba(12,20,37,.92));color:#facc15;text-transform:none;letter-spacing:0;line-height:1.25}
+.portal-addon-download .portal-addon-icon{width:38px;height:38px;object-fit:contain;flex-shrink:0}
+.portal-addon-download strong{display:block;font-size:14px}.portal-addon-download small{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:#d9e2ef}.portal-addon-download small img{width:18px;height:18px}.portal-addon-download b{margin-left:auto;font-size:25px}.portal-addon-download span{min-width:0}
+.portal-nav .portal-addon-download:hover{background:rgba(250,204,21,.15)}.portal-nav a:focus-visible{outline:2px solid #facc15;outline-offset:3px}
+@media(max-width:1000px){.header .portal-nav{display:flex;grid-column:1/-1;grid-row:2;height:auto;padding-bottom:12px;gap:10px}.header .portal-profile{grid-column:2;grid-row:1}.header{row-gap:0}.portal-nav .portal-addon-download{min-width:0}.portal-nav a[data-guild-support]{padding:0 12px}}
+@media(max-width:650px){.portal-nav .portal-addon-download{flex:1;padding:7px 9px;gap:8px}.portal-addon-download .portal-addon-icon{width:30px;height:30px}.portal-addon-download strong{font-size:12px}.portal-addon-download small{font-size:11px}.portal-nav a[data-guild-support]{padding:0 4px;font-size:12px}}
+</style>
 </head>
 <body>
 <div class="overlay">
@@ -1536,6 +1545,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     <img src="images/guildloot-logo-concept.webp" alt="GuildLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
       <a href="#support" data-guild-support>Support</a>
+      <a class="portal-addon-download" href="start.html?view=addon"><img class="portal-addon-icon" src="images/addon-guide/guildloot-icon.png" alt=""><span><strong>Addon Download &amp; Installation</strong><small><img src="images/addon-guide/curseforge.svg" alt=""> CurseForge</small></span><b aria-hidden="true">›</b></a>
     </nav>
     <button class="portal-profile" type="button" onclick="document.getElementById('loginCard')?.scrollIntoView({behavior:'smooth',block:'center'})">
       <span class="portal-avatar">👤</span>
