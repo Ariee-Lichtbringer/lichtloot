@@ -1,5 +1,5 @@
-# GuildLoot 0.24.10-beta
+# GuildLoot 0.24.11-beta
 
-- RaidCheck: added Onyxia Scale Cloak, Hourglass Sand and Drakefire Amulet to the permanent catalog.
-- Added Raid Accessories filter and search aliases for Onyxia and BWL.
-- All Items now includes bag/bank equipment as well as consumables; permanent raid gear remains searchable even when not owned.
+- Added persistent checkboxes beside the Whisper, Raidsheets, Professions and RaidCheck toolbar icons to show or hide their mini-addon launchers.
+- Checkmarks reflect existing settings and icon clicks.
+- New launchers appear together around the screen center. Previously positioned launchers keep their saved locations.
