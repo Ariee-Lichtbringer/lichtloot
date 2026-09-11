@@ -12899,7 +12899,7 @@ async function savePrio({ guildId, query: params }) {
            and lower(raid_type) = any($3)
          order by updated_at desc
          limit 1`,
-        [guildId, prioPin, raidTypeSearchValues(raidType)]
+        [guildId, prioPin, raidIdentityTypeSearchValues(raidType, true)]
       );
     }
 
@@ -12973,7 +12973,7 @@ async function savePrio({ guildId, query: params }) {
 
     const savedRaidForSignupCheck = raidResult.rows[0];
     // A stale client must never save an AQ40 selection into a Naxx raid.
-    if (raidType && !raidTypeSearchValues(raidType).includes(String(savedRaidForSignupCheck.raid_type || "").toLowerCase())) {
+    if (raidType && !raidIdentityTypeSearchValues(raidType, Boolean(externalRaidId || prioPin)).includes(String(savedRaidForSignupCheck.raid_type || "").toLowerCase())) {
       const error = new Error("Der Raid gehört nicht zu dieser Prioseite. Bitte öffne den aktuellen Raid-Link erneut.");
       error.statusCode = 409;
       throw error;
@@ -22759,6 +22759,14 @@ function buildSignupCounts(signups, externalSignups = []) {
   return counts;
 }
 
+// The shared ZG loot page serves Prime/Late/Mittwoch too. Expand only when
+// a concrete ID or PIN identifies the event; date/type discovery stays exact.
+function raidIdentityTypeSearchValues(value, hasIdentity) {
+  const types = raidTypeSearchValues(value);
+  if (!hasIdentity || normalizeRaidType(value) !== "zg") return types;
+  return Array.from(new Set([...types, ...["zg-prime", "zg-late", "zg-mittwoch"].flatMap(raidTypeSearchValues)]));
+}
+
 async function findRaid(guildId, params) {
   const raidId = clean(params.raidId || params.RaidID || params.raidID);
   const leadPin = clean(params.leadPin || params.raidleadPin);
@@ -22801,7 +22809,7 @@ async function findRaid(guildId, params) {
   const clauses = ["guild_id = $1", "deleted_at is null"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType) {
-    values.push(raidTypeSearchValues(raidType));
+    values.push(raidIdentityTypeSearchValues(raidType, Boolean(raidId || leadPin || prioPin)));
     clauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
