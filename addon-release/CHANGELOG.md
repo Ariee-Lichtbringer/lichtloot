@@ -1,10 +1,6 @@
-# GuildLoot Era 0.24.8-beta
+# GuildLoot 0.24.9-beta
 
-- Added “Withdraw from bank” to GuildLoot RaidCheck. With your bank open, fill missing quantities from the selected checklist.
-- Counts items already in your bags and equipped gear; supports bank bags, partial stacks and compatible specialty bags.
-- Stops when the bank closes, combat starts, the selected checklist changes, or inventory space is unavailable.
-- Reports missing bank stock and unconfirmed transfers.
-
-Includes personal RaidCheck lists, raid buff tools, and Tier 2.5/Tier 3 armor requests through your connected guild.
-
-Automated Lua and simulated inventory tests passed. In-game bank transfer validation is still pending in this beta.
+- Added a quantity input and Create All for normal crafting professions.
+- Added a quantity planner for Enchanting. Classic Era requires a separate click on the native Enchant button for each craft, including oils; the planner tracks successful crafts.
+- RaidCheck: added Return to Bank to deposit remaining items from the selected checklist after a raid. Equipped items stay equipped.
+- Bank transfers respect stack capacity, specialized bags, locked items and free space, and stop when the bank closes or combat begins.
