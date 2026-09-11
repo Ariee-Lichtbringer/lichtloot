@@ -5408,6 +5408,65 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .raid-helper-current-grid .raid-select-checkbox{flex-shrink:0;width:16px;height:16px;accent-color:var(--gold)}
 @media(max-width:600px){.raid-helper-current-grid{grid-template-columns:minmax(0,1fr);gap:14px}}
 
+/* Match the guild overview cards in the current raid signup list. */
+#raidHelperScheduleRules{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:20px;align-items:stretch}
+#raidHelperScheduleRules .raid-helper-current-card{grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto auto auto 1fr auto auto;gap:0 12px;min-height:350px;padding:20px 16px 16px;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--soft));border-top:3px solid color-mix(in srgb,var(--gold) 65%,var(--soft));border-radius:11px;background:color-mix(in srgb,var(--panel) 94%,var(--text) 6%);color:var(--text);box-shadow:0 8px 20px rgba(0,0,0,.26)}
+#raidHelperScheduleRules .raid-helper-current-card::after{display:none}
+#raidHelperScheduleRules .raid-helper-current-card-image{grid-column:1;grid-row:1 / 3;align-self:start;width:58px;height:64px;object-fit:contain;border:1px solid var(--soft);background:var(--panel2);border-radius:7px;box-shadow:none}
+#raidHelperScheduleRules .raid-helper-current-card-body{display:contents}
+#raidHelperScheduleRules .raid-helper-current-card-head{grid-column:2;grid-row:1;min-height:25px}
+#raidHelperScheduleRules .raid-helper-current-card-head h4{font-size:16px;font-weight:750;line-height:1.25;color:var(--text);overflow-wrap:anywhere}
+#raidHelperScheduleRules .raid-helper-current-card-meta{grid-column:2;grid-row:2;align-content:start;gap:2px 7px;margin-top:5px;min-height:39px;color:var(--muted);font-size:12px;font-weight:400;line-height:1.4}
+#raidHelperScheduleRules .raid-helper-current-card-status{grid-column:1/-1;grid-row:3;margin-top:18px}
+#raidHelperScheduleRules .raid-helper-current-card-status .badge{border-radius:5px;border:0;background:rgba(var(--gold-rgb),.08);color:var(--gold);font-size:11px;padding:4px 7px}
+#raidHelperScheduleRules .raid-helper-current-status-breakdown{grid-column:1/-1;grid-row:4;align-content:start;gap:6px;min-height:43px;margin-top:12px}
+#raidHelperScheduleRules .raid-helper-current-status-chip{border-radius:5px;font-size:11px;font-weight:600;padding:4px 6px}
+#raidHelperScheduleRules .raid-helper-current-card-counts{grid-column:1/-1;grid-row:5;display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;padding:18px 0;border-block:1px solid var(--line)}
+#raidHelperScheduleRules .raid-helper-current-card-count{display:flex;flex-direction:column;align-items:flex-start;gap:5px;border:0;border-radius:0;padding:0;background:none;color:var(--muted);font-size:12px;font-weight:400}
+#raidHelperScheduleRules .raid-helper-current-card-count>span:first-child{display:none}
+#raidHelperScheduleRules .raid-helper-current-card-count b{font-size:27px;line-height:1.2;font-weight:650;font-variant-numeric:tabular-nums;color:var(--text)}
+#raidHelperScheduleRules .raid-helper-current-card-pin{grid-column:1/-1;grid-row:6;padding:16px 0}
+#raidHelperScheduleRules .raid-helper-current-card-pin small{display:block;font-size:10px;letter-spacing:.08em;color:var(--muted)}
+#raidHelperScheduleRules .raid-helper-current-card-pin strong{color:var(--gold);font-size:22px;letter-spacing:.12em;overflow-wrap:anywhere}
+#raidHelperScheduleRules .raid-helper-current-card-actions{grid-row:7;grid-template-columns:1fr 1fr 36px;gap:8px;margin-top:auto}
+#raidHelperScheduleRules .raid-helper-current-card-actions .small-btn{min-width:0;min-height:38px;padding:8px;border:1px solid var(--soft);border-radius:6px;background:var(--panel2);color:var(--text);font-size:12px;font-weight:650;box-shadow:none;white-space:normal}
+#raidHelperScheduleRules .raid-helper-current-card-actions .primary{background:var(--gold);border-color:var(--gold);color:var(--raid-action-ink,#0b1320)}
+#raidHelperScheduleRules .raid-helper-current-card-actions .small-btn:hover{border-color:var(--gold);filter:brightness(1.08)}
+#raidHelperScheduleRules .raid-select-checkbox{flex-shrink:0;width:16px;height:16px;accent-color:var(--gold)}
+@media(max-width:600px){#raidHelperScheduleRules{grid-template-columns:minmax(0,1fr);gap:14px}}
+
+/* Guild overview style for recurring schedules and saved templates. */
+#raidHelperScheduleRules .raid-helper-current-card{grid-template-rows:auto auto 1fr auto auto}
+#raidHelperScheduleRules .raid-helper-current-card-meta{display:grid;gap:5px;min-height:60px}
+#raidHelperScheduleRules .raid-helper-current-card-meta span{white-space:normal;overflow-wrap:anywhere}
+#raidHelperScheduleRules .raid-helper-current-card-status{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:18px 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere;min-width:0}
+#raidHelperScheduleRules .raid-helper-current-card-status .status-badge{padding:4px 7px;border-radius:5px;color:var(--gold);background:rgba(var(--gold-rgb),.08)}
+#raidHelperScheduleRules .raid-helper-current-card-counts{grid-row:4;grid-template-columns:minmax(70px,.6fr) minmax(0,1fr);min-width:0}
+#raidHelperScheduleRules .raid-helper-current-card-count{min-width:0;overflow-wrap:anywhere}
+#raidHelperScheduleRules .raid-helper-current-card-count:last-child{justify-content:center;line-height:1.5}
+#raidHelperScheduleRules .raid-helper-current-card-actions{grid-row:5;margin-top:16px}
+#raidHelperScheduleRules .raid-helper-current-card-actions .primary:nth-child(2){background:var(--panel2);color:var(--text);border-color:var(--soft)}
+#raidHelperScheduleRules .raid-helper-current-card-actions .danger{color:#fca5a5;border-color:rgba(248,113,113,.4)}
+#raidHelperScheduleRules .raid-helper-current-card-actions button:disabled{opacity:.45;cursor:not-allowed}
+#raidHelperTemplateGrid{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:20px;align-items:stretch}
+#raidHelperTemplateGrid .raid-helper-template-card{grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto 1fr auto auto;gap:18px 12px;padding:20px 16px 16px;min-height:350px;min-width:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--soft));border-top:3px solid color-mix(in srgb,var(--gold) 65%,var(--soft));border-radius:11px;background:color-mix(in srgb,var(--panel) 94%,var(--text) 6%);color:var(--text);box-shadow:0 8px 20px rgba(0,0,0,.26)}
+#raidHelperTemplateGrid .raid-helper-template-main{display:contents}
+#raidHelperTemplateGrid .raid-helper-template-visual{grid-row:1;grid-column:1;width:58px;height:64px;border:1px solid var(--soft);border-radius:7px;background:var(--panel2);box-shadow:none}
+#raidHelperTemplateGrid .raid-helper-template-visual img{object-fit:contain}
+#raidHelperTemplateGrid .raid-helper-template-card-head{grid-row:1;grid-column:2;min-width:0;min-height:64px}
+#raidHelperTemplateGrid .raid-helper-template-badge{display:inline-block;border:0;border-radius:5px;color:var(--gold);background:rgba(var(--gold-rgb),.08);font-size:11px;font-weight:650;padding:4px 7px}
+#raidHelperTemplateGrid h4{font-size:16px;font-weight:750;line-height:1.25;color:var(--text);overflow-wrap:anywhere}
+#raidHelperTemplateGrid .raid-helper-template-card p{grid-row:2;grid-column:1/-1;font-size:12px;font-weight:400;line-height:1.6;color:var(--muted);display:block;overflow-wrap:anywhere}
+#raidHelperTemplateGrid .raid-helper-template-card-meta{grid-row:3;grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:18px 0;border-block:1px solid var(--line)}
+#raidHelperTemplateGrid .raid-helper-meta-pill{display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:0;border:0;border-radius:0;background:none;color:var(--muted);font-size:11px;font-weight:400}
+#raidHelperTemplateGrid .raid-helper-meta-pill strong{font-size:25px;line-height:1.2;color:var(--text);font-weight:650;font-variant-numeric:tabular-nums}
+#raidHelperTemplateGrid .raid-helper-template-actions{grid-row:4;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0;padding:0;background:none}
+#raidHelperTemplateGrid .small-btn{min-width:0;min-height:38px;padding:8px;border:1px solid var(--soft);border-radius:6px;background:var(--panel2);color:var(--text);font-size:12px;font-weight:650;white-space:normal;box-shadow:none}
+#raidHelperTemplateGrid .small-btn.primary{background:var(--gold);color:var(--raid-action-ink,#0b1320);border-color:var(--gold)}
+#raidHelperTemplateGrid .small-btn.danger{color:#fca5a5;border-color:rgba(248,113,113,.4)}
+#raidHelperTemplateGrid .small-btn:hover{border-color:var(--gold);filter:brightness(1.08)}
+@media(max-width:600px){#raidHelperTemplateGrid{grid-template-columns:minmax(0,1fr);gap:14px}}
+
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -13635,10 +13694,10 @@ function renderRaidHelperTemplates(){
           </div>
           <p>${escapeHtml(text.split("\\n").find(Boolean) || "Raidanmeldung")}</p>
           <div class="raid-helper-template-card-meta">
-            <span class="raid-helper-meta-pill">Gesamt ${escapeHtml(String(item.maxPlayers || "-"))}</span>
-            <span class="raid-helper-meta-pill">Tanks ${escapeHtml(String(item.tankSlots || 0))}</span>
-            <span class="raid-helper-meta-pill">Heals ${escapeHtml(String(item.healSlots || 0))}</span>
-            <span class="raid-helper-meta-pill">DD ${escapeHtml(String(item.ddSlots || 0))}</span>
+            <span class="raid-helper-meta-pill"><strong>${escapeHtml(String(item.maxPlayers || "-"))}</strong><span>Gesamt</span></span>
+            <span class="raid-helper-meta-pill"><strong>${escapeHtml(String(item.tankSlots || 0))}</strong><span>Tanks</span></span>
+            <span class="raid-helper-meta-pill"><strong>${escapeHtml(String(item.healSlots || 0))}</strong><span>Heals</span></span>
+            <span class="raid-helper-meta-pill"><strong>${escapeHtml(String(item.ddSlots || 0))}</strong><span>DD</span></span>
           </div>
           <div class="raid-helper-template-actions">
             <button class="small-btn ghost" type="button" onclick="editRaidHelperTemplate('${escapeAttr(key)}')">Bearbeiten</button>
