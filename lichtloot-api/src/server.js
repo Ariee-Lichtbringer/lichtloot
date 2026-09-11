@@ -1,3 +1,4 @@
+import { openPlatformGuildLeadership } from "./platform-guild-entry.js";
 import { createArmorRequests } from "./armor-requests.js";
 import { createCharacterProfessions } from "./character-professions.js";
 import { createSupportDiscordReplies } from "./support-discord-replies.js";
@@ -31856,6 +31857,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildRejectApplication") {
       const rejected = await rejectGuildApplication({ query: req.query, body: req.body });
       return res.json(rejected);
+    }
+
+    if (action === "platformOpenGuildLeadership") {
+      enforceSecurityRateLimit(req, "platform-admin-sensitive", 60, 15 * 60 * 1000);
+      res.set('Cache-Control','no-store');
+      return res.json(await openPlatformGuildLeadership(req.body, {
+        authorize: requirePlatformMasterCode, query,
+        codeFor: guildId => masterCodeOverrides.get(String(guildId)),
+        platformCode: masterCode, defaultGuildSlug
+      }));
     }
 
     if (action === "platformResetGuildCode") {

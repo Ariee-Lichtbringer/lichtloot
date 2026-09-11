@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="platform-guild-entry.js?v=20260911-1"></script>
 <script src="guild-page-boot.js?v=20260831-1735"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6896,6 +6897,7 @@ function configuredGuildChannelId(key){
   return String(currentGuildInfo?.layout?.[key] || "").trim();
 }
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+let platformAdminEntry=false;
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
@@ -7231,6 +7233,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const worldbuffField = document.getElementById("worldbuffAccessPassword");
   let rememberedMasterCode="";
   try{rememberedMasterCode=localStorage.getItem(MASTER_STORAGE_KEY)||"";}catch(_error){}
+  const adminEntry=window.GuildLootAdminEntry.consume(sessionStorage,CURRENT_GUILD_SLUG);
+  if(adminEntry){rememberedMasterCode=adminEntry;platformAdminEntry=true;}
   if(masterField) masterField.value = rememberedMasterCode;
   if(rememberField) rememberField.checked = true;
   rememberField?.addEventListener("change",()=>{if(!rememberField.checked){try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}}});
@@ -7418,7 +7422,7 @@ function clearMasterCode(){
   raidHelperSchedulesState = "idle";
   renderRaidHelperScheduleRules();
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
-  try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}
+  try{if(!platformAdminEntry)localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}
   document.getElementById("masterCode").value = "";
   const rememberField=document.getElementById("rememberMasterCode");
   if(rememberField)rememberField.checked=false;
@@ -7820,7 +7824,8 @@ async function loadOverview(options){
 
     sessionStorage.removeItem(MASTER_STORAGE_KEY);
     try{
-      if(document.getElementById("rememberMasterCode")?.checked) localStorage.setItem(MASTER_STORAGE_KEY,masterCode);
+      if(platformAdminEntry){ /* Admin access stays in this tab. */ }
+      else if(document.getElementById("rememberMasterCode")?.checked) localStorage.setItem(MASTER_STORAGE_KEY,masterCode);
       else localStorage.removeItem(MASTER_STORAGE_KEY);
     }catch(_error){}
     setWorldbuffOnlyMode(false);
