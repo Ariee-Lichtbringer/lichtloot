@@ -1853,7 +1853,7 @@
     "slot": "",
     "type": "Handwerksmaterial",
     "boss": "Trash",
-    "tooltip": "",
+    "tooltip": "Arkankristall\nGegenstandsstufe 60\nMaximaler Stapel: 20Verkaufspreis: 20",
     "raids": [
       "aq20",
       "zg",
