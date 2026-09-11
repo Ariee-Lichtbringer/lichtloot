@@ -1,5 +1,4 @@
-# GuildLoot 0.24.11-beta
+# GuildLoot 0.24.12-beta
 
-- Added persistent checkboxes beside the Whisper, Raidsheets, Professions and RaidCheck toolbar icons to show or hide their mini-addon launchers.
-- Checkmarks reflect existing settings and icon clicks.
-- New launchers appear together around the screen center. Previously positioned launchers keep their saved locations.
+- RaidCheck: drag the bottom-right grip to resize the window. The complete layout scales together.
+- Window size is saved per character and bounded to the available screen area. Right-click the grip to restore the default size.
