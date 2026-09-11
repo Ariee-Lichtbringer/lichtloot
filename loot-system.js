@@ -1,6 +1,14 @@
 (function(){
   'use strict';
   let activeGuild=null,observer=null;
+  const bidsURL=new URL('dkp-loot-bids.js?v=20260911-1',document.currentScript.src).href;
+  let bidsLoading=null;
+  function applyBids(){
+    if(window.GuildLootBids){window.GuildLootBids.apply(activeGuild);return;}
+    if(!document.documentElement.classList.contains('guild-dkp'))return;
+    if(!bidsLoading)bidsLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=bidsURL;script.onload=resolve;script.onerror=()=>{script.remove();bidsLoading=null;reject(new Error('DKP-Gebote konnten nicht geladen werden.'));};document.head.append(script);});
+    bidsLoading.then(()=>window.GuildLootBids?.apply(activeGuild)).catch(()=>{const link=document.getElementById('guildDkpLink');if(link)link.textContent='DKP-Gebote: bitte Seite neu laden · DKP-Konten öffnen →';});
+  }
   function catalogButtons(){
     if(!document.documentElement.classList.contains('guild-dkp'))return;
     document.querySelectorAll('.loot-item-row').forEach(row=>{
@@ -22,12 +30,13 @@
   window.GuildLootMode = {apply(guild){
     const dkp = new URLSearchParams(location.search).get('random') !== '1' && (guild?.lootSystem || guild?.layout?.lootSystem) === 'dkp';
     document.documentElement.classList.toggle('guild-dkp',dkp);
-    const labels=[['[data-start-nav="p0plus"] span','DKP-Liste'],['button[onclick="openP0PlusPanel()"] .side-label','DKP-Punkte'],['#p0PlusPanel > summary','DKP-Punkte bearbeiten'],['#p0plusOverlay h2','DKP-Übersicht'],['#ownP0PlusModal h2','Meine DKP']];
+    const labels=[['[data-start-nav="p0plus"] span','DKP Übersicht'],['button[onclick="openP0PlusPanel()"] .side-label','DKP-Punkte'],['#p0PlusPanel > summary','DKP-Punkte bearbeiten'],['#p0plusOverlay h2','DKP Übersicht'],['#ownP0PlusModal h2','Meine DKP']];
     labels.forEach(([selector,label])=>document.querySelectorAll(selector).forEach(el=>{if(!el.dataset.prioLabel)el.dataset.prioLabel=el.textContent;el.textContent=dkp?label:el.dataset.prioLabel;}));
     const card=document.getElementById('dashboardDkpCard');if(card)card.hidden=!dkp;
     if(dkp && card && window.GuildLootDKP){window.GuildLootDKP.mount('dashboardDkpContent',{guild:guild?.slug,ownOnly:true,credentials:()=>({playerPin:typeof getStoredLichtLootPlayerPin==='function'?getStoredLichtLootPlayerPin():''})});}
     let link=document.getElementById('guildDkpLink');
     activeGuild=guild?.slug || new URLSearchParams(location.search).get('guild') || '';
+    applyBids();
     if(!dkp){link?.remove();return;}
     catalogButtons();
     if(!observer){observer=new MutationObserver(catalogButtons);observer.observe(document.body,{childList:true,subtree:true});}

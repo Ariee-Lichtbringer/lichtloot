@@ -32,3 +32,14 @@ create table if not exists dkp_awards (
  guild_id uuid not null references guilds(id), award_key text not null,
  details jsonb not null, created_at timestamptz not null default now(), primary key(guild_id,award_key)
 );
+
+-- Non-binding preparation, isolated from auction bids and DKP balances.
+create table if not exists dkp_start_bids (
+  guild_id uuid not null references guilds(id) on delete cascade,
+  character_id uuid not null references characters(id) on delete cascade,
+  raid text not null,
+  bids jsonb not null default '[]'::jsonb check (jsonb_typeof(bids)='array' and jsonb_array_length(bids)<=3),
+  revision integer not null default 1,
+  updated_at timestamptz not null default now(),
+  primary key(guild_id,character_id,raid)
+);

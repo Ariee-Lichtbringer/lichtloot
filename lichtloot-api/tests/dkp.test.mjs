@@ -115,4 +115,26 @@ await write({action:'setMode',lootSystem:'prio'});
 await rejects(()=>write({action:'saveRules',rules,revision:1}),409);
 await rejects(()=>write({action:'postDiscord',channelId:'123',description:'Test'}),409);
 
+
+await write({action:'setMode',lootSystem:'dkp'});
+const wish={action:'saveStartBids',characterId:c,raid:'mc',revision:0,bids:[{item:'Klinge',amount:'12,50'},{item:'Umhang',amount:20}],requestId:randomUUID()};
+const wishState=()=>service.state(g,{playerPin:'PLAYER',includeStartBids:true,raid:'mc'});
+const beforeWish=await state();
+await write(wish,{playerPin:'PLAYER'});
+check((await wishState()).startBids[0].bids[0].amount,'12.50');
+check((await wishState()).startBids[0].revision,1);
+check((await write(wish,{playerPin:'PLAYER'})).replayed,true);
+check((await state()).accounts,beforeWish.accounts);check((await state()).ledger,beforeWish.ledger);check((await state()).auctions,beforeWish.auctions);
+await rejects(()=>write({...wish,requestId:randomUUID()},{playerPin:'PLAYER'}),409);
+await rejects(()=>write({...wish,characterId:c2},{playerPin:'PLAYER'}),403);
+await rejects(()=>write({...wish,requestId:randomUUID(),characterId:other}),403);
+await rejects(()=>write(wish,{playerPin:'FOREIGN'}),403);
+check((await service.state(g2,{playerPin:'FOREIGN',includeStartBids:true,raid:'mc'})).startBids,undefined);
+for(const bids of [[...wish.bids,...wish.bids],[{item:'Klinge',amount:1},{item:'klinge',amount:2}],[{item:'Klinge',amount:0}]]) await rejects(()=>write({...wish,requestId:randomUUID(),revision:1,bids},{playerPin:'PLAYER'}),400);
+await write({...wish,requestId:randomUUID(),raid:'bwl',bids:[{item:'Andere Klinge',amount:5}]},{playerPin:'PLAYER'});
+check((await wishState()).startBids[0].bids.length,2);
+await write({...wish,requestId:randomUUID(),revision:1,bids:[]},{playerPin:'PLAYER'});
+check((await wishState()).startBids[0].bids,[]);check((await wishState()).startBids[0].revision,2);
+await write({action:'setMode',lootSystem:'prio'});
+await rejects(()=>write({...wish,requestId:randomUUID(),revision:2},{playerPin:'PLAYER'}),409);
 await db.close();console.log(`${checks} DKP checks passed: PostgreSQL transactions, authorization, guild isolation, reservations, settlement, retries and mode changes.`);

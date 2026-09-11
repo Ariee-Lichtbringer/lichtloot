@@ -41,7 +41,7 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
       authorize(guild, params);
       return { manager: true, own: [] };
     }
-    if (write && params.action !== 'bid') fail('Für diese Änderung ist der Leitungscode erforderlich.', 403);
+    if (write && !['bid','saveStartBids'].includes(params.action)) fail('Für diese Änderung ist der Leitungscode erforderlich.', 403);
     const result = await client.query(
       `select c.id from characters c join players p on p.id=c.player_id
        where p.guild_id=$1 and p.player_pin=$2`, [guild.id, text(params.playerPin).toUpperCase()]);
@@ -86,6 +86,11 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
       const result = {success:true,lootSystem:await mode(client,guild.id),manager:auth.manager,own:auth.own,
         accounts:accounts.rows.map(r=>({...r,balance:Number(r.balance),reserved:Number(r.reserved)})),auctions:auctions.rows,
         ledger:ledger.rows.slice(0,100),hasMore:ledger.rows.length>100,offset};
+      if(params.includeStartBids === true && result.lootSystem === 'dkp') {
+        result.startBids=(await client.query(`select b.character_id,b.raid,b.bids,b.revision,b.updated_at,c.name,c.server
+          from dkp_start_bids b join characters c on c.id=b.character_id join players p on p.id=c.player_id
+          where b.guild_id=$1 and p.guild_id=$1 and b.raid=$2 order by lower(c.name),lower(c.server)`,[guild.id,text(params.raid).toLowerCase()])).rows;
+      }
       Object.assign(result,await rulesFor(client,guild.id));
       if(params.includeRaids && auth.manager && result.lootSystem==='dkp') {
         result.raids=(await client.query(`select id,name,raid_type,raid_date::text from raids where guild_id=$1 and raid_date<=current_date order by raid_date desc limit 100`,[guild.id])).rows;
@@ -104,10 +109,10 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
     await ensure();
     if (!uuid(params.requestId)) fail('Eine gültige Vorgangs-ID ist erforderlich.');
     const action = text(params.action);
-    if (!['book','openAuction','bid','closeAuction','cancelAuction','setMode','setBalance','saveRules','awardRaid','decay','postDiscord'].includes(action)) fail('Unbekannte DKP-Aktion.');
+    if (!['book','openAuction','bid','closeAuction','cancelAuction','setMode','setBalance','saveRules','awardRaid','decay','postDiscord','saveStartBids'].includes(action)) fail('Unbekannte DKP-Aktion.');
     // Credentials never enter the journal or idempotency records.
     const payload = {action,characterIds:params.characterIds,characterId:params.characterId,amount:params.amount,
-      kind:params.kind,reason:params.reason,item:params.item,raid:params.raid,auctionId:params.auctionId,lootSystem:params.lootSystem,expectedBalance:params.expectedBalance,rules:params.rules,revision:params.revision,raidId:params.raidId,roster:params.roster,confirmed:params.confirmed,channelId:params.channelId,description:params.description,period:params.period,balances:params.balances};
+      kind:params.kind,reason:params.reason,item:params.item,raid:params.raid,auctionId:params.auctionId,lootSystem:params.lootSystem,expectedBalance:params.expectedBalance,rules:params.rules,revision:params.revision,raidId:params.raidId,roster:params.roster,confirmed:params.confirmed,channelId:params.channelId,description:params.description,period:params.period,balances:params.balances,bids:params.bids};
     const fingerprint = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
     const client = await pool.connect();
     try {
@@ -116,7 +121,7 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
       await client.query('select id from guilds where id=$1 for update',[guild.id]);
       const auth = await authenticate(client,guild,params,true);
       if(action==='setMode') authorizeMode(guild,params);
-      if(action==='bid' && (!uuid(params.characterId) || (!auth.manager && !auth.own.includes(params.characterId)))) fail('Dieser Charakter gehört nicht zu deinem SpielerLogin.',403);
+      if(['bid','saveStartBids'].includes(action) && (!uuid(params.characterId) || (!auth.manager && !auth.own.includes(params.characterId)))) fail('Dieser Charakter gehört nicht zu deinem SpielerLogin.',403);
       const previous = await client.query('select fingerprint,result from dkp_requests where guild_id=$1 and request_id=$2',[guild.id,params.requestId]);
       if(previous.rows.length){
         if(previous.rows[0].fingerprint!==fingerprint) fail('Diese Vorgangs-ID wurde bereits für andere Daten verwendet.',409);
@@ -133,7 +138,24 @@ export function createDkpService({ pool, query, authorize, authorizeMode }) {
         await client.query(`insert into dkp_ledger(id,guild_id,character_id,amount,kind,reason,item,raid,auction_id,actor_role)
           values($1,$2,$3,$4,$5,$6,$7,$8,$9,'Leitung')`,[randomUUID(),guild.id,id,amount,kind,reason,item,raid,auctionId]);
       };
-      if(action==='setMode'){
+      if(action==='saveStartBids'){
+        await character(params.characterId);
+        const raid=text(params.raid).toLowerCase();
+        if(!/^[a-z0-9_-]{1,32}$/.test(raid)) fail('Bitte einen gültigen Raid auswählen.');
+        if(!Array.isArray(params.bids) || params.bids.length>3) fail('Maximal drei Startgebote pro Charakter und Raid sind möglich.');
+        const bids=params.bids.map(b=>{
+          const item=text(b?.item);
+          if(!item || item.length>200) fail('Bitte ein gültiges Item auswählen.');
+          return {item,amount:dkpAmount(b.amount)};
+        });
+        if(new Set(bids.map(b=>b.item.toLocaleLowerCase('de-DE'))).size!==bids.length) fail('Jedes Item darf nur einmal vorgemerkt werden.');
+        const old=(await client.query('select revision from dkp_start_bids where guild_id=$1 and character_id=$2 and raid=$3',[guild.id,params.characterId,raid])).rows[0];
+        if(!Number.isInteger(params.revision) || params.revision!==(old?.revision || 0)) fail('Startgebote wurden inzwischen geändert. Bitte neu laden.',409);
+        // Non-binding wishes: no auction, reservation or ledger entry is created here.
+        await client.query(`insert into dkp_start_bids(guild_id,character_id,raid,bids,revision) values($1,$2,$3,$4,1)
+          on conflict(guild_id,character_id,raid) do update set bids=$4,revision=dkp_start_bids.revision+1,updated_at=now()`,[guild.id,params.characterId,raid,JSON.stringify(bids)]);
+        result.revision=(old?.revision || 0)+1;
+      } else if(action==='setMode'){
         await validateMode(client,guild.id,params.lootSystem);
         await client.query(`insert into guild_settings(guild_id,layout_json) values($1,jsonb_build_object('lootSystem',$2::text))
           on conflict(guild_id) do update set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{lootSystem}',to_jsonb($2::text)),updated_at=now()`,[guild.id,params.lootSystem]);
