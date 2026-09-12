@@ -1,3 +1,7 @@
+# GuildLoot 0.24.19-beta
+
+- Gildenbank-Export liest zusätzlich GBankClassic (Revived): Ist das Addon geladen, exportiert /gle bank alle darin synchronisierten Bankcharaktere auf einmal. Ohne GBankClassic wird wie bisher die eigene Bank des Charakters exportiert.
+
 # GuildLoot 0.24.18-beta
 
 - Gildenbank: Bankcharaktere erzeugen mit /gle bank einen Export von Bank und Taschen. Die Gildenleitung importiert ihn auf lichtloot.de unter Gildenbank → Einstellungen; der Bestand wird dort angezeigt und ist Grundlage für Gildenbankanträge.

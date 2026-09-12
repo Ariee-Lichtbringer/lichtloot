@@ -33,9 +33,7 @@ export function normalizeCharacters(input){
  }
  return out;
 }
-export function parseGuildBankExport(text){
- const lines=String(text||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
- if(!lines.length||lines.length>2500)fail('Gildenbank-Export fehlt oder ist zu groß.');
+function parseGuildBankBlock(lines){
  const head=lines[0].split(';');
  if(head[0]!=='GLB1'||head.length<5)fail('Kein gültiger Gildenbank-Export. Im Addon /gle bank ausführen und den Text vollständig kopieren.');
  const guild=clean(head[1]).toLowerCase(),player=clean(decodeURIComponent(head[2])),realm=clean(decodeURIComponent(head[3])),stamp=Number(head[4]);
@@ -49,6 +47,21 @@ export function parseGuildBankExport(text){
  }
  return {guild,player,realm,observedAt:Math.min(stamp,Math.floor(Date.now()/1000)+300),items:[...items.values()].filter(i=>i.quantity>0)};
 }
+// Ein Export kann mehrere Charaktere enthalten (z. B. aus GBankClassic): jeder Block beginnt mit GLB1;…
+export function parseGuildBankExports(text){
+ const lines=String(text||'').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+ if(!lines.length||lines.length>20000)fail('Gildenbank-Export fehlt oder ist zu groß.');
+ const blocks=[];let current=null;const roster=[];
+ for(const line of lines){
+  if(line.startsWith('GLBROSTER;')){roster.push(...line.slice(10).split(';').map(x=>clean(decodeURIComponent(x))).filter(Boolean));continue;}
+  if(line.startsWith('GLB1;')){current=[line];blocks.push(current);continue;}
+  if(!current)fail('Kein gültiger Gildenbank-Export. Im Addon /gle bank ausführen und den Text vollständig kopieren.');
+  current.push(line);
+ }
+ if(!blocks.length||blocks.length>60)fail('Kein gültiger Gildenbank-Export.');
+ return {exports:blocks.map(parseGuildBankBlock),roster:[...new Set(roster)].slice(0,60)};
+}
+export function parseGuildBankExport(text){return parseGuildBankExports(text).exports[0];}
 export function createGuildBank({pool,query,getCharactersByPin}){
  let schema=null;
  const ensure=()=>{if(!schema)schema=query(GUILD_BANK_SCHEMA).catch(e=>{schema=null;throw e;});return schema;};
@@ -56,21 +69,20 @@ export function createGuildBank({pool,query,getCharactersByPin}){
   const row=await query(`select layout_json->'guildBank' as bank from guild_settings where guild_id=$1`,[guild.id]);
   const stored=row.rows[0]?.bank;
   const characters=Array.isArray(stored?.characters)?normalizeCharacters(stored.characters):(DEFAULT_CHARACTERS[guild.slug]||[]);
-  return {characters,hiddenItems:Array.isArray(stored?.hiddenItems)?stored.hiddenItems.map(Number).filter(Number.isInteger).slice(0,500):[],note:clean(stored?.note).slice(0,500)};
+  return {characters,hiddenItems:Array.isArray(stored?.hiddenItems)?stored.hiddenItems.map(Number).filter(Number.isInteger).slice(0,500):[],note:clean(stored?.note).slice(0,500),useGBank:stored?.useGBank===true};
  }
  async function saveSettings(guild,params){
   const current=await settings(guild);
-  const next={characters:params.characters===undefined?current.characters:normalizeCharacters(params.characters),hiddenItems:params.hiddenItems===undefined?current.hiddenItems:(()=>{let v=params.hiddenItems;if(typeof v==='string'){try{v=JSON.parse(v);}catch{v=[];}}return (Array.isArray(v)?v:[]).map(Number).filter(Number.isInteger).slice(0,500);})(),note:params.note===undefined?current.note:clean(params.note).slice(0,500)};
+  const next={characters:params.characters===undefined?current.characters:normalizeCharacters(params.characters),hiddenItems:params.hiddenItems===undefined?current.hiddenItems:(()=>{let v=params.hiddenItems;if(typeof v==='string'){try{v=JSON.parse(v);}catch{v=[];}}return (Array.isArray(v)?v:[]).map(Number).filter(Number.isInteger).slice(0,500);})(),note:params.note===undefined?current.note:clean(params.note).slice(0,500),useGBank:params.useGBank===undefined?current.useGBank:['1','true','ja','yes'].includes(String(params.useGBank).toLowerCase())};
   await query(`insert into guild_settings(guild_id,layout_json) values($1,jsonb_build_object('guildBank',$2::jsonb)) on conflict(guild_id) do update set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{guildBank}',$2::jsonb,true),updated_at=now()`,[guild.id,JSON.stringify(next)]);
   return next;
  }
  function bankCharacter(list,player,realm){return list.find(c=>sameName(c.name,player)&&(!c.server||!realm||sameServer(c.server,realm)));}
- async function importExport(guild,text){
-  const parsed=parseGuildBankExport(text);
+ async function importOne(guild,config,parsed){
   if(parsed.guild&&parsed.guild!==guild.slug)fail('Der Export gehört zur Gilde „'+parsed.guild+'“, nicht zu dieser Gilde.');
-  const config=await settings(guild);const character=bankCharacter(config.characters,parsed.player,parsed.realm);
-  if(!character)fail(parsed.player+' ist nicht als Bankcharakter eingetragen. Bitte zuerst unter Gildenbank → Einstellungen hinzufügen.');
-  await ensure();const client=await pool.connect();
+  const character=bankCharacter(config.characters,parsed.player,parsed.realm);
+  if(!character)return null;
+  const client=await pool.connect();
   try{
    await client.query('begin');
    await client.query('delete from guild_bank_stock where guild_id=$1 and lower(character_name)=lower($2) and lower(server)=lower($3)',[guild.id,character.name,character.server||parsed.realm]);
@@ -79,7 +91,27 @@ export function createGuildBank({pool,query,getCharactersByPin}){
    }
    await client.query('commit');
   }catch(error){await client.query('rollback');throw error;}finally{client.release();}
-  return {success:true,character:character.name,server:character.server||parsed.realm,items:parsed.items.length,observedAt:parsed.observedAt};
+  return {character:character.name,server:character.server||parsed.realm,items:parsed.items.length,observedAt:parsed.observedAt};
+ }
+ async function importExport(guild,text,{onlyPlayers=null}={}){
+  const {exports,roster}=parseGuildBankExports(text);
+  await ensure();const config=await settings(guild);
+  const imported=[],unknown=[],skipped=[];
+  for(const parsed of exports){
+   if(onlyPlayers&&!onlyPlayers.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm)))){skipped.push(parsed.player);continue;}
+   let result=await importOne(guild,config,parsed);
+   if(!result&&config.useGBank&&!onlyPlayers){
+    // Mit GBankClassic: unbekannte Bankcharaktere aus dem Export automatisch eintragen.
+    config.characters=normalizeCharacters([...config.characters,{name:parsed.player,server:parsed.realm}]);
+    await saveSettings(guild,{characters:config.characters});
+    result=await importOne(guild,config,parsed);
+   }
+   if(result)imported.push(result);else unknown.push(parsed.player);
+  }
+  const suggested=[...new Set([...unknown,...roster.filter(n=>!bankCharacter(config.characters,n.split('-')[0],n.split('-')[1]||''))])];
+  if(!imported.length&&unknown.length)fail((unknown.join(', ')+' ist nicht als Bankcharakter eingetragen. Bitte zuerst unter Gildenbank → Einstellungen hinzufügen.'));
+  if(!imported.length)fail('Der Export enthält keinen Bestand eines freigegebenen Charakters.');
+  return {success:true,character:imported[0].character,server:imported[0].server,items:imported.reduce((n,r)=>n+r.items,0),observedAt:imported[0].observedAt,imported,unknown:suggested,skipped};
  }
  async function inventory(guild,{includeHidden=false}={}){
   await ensure();const config=await settings(guild);
@@ -128,9 +160,7 @@ export function createGuildBank({pool,query,getCharactersByPin}){
     }catch(error){await client.query('rollback');throw error;}finally{client.release();}
    }
    if(action==='submitGuildBankExport'){
-    const parsed=parseGuildBankExport(params.text||params.export);
-    if(!owned.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm))))fail('Der Export stammt von einem Charakter, der nicht zu deinem SpielerLogin gehört.',403);
-    return importExport(guild,params.text||params.export);
+    return importExport(guild,params.text||params.export,{onlyPlayers:owned});
    }
    fail('Unbekannte Aktion.',404);
   }
