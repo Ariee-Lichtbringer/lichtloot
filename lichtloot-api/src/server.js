@@ -75,7 +75,7 @@ const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensure
 const raidSheetBridge=createRaidSheetBridge(query);
 const armorRequests=createArmorRequests({pool,query});
 const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
-const guildBank = createGuildBank({query,pool,getCharactersByPin});
+const guildBank = createGuildBank({query,pool,getCharactersByPin,lookupItem:id=>getWowheadClassicItemTooltip(id)});
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);

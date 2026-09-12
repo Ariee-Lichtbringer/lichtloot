@@ -49,43 +49,7 @@
  .armor-bank-table{width:100%;border-collapse:collapse;font-size:14px}.armor-bank-table th,.armor-bank-table td{padding:6px;border-bottom:1px solid #243448;text-align:left;vertical-align:middle}.armor-bank-table th{color:#a3b6cc;font-weight:600}
  .armor-my-requests{margin-top:22px;border-top:1px solid #243448;padding-top:14px}.armor-my-requests h4{margin:0 0 10px}.armor-my-requests table{width:100%;border-collapse:collapse;font-size:14px}.armor-my-requests th,.armor-my-requests td{padding:8px 6px;border-bottom:1px solid #243448;text-align:left;vertical-align:top}.armor-my-requests th{color:#a3b6cc;font-weight:600}.armor-my-requests small{display:block;margin-top:8px}.armor-status{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}.armor-status-pending{background:#4a3a12;color:#fbbf24}.armor-status-approved{background:#123f2a;color:#4ade80}.armor-status-rejected{background:#4a1d1d;color:#f87171}
  `;document.head.append(style);
- window.GuildLootBank={async open(root,context){
-  try{const selected=JSON.parse(document.getElementById('myLichtlootCharSelect')?.value||'null');if(selected?.name){context.character=selected.name;context.server=selected.server||'';}}catch{}
-  const identity=JSON.stringify(context);if(root._identity===identity)return;root._identity=identity;
-  const alive=()=>root.isConnected&&root._identity===identity;
-  root.replaceChildren(el('h3','Gildenbank'),el('p','Bestand wird geladen …'));
-  try{
-   const data=await call(context,'getGuildBankInventory');if(!alive())return;
-   root.replaceChildren(el('h3','Gildenbank'));
-   const scans=(data.characters||[]).filter(c=>c.observedAt);
-   root.append(el('p',scans.length?`Bestand von ${scans.map(c=>c.name).join(', ')} · Stand ${new Date(Math.max(...scans.map(c=>c.observedAt))*1000).toLocaleString('de-DE')}`:'Die Gildenleitung hat noch keinen Bestand übertragen.'));
-   if(data.note)root.append(el('p',data.note));
-   const status=el('p');status.setAttribute('role','status');
-   const search=el('input');search.type='search';search.placeholder='Gegenstand suchen';search.setAttribute('aria-label','Gegenstand auf der Gildenbank suchen');search.style.cssText='width:100%;box-sizing:border-box;margin:10px 0';
-   const table=el('table');table.className='armor-bank-table';const body=el('tbody');const head=el('tr');['Gegenstand','Verfügbar','Menge',''].forEach(t=>head.append(el('th',t)));table.append(head,body);
-   const items=(data.items||[]);
-   function renderRows(){
-    body.replaceChildren();const needle=search.value.trim().toLowerCase();
-    const shown=items.filter(i=>!needle||i.name.toLowerCase().includes(needle)||String(i.itemId)===needle).slice(0,150);
-    if(!shown.length){const row=el('tr');row.append(el('td',items.length?'Kein Gegenstand gefunden.':'Die Gildenbank ist leer.'));body.append(row);return;}
-    for(const item of shown){
-     const row=el('tr'),name=el('td');name.append(itemButton({itemId:String(item.itemId),name:item.name}));
-     const amount=el('input');amount.type='number';amount.min='1';amount.max=String(item.quantity);amount.value='1';amount.style.width='70px';amount.setAttribute('aria-label','Menge: '+item.name);
-     const button=el('button','Beantragen');button.className='primary';button.type='button';button.style.padding='6px 12px';
-     button.onclick=async()=>{
-      if(!amount.reportValidity())return;button.disabled=true;status.textContent='Antrag wird gespeichert …';
-      try{const result=await call(context,'submitGuildBankRequest',{itemId:item.itemId,quantity:Number(amount.value)});if(!alive())return;status.textContent=result.duplicate?'Dieser Antrag wartet bereits auf die Freigabe.':`Antrag gespeichert: ${amount.value} × ${item.name}. Die Gildenleitung gibt ihn unter „Gildenbankanträge“ frei.`;}
-      catch(error){status.textContent=error.message;}
-      finally{button.disabled=false;}
-     };
-     const qty=el('td',String(item.quantity)),act=el('td');const amountCell=el('td');amountCell.append(amount);act.append(button);row.append(name,qty,amountCell,act);body.append(row);
-    }
-   }
-   search.oninput=renderRows;renderRows();
-   root.append(search,table,status,el('small','Nicht verfügbare Gegenstände lassen sich nicht beantragen. Freigegebene Anträge werden von der Gildenleitung ausgegeben. Deine Anträge siehst du unter „Rüstungsteile beantragen“ → Meine Gildenbankanträge.'));
-  }catch(error){if(alive()){root.replaceChildren(el('h3','Gildenbank'),el('p',error.message));root._identity=null;}}
- }};
-window.GuildLootArmor={async open(root,context){
+ window.GuildLootArmor={async open(root,context){
   try{const selected=JSON.parse(document.getElementById('myLichtlootCharSelect')?.value||'null');if(selected?.name){context.character=selected.name;context.server=selected.server||'';}}catch{}
   const identity=JSON.stringify(context);if(root._identity===identity)return;root._identity=identity;
   const alive=()=>root.isConnected&&root._identity===identity;
