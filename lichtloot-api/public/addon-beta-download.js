@@ -34,7 +34,12 @@
       const base = typeof RAILWAY_API_URL !== 'undefined' ? RAILWAY_API_URL : location.origin;
       const response = await fetch(new URL('/api/addon-beta/download', base), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({platform:choice}), cache:'no-store', signal:controller.signal});
       if(!response.ok){ const data = await response.json().catch(()=>({})); throw new Error(data.error || 'Download fehlgeschlagen. Bitte erneut versuchen.'); }
-      const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement('a');
+      const expected = Number(response.headers.get('content-length')) || 0;
+      const blob = await response.blob();
+      // Unvollständige Downloads nie als Installer speichern: NSIS meldet sonst "integrity check failed".
+      if (expected && blob.size !== expected) throw new Error('Der Download war unvollständig ('+Math.round(blob.size/1048576)+' von '+Math.round(expected/1048576)+' MB). Bitte erneut versuchen, am besten per Kabel oder stabilem WLAN.');
+      if (blob.size < 50000000) throw new Error('Der Download war unvollständig. Bitte erneut versuchen.');
+      const url = URL.createObjectURL(blob), link = document.createElement('a');
       link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
       status.textContent = 'Download fertig. Öffne '+filename+' in deinen Downloads und folge der Installation. Öffne GuildLoot Sync anschließend wieder.';
     } catch(error) { if(error.name !== 'AbortError') {status.textContent = error.message;} }
