@@ -7,6 +7,20 @@ export function installAddonBetaDownload(app, {
   artifacts = betaArtifacts,
   materialize = materializeBetaArtifact,
 } = {}) {
+  // Versionsauskunft für die Update-Prüfung in GuildLoot Sync (ohne Anmeldung, keine Download-Links).
+  app.get('/api/addon-beta/version', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const summary = {};
+    let version = null;
+    for (const [platform, artifact] of Object.entries(artifacts)) {
+      const match = /GuildLoot-Sync-(\d+\.\d+\.\d+)-/.exec(artifact.name || '');
+      if (!match) continue;
+      version = version || match[1];
+      summary[platform] = { name: artifact.name, size: artifact.size, sha256: artifact.sha256 };
+    }
+    if (!version) return res.status(503).json({ error: 'Keine Sync-Version verfügbar.' });
+    res.json({ success: true, version, artifacts: summary });
+  });
   app.post('/api/addon-beta/download', async (req, res) => {
     res.set('Cache-Control', 'no-store');
     const platform = req.body?.platform;
