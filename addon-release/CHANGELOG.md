@@ -1,3 +1,8 @@
+# GuildLoot 0.24.21-beta
+
+- Button „Gildenbank“ auf Mein Lichtloot neben „Charakter wechseln“.
+- Gildenbank als Mini-Symbol: Linksklick auf das Bank-Symbol in der Symbolleiste (oder Haken) blendet ein frei verschiebbares Symbol ein, Rechtsklick öffnet die Gildenbank direkt.
+
 # GuildLoot 0.24.20-beta
 
 - Gildenbank-Fenster: /gle bank oder das neue Symbol im Hauptfenster öffnen den Bestand der Bankcharaktere mit Kategorien, Suche, Icons und Tooltips. Gegenstände lassen sich direkt beantragen; die Anträge gehen über GuildLoot Sync (ab 0.3.14) an die Gildenleitung.
