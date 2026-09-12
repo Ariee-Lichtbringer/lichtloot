@@ -5,10 +5,10 @@ Usage: python3 scripts/build-standalone.py GuildRaidBag
 import hashlib, json, re, sys, zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
-PROJECTS={'GuildRaidBag':{'projectId':1692270,'slug':'guildraidbag'},'GuildSkills':{'projectId':1692281,'slug':'guildskills'},'GuildBuff':{'projectId':1692275,'slug':'guildbuff'}}
+PROJECTS={'GuildRaidBag':{'projectId':1692270,'slug':'guildraidbag'},'GuildSkills':{'projectId':1692281,'slug':'guildskills'},'GuildBuff':{'projectId':1692275,'slug':'guildbuff'},'GuildHeal':{'projectId':0,'slug':'guildheal'}}
 EXTRAS={'README.md','PROFESSION-DATA-LICENSE.txt','PROFESSION-DATA-SOURCE.txt'}
 # Ein CurseForge-Projekt für alle Mini-Addons: eine Zip mit drei Addon-Ordnern (Vorgabe der CurseForge-Moderation).
-BUNDLE={'name':'GuildLootMiniAddons','projectId':1692281,'slug':'guildloot-mini-addons','addons':['GuildSkills','GuildBuff','GuildRaidBag']}
+BUNDLE={'name':'GuildLootMiniAddons','projectId':1692281,'slug':'guildloot-mini-addons','addons':['GuildSkills','GuildBuff','GuildRaidBag','GuildHeal']}
 
 def files_of(name):
     folder=ROOT/'addons'/name;assert folder.is_dir(),'Unknown addon '+name

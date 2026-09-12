@@ -1,3 +1,8 @@
+# GuildLoot Mini-Addons 1.1.0-beta
+
+- Neu: GuildHeal – einfache Heilerframes mit vorbelegten Klickzaubern je Klasse, Debuff-Anzeige, Reichweite, Manabalken. /gheal öffnet die Einstellungen.
+- GuildSkills, GuildBuff und GuildRaidBag unverändert (Versionsangleich für das Paket).
+
 # GuildLoot Mini-Addons 1.0.2-beta
 
 Ein Paket mit drei eigenständigen Addons für WoW Classic Era, jedes ohne GuildLoot-Account nutzbar. Ist GuildLoot Era installiert, deaktivieren sie sich selbst, weil die Funktionen dort enthalten sind.

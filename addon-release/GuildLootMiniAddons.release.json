@@ -3,12 +3,13 @@
   "folders": [
     "GuildSkills",
     "GuildBuff",
-    "GuildRaidBag"
+    "GuildRaidBag",
+    "GuildHeal"
   ],
   "projectId": 1692281,
   "slug": "guildloot-mini-addons",
-  "version": "1.0.2-beta",
+  "version": "1.1.0-beta",
   "releaseType": "beta",
   "gameVersion": "1.15.9",
-  "sha256": "ec32afd624699a32f5564a2910739b332f2e0b1dbbcdf70f220e6af7720e4836"
+  "sha256": "934d29200fc4b5e19df63caba2b3b2df997992118b5365542454ae21253154a8"
 }
