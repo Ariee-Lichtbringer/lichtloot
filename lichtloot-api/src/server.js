@@ -4483,7 +4483,7 @@ async function getGuildNotificationSettings({guildId,query:params}){
 async function setGuildNotificationSetting({guildId,query:params}){
   requireMasterCode(params.masterCode);
   await ensureGuildNotificationSettingsSchema();
-  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","notify_po_release_granted","raid_status_changes","po_reviewers"]);
+  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","notify_po_release_granted","raid_status_changes","po_reviewers","notify_guild_bank_requests"]);
   const notificationKey=clean(params.notificationKey||params.key);
   const allowedLootMasterKey=/^loot_master:(mc|bwl|ony|zg|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
   const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|ony|zg|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
@@ -7982,6 +7982,40 @@ async function queueBotUpdate({ guildId, query: params }) {
   return enqueueBotUpdate({ guildId, type, payload });
 }
 
+// Neuer Gildenbankantrag (Website oder Addon): DM an die unter Discord-Benachrichtigungen gewählten Namen und Rollen.
+async function queueGuildBankRequestNotice(guild, armorRequestId) {
+  try {
+    if (!isUuid(armorRequestId)) return;
+    const row = (await query(`select * from armor_requests where id=$1 and guild_id=$2`, [armorRequestId, guild.id])).rows[0];
+    if (!row) return;
+    const targets = await notificationTargetsForPermissions(guild.id, "notify_guild_bank_requests");
+    if (!targets.length) return;
+    const messageTemplate = await notificationMessageTemplate(guild.id, "notify_guild_bank_requests").catch(() => "");
+    const materials = (Array.isArray(row.materials) ? row.materials : []).map(m => `${m.quantity} × ${m.name}`).join(", ");
+    await enqueueBotUpdate({
+      guildId: guild.id,
+      type: "guild_bank_request_notice",
+      payload: {
+        guildSlug: guild.slug,
+        guildName: guild.name || guild.guild_name || guild.slug,
+        requestId: row.id,
+        character: row.character_name,
+        server: row.server,
+        className: row.class_name,
+        item: row.item_name,
+        tier: row.tier,
+        materials,
+        notificationRoleIds: targets.filter(t => t.type === "role").map(t => t.value),
+        notificationNames: targets.filter(t => t.type === "name").map(t => t.value),
+        targets,
+        messageTemplate,
+        link: `https://lichtloot.de/gildenleitung.html?guild=${encodeURIComponent(guild.slug)}#gildenbankantraege`
+      }
+    });
+  } catch (error) {
+    console.warn("Gildenbankantrag-Benachrichtigung konnte nicht eingereiht werden:", error.message || error);
+  }
+}
 async function enqueueBotUpdate({ guildId, type, payload }) {
   if(type === "boss_token_notice")return queueBossTokenNotice(pool,guildId,payload);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
@@ -32333,12 +32367,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "getGuildBankInventory" || action === "submitGuildBankExport" || action === "submitGuildBankRequest") {
       enforceSecurityRateLimit(req,"guild-bank",60,60*1000);
       res.set("Cache-Control","no-store");
-      return res.json({ ...(await guildBank.player(guild, action, postParams)), guild: guild.slug });
+      const bankResult = await guildBank.player(guild, action, postParams);
+      if (action === "submitGuildBankRequest" && bankResult?.armorRequestId && !bankResult.duplicate) await queueGuildBankRequestNotice(guild, bankResult.armorRequestId);
+      return res.json({ ...bankResult, guild: guild.slug });
     }
     if (action === "getArmorRequestCatalog" || action === "getArmorRequestStatus" || action === "submitArmorRequest" || action === "getMyArmorRequests") {
       enforceSecurityRateLimit(req,"armor-requests",90,60*1000);
       res.set("Cache-Control","no-store");
-      return res.json(await armorRequests.handle(guild, postParams));
+      const armorResult = await armorRequests.handle(guild, postParams);
+      if (action === "submitArmorRequest" && armorResult?.armorRequestId && !armorResult.duplicate) await queueGuildBankRequestNotice(guild, armorResult.armorRequestId);
+      return res.json(armorResult);
     }
     if (action === "submitPoReleaseRequest") {
       const saved = await submitPoReleaseRequest({ guildId: guild.id, query: postParams });
