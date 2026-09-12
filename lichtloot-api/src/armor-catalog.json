@@ -1,3749 +1,4742 @@
 [
-  {
-    "itemId": "22490",
-    "tier": "T3",
-    "name": "Kopfstück des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22360,
-        "name": "Entweihtes Kopfstück",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 6
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22360,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22491",
-    "tier": "T3",
-    "name": "Schiftung des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22361,
-        "name": "Entweihte Schiftung",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22361,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22488",
-    "tier": "T3",
-    "name": "Tunika des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22350,
-        "name": "Entweihte Tunika",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 6
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22350,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22495",
-    "tier": "T3",
-    "name": "Handgelenksschutz des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22362,
-        "name": "Entweihter Handgelenksschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22362,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22493",
-    "tier": "T3",
-    "name": "Handschützer des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22364,
-        "name": "Entweihte Handschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22364,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22494",
-    "tier": "T3",
-    "name": "Gurt des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22363,
-        "name": "Entweihter Gurt",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 3
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22363,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22489",
-    "tier": "T3",
-    "name": "Beinschützer des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22359,
-        "name": "Entweihte Beinschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 8
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22359,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22492",
-    "tier": "T3",
-    "name": "Stiefel des Traumwandlers",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 22365,
-        "name": "Entweihte Stiefel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 3
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22365,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22438",
-    "tier": "T3",
-    "name": "Kopfstück des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22360,
-        "name": "Entweihtes Kopfstück",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22360,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22439",
-    "tier": "T3",
-    "name": "Schiftung des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22361,
-        "name": "Entweihte Schiftung",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22361,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22436",
-    "tier": "T3",
-    "name": "Tunika des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22350,
-        "name": "Entweihte Tunika",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22350,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22443",
-    "tier": "T3",
-    "name": "Handgelenksschutz des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22362,
-        "name": "Entweihter Handgelenksschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22362,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22441",
-    "tier": "T3",
-    "name": "Handschützer des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22364,
-        "name": "Entweihte Handschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22364,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22442",
-    "tier": "T3",
-    "name": "Gurt des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22363,
-        "name": "Entweihter Gurt",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22363,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22437",
-    "tier": "T3",
-    "name": "Beinschützer des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22359,
-        "name": "Entweihte Beinschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 3
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22359,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22440",
-    "tier": "T3",
-    "name": "Stiefel des Gruftpirschers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 22365,
-        "name": "Entweihte Stiefel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22365,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22498",
-    "tier": "T3",
-    "name": "Frostfeuerreif",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22367,
-        "name": "Entweihter Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 3
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22367,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22499",
-    "tier": "T3",
-    "name": "Frostfeuerschulterpolster",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22368,
-        "name": "Entweihte Schulterpolster",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22368,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22496",
-    "tier": "T3",
-    "name": "Frostfeuerrobe",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22351,
-        "name": "Entweihte Robe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22351,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22503",
-    "tier": "T3",
-    "name": "Frostfeuerbindungen",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22369,
-        "name": "Entweihte Bindungen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22369,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22501",
-    "tier": "T3",
-    "name": "Frostfeuerhandschuhe",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22371,
-        "name": "Entweihte Handschuhe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      }
-    ],
-    "tokenId": 22371,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22502",
-    "tier": "T3",
-    "name": "Frostfeuergürtel",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22370,
-        "name": "Entweihter Gürtel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 2
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22370,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22497",
-    "tier": "T3",
-    "name": "Frostfeuergamaschen",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22366,
-        "name": "Entweihte Gamaschen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22366,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22500",
-    "tier": "T3",
-    "name": "Frostfeuersandalen",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 22372,
-        "name": "Entweihte Sandalen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22372,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22428",
-    "tier": "T3",
-    "name": "Kopfstück der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22360,
-        "name": "Entweihtes Kopfstück",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 5
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22360,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22429",
-    "tier": "T3",
-    "name": "Schiftung der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22361,
-        "name": "Entweihte Schiftung",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22361,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22425",
-    "tier": "T3",
-    "name": "Tunika der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22350,
-        "name": "Entweihte Tunika",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22350,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22424",
-    "tier": "T3",
-    "name": "Handgelenksschutz der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22362,
-        "name": "Entweihter Handgelenksschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22362,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22426",
-    "tier": "T3",
-    "name": "Handschützer der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22364,
-        "name": "Entweihte Handschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22364,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22431",
-    "tier": "T3",
-    "name": "Gurt der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22363,
-        "name": "Entweihter Gurt",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22363,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22427",
-    "tier": "T3",
-    "name": "Beinschützer der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22359,
-        "name": "Entweihte Beinschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22359,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22430",
-    "tier": "T3",
-    "name": "Stiefel der Erlösung",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 22365,
-        "name": "Entweihte Stiefel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22365,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22514",
-    "tier": "T3",
-    "name": "Reif des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22367,
-        "name": "Entweihter Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 3
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22367,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22515",
-    "tier": "T3",
-    "name": "Schulterpolster des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22368,
-        "name": "Entweihte Schulterpolster",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22368,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22512",
-    "tier": "T3",
-    "name": "Robe des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22351,
-        "name": "Entweihte Robe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22351,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22519",
-    "tier": "T3",
-    "name": "Bindungen des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22369,
-        "name": "Entweihte Bindungen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22369,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22517",
-    "tier": "T3",
-    "name": "Handschuhe des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22371,
-        "name": "Entweihte Handschuhe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      }
-    ],
-    "tokenId": 22371,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22518",
-    "tier": "T3",
-    "name": "Gürtel des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22370,
-        "name": "Entweihter Gürtel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 2
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22370,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22513",
-    "tier": "T3",
-    "name": "Gamaschen des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22366,
-        "name": "Entweihte Gamaschen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22366,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22516",
-    "tier": "T3",
-    "name": "Sandalen des Glaubens",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 22372,
-        "name": "Entweihte Sandalen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22372,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22478",
-    "tier": "T3",
-    "name": "Helm der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22353,
-        "name": "Entweihter Helm",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 8
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22353,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22479",
-    "tier": "T3",
-    "name": "Schulterstücke der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22354,
-        "name": "Entweihte Schulterstücke",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22354,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22476",
-    "tier": "T3",
-    "name": "Brustplatte der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22349,
-        "name": "Entweihte Brustplatte",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 6
-      }
-    ],
-    "tokenId": 22349,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22483",
-    "tier": "T3",
-    "name": "Armschienen der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22355,
-        "name": "Entweihte Armschienen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22355,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22481",
-    "tier": "T3",
-    "name": "Stulpen der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22357,
-        "name": "Entweihte Stulpen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22357,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22482",
-    "tier": "T3",
-    "name": "Taillenschutz der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22356,
-        "name": "Entweihter Taillenschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22356,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22477",
-    "tier": "T3",
-    "name": "Beinplatten der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22352,
-        "name": "Entweihte Beinplatten",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 8
-      }
-    ],
-    "tokenId": 22352,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22480",
-    "tier": "T3",
-    "name": "Sabatons der Knochensense",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 22358,
-        "name": "Entweihte Sabatons",
-        "quantity": 1
-      },
-      {
-        "itemId": 22373,
-        "name": "Kampfzerschlissenes Lederstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22358,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22467",
-    "tier": "T3",
-    "name": "Schiftung des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22361,
-        "name": "Entweihte Schiftung",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22361,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22464",
-    "tier": "T3",
-    "name": "Tunika des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22350,
-        "name": "Entweihte Tunika",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22350,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22471",
-    "tier": "T3",
-    "name": "Handgelenksschutz des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22362,
-        "name": "Entweihter Handgelenksschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22362,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22469",
-    "tier": "T3",
-    "name": "Handschützer des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22364,
-        "name": "Entweihte Handschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22364,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22470",
-    "tier": "T3",
-    "name": "Gurt des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22363,
-        "name": "Entweihter Gurt",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22363,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22465",
-    "tier": "T3",
-    "name": "Beinschützer des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22359,
-        "name": "Entweihte Beinschützer",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 3
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22359,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22468",
-    "tier": "T3",
-    "name": "Stiefel des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22365,
-        "name": "Entweihte Stiefel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22365,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22506",
-    "tier": "T3",
-    "name": "Reif des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22367,
-        "name": "Entweihter Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 3
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22367,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22507",
-    "tier": "T3",
-    "name": "Schulterpolster des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22368,
-        "name": "Entweihte Schulterpolster",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22368,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22504",
-    "tier": "T3",
-    "name": "Robe des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22351,
-        "name": "Entweihte Robe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22351,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22511",
-    "tier": "T3",
-    "name": "Bindungen des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22369,
-        "name": "Entweihte Bindungen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22369,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22509",
-    "tier": "T3",
-    "name": "Handschuhe des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22371,
-        "name": "Entweihte Handschuhe",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      }
-    ],
-    "tokenId": 22371,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22510",
-    "tier": "T3",
-    "name": "Gürtel des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22370,
-        "name": "Entweihter Gürtel",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12363,
-        "name": "Arkankristall",
-        "quantity": 2
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22370,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22505",
-    "tier": "T3",
-    "name": "Gamaschen des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22366,
-        "name": "Entweihte Gamaschen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22366,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22508",
-    "tier": "T3",
-    "name": "Sandalen des verseuchten Herzens",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 22372,
-        "name": "Entweihte Sandalen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22376,
-        "name": "Kampfzerschlissenes Stoffstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 14342,
-        "name": "Mondstoff",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22372,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22418",
-    "tier": "T3",
-    "name": "Helm des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22353,
-        "name": "Entweihter Helm",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 5
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22353,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22419",
-    "tier": "T3",
-    "name": "Schulterstücke des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22354,
-        "name": "Entweihte Schulterstücke",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22354,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22416",
-    "tier": "T3",
-    "name": "Brustplatte des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22349,
-        "name": "Entweihte Brustplatte",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 25
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22349,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22423",
-    "tier": "T3",
-    "name": "Armschienen des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22355,
-        "name": "Entweihte Armschienen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 6
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 1
-      }
-    ],
-    "tokenId": 22355,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22421",
-    "tier": "T3",
-    "name": "Stulpen des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22357,
-        "name": "Entweihte Stulpen",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22357,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22422",
-    "tier": "T3",
-    "name": "Taillenschutz des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22356,
-        "name": "Entweihter Taillenschutz",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 8
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 1
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 22356,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22417",
-    "tier": "T3",
-    "name": "Beinplatten des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22352,
-        "name": "Entweihte Beinplatten",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 20
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22352,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22420",
-    "tier": "T3",
-    "name": "Sabatons des Schreckenspanzers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 22358,
-        "name": "Entweihte Sabatons",
-        "quantity": 1
-      },
-      {
-        "itemId": 22375,
-        "name": "Kampfzerschlissenes Plattenstück",
-        "quantity": 12
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 2
-      },
-      {
-        "itemId": 15407,
-        "name": "Geschmeidiger unverwüstlicher Balg",
-        "quantity": 3
-      }
-    ],
-    "tokenId": 22358,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "22466",
-    "tier": "T3",
-    "name": "Kopfstück des Erdspalters",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 22360,
-        "name": "Entweihtes Kopfstück",
-        "quantity": 1
-      },
-      {
-        "itemId": 22374,
-        "name": "Kampfzerschlissenes Kettenstück",
-        "quantity": 15
-      },
-      {
-        "itemId": 12360,
-        "name": "Arkanitbarren",
-        "quantity": 4
-      },
-      {
-        "itemId": 20725,
-        "name": "Nexuskristall",
-        "quantity": 2
-      }
-    ],
-    "tokenId": 22360,
-    "reputation": null,
-    "prerequisite": "Echo des Krieges"
-  },
-  {
-    "itemId": "21355",
-    "tier": "T2,5",
-    "name": "Stiefel der Genesis",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21353",
-    "tier": "T2,5",
-    "name": "Helm der Genesis",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 20930,
-        "name": "Vek'lors Diadem",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20930,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21354",
-    "tier": "T2,5",
-    "name": "Schulterpolster der Genesis",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21356",
-    "tier": "T2,5",
-    "name": "Beinkleider der Genesis",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 20931,
-        "name": "Haut des großen Sandwurms",
-        "quantity": 1
-      },
-      {
-        "itemId": 20882,
-        "name": "Götze des Krieges",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20931,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21357",
-    "tier": "T2,5",
-    "name": "Weste der Genesis",
-    "classMask": 1024,
-    "requirements": [
-      {
-        "itemId": 20933,
-        "name": "Hülle des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20933,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21365",
-    "tier": "T2,5",
-    "name": "Fußschützer des Hetzers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21366",
-    "tier": "T2,5",
-    "name": "Diadem des Hetzers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 20930,
-        "name": "Vek'lors Diadem",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20930,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21367",
-    "tier": "T2,5",
-    "name": "Schulterstücke des Hetzers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20882,
-        "name": "Götze des Krieges",
-        "quantity": 2
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21368",
-    "tier": "T2,5",
-    "name": "Gamaschen des Hetzers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 20931,
-        "name": "Haut des großen Sandwurms",
-        "quantity": 1
-      },
-      {
-        "itemId": 20874,
-        "name": "Götze der Sonne",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20931,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21370",
-    "tier": "T2,5",
-    "name": "Halsberge des Hetzers",
-    "classMask": 4,
-    "requirements": [
-      {
-        "itemId": 20929,
-        "name": "Knochenpanzer des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20929,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21344",
-    "tier": "T2,5",
-    "name": "Stiefel des Mysteriums",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20874,
-        "name": "Götze der Sonne",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21347",
-    "tier": "T2,5",
-    "name": "Reif des Mysteriums",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 20926,
-        "name": "Vek'nilashs Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 20875,
-        "name": "Götze der Nacht",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20926,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21345",
-    "tier": "T2,5",
-    "name": "Schulterpolster des Mysteriums",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20876,
-        "name": "Götze des Todes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21343",
-    "tier": "T2,5",
-    "name": "Roben des Mysteriums",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 20933,
-        "name": "Hülle des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20874,
-        "name": "Götze der Sonne",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20933,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21388",
-    "tier": "T2,5",
-    "name": "Schienbeinschützer des Rächers",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21387",
-    "tier": "T2,5",
-    "name": "Krone des Rächers",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 20930,
-        "name": "Vek'lors Diadem",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20930,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21391",
-    "tier": "T2,5",
-    "name": "Schulterstücke des Rächers",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21389",
-    "tier": "T2,5",
-    "name": "Brustplatte des Rächers",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 20929,
-        "name": "Knochenpanzer des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20929,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21349",
-    "tier": "T2,5",
-    "name": "Fußlappen des Orakels",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20876,
-        "name": "Götze des Todes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21348",
-    "tier": "T2,5",
-    "name": "Tiara des Orakels",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 20926,
-        "name": "Vek'nilashs Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20926,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21350",
-    "tier": "T2,5",
-    "name": "Mantel des Orakels",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21352",
-    "tier": "T2,5",
-    "name": "Beinkleider des Orakels",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 20927,
-        "name": "Ouros intakte Haut",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20927,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21351",
-    "tier": "T2,5",
-    "name": "Gewänder des Orakels",
-    "classMask": 16,
-    "requirements": [
-      {
-        "itemId": 20933,
-        "name": "Hülle des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20876,
-        "name": "Götze des Todes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20933,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21359",
-    "tier": "T2,5",
-    "name": "Stiefel des Todesboten",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21360",
-    "tier": "T2,5",
-    "name": "Helm des Todesboten",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 20930,
-        "name": "Vek'lors Diadem",
-        "quantity": 1
-      },
-      {
-        "itemId": 20882,
-        "name": "Götze des Krieges",
-        "quantity": 2
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20930,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21361",
-    "tier": "T2,5",
-    "name": "Schiftung des Todesboten",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20874,
-        "name": "Götze der Sonne",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21362",
-    "tier": "T2,5",
-    "name": "Gamaschen des Todesboten",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 20927,
-        "name": "Ouros intakte Haut",
-        "quantity": 1
-      },
-      {
-        "itemId": 20875,
-        "name": "Götze der Nacht",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20927,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21364",
-    "tier": "T2,5",
-    "name": "Weste des Todesboten",
-    "classMask": 8,
-    "requirements": [
-      {
-        "itemId": 20929,
-        "name": "Knochenpanzer des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20929,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21373",
-    "tier": "T2,5",
-    "name": "Fußschützer des Sturmrufers",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21372",
-    "tier": "T2,5",
-    "name": "Diadem des Sturmrufers",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 20930,
-        "name": "Vek'lors Diadem",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20930,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21376",
-    "tier": "T2,5",
-    "name": "Schulterstücke des Sturmrufers",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20879,
-        "name": "Götze des Lebens",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21375",
-    "tier": "T2,5",
-    "name": "Gamaschen des Sturmrufers",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 20931,
-        "name": "Haut des großen Sandwurms",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20931,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21374",
-    "tier": "T2,5",
-    "name": "Halsberge des Sturmrufers",
-    "classMask": 64,
-    "requirements": [
-      {
-        "itemId": 20929,
-        "name": "Knochenpanzer des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20929,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21338",
-    "tier": "T2,5",
-    "name": "Fußlappen des Verdammnisrufers",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20875,
-        "name": "Götze der Nacht",
-        "quantity": 2
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21337",
-    "tier": "T2,5",
-    "name": "Reif des Verdammnisrufers",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 20926,
-        "name": "Vek'nilashs Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 20876,
-        "name": "Götze des Todes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20926,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21335",
-    "tier": "T2,5",
-    "name": "Mantel des Verdammnisrufers",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 20932,
-        "name": "Dominanzbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20932,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21336",
-    "tier": "T2,5",
-    "name": "Beinkleider des Verdammnisrufers",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 20931,
-        "name": "Haut des großen Sandwurms",
-        "quantity": 1
-      },
-      {
-        "itemId": 20878,
-        "name": "Götze der Wiedergeburt",
-        "quantity": 2
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20931,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21334",
-    "tier": "T2,5",
-    "name": "Roben des Verdammnisrufers",
-    "classMask": 256,
-    "requirements": [
-      {
-        "itemId": 20933,
-        "name": "Hülle des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20875,
-        "name": "Götze der Nacht",
-        "quantity": 2
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20933,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21333",
-    "tier": "T2,5",
-    "name": "Schienbeinschützer des Eroberers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20882,
-        "name": "Götze des Krieges",
-        "quantity": 2
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20859,
-        "name": "Goldskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21329",
-    "tier": "T2,5",
-    "name": "Krone des Eroberers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 20926,
-        "name": "Vek'nilashs Reif",
-        "quantity": 1
-      },
-      {
-        "itemId": 20874,
-        "name": "Götze der Sonne",
-        "quantity": 2
-      },
-      {
-        "itemId": 20862,
-        "name": "Kristallskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20926,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21330",
-    "tier": "T2,5",
-    "name": "Schiftung des Eroberers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 20928,
-        "name": "Befehlsbindungen der Qiraji",
-        "quantity": 1
-      },
-      {
-        "itemId": 20875,
-        "name": "Götze der Nacht",
-        "quantity": 2
-      },
-      {
-        "itemId": 20863,
-        "name": "Tonskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20858,
-        "name": "Steinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20928,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Neutral"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21332",
-    "tier": "T2,5",
-    "name": "Beinschützer des Eroberers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 20927,
-        "name": "Ouros intakte Haut",
-        "quantity": 1
-      },
-      {
-        "itemId": 20876,
-        "name": "Götze des Todes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20927,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21331",
-    "tier": "T2,5",
-    "name": "Brustplatte des Eroberers",
-    "classMask": 1,
-    "requirements": [
-      {
-        "itemId": 20929,
-        "name": "Knochenpanzer des alten Gottes",
-        "quantity": 1
-      },
-      {
-        "itemId": 20882,
-        "name": "Götze des Krieges",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20929,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Wohlwollend"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21346",
-    "tier": "T2,5",
-    "name": "Gamaschen des Mysteriums",
-    "classMask": 128,
-    "requirements": [
-      {
-        "itemId": 20927,
-        "name": "Ouros intakte Haut",
-        "quantity": 1
-      },
-      {
-        "itemId": 20877,
-        "name": "Götze der Weisen",
-        "quantity": 2
-      },
-      {
-        "itemId": 20860,
-        "name": "Silberskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20864,
-        "name": "Knochenskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20927,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  },
-  {
-    "itemId": "21390",
-    "tier": "T2,5",
-    "name": "Beinschützer des Rächers",
-    "classMask": 2,
-    "requirements": [
-      {
-        "itemId": 20931,
-        "name": "Haut des großen Sandwurms",
-        "quantity": 1
-      },
-      {
-        "itemId": 20881,
-        "name": "Götze des Kampfes",
-        "quantity": 2
-      },
-      {
-        "itemId": 20865,
-        "name": "Elfenbeinskarabäus",
-        "quantity": 5
-      },
-      {
-        "itemId": 20861,
-        "name": "Bronzeskarabäus",
-        "quantity": 5
-      }
-    ],
-    "tokenId": 20931,
-    "reputation": {
-      "faction": "Brut Nozdormus",
-      "standing": "Freundlich"
-    },
-    "prerequisite": ""
-  }
+ {
+  "itemId": "22490",
+  "tier": "T3",
+  "name": "Kopfstück des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22360,
+    "name": "Entweihtes Kopfstück",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 6
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22360,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22491",
+  "tier": "T3",
+  "name": "Schiftung des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22361,
+    "name": "Entweihte Schiftung",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22361,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22488",
+  "tier": "T3",
+  "name": "Tunika des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22350,
+    "name": "Entweihte Tunika",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 6
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22350,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22495",
+  "tier": "T3",
+  "name": "Handgelenksschutz des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22362,
+    "name": "Entweihter Handgelenksschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22362,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22493",
+  "tier": "T3",
+  "name": "Handschützer des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22364,
+    "name": "Entweihte Handschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22364,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22494",
+  "tier": "T3",
+  "name": "Gurt des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22363,
+    "name": "Entweihter Gurt",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 3
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22363,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22489",
+  "tier": "T3",
+  "name": "Beinschützer des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22359,
+    "name": "Entweihte Beinschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 8
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22359,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22492",
+  "tier": "T3",
+  "name": "Stiefel des Traumwandlers",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 22365,
+    "name": "Entweihte Stiefel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 3
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22365,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22438",
+  "tier": "T3",
+  "name": "Kopfstück des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22360,
+    "name": "Entweihtes Kopfstück",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22360,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22439",
+  "tier": "T3",
+  "name": "Schiftung des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22361,
+    "name": "Entweihte Schiftung",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22361,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22436",
+  "tier": "T3",
+  "name": "Tunika des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22350,
+    "name": "Entweihte Tunika",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22350,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22443",
+  "tier": "T3",
+  "name": "Handgelenksschutz des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22362,
+    "name": "Entweihter Handgelenksschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22362,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22441",
+  "tier": "T3",
+  "name": "Handschützer des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22364,
+    "name": "Entweihte Handschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22364,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22442",
+  "tier": "T3",
+  "name": "Gurt des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22363,
+    "name": "Entweihter Gurt",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22363,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22437",
+  "tier": "T3",
+  "name": "Beinschützer des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22359,
+    "name": "Entweihte Beinschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 3
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22359,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22440",
+  "tier": "T3",
+  "name": "Stiefel des Gruftpirschers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 22365,
+    "name": "Entweihte Stiefel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22365,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22498",
+  "tier": "T3",
+  "name": "Frostfeuerreif",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22367,
+    "name": "Entweihter Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 3
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22367,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22499",
+  "tier": "T3",
+  "name": "Frostfeuerschulterpolster",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22368,
+    "name": "Entweihte Schulterpolster",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22368,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22496",
+  "tier": "T3",
+  "name": "Frostfeuerrobe",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22351,
+    "name": "Entweihte Robe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22351,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22503",
+  "tier": "T3",
+  "name": "Frostfeuerbindungen",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22369,
+    "name": "Entweihte Bindungen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22369,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22501",
+  "tier": "T3",
+  "name": "Frostfeuerhandschuhe",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22371,
+    "name": "Entweihte Handschuhe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   }
+  ],
+  "tokenId": 22371,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22502",
+  "tier": "T3",
+  "name": "Frostfeuergürtel",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22370,
+    "name": "Entweihter Gürtel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 2
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22370,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22497",
+  "tier": "T3",
+  "name": "Frostfeuergamaschen",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22366,
+    "name": "Entweihte Gamaschen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22366,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22500",
+  "tier": "T3",
+  "name": "Frostfeuersandalen",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 22372,
+    "name": "Entweihte Sandalen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22372,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22428",
+  "tier": "T3",
+  "name": "Kopfstück der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22360,
+    "name": "Entweihtes Kopfstück",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 5
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22360,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22429",
+  "tier": "T3",
+  "name": "Schiftung der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22361,
+    "name": "Entweihte Schiftung",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22361,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22425",
+  "tier": "T3",
+  "name": "Tunika der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22350,
+    "name": "Entweihte Tunika",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22350,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22424",
+  "tier": "T3",
+  "name": "Handgelenksschutz der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22362,
+    "name": "Entweihter Handgelenksschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22362,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22426",
+  "tier": "T3",
+  "name": "Handschützer der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22364,
+    "name": "Entweihte Handschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22364,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22431",
+  "tier": "T3",
+  "name": "Gurt der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22363,
+    "name": "Entweihter Gurt",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22363,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22427",
+  "tier": "T3",
+  "name": "Beinschützer der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22359,
+    "name": "Entweihte Beinschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22359,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22430",
+  "tier": "T3",
+  "name": "Stiefel der Erlösung",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 22365,
+    "name": "Entweihte Stiefel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22365,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22514",
+  "tier": "T3",
+  "name": "Reif des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22367,
+    "name": "Entweihter Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 3
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22367,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22515",
+  "tier": "T3",
+  "name": "Schulterpolster des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22368,
+    "name": "Entweihte Schulterpolster",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22368,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22512",
+  "tier": "T3",
+  "name": "Robe des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22351,
+    "name": "Entweihte Robe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22351,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22519",
+  "tier": "T3",
+  "name": "Bindungen des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22369,
+    "name": "Entweihte Bindungen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22369,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22517",
+  "tier": "T3",
+  "name": "Handschuhe des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22371,
+    "name": "Entweihte Handschuhe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   }
+  ],
+  "tokenId": 22371,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22518",
+  "tier": "T3",
+  "name": "Gürtel des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22370,
+    "name": "Entweihter Gürtel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 2
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22370,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22513",
+  "tier": "T3",
+  "name": "Gamaschen des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22366,
+    "name": "Entweihte Gamaschen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22366,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22516",
+  "tier": "T3",
+  "name": "Sandalen des Glaubens",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 22372,
+    "name": "Entweihte Sandalen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22372,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22478",
+  "tier": "T3",
+  "name": "Helm der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22353,
+    "name": "Entweihter Helm",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 8
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22353,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22479",
+  "tier": "T3",
+  "name": "Schulterstücke der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22354,
+    "name": "Entweihte Schulterstücke",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22354,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22476",
+  "tier": "T3",
+  "name": "Brustplatte der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22349,
+    "name": "Entweihte Brustplatte",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 6
+   }
+  ],
+  "tokenId": 22349,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22483",
+  "tier": "T3",
+  "name": "Armschienen der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22355,
+    "name": "Entweihte Armschienen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22355,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22481",
+  "tier": "T3",
+  "name": "Stulpen der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22357,
+    "name": "Entweihte Stulpen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22357,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22482",
+  "tier": "T3",
+  "name": "Taillenschutz der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22356,
+    "name": "Entweihter Taillenschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22356,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22477",
+  "tier": "T3",
+  "name": "Beinplatten der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22352,
+    "name": "Entweihte Beinplatten",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 8
+   }
+  ],
+  "tokenId": 22352,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22480",
+  "tier": "T3",
+  "name": "Sabatons der Knochensense",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 22358,
+    "name": "Entweihte Sabatons",
+    "quantity": 1
+   },
+   {
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22358,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22467",
+  "tier": "T3",
+  "name": "Schiftung des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22361,
+    "name": "Entweihte Schiftung",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22361,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22464",
+  "tier": "T3",
+  "name": "Tunika des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22350,
+    "name": "Entweihte Tunika",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22350,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22471",
+  "tier": "T3",
+  "name": "Handgelenksschutz des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22362,
+    "name": "Entweihter Handgelenksschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22362,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22469",
+  "tier": "T3",
+  "name": "Handschützer des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22364,
+    "name": "Entweihte Handschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22364,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22470",
+  "tier": "T3",
+  "name": "Gurt des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22363,
+    "name": "Entweihter Gurt",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22363,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22465",
+  "tier": "T3",
+  "name": "Beinschützer des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22359,
+    "name": "Entweihte Beinschützer",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 3
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22359,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22468",
+  "tier": "T3",
+  "name": "Stiefel des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22365,
+    "name": "Entweihte Stiefel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22365,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22506",
+  "tier": "T3",
+  "name": "Reif des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22367,
+    "name": "Entweihter Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 3
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22367,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22507",
+  "tier": "T3",
+  "name": "Schulterpolster des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22368,
+    "name": "Entweihte Schulterpolster",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22368,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22504",
+  "tier": "T3",
+  "name": "Robe des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22351,
+    "name": "Entweihte Robe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22351,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22511",
+  "tier": "T3",
+  "name": "Bindungen des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22369,
+    "name": "Entweihte Bindungen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22369,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22509",
+  "tier": "T3",
+  "name": "Handschuhe des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22371,
+    "name": "Entweihte Handschuhe",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   }
+  ],
+  "tokenId": 22371,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22510",
+  "tier": "T3",
+  "name": "Gürtel des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22370,
+    "name": "Entweihter Gürtel",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "quantity": 2
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22370,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22505",
+  "tier": "T3",
+  "name": "Gamaschen des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22366,
+    "name": "Entweihte Gamaschen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22366,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22508",
+  "tier": "T3",
+  "name": "Sandalen des verseuchten Herzens",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 22372,
+    "name": "Entweihte Sandalen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 14342,
+    "name": "Mondstoff",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22372,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22418",
+  "tier": "T3",
+  "name": "Helm des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22353,
+    "name": "Entweihter Helm",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 5
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22353,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22419",
+  "tier": "T3",
+  "name": "Schulterstücke des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22354,
+    "name": "Entweihte Schulterstücke",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22354,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22416",
+  "tier": "T3",
+  "name": "Brustplatte des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22349,
+    "name": "Entweihte Brustplatte",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 25
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22349,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22423",
+  "tier": "T3",
+  "name": "Armschienen des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22355,
+    "name": "Entweihte Armschienen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 6
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 1
+   }
+  ],
+  "tokenId": 22355,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22421",
+  "tier": "T3",
+  "name": "Stulpen des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22357,
+    "name": "Entweihte Stulpen",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22357,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22422",
+  "tier": "T3",
+  "name": "Taillenschutz des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22356,
+    "name": "Entweihter Taillenschutz",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 8
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 1
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 22356,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22417",
+  "tier": "T3",
+  "name": "Beinplatten des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22352,
+    "name": "Entweihte Beinplatten",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 20
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22352,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22420",
+  "tier": "T3",
+  "name": "Sabatons des Schreckenspanzers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 22358,
+    "name": "Entweihte Sabatons",
+    "quantity": 1
+   },
+   {
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quantity": 12
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 2
+   },
+   {
+    "itemId": 15407,
+    "name": "Geschmeidiger unverwüstlicher Balg",
+    "quantity": 3
+   }
+  ],
+  "tokenId": 22358,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "22466",
+  "tier": "T3",
+  "name": "Kopfstück des Erdspalters",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 22360,
+    "name": "Entweihtes Kopfstück",
+    "quantity": 1
+   },
+   {
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quantity": 15
+   },
+   {
+    "itemId": 12360,
+    "name": "Arkanitbarren",
+    "quantity": 4
+   },
+   {
+    "itemId": 20725,
+    "name": "Nexuskristall",
+    "quantity": 2
+   }
+  ],
+  "tokenId": 22360,
+  "reputation": null,
+  "prerequisite": "Echo des Krieges"
+ },
+ {
+  "itemId": "21355",
+  "tier": "T2,5",
+  "name": "Stiefel der Genesis",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21353",
+  "tier": "T2,5",
+  "name": "Helm der Genesis",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20930,
+    "name": "Vek'lors Diadem",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20930,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21354",
+  "tier": "T2,5",
+  "name": "Schulterpolster der Genesis",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21356",
+  "tier": "T2,5",
+  "name": "Beinkleider der Genesis",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20931,
+    "name": "Haut des großen Sandwurms",
+    "quantity": 1
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20931,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21357",
+  "tier": "T2,5",
+  "name": "Weste der Genesis",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20933,
+    "name": "Hülle des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20933,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21365",
+  "tier": "T2,5",
+  "name": "Fußschützer des Hetzers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21366",
+  "tier": "T2,5",
+  "name": "Diadem des Hetzers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20930,
+    "name": "Vek'lors Diadem",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20930,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21367",
+  "tier": "T2,5",
+  "name": "Schulterstücke des Hetzers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 2
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21368",
+  "tier": "T2,5",
+  "name": "Gamaschen des Hetzers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20931,
+    "name": "Haut des großen Sandwurms",
+    "quantity": 1
+   },
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20931,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21370",
+  "tier": "T2,5",
+  "name": "Halsberge des Hetzers",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20929,
+    "name": "Knochenpanzer des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20929,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21344",
+  "tier": "T2,5",
+  "name": "Stiefel des Mysteriums",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21347",
+  "tier": "T2,5",
+  "name": "Reif des Mysteriums",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20926,
+    "name": "Vek'nilashs Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20926,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21345",
+  "tier": "T2,5",
+  "name": "Schulterpolster des Mysteriums",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21343",
+  "tier": "T2,5",
+  "name": "Roben des Mysteriums",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20933,
+    "name": "Hülle des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20933,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21388",
+  "tier": "T2,5",
+  "name": "Schienbeinschützer des Rächers",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21387",
+  "tier": "T2,5",
+  "name": "Krone des Rächers",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20930,
+    "name": "Vek'lors Diadem",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20930,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21391",
+  "tier": "T2,5",
+  "name": "Schulterstücke des Rächers",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21389",
+  "tier": "T2,5",
+  "name": "Brustplatte des Rächers",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20929,
+    "name": "Knochenpanzer des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20929,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21349",
+  "tier": "T2,5",
+  "name": "Fußlappen des Orakels",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21348",
+  "tier": "T2,5",
+  "name": "Tiara des Orakels",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20926,
+    "name": "Vek'nilashs Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20926,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21350",
+  "tier": "T2,5",
+  "name": "Mantel des Orakels",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21352",
+  "tier": "T2,5",
+  "name": "Beinkleider des Orakels",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20927,
+    "name": "Ouros intakte Haut",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20927,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21351",
+  "tier": "T2,5",
+  "name": "Gewänder des Orakels",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20933,
+    "name": "Hülle des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20933,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21359",
+  "tier": "T2,5",
+  "name": "Stiefel des Todesboten",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21360",
+  "tier": "T2,5",
+  "name": "Helm des Todesboten",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20930,
+    "name": "Vek'lors Diadem",
+    "quantity": 1
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 2
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20930,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21361",
+  "tier": "T2,5",
+  "name": "Schiftung des Todesboten",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21362",
+  "tier": "T2,5",
+  "name": "Gamaschen des Todesboten",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20927,
+    "name": "Ouros intakte Haut",
+    "quantity": 1
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20927,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21364",
+  "tier": "T2,5",
+  "name": "Weste des Todesboten",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20929,
+    "name": "Knochenpanzer des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20929,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21373",
+  "tier": "T2,5",
+  "name": "Fußschützer des Sturmrufers",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21372",
+  "tier": "T2,5",
+  "name": "Diadem des Sturmrufers",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20930,
+    "name": "Vek'lors Diadem",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20930,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21376",
+  "tier": "T2,5",
+  "name": "Schulterstücke des Sturmrufers",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21375",
+  "tier": "T2,5",
+  "name": "Gamaschen des Sturmrufers",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20931,
+    "name": "Haut des großen Sandwurms",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20931,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21374",
+  "tier": "T2,5",
+  "name": "Halsberge des Sturmrufers",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20929,
+    "name": "Knochenpanzer des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20929,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21338",
+  "tier": "T2,5",
+  "name": "Fußlappen des Verdammnisrufers",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 2
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21337",
+  "tier": "T2,5",
+  "name": "Reif des Verdammnisrufers",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20926,
+    "name": "Vek'nilashs Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20926,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21335",
+  "tier": "T2,5",
+  "name": "Mantel des Verdammnisrufers",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20932,
+    "name": "Dominanzbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20932,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21336",
+  "tier": "T2,5",
+  "name": "Beinkleider des Verdammnisrufers",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20931,
+    "name": "Haut des großen Sandwurms",
+    "quantity": 1
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20931,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21334",
+  "tier": "T2,5",
+  "name": "Roben des Verdammnisrufers",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20933,
+    "name": "Hülle des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 2
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20933,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21333",
+  "tier": "T2,5",
+  "name": "Schienbeinschützer des Eroberers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 2
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21329",
+  "tier": "T2,5",
+  "name": "Krone des Eroberers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 20926,
+    "name": "Vek'nilashs Reif",
+    "quantity": 1
+   },
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 2
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20926,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21330",
+  "tier": "T2,5",
+  "name": "Schiftung des Eroberers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 20928,
+    "name": "Befehlsbindungen der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 2
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20928,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Neutral"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21332",
+  "tier": "T2,5",
+  "name": "Beinschützer des Eroberers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 20927,
+    "name": "Ouros intakte Haut",
+    "quantity": 1
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20927,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21331",
+  "tier": "T2,5",
+  "name": "Brustplatte des Eroberers",
+  "classMask": 1,
+  "requirements": [
+   {
+    "itemId": 20929,
+    "name": "Knochenpanzer des alten Gottes",
+    "quantity": 1
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20929,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21346",
+  "tier": "T2,5",
+  "name": "Gamaschen des Mysteriums",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20927,
+    "name": "Ouros intakte Haut",
+    "quantity": 1
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20927,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21390",
+  "tier": "T2,5",
+  "name": "Beinschützer des Rächers",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20931,
+    "name": "Haut des großen Sandwurms",
+    "quantity": 1
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 2
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20931,
+  "reputation": {
+   "faction": "Brut Nozdormus",
+   "standing": "Freundlich"
+  },
+  "prerequisite": ""
+ },
+ {
+  "itemId": "21412",
+  "tier": "AQ20",
+  "name": "Schleier der unendlichen Weisheit",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20885,
+    "name": "Kampftuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20870,
+    "name": "Jaspisgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20885,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8689
+ },
+ {
+  "itemId": "21400",
+  "tier": "AQ20",
+  "name": "Umhang der aufziehenden Stürme",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20889,
+    "name": "Hoheitstuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20871,
+    "name": "Obsidiangötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20889,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8690
+ },
+ {
+  "itemId": "21415",
+  "tier": "AQ20",
+  "name": "Tuch der behüteten Geheimnisse",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20885,
+    "name": "Kampftuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20873,
+    "name": "Alabastergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20885,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8691
+ },
+ {
+  "itemId": "21409",
+  "tier": "AQ20",
+  "name": "Umhang des endlosen Lebens",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20889,
+    "name": "Hoheitstuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20872,
+    "name": "Zinnobergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20889,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8692
+ },
+ {
+  "itemId": "21406",
+  "tier": "AQ20",
+  "name": "Umhang der Schattenschleier",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20885,
+    "name": "Kampftuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20866,
+    "name": "Azurgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20885,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8693
+ },
+ {
+  "itemId": "21418",
+  "tier": "AQ20",
+  "name": "Schleier der ungesagten Namen",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20889,
+    "name": "Hoheitstuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20869,
+    "name": "Bernsteingötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20889,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8694
+ },
+ {
+  "itemId": "21397",
+  "tier": "AQ20",
+  "name": "Cape der ewigen Gerechtigkeit",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20889,
+    "name": "Hoheitstuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20871,
+    "name": "Obsidiangötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20889,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8695
+ },
+ {
+  "itemId": "21403",
+  "tier": "AQ20",
+  "name": "Umhang des unsichtbaren Pfads",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20889,
+    "name": "Hoheitstuch der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20868,
+    "name": "Züngelnder Götze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20889,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Respektvoll"
+  },
+  "prerequisite": "",
+  "questId": 8696
+ },
+ {
+  "itemId": "21411",
+  "tier": "AQ20",
+  "name": "Ring der unendlichen Weisheit",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20888,
+    "name": "Zeremonienring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20871,
+    "name": "Obsidiangötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20888,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8697
+ },
+ {
+  "itemId": "21399",
+  "tier": "AQ20",
+  "name": "Ring der aufziehenden Stürme",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20884,
+    "name": "Gebieterring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20872,
+    "name": "Zinnobergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20884,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8698
+ },
+ {
+  "itemId": "21414",
+  "tier": "AQ20",
+  "name": "Band der behüteten Geheimnisse",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20884,
+    "name": "Gebieterring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20866,
+    "name": "Azurgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20884,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8699
+ },
+ {
+  "itemId": "21408",
+  "tier": "AQ20",
+  "name": "Band des endlosen Lebens",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20884,
+    "name": "Gebieterring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20873,
+    "name": "Alabastergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20884,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8700
+ },
+ {
+  "itemId": "21405",
+  "tier": "AQ20",
+  "name": "Band der Schattenschleier",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20888,
+    "name": "Zeremonienring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20867,
+    "name": "Onyxgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20888,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8701
+ },
+ {
+  "itemId": "21417",
+  "tier": "AQ20",
+  "name": "Ring der ungesagten Namen",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20888,
+    "name": "Zeremonienring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20870,
+    "name": "Jaspisgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20888,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8702
+ },
+ {
+  "itemId": "21396",
+  "tier": "AQ20",
+  "name": "Ring der ewigen Gerechtigkeit",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20884,
+    "name": "Gebieterring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20872,
+    "name": "Zinnobergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20884,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8703
+ },
+ {
+  "itemId": "21402",
+  "tier": "AQ20",
+  "name": "Siegel des unsichtbaren Pfads",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20888,
+    "name": "Zeremonienring der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20869,
+    "name": "Bernsteingötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20888,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Wohlwollend"
+  },
+  "prerequisite": "",
+  "questId": 8704
+ },
+ {
+  "itemId": "21410",
+  "tier": "AQ20",
+  "name": "Hammer der unendlichen Weisheit",
+  "classMask": 16,
+  "requirements": [
+   {
+    "itemId": 20890,
+    "name": "Verschnörkelter Griff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20868,
+    "name": "Züngelnder Götze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20890,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8705
+ },
+ {
+  "itemId": "21398",
+  "tier": "AQ20",
+  "name": "Hammer der aufziehenden Stürme",
+  "classMask": 64,
+  "requirements": [
+   {
+    "itemId": 20886,
+    "name": "Stachelgriff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20869,
+    "name": "Bernsteingötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20886,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8706
+ },
+ {
+  "itemId": "21413",
+  "tier": "AQ20",
+  "name": "Klinge der behüteten Geheimnisse",
+  "classMask": 128,
+  "requirements": [
+   {
+    "itemId": 20890,
+    "name": "Verschnörkelter Griff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20871,
+    "name": "Obsidiangötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20890,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8707
+ },
+ {
+  "itemId": "21407",
+  "tier": "AQ20",
+  "name": "Streitkolben des endlosen Lebens",
+  "classMask": 1024,
+  "requirements": [
+   {
+    "itemId": 20890,
+    "name": "Verschnörkelter Griff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20870,
+    "name": "Jaspisgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20890,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8708
+ },
+ {
+  "itemId": "21404",
+  "tier": "AQ20",
+  "name": "Dolch der Schattenschleier",
+  "classMask": 8,
+  "requirements": [
+   {
+    "itemId": 20886,
+    "name": "Stachelgriff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20872,
+    "name": "Zinnobergötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20886,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8709
+ },
+ {
+  "itemId": "21416",
+  "tier": "AQ20",
+  "name": "Kris der ungesagten Namen",
+  "classMask": 256,
+  "requirements": [
+   {
+    "itemId": 20890,
+    "name": "Verschnörkelter Griff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20867,
+    "name": "Onyxgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20890,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8710
+ },
+ {
+  "itemId": "21395",
+  "tier": "AQ20",
+  "name": "Klinge der ewigen Gerechtigkeit",
+  "classMask": 2,
+  "requirements": [
+   {
+    "itemId": 20886,
+    "name": "Stachelgriff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20869,
+    "name": "Bernsteingötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20886,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8711
+ },
+ {
+  "itemId": "21401",
+  "tier": "AQ20",
+  "name": "Sense des unsichtbaren Pfads",
+  "classMask": 4,
+  "requirements": [
+   {
+    "itemId": 20886,
+    "name": "Stachelgriff der Qiraji",
+    "quantity": 1
+   },
+   {
+    "itemId": 20866,
+    "name": "Azurgötze",
+    "quantity": 2
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 5
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 5
+   }
+  ],
+  "tokenId": 20886,
+  "reputation": {
+   "faction": "Zirkel des Cenarius",
+   "standing": "Ehrfürchtig"
+  },
+  "prerequisite": "",
+  "questId": 8712
+ },
+ {
+  "itemId": "aq-skarabaeen",
+  "tier": "Skarabäen & Götzen",
+  "name": "Skarabäen (AQ20 & AQ40)",
+  "classMask": 2047,
+  "requirements": [
+   {
+    "itemId": 20858,
+    "name": "Steinskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20859,
+    "name": "Goldskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20860,
+    "name": "Silberskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20861,
+    "name": "Bronzeskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20862,
+    "name": "Kristallskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20863,
+    "name": "Tonskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20864,
+    "name": "Knochenskarabäus",
+    "quantity": 20
+   },
+   {
+    "itemId": 20865,
+    "name": "Elfenbeinskarabäus",
+    "quantity": 20
+   }
+  ],
+  "tokenId": null,
+  "reputation": null,
+  "prerequisite": ""
+ },
+ {
+  "itemId": "aq20-goetzen",
+  "tier": "Skarabäen & Götzen",
+  "name": "Götzen aus AQ20 (Ruinen von Ahn’Qiraj)",
+  "classMask": 2047,
+  "requirements": [
+   {
+    "itemId": 20866,
+    "name": "Azurgötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20867,
+    "name": "Onyxgötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20868,
+    "name": "Züngelnder Götze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20869,
+    "name": "Bernsteingötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20870,
+    "name": "Jaspisgötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20871,
+    "name": "Obsidiangötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20872,
+    "name": "Zinnobergötze",
+    "quantity": 10
+   },
+   {
+    "itemId": 20873,
+    "name": "Alabastergötze",
+    "quantity": 10
+   }
+  ],
+  "tokenId": null,
+  "reputation": null,
+  "prerequisite": ""
+ },
+ {
+  "itemId": "aq40-goetzen",
+  "tier": "Skarabäen & Götzen",
+  "name": "Götzen aus AQ40 (Tempel von Ahn’Qiraj)",
+  "classMask": 2047,
+  "requirements": [
+   {
+    "itemId": 20874,
+    "name": "Götze der Sonne",
+    "quantity": 10
+   },
+   {
+    "itemId": 20875,
+    "name": "Götze der Nacht",
+    "quantity": 10
+   },
+   {
+    "itemId": 20876,
+    "name": "Götze des Todes",
+    "quantity": 10
+   },
+   {
+    "itemId": 20877,
+    "name": "Götze der Weisen",
+    "quantity": 10
+   },
+   {
+    "itemId": 20878,
+    "name": "Götze der Wiedergeburt",
+    "quantity": 10
+   },
+   {
+    "itemId": 20879,
+    "name": "Götze des Lebens",
+    "quantity": 10
+   },
+   {
+    "itemId": 20881,
+    "name": "Götze des Kampfes",
+    "quantity": 10
+   },
+   {
+    "itemId": 20882,
+    "name": "Götze des Krieges",
+    "quantity": 10
+   }
+  ],
+  "tokenId": null,
+  "reputation": null,
+  "prerequisite": ""
+ }
 ]

@@ -5637,6 +5637,7 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
+      <button class="side-link" type="button" onclick="openArmorRequestsPanel()" aria-label="Gildenbankanträge" title="Gildenbankanträge"><span class="side-icon">🛡</span><span class="side-label">Gildenbankanträge</span><span id="armorRequestCount" class="side-count" style="display:none">0</span></button>
       <div class="side-group collapsed" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
@@ -6528,6 +6529,13 @@ body.worldbuff-only .master-only{display:none!important}
     <summary>P0+ Freigabe</summary>
     <div class="p0-panel-body">
       <div id="p0ReleasePanelContent" class="create-result">P0+ Freigaben der Charaktere laden.</div>
+    </div>
+  </details>
+
+  <details id="armorRequestsPanel" class="panel p0-panel" ontoggle="if(this.open) loadArmorRequestsPanel()">
+    <summary>🛡 Gildenbankanträge</summary>
+    <div class="p0-panel-body">
+      <div id="armorRequestsPanelContent" class="create-result">Anträge auf Materialien aus der Gildenbank laden.</div>
     </div>
   </details>
 
@@ -7884,7 +7892,7 @@ async function loadOverview(options){
 }
 
 // Task counters keep unknown/error states distinct from a confirmed zero.
-let leadershipTaskState={requests:null,messages:null,reviews:null,loading:false,generation:0};
+let leadershipTaskState={requests:null,messages:null,reviews:null,bank:null,loading:false,generation:0};
 function leadershipPendingTransfers(){
   return (guildData.raids||[]).filter(raid=>{
     const status=normalize(raid.status||'');
@@ -7903,13 +7911,15 @@ function renderLeadershipTasks(){
     ['P0-Freigaben',ready?leadershipTaskState.requests:null,'Anträge prüfen','openP0ReleasePanel()'],
     ['Spielerzugänge',pending,'Zugänge freigeben','openPendingLoginReview()'],
     ['Postfach',ready?leadershipTaskState.messages:null,'Postfach öffnen','openIssueInboxPanel()'],
-    ['Punkteübertragung',ready&&leadershipTaskState.reviews!==null?leadershipPendingTransfers().length:null,'Vergangene Raids prüfen','openLeadershipPendingTransfers()']
+    ['Punkteübertragung',ready&&leadershipTaskState.reviews!==null?leadershipPendingTransfers().length:null,'Vergangene Raids prüfen','openLeadershipPendingTransfers()'],
+    ['Gildenbankanträge',ready?leadershipTaskState.bank:null,'Anträge freigeben','openArmorRequestsPanel()']
   ];
   const icons=[
     '<path d="M9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M9 3h6v4H9zM8 14l3 3 5-6"/>',
     '<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"/>',
     '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 7 9 6 9-6"/>',
-    '<path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/>'
+    '<path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/>',
+    '<path d="M12 3l7 3v6c0 4.6-3 8.4-7 9.5C8 20.4 5 16.6 5 12V6z"/><path d="m9 12 2 2 4-4"/>'
   ];
   box.innerHTML=rows.map(([label,count,hint,action],index)=>{
     const detail=count===null?(leadershipTaskState.loading?'Wird geladen …':'Noch nicht geladen'):count===0?'Keine offenen Einträge':hint+' →';
@@ -7920,13 +7930,14 @@ async function loadLeadershipTasks(){
   const code=document.getElementById('masterCode')?.value.trim();
   if(!code||document.body.classList.contains('guild-locked'))return;
   const generation=++leadershipTaskState.generation;
-  leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.reviews=null;leadershipTaskState.loading=true;renderLeadershipTasks();
+  leadershipTaskState.requests=null;leadershipTaskState.messages=null;leadershipTaskState.reviews=null;leadershipTaskState.bank=null;leadershipTaskState.loading=true;renderLeadershipTasks();
   await Promise.allSettled([
-    ['requests','guildGetPoReleaseRequests'],['messages','guildGetIssueReports'],['reviews','guildGetRaidTaskReviews']
+    ['requests','guildGetPoReleaseRequests'],['messages','guildGetIssueReports'],['reviews','guildGetRaidTaskReviews'],['bank','guildGetArmorRequests']
   ].map(async([key,action])=>{
     const result=await railwayApi({action,masterCode:code},15000);
     if(generation!==leadershipTaskState.generation||!result?.success)return;
     if(key==='reviews'){if(Array.isArray(result.reviews))leadershipTaskState.reviews=result.reviews;return;}
+    if(key==='bank'){if(Array.isArray(result.entries)){leadershipTaskState.bank=result.entries.filter(row=>row.status==='pending').length;updateArmorRequestCount(leadershipTaskState.bank);}return;}
     const entries=key==='requests'?result.entries:result.reports;
     if(Array.isArray(entries)){leadershipTaskState[key]=key==='requests'?entries.filter(row=>row.status==='pending').length:entries.length;if(key==='messages')issueReports=entries;}
   }));
@@ -8556,6 +8567,100 @@ function openP0ReleasePanel(){
   openDetailsPanel("p0ReleasePanel");
 }
 
+let armorRequestEntries=[];
+let armorRequestFilter="pending";
+function openArmorRequestsPanel(){
+  openDetailsPanel("armorRequestsPanel");
+}
+function updateArmorRequestCount(count){
+  const badge=document.getElementById("armorRequestCount");
+  if(!badge)return;
+  badge.textContent=String(count||0);
+  badge.style.display=count>0?"":"none";
+}
+function armorRequestStatusLabel(status){
+  return status==="approved"?"freigegeben":status==="rejected"?"abgelehnt":"offen";
+}
+async function loadArmorRequestsPanel(){
+  const box=document.getElementById("armorRequestsPanelContent");
+  if(box)box.innerHTML='<div class="status">Gildenbankanträge werden geladen ...</div>';
+  try{
+    const masterCode=document.getElementById("masterCode").value.trim();
+    if(!masterCode){
+      if(box)box.innerHTML='<div class="status bad">Bitte Master-Code eingeben, um Gildenbankanträge zu laden.</div>';
+      return;
+    }
+    const result=await railwayApi({action:"guildGetArmorRequests",masterCode});
+    if(!result.success){
+      if(box)box.innerHTML=`<div class="status bad">${escapeHtml(result.error||"Gildenbankanträge konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    armorRequestEntries=Array.isArray(result.entries)?result.entries:[];
+    const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;
+    leadershipTaskState.bank=pending;
+    updateArmorRequestCount(pending);
+    renderLeadershipTasks();
+    renderArmorRequestsPanel();
+  }catch(error){
+    if(box)box.innerHTML=`<div class="status bad">${escapeHtml(error.message||"Gildenbankanträge konnten nicht geladen werden.")}</div>`;
+  }
+}
+function setArmorRequestFilter(filter){
+  armorRequestFilter=filter;
+  renderArmorRequestsPanel();
+}
+function renderArmorRequestsPanel(){
+  const box=document.getElementById("armorRequestsPanelContent");
+  if(!box)return;
+  const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;
+  const shown=armorRequestFilter==="all"?armorRequestEntries:armorRequestEntries.filter(entry=>entry.status===armorRequestFilter);
+  const filters=[["pending","Offen"],["approved","Freigegeben"],["rejected","Abgelehnt"],["all","Alle"]];
+  const rows=shown.map(entry=>{
+    const materials=(entry.materials||[]).map(material=>`<li>${escapeHtml(String(material.quantity))} × ${escapeHtml(material.name||"")}</li>`).join("");
+    const token=entry.token?`<div class="muted">Token: ${escapeHtml(entry.token.name||"")}</div>`:"";
+    const note=entry.reviewNote?`<div class="muted">Notiz: ${escapeHtml(entry.reviewNote)}</div>`:"";
+    const reviewed=entry.reviewedAt?`<div class="muted">${escapeHtml(armorRequestStatusLabel(entry.status))} am ${escapeHtml(new Date(entry.reviewedAt).toLocaleString("de-DE"))}</div>`:"";
+    const id=escapeAttr(String(entry.id));
+    const actions=entry.status==="pending"
+      ?`<button class="small-btn good" type="button" onclick="reviewArmorRequest('${id}','approved')">Freigeben</button><button class="small-btn danger" type="button" onclick="reviewArmorRequest('${id}','rejected')">Ablehnen</button>`
+      :`<button class="small-btn ghost" type="button" onclick="reviewArmorRequest('${id}','pending')">Wieder öffnen</button>`;
+    return `<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(armorRequestStatusLabel(entry.status))}</span>${reviewed}</td><td>${renderAdminGearLink(entry.characterName||"-",entry.server)}<br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td><strong>${escapeHtml(entry.itemName||"")}</strong><div class="muted">${escapeHtml(entry.tier||"")}</div>${token}</td><td><ul style="margin:0;padding-left:18px">${materials}</ul>${note}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${actions}<button class="small-btn danger" type="button" onclick="deleteArmorRequest('${id}')">Löschen</button></div></td></tr>`;
+  }).join("");
+  box.innerHTML=`<div class="p0-review-block" style="border-color:#5fe5da"><div class="section-head"><div><h3>Gildenbankanträge <span class="badge warn">${pending} offen</span></h3><p>Anträge der Spieler auf Materialien aus der Gildenbank: T3, T2,5, AQ20 sowie Skarabäen und Götzen. Freigeben, sobald die Materialien ausgegeben werden können.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">${filters.map(([key,label])=>`<button class="small-btn ${armorRequestFilter===key?"primary":"ghost"}" type="button" onclick="setArmorRequestFilter('${key}')">${label}</button>`).join("")}<button class="small-btn ghost" type="button" onclick="loadArmorRequestsPanel()">Aktualisieren</button></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Aus der Gildenbank</th><th>Eingang</th><th>Aktion</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">Keine Anträge in dieser Ansicht.</td></tr>'}</tbody></table></div></div>`;
+}
+async function reviewArmorRequest(requestId,decision){
+  const entry=armorRequestEntries.find(item=>String(item.id)===String(requestId));
+  if(!entry)return;
+  let note=entry.reviewNote||"";
+  if(decision==="rejected"){
+    const reason=prompt("Grund der Ablehnung (optional):",note);
+    if(reason===null)return;
+    note=reason.trim();
+  }
+  try{
+    const masterCode=document.getElementById("masterCode").value.trim();
+    const result=await railwayApi({action:"guildReviewArmorRequest",masterCode,requestId,decision,note});
+    if(!result.success)throw new Error(result.error||"Antrag konnte nicht aktualisiert werden.");
+    setStatus(decision==="approved"?"Gildenbankantrag freigegeben.":decision==="rejected"?"Gildenbankantrag abgelehnt.":"Gildenbankantrag wieder geöffnet.","good");
+    await loadArmorRequestsPanel();
+  }catch(error){
+    setStatus(error.message||"Antrag konnte nicht aktualisiert werden.","bad");
+  }
+}
+async function deleteArmorRequest(requestId){
+  const entry=armorRequestEntries.find(item=>String(item.id)===String(requestId));
+  if(!entry||!confirm(`Antrag von ${entry.characterName||"diesem Charakter"} auf ${entry.itemName||"Materialien"} endgültig löschen?`))return;
+  try{
+    const masterCode=document.getElementById("masterCode").value.trim();
+    const result=await railwayApi({action:"guildDeleteArmorRequest",masterCode,requestId});
+    if(!result.success)throw new Error(result.error||"Antrag konnte nicht gelöscht werden.");
+    setStatus("Gildenbankantrag gelöscht.","good");
+    await loadArmorRequestsPanel();
+  }catch(error){
+    setStatus(error.message||"Antrag konnte nicht gelöscht werden.","bad");
+  }
+}
+
 function openPoItemSettingsPanel(){
   openDetailsPanel("poItemSettingsPanel");
 }
@@ -9057,7 +9162,7 @@ function renderLootLayoutPanel(){
               <select id="layoutRaidAnnouncementChannelId">${layoutChannelSelectOptions(layout.raidAnnouncementChannelId || "")}</select>
               <span class="muted">Standardchannel für neue Raid- und Discord-Anmelder.</span>
             </div>
-            <div class="field"><label>Rüstungsteile beantragen</label><select id="layoutArmorRequestChannelId">${layoutChannelSelectOptions(layout.armorRequestChannelId ?? (CURRENT_GUILD_SLUG === "lichtloot" ? "1390681277992272024" : ""))}</select><small>Der PO Bot postet hier Anfragen für T3- und T2,5-Materialien aus der Gildenbank.</small></div>
+            <div class="field"><label>Rüstungsteile beantragen</label><select id="layoutArmorRequestChannelId">${layoutChannelSelectOptions(layout.armorRequestChannelId ?? (CURRENT_GUILD_SLUG === "lichtloot" ? "1390681277992272024" : ""))}</select><small>Der PO Bot postet hier Anfragen für T3-, T2,5- und AQ20-Materialien sowie Skarabäen und Götzen aus der Gildenbank. Die Anträge erscheinen zusätzlich unter „Gildenbankanträge“ zur Freigabe.</small></div>
             <div class="field">
               <label>Hordenbuff-Channel</label>
               <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>

@@ -11,7 +11,7 @@
   const raid=group('sideGroupRaidorga','Raids & Anmeldungen',[
    take('openRaidHelperPanel','Aktuelle Raids'),makeButton('Raid erstellen',()=>openRaidCreatorFromDashboard()),makeButton('Wochenrhythmen',()=>openRaidHelperPanel('scheduledEvents')),take('openRaidArchivePanel','Raidarchiv')
   ]);
-  const loot=group('sideGroupLoot','Loot & Punkte',[makeButton('P0-Anmeldungen',()=>openRaidHelperPanel('poSignup')),take('openP0ReleasePanel','Freigabeanträge'),take('openP0PlusPanel','P0+ Punktekonten'),take('openPoItemSettingsPanel','Lootregeln'),take('openRaidleadPanelDirect','Plündermeister')]);
+  const loot=group('sideGroupLoot','Loot & Punkte',[makeButton('P0-Anmeldungen',()=>openRaidHelperPanel('poSignup')),take('openP0ReleasePanel','Freigabeanträge'),take('openArmorRequestsPanel','Gildenbankanträge'),take('openP0PlusPanel','P0+ Punktekonten'),take('openPoItemSettingsPanel','Lootregeln'),take('openRaidleadPanelDirect','Plündermeister')]);
   loot.querySelectorAll('.side-link').forEach(button=>{if(['P0-Anmeldungen','Freigabeanträge','Lootregeln'].includes(button.querySelector('.side-label')?.textContent))button.classList.add('guild-prio-only');});
   const members=group('sideGroupMembers','Mitglieder',[take('openPlayerPanel','Spieler & Charaktere'),makeButton('Zugangsanträge',()=>openPendingLoginReview()),take('openIssueInboxPanel','Postfach'),take('openRaidMemberNoticePanel','Mitglieder informieren'),take('openPlayerAnalysis','Spieleranalyse')]);
   const analysis=group('sideGroupAnalysis','Analysen',[take('openLogAnalysisPanel','Loganalysen'),take('openTrafficStatsPanel','Aufrufstatistik')]);

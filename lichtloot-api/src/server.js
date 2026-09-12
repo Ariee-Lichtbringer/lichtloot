@@ -30945,6 +30945,12 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...reports, guild: guild.slug });
     }
 
+    if (action === "guildGetArmorRequests" || action === "guildReviewArmorRequest" || action === "guildDeleteArmorRequest") {
+      requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
+      res.set("Cache-Control", "no-store");
+      return res.json({ ...(await armorRequests.manage(guild, action, req.query)), guild: guild.slug });
+    }
+
     if (action === "guildGetTrafficStats") {
       const stats = await getTrafficStats({ guild, params: req.query });
       return res.json({ ...stats, guild: guild.slug });
@@ -32291,7 +32297,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       const list = await getPoReleaseRequests({ guildId: guild.id, query: postParams, management: true });
       return res.json({ ...list, guild: guild.slug });
     }
-    if (action === "getArmorRequestCatalog" || action === "getArmorRequestStatus" || action === "submitArmorRequest") {
+    if (action === "getArmorRequestCatalog" || action === "getArmorRequestStatus" || action === "submitArmorRequest" || action === "getMyArmorRequests") {
       enforceSecurityRateLimit(req,"armor-requests",90,60*1000);
       res.set("Cache-Control","no-store");
       return res.json(await armorRequests.handle(guild, postParams));
