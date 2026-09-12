@@ -5586,6 +5586,7 @@ body.worldbuff-only .master-only{display:none!important}
 <link rel="stylesheet" href="profession-guides.css?v=20260909-icons">
 <script defer src="profession-guides.js?v=20260909-icons"></script>
 <script defer src="item-search-ui.js?v=20260907-aq40-1"></script>
+<script defer src="guild-bank-ui.js?v=20260912-2"></script>
 <script defer src="player-search-ui.js?v=20260907-compare-1"></script>
 <script defer src="start-search.js?v=20260907-professions-1"></script>
 </head>
@@ -8671,10 +8672,11 @@ async function loadGuildBankSettingsPanel(){
   try{
     const masterCode=document.getElementById("masterCode").value.trim();
     if(!masterCode){if(box)box.innerHTML='<div class="status bad">Bitte Master-Code eingeben, um die Gildenbank zu laden.</div>';return;}
-    const [settings,inventory]=await Promise.all([railwayApi({action:"guildGetGuildBankSettings",masterCode}),railwayApi({action:"guildGetGuildBankInventory",masterCode},30000)]);
+    const [settings,inventory,requests]=await Promise.all([railwayApi({action:"guildGetGuildBankSettings",masterCode}),railwayApi({action:"guildGetGuildBankInventory",masterCode},30000),railwayApi({action:"guildGetArmorRequests",masterCode})]);
     if(!settings.success)throw new Error(settings.error||"Einstellungen konnten nicht geladen werden.");
     guildBankSettings=settings.settings||{characters:[],hiddenItems:[],note:""};
     guildBankInventory=inventory.success?inventory:null;
+    if(requests.success&&Array.isArray(requests.entries)){armorRequestEntries=requests.entries;const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;leadershipTaskState.bank=pending;updateArmorRequestCount(pending);}
     renderGuildBankSettingsPanel();
   }catch(error){if(box)box.innerHTML=`<div class="status bad">${escapeHtml(error.message||"Gildenbank konnte nicht geladen werden.")}</div>`;}
 }
@@ -8684,49 +8686,51 @@ function guildBankCharacterRows(){
 function renderGuildBankSettingsPanel(){
   const box=document.getElementById("guildBankSettingsPanelContent");if(!box)return;
   const characters=guildBankSettings.characters||[];
-  const rowHtml=(c,i)=>`<div class="layout-form-grid" data-bank-row style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px;margin-bottom:6px"><div class="field"><label>Charakter</label><input data-bank-name maxlength="24" value="${escapeAttr(c.name||"")}" placeholder="Name"></div><div class="field"><label>Server</label><input data-bank-server maxlength="40" value="${escapeAttr(c.server||"")}" placeholder="z. B. Everlook"></div><button class="small-btn danger" type="button" onclick="this.closest('[data-bank-row]').remove()" aria-label="Bankcharakter entfernen">Entfernen</button></div>`;
+  const rowHtml=(c)=>`<div class="layout-form-grid" data-bank-row style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px;margin-bottom:6px"><div class="field"><label>Charakter</label><input data-bank-name maxlength="24" value="${escapeAttr(c.name||"")}" placeholder="Name"></div><div class="field"><label>Server</label><input data-bank-server maxlength="40" value="${escapeAttr(c.server||"")}" placeholder="z. B. Everlook"></div><button class="small-btn danger" type="button" onclick="this.closest('[data-bank-row]').remove()" aria-label="Bankcharakter entfernen">Entfernen</button></div>`;
   const inventory=guildBankInventory;
   const scans=(inventory?.characters||[]).map(c=>`<li><strong>${escapeHtml(c.name)}</strong>${c.server?` · ${escapeHtml(c.server)}`:""}: ${c.observedAt?`${c.items} Gegenstände, ${c.quantity} Stück, Stand ${escapeHtml(new Date(c.observedAt*1000).toLocaleString("de-DE"))}`:"noch kein Bestand übertragen"}</li>`).join("");
-  const items=(inventory?.items||[]);
-  const hidden=new Set(guildBankSettings.hiddenItems||[]);
-  const itemRows=items.map(item=>`<tr><td>${escapeHtml(item.name)}<br><span class="muted">#${item.itemId}</span></td><td><strong>${item.quantity}</strong></td><td class="muted">${(item.stacks||[]).map(s=>`${escapeHtml(s.name)}: ${s.quantity}`).join(", ")}</td><td><label class="po-request-review-check"><input type="checkbox" data-bank-hidden="${item.itemId}" ${hidden.has(item.itemId)?"checked":""}> nicht beantragbar</label></td></tr>`).join("");
-  box.innerHTML=`<div class="p0-review-block" style="border-color:#f5c542"><div class="section-head"><div><h3>Bankcharaktere</h3><p>Diese Charaktere sind die Gildenbank. Öffnet einer davon im Spiel seine Bank, erfasst GuildLoot Era den Bestand. Mit <code>/gle bank</code> erzeugt der Charakter den Export, der unten eingefügt wird.</p></div></div>
+  box.innerHTML=`<details id="guildBankSettingsDetails" class="p0-review-block" style="border-color:#f5c542"><summary style="cursor:pointer;font-weight:700">⚙ Bankcharaktere, GBankClassic und Bestand übertragen</summary>
+    <div class="section-head" style="margin-top:10px"><div><h3>Bankcharaktere</h3><p>Diese Charaktere sind die Gildenbank. Ein Bankcharakter öffnet im Spiel seine Bank und erzeugt mit <code>/gle bank</code> den Export. Mit GBankClassic exportiert ein beliebiges Mitglied alle Bankcharaktere auf einmal.</p></div></div>
     <div id="guildBankCharacterList">${characters.map(rowHtml).join("")}</div>
     <div class="layout-form-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px;margin-top:10px"><div class="field"><label>Weiterer Bankcharakter</label><input id="guildBankNewName" maxlength="24" placeholder="Name"></div><div class="field"><label>Server</label><input id="guildBankNewServer" maxlength="40" placeholder="z. B. Everlook" value="${escapeAttr(characters[0]?.server||"Everlook")}"></div><button class="small-btn primary" type="button" onclick="addGuildBankCharacterRow()">Hinzufügen</button></div>
-    <label class="layout-loot-toggle" style="margin-top:12px"><input id="guildBankUseGBank" type="checkbox" ${guildBankSettings.useGBank?"checked":""}><span><strong>Bestände aus GBankClassic übernehmen</strong><small>Nutzt die Gilde das Addon „GBankClassic – Revived“, kann jedes Mitglied mit beiden Addons per <code>/gle bank</code> alle Bankcharaktere auf einmal exportieren. Neue Bankcharaktere aus dem Export werden automatisch eingetragen. Ohne Haken zählt nur die Liste oben; jeder Bankcharakter exportiert selbst.</small></span></label>
+    <label class="layout-loot-toggle" style="margin-top:12px"><input id="guildBankUseGBank" type="checkbox" ${guildBankSettings.useGBank?"checked":""}><span><strong>Bestände aus GBankClassic übernehmen</strong><small>Bankcharaktere aus dem GBankClassic-Export werden automatisch eingetragen. Ohne Haken zählt nur die Liste oben.</small></span></label>
     <div class="field" style="margin-top:12px"><label>Hinweis für Spieler (optional)</label><input id="guildBankNote" maxlength="500" value="${escapeAttr(guildBankSettings.note||"")}" placeholder="z. B. Ausgabe nach dem Raid am Donnerstag"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="small-btn good" type="button" onclick="saveGuildBankSettings()">Einstellungen speichern</button><button class="small-btn ghost" type="button" onclick="loadGuildBankSettingsPanel()">Neu laden</button></div>
-  </div>
-  <div class="p0-review-block" style="border-color:#5fe5da;margin-top:14px"><div class="section-head"><div><h3>Bestand übertragen</h3><p>Im Spiel mit dem Bankcharakter die Bank öffnen, dann <code>/gle bank</code> eingeben, den Text kopieren und hier einfügen. Der Bestand des Charakters wird dabei komplett ersetzt.</p></div></div>
-    <textarea id="guildBankImportText" rows="6" style="width:100%;box-sizing:border-box;font:13px/1.4 monospace" placeholder="GLB1;lichtloot;Lichtbank;Everlook;…"></textarea>
+    <h4 id="guildBankImportHead" style="margin-top:16px">Bestand übertragen</h4><p class="muted">Export aus dem Addon (<code>/gle bank</code>) hier einfügen. Der Bestand der enthaltenen Charaktere wird komplett ersetzt.</p>
+    <textarea id="guildBankImportText" rows="5" style="width:100%;box-sizing:border-box;font:13px/1.4 monospace" placeholder="GLB1;lichtloot;Lichtbank;Everlook;…"></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="small-btn primary" type="button" onclick="importGuildBankExport()">Bestand importieren</button></div>
     <div id="guildBankImportStatus" class="status" style="margin-top:8px"></div>
     <h4 style="margin-top:14px">Letzte Übertragungen</h4><ul>${scans||'<li class="muted">Noch keine Bestände übertragen.</li>'}</ul>
-  </div>
-  <div class="p0-review-block" style="border-color:#21c77a;margin-top:14px"><div class="section-head"><div><h3>Bestand <span class="badge warn">${items.length} Gegenstände</span></h3><p>Alles, was auf den Bankcharakteren liegt. „Nicht beantragbar“ blendet ein Item für Spieler aus; speichern über „Einstellungen speichern“.</p></div></div>
-    <input id="guildBankFilter" type="search" placeholder="Gegenstand suchen" style="width:100%;box-sizing:border-box;margin-bottom:8px" oninput="filterGuildBankTable(this.value)">
-    <div class="table-wrap"><table class="p0-table" id="guildBankTable"><thead><tr><th>Gegenstand</th><th>Menge</th><th>Wo</th><th>Sichtbarkeit</th></tr></thead><tbody>${itemRows||'<tr><td colspan="4" class="muted">Noch kein Bestand vorhanden.</td></tr>'}</tbody></table></div>
-  </div>`;
+  </details>
+  <div id="guildBankAdminView" style="margin-top:14px"></div>`;
+  const view=document.getElementById("guildBankAdminView");
+  if(!window.GuildLootBank?.openAdmin){view.innerHTML='<div class="status bad">Die Gildenbank-Ansicht konnte nicht geladen werden. Bitte Seite neu laden.</div>';return;}
+  window.GuildLootBank.openAdmin(view,{
+    items:inventory?.items||[],characters:inventory?.characters||[],requests:armorRequestEntries,hiddenItems:guildBankSettings.hiddenItems||[],
+    onReview:(id,decision)=>reviewArmorRequest(id,decision).then(()=>loadGuildBankSettingsPanel()),
+    onToggleHidden:(itemId,isHidden)=>{const set=new Set((guildBankSettings.hiddenItems||[]).map(Number));if(isHidden)set.add(itemId);else set.delete(itemId);guildBankSettings.hiddenItems=[...set];saveGuildBankSettings({silent:true});},
+    onOpenSettings:(part)=>{const d=document.getElementById("guildBankSettingsDetails");if(d){d.open=true;(part==="import"?document.getElementById("guildBankImportText"):d).scrollIntoView({behavior:"smooth",block:"start"});}},
+    onOpenRequests:()=>openArmorRequestsPanel()
+  });
 }
 function addGuildBankCharacterRow(){
   const name=document.getElementById("guildBankNewName")?.value.trim(),server=document.getElementById("guildBankNewServer")?.value.trim();
   if(!name){setStatus("Bitte einen Charakternamen eingeben.","bad");return;}
   guildBankSettings.characters=[...guildBankCharacterRows(),{name,server}];
-  guildBankSettings.hiddenItems=[...document.querySelectorAll("[data-bank-hidden]:checked")].map(i=>Number(i.dataset.bankHidden));
   guildBankSettings.note=document.getElementById("guildBankNote")?.value||"";
   guildBankSettings.useGBank=document.getElementById("guildBankUseGBank")?.checked===true;
   renderGuildBankSettingsPanel();
 }
-async function saveGuildBankSettings(){
+async function saveGuildBankSettings(options={}){
   try{
     const masterCode=document.getElementById("masterCode").value.trim();
     const characters=guildBankCharacterRows();
-    const hiddenItems=[...document.querySelectorAll("[data-bank-hidden]:checked")].map(i=>Number(i.dataset.bankHidden));
+    const hiddenItems=(guildBankSettings.hiddenItems||[]).map(Number);
     const note=document.getElementById("guildBankNote")?.value||"";
     const useGBank=document.getElementById("guildBankUseGBank")?.checked?"1":"0";
     const result=await railwayApi({action:"guildSaveGuildBankSettings",masterCode,characters:JSON.stringify(characters),hiddenItems:JSON.stringify(hiddenItems),note,useGBank});
     if(!result.success)throw new Error(result.error||"Einstellungen konnten nicht gespeichert werden.");
-    guildBankSettings=result.settings;setStatus("Gildenbank-Einstellungen gespeichert.","good");renderGuildBankSettingsPanel();
+    guildBankSettings=result.settings;if(!options.silent){setStatus("Gildenbank-Einstellungen gespeichert.","good");renderGuildBankSettingsPanel();}
   }catch(error){setStatus(error.message||"Einstellungen konnten nicht gespeichert werden.","bad");}
 }
 async function importGuildBankExport(){

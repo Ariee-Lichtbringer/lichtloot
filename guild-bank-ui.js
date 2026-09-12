@@ -105,5 +105,85 @@
    search.oninput=()=>{state.search=search.value;renderGrid();};charSel.onchange=()=>{state.character=charSel.value;renderCat();renderGrid();};qualSel.onchange=()=>{state.quality=qualSel.value;renderGrid();};sortSel.onchange=()=>{state.sort=sortSel.value;renderGrid();};
    renderCat();renderGrid();renderDetail(null);loadMine();
   }catch(error){if(alive()){root.replaceChildren(el('h3','Gildenbank'),el('p',error.message,'gb-sub'));root._identity=null;}}
+ },
+ // Gildenleitung: gleiche Ansicht mit Anträgen je Item, Freigabe, Ablehnung und „nicht beantragbar“.
+ openAdmin(root,opts){
+  const items=(opts.items||[]).map(i=>({...i,quantity:Number(i.quantity)||0}));const characters=opts.characters||[];const requests=opts.requests||[];
+  const hidden=new Set((opts.hiddenItems||[]).map(Number));
+  const pendingFor=id=>requests.filter(r=>r.status==='pending'&&(r.materials||[]).some(m=>Number(m.itemId)===id));
+  const qtyFor=(list,id)=>list.reduce((n,r)=>n+(r.materials||[]).filter(m=>Number(m.itemId)===id).reduce((a,m)=>a+Number(m.quantity||0),0),0);
+  const reservedFor=item=>{const scan=Math.max(0,...(item.stacks||[]).map(s=>Number(s.observedAt)||0));return qtyFor(requests.filter(r=>r.status==='approved'&&(!r.reviewedAt||Math.floor(new Date(r.reviewedAt).getTime()/1000)>=scan)),item.itemId);};
+  const state={search:'',category:'',character:'',onlyRequests:false,selected:null,showHidden:true};
+  const now=Math.floor(Date.now()/1000);const age=ts=>!ts?'kein Stand':(now-ts<86400?'heute':`${Math.floor((now-ts)/86400)} Tage`);
+  root.classList.add('gb');root.replaceChildren();
+  const pending=requests.filter(r=>r.status==='pending').length;
+  const sub=el('p',`${characters.length} Bankcharaktere · ${items.length} Gegenstände · ${pending} offene Anträge`,'gb-sub');root.append(sub);
+  const top=el('div','','gb-top');const search=el('input');search.type='search';search.placeholder='Gegenstand, Spieler oder Itemlink';search.setAttribute('aria-label','Gildenbank durchsuchen');
+  const charSel=el('select');charSel.setAttribute('aria-label','Bankcharakter');charSel.append(new Option('Bankcharakter: Alle',''));for(const c of characters)charSel.append(new Option(c.name,c.name));
+  const onlyReq=el('button','Nur mit Anträgen');onlyReq.type='button';onlyReq.className='small-btn ghost';
+  const reqBtn=el('button',`📋 Anträge (${pending})`);reqBtn.type='button';reqBtn.className='small-btn '+(pending?'primary':'ghost');reqBtn.onclick=()=>opts.onOpenRequests?.();
+  const impBtn=el('button','⬆ Export einfügen');impBtn.type='button';impBtn.className='small-btn good';impBtn.onclick=()=>opts.onOpenSettings?.('import');
+  const setBtn=el('button','⚙ Einstellungen');setBtn.type='button';setBtn.className='small-btn ghost';setBtn.onclick=()=>opts.onOpenSettings?.('settings');
+  top.append(search,charSel,onlyReq,reqBtn,impBtn,setBtn);root.append(top);
+  const cols=el('div','','gb-cols');const cat=el('div','','gb-cat');const grid=el('div','','gb-grid');const det=el('div','','gb-det');cols.append(cat,grid,det);root.append(cols);
+  const counts={};for(const i of items)counts[i.category||'Verschiedenes']=(counts[i.category||'Verschiedenes']||0)+1;
+  function renderCat(){
+   cat.replaceChildren();
+   const add=(label,value,count,key,extraClass)=>{const b=el('button');b.append(el('span',label),el('small',count===undefined?'':String(count)));b.type='button';if(state[key]===value)b.classList.add('on');if(extraClass)b.style.color=extraClass;b.onclick=()=>{state[key]=value;renderCat();renderGrid();};cat.append(b);};
+   add('Alles','',items.length,'category');for(const c of CATEGORIES){if(counts[c])add(c,c,counts[c],'category');}
+   cat.append(el('div','Bankcharaktere · Stand','gb-cat-head'));add('Alle','',undefined,'character');
+   for(const c of characters){const old=c.observedAt&&now-c.observedAt>7*86400;add(c.name,c.name,(old?'⚠ ':'')+age(c.observedAt),'character',old||!c.observedAt?'#f5c542':'');}
+   const hiddenCount=items.filter(i=>hidden.has(i.itemId)).length;if(hiddenCount){const b=el('button');b.append(el('span','Nicht beantragbar'),el('small',String(hiddenCount)));b.type='button';b.style.color='#8fa2b8';b.onclick=()=>{state.category='__hidden';renderCat();renderGrid();};if(state.category==='__hidden')b.classList.add('on');cat.append(b);}
+  }
+  const qualityRank=i=>({poor:0,common:1,uncommon:2,rare:3,epic:4,legendary:5}[i.quality]??1);
+  function visible(){
+   const needle=state.search.trim().toLowerCase();const idMatch=needle.match(/item[:=](\d+)/)?.[1]||(/^\d+$/.test(needle)?needle:null);
+   return items.filter(i=>{
+    if(state.category==='__hidden')return hidden.has(i.itemId);
+    if(state.category&&(i.category||'Verschiedenes')!==state.category)return false;
+    if(state.character&&!(i.stacks||[]).some(s=>s.name===state.character&&s.quantity>0))return false;
+    if(state.onlyRequests&&!pendingFor(i.itemId).length)return false;
+    if(!needle)return true;
+    return i.name.toLowerCase().includes(needle)||(idMatch&&String(i.itemId)===idMatch)||pendingFor(i.itemId).some(r=>String(r.characterName||'').toLowerCase().includes(needle));
+   }).sort((a,b)=>(pendingFor(b.itemId).length-pendingFor(a.itemId).length)||(qualityRank(b)-qualityRank(a))||a.name.localeCompare(b.name,'de'));
+  }
+  function renderGrid(){
+   grid.replaceChildren();const list=visible();
+   if(!list.length){grid.append(el('div',items.length?'Kein Gegenstand für diese Auswahl.':'Noch kein Bestand übertragen. Oben „Export einfügen“ wählen.','gb-empty'));return;}
+   for(const item of list.slice(0,500)){
+    const b=el('button','','gb-tile');b.type='button';b.setAttribute('aria-label',`${item.name}, ${item.quantity} Stück`);b.style.borderColor=qualityColor[item.quality]||'#fff';
+    const img=el('img');img.alt='';img.src=iconUrl(item);img.onerror=()=>{if(img.src!==fallback)img.src=fallback;};img.referrerPolicy='no-referrer';
+    const qty=state.character?(item.stacks||[]).filter(s=>s.name===state.character).reduce((n,s)=>n+s.quantity,0):item.quantity;
+    b.append(img,el('span',String(qty),'gb-n'));if(state.selected===item.itemId)b.classList.add('on');if(hidden.has(item.itemId))b.classList.add('zero');
+    const open=pendingFor(item.itemId).length;if(open){const badge=el('span',String(open));badge.style.cssText='position:absolute;left:-2px;top:-2px;background:#f59e0b;color:#000;font-weight:700;font-size:11px;border-radius:999px;padding:1px 6px';b.append(badge);}
+    b.addEventListener('mouseenter',()=>showTip(b,item));b.addEventListener('mouseleave',hideTip);b.addEventListener('focus',()=>showTip(b,item));b.addEventListener('blur',hideTip);
+    b.onclick=()=>{state.selected=item.itemId;hideTip();renderGrid();renderDetail(item);};
+    grid.append(b);
+   }
+  }
+  function renderDetail(item){
+   det.replaceChildren();
+   if(!item){det.append(el('h4','Gegenstand auswählen'),el('p','Klicke auf einen Gegenstand, um Bestand, Anträge und Sichtbarkeit zu verwalten. Orange Zahlen zeigen offene Anträge.','gb-lab'));return;}
+   const img=el('img','','gb-ico');img.alt='';img.src=iconUrl(item);img.style.borderColor=qualityColor[item.quality]||'#fff';const h=el('h4',item.name);h.style.color=qualityColor[item.quality]||'#fff';
+   det.append(img,h,el('div',`${item.category||'Verschiedenes'} · ${qualityLabel[item.quality]||'Gewöhnlich'} · #${item.itemId}`,'gb-lab'));const clear=el('div');clear.style.cssText='clear:both;margin-top:10px';det.append(clear);
+   const row=(label,value,color)=>{const r=el('div','','gb-row');r.append(el('span',label,'gb-lab'));const v=el(color?'b':'span',value);if(color)v.style.color=color;r.append(v);det.append(r);};
+   row('Auf der Bank',`${item.quantity} Stück`,item.quantity>0?'#73e4ce':'#f87171');for(const s of item.stacks||[])row(s.name,String(s.quantity));
+   const reserved=reservedFor(item);if(reserved)row('Reserviert (freigegeben)',String(reserved));
+   const open=pendingFor(item.itemId);const head=el('div',open.length?`Offene Anträge für dieses Item (${open.length})`:'Keine offenen Anträge');head.style.cssText='margin-top:10px;font-weight:700';det.append(head);
+   for(const r of open){
+    const box=el('div');box.style.cssText='background:#121f36;border:1px solid #2a4560;border-radius:8px;padding:8px;margin:8px 0';
+    box.append(el('b',`${r.characterName} · ${qtyFor([r],item.itemId)} Stück`),el('div',`${r.createdAt?new Date(r.createdAt).toLocaleString('de-DE'):''}${r.server?' · '+r.server:''}${r.className?' · '+r.className:''}`,'gb-lab'));
+    const acts=el('div');acts.style.cssText='display:flex;gap:6px;margin-top:6px';
+    const ok=el('button','Freigeben');ok.type='button';ok.className='small-btn good';ok.onclick=()=>opts.onReview?.(r.id,'approved');
+    const no=el('button','Ablehnen');no.type='button';no.className='small-btn danger';no.onclick=()=>opts.onReview?.(r.id,'rejected');
+    acts.append(ok,no);box.append(acts);det.append(box);
+   }
+   const toggle=el('label');toggle.style.cssText='display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer';const cb=el('input');cb.type='checkbox';cb.checked=hidden.has(item.itemId);cb.onchange=()=>{if(cb.checked)hidden.add(item.itemId);else hidden.delete(item.itemId);opts.onToggleHidden?.(item.itemId,cb.checked);renderCat();renderGrid();};toggle.append(cb,el('span','Für Spieler nicht beantragbar'));det.append(toggle);
+   det.append(el('div','Freigegebene Mengen zählen als reserviert, bis der nächste Bankexport den echten Stand bringt.','gb-foot'));
+  }
+  search.oninput=()=>{state.search=search.value;renderGrid();};charSel.onchange=()=>{state.character=charSel.value;renderCat();renderGrid();};
+  onlyReq.onclick=()=>{state.onlyRequests=!state.onlyRequests;onlyReq.className='small-btn '+(state.onlyRequests?'primary':'ghost');renderGrid();};
+  renderCat();renderGrid();renderDetail(null);
+  return {select(id){const item=items.find(i=>i.itemId===id);if(item){state.selected=id;renderGrid();renderDetail(item);}}};
  }};
 })();
