@@ -34,6 +34,7 @@
   }
   document.querySelectorAll('[data-addon-update]').forEach(button => { button.onclick = () => openDownload(true); });
   document.querySelectorAll('[data-addon-download]').forEach(button => { button.onclick = () => openDownload(); });
+  loadVersion();
   if (new URLSearchParams(location.search).get('addonBeta') === '1') { dialog.showModal(); platform.focus(); }
   dialog.querySelector('form').addEventListener('submit', async event => {
     event.preventDefault(); if(submit.disabled)return;
