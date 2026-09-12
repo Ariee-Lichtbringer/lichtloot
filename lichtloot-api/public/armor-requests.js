@@ -84,7 +84,7 @@
    function render(){
     status.textContent='';details.replaceChildren();const item=data.items.find(item=>item.itemId===select.value);if(!item)return;
     const heading=el('h4');heading.append(itemButton(item));details.append(heading);
-    const token=item.requirements.find(r=>r.itemId===item.tokenId);const tokenLine=el('div','Passendes Token: ');if(token)tokenLine.append(itemButton(token));details.append(tokenLine);
+    const token=item.tokenId?item.requirements.find(r=>r.itemId===item.tokenId):null;if(token){const tokenLine=el('div','Passendes Token: ');tokenLine.append(itemButton(token));details.append(tokenLine);}
     details.append(el('p',item.tokenId?'Markiere, was du aus der Gildenbank benötigst. Die Mengen zeigen den vollständigen Bedarf und können reduziert werden.':'Markiere, was du aus der Gildenbank benötigst, und trage die gewünschte Menge ein.'));
     const rows=[];
     for(const material of item.requirements){
