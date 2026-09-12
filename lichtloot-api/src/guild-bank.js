@@ -100,18 +100,20 @@ export function createGuildBank({pool,query,getCharactersByPin}){
   for(const parsed of exports){
    if(onlyPlayers&&!onlyPlayers.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm)))){skipped.push(parsed.player);continue;}
    let result=await importOne(guild,config,parsed);
-   if(!result&&config.useGBank&&!onlyPlayers){
-    // Mit GBankClassic: unbekannte Bankcharaktere aus dem Export automatisch eintragen.
+   const inRoster=roster.some(n=>sameName(n.split('-')[0],parsed.player));
+   if(!result&&config.useGBank&&!onlyPlayers&&inRoster){
+    // Mit GBankClassic: nur Bankcharaktere aus dessen Roster automatisch eintragen, nie den exportierenden Spieler selbst.
     config.characters=normalizeCharacters([...config.characters,{name:parsed.player,server:parsed.realm}]);
     await saveSettings(guild,{characters:config.characters});
     result=await importOne(guild,config,parsed);
    }
    if(result)imported.push(result);else unknown.push(parsed.player);
   }
-  const suggested=[...new Set([...unknown,...roster.filter(n=>!bankCharacter(config.characters,n.split('-')[0],n.split('-')[1]||''))])];
+  const suggested=[...new Set([...unknown.filter(n=>roster.some(r=>sameName(r.split('-')[0],n))),...roster.map(n=>n.split('-')[0]).filter(n=>!bankCharacter(config.characters,n,''))])];
+  const ignored=unknown.filter(n=>!roster.some(r=>sameName(r.split('-')[0],n)));
   if(!imported.length&&unknown.length)fail((unknown.join(', ')+' ist nicht als Bankcharakter eingetragen. Bitte zuerst unter Gildenbank → Einstellungen hinzufügen.'));
   if(!imported.length)fail('Der Export enthält keinen Bestand eines freigegebenen Charakters.');
-  return {success:true,character:imported[0].character,server:imported[0].server,items:imported.reduce((n,r)=>n+r.items,0),observedAt:imported[0].observedAt,imported,unknown:suggested,skipped};
+  return {success:true,character:imported[0].character,server:imported[0].server,items:imported.reduce((n,r)=>n+r.items,0),observedAt:imported[0].observedAt,imported,unknown:suggested,ignored,skipped};
  }
  async function inventory(guild,{includeHidden=false}={}){
   await ensure();const config=await settings(guild);

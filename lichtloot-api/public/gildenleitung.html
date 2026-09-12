@@ -8738,7 +8738,7 @@ async function importGuildBankExport(){
     const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"guildImportGuildBankExport",guild:CURRENT_GUILD_SLUG,guildSlug:CURRENT_GUILD_SLUG,masterCode,text})});
     const result=await response.json();
     if(!response.ok||!result.success)throw new Error(result.error||"Import fehlgeschlagen.");
-    if(status){const parts=(result.imported||[{character:result.character,items:result.items}]).map(r=>`${r.character}: ${r.items} Gegenstände`);status.textContent=`Übernommen – ${parts.join(", ")}.`+((result.unknown||[]).length?` Nicht eingetragen und daher übersprungen: ${result.unknown.join(", ")}. Unter Bankcharaktere hinzufügen und erneut importieren.`:"");}
+    if(status){const parts=(result.imported||[{character:result.character,items:result.items}]).map(r=>`${r.character}: ${r.items} Gegenstände`);status.textContent=`Übernommen – ${parts.join(", ")}.`+((result.unknown||[]).length?` Nicht eingetragen und daher übersprungen: ${result.unknown.join(", ")}. Unter Bankcharaktere hinzufügen und erneut importieren.`:"")+((result.ignored||[]).length?` Kein Bankcharakter, ignoriert: ${result.ignored.join(", ")}.`:"");}
     document.getElementById("guildBankImportText").value="";
     await loadGuildBankSettingsPanel();
   }catch(error){if(status)status.textContent=error.message||"Import fehlgeschlagen.";}
