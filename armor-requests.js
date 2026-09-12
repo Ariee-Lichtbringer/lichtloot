@@ -56,7 +56,6 @@
   try{
    const data=await call(context,'getArmorRequestCatalog');if(!alive())return;
    root.replaceChildren(el('h3','Rüstungsteile beantragen'),el('p',`${data.character.name} – ${data.character.server} · ${data.character.className}`));
-   if(!data.configured){root.append(el('p','Die Gildenleitung muss zuerst unter Layout → Discordchannel den Channel für Rüstungsteile einstellen.'));return;}
    const tier=el('select'),select=el('select'),details=el('div'),status=el('p');status.setAttribute('role','status');
    tier.setAttribute('aria-label','Rüstungsset');select.setAttribute('aria-label','Rüstungsteil');
    const tiers=(Array.isArray(data.tiers)&&data.tiers.length?data.tiers:['T3','T2,5']).filter(value=>data.items.some(item=>item.tier===value));
