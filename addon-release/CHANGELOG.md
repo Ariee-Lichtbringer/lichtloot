@@ -1,3 +1,7 @@
+# GuildLoot 0.24.23-beta
+
+- Eigenes GuildLoot-Symbol für das Whisper-Mini-Addon (Symbolleiste, Mini-Button und Auswahl im GuildLoot-Hauptsymbol).
+
 # GuildLoot 0.24.22-beta
 
 - Neues GuildLoot-Hauptsymbol (Mini-Button mit GuildLoot-Logo): Linksklick öffnet die Auswahl aller Mini-Addons (Hauptfenster, Raidsheet, Berufe, Raidcheck, Buffleiste, Gildenbank, Whisper, Rüstungsteile), Rechtsklick öffnet das Hauptfenster. Ein-/Ausblenden über die Symbolleiste im Hauptfenster oder /glehub.
