@@ -1,3 +1,9 @@
+# GuildLoot 0.24.17-beta
+
+- Eigene Symbole im GuildLoot-Design für die Mini-Addons Berufe, Buffs und Raidcheck, im Hauptfenster und als freie Schaltflächen.
+- Buffleiste direkt aus dem Hauptfenster ein- und ausschalten; Rechtsklick auf das Buff-Symbol öffnet die Buffübersicht.
+- Neue Kurzbefehle: /gle berufe, /gle check, /gle buffs und /gle hilfe mit einer Übersicht aller Befehle.
+
 # GuildLoot 0.24.16-beta
 
 - Buff-Meldung im Raidchat nur noch nach eigenem Zauber: „hat Gruppe … gebufft“ erscheint ausschließlich, wenn der eigene Charakter den Gruppenbuff tatsächlich gewirkt hat. Auffrischungen fremder Buffs lösen keine Meldung mehr aus.

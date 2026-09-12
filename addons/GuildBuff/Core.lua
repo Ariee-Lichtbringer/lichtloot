@@ -80,7 +80,7 @@ local function createLauncher()
  b:SetSize(36,36);b:SetFrameStrata('MEDIUM');b:SetMovable(true);b:SetClampedToScreen(true);b:EnableMouse(true);b:RegisterForDrag('LeftButton')
  local p=GL.db.launcherPosition
  if p and p.point and tonumber(p.x) and tonumber(p.y) then b:SetPoint(p.point,UIParent,p.relativePoint or p.point,p.x,p.y) else b:SetPoint('CENTER',UIParent,'CENTER',110,0) end
- local icon=b:CreateTexture(nil,'ARTWORK');icon:SetAllPoints();icon:SetTexture('Interface\\Icons\\Spell_Holy_WordFortitude')
+ local icon=b:CreateTexture(nil,'ARTWORK');icon:SetAllPoints();icon:SetTexture('Interface\\AddOns\\GuildBuff\\Media\\GuildBuff')
  b:SetHighlightTexture('Interface\\Buttons\\ButtonHilight-Square','ADD')
  b:SetScript('OnDragStart',function(self) self.dragging=true;self:StartMoving() end)
  b:SetScript('OnDragStop',function(self) self:StopMovingOrSizing();local point,_,relativePoint,x,y=self:GetPoint();GL.db.launcherPosition={point=point,relativePoint=relativePoint,x=x,y=y};self.suppressClick=true;self.dragging=false end)

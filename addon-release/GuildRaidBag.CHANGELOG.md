@@ -1,3 +1,7 @@
+# GuildRaidBag 1.0.1-beta
+
+- Eigenes Symbol im GuildLoot-Design für die Startschaltfläche.
+
 # GuildRaidBag 1.0.0-beta
 
 Erste eigenständige Version des GuildLoot-Raidchecks für WoW Classic Era.

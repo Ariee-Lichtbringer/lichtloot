@@ -1,3 +1,7 @@
+# GuildBuff 1.0.1-beta
+
+- Eigenes Symbol im GuildLoot-Design für die Startschaltfläche.
+
 # GuildBuff 1.0.0-beta
 
 Erste eigenständige Version des GuildLoot-Buffchecks für WoW Classic Era.

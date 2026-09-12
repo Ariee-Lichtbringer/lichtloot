@@ -1,7 +1,7 @@
 local _,GL=...
 -- Berufsfenster aus GuildLoot Era (UI.lua, Berufsblock), eigenständig ohne Website-Anbindung.
 do
- local iconPath='Interface\\Icons\\Trade_BlackSmithing'
+ local iconPath='Interface\\AddOns\\GuildSkills\\Media\\GuildSkills'
  local frame,launcher,search,summary,detail,rows,buttons,kind
  local chosen,action,reagents,recipeIcon,scanTooltip
  local database,dbButtons,viewed,remoteProfession,characterButton,exportButton,remoteButtons

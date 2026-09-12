@@ -2,8 +2,8 @@
   "addon": "GuildSkills",
   "projectId": 1692281,
   "slug": "guildskills",
-  "version": "1.0.0-beta",
+  "version": "1.0.1-beta",
   "releaseType": "beta",
   "gameVersion": "1.15.9",
-  "sha256": "ed1b152f11b69d34f44715a87b6ee97304042c13158a0e4aa75d5b3b8e1073e4"
+  "sha256": "7d90496e54b82410d72467a4135ebd003a9058d4f11070447fe7f65dbb19bf54"
 }
