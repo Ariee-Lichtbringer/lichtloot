@@ -1,0 +1,11 @@
+## Interface: 11509
+## Title: GuildBuff
+## Notes: Raid-Buffcheck, Buffeinteilung, Ablaufwarnungen und Seelenstein-Leiste (Classic Era)
+## Author: GuildLoot
+## Version: 1.0.0-beta
+## SavedVariables: GuildBuffDB
+## SavedVariablesPerCharacter: GuildBuffCharDB
+Core.lua
+RaidBuffAssignments.lua
+Buffs.lua
+Soulstone.lua

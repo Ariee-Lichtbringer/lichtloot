@@ -18,7 +18,10 @@ def request(url,token,data=None,content_type='application/json',github=False,met
         with OPEN.open(urllib.request.Request(url,data=data,headers=headers,method=method),timeout=90) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as error:
-        raise RuntimeError(('GitHub' if github else 'CurseForge')+' API returned HTTP '+str(error.code)) from None
+        body=''
+        try:body=error.read().decode('utf-8','replace')[:600]
+        except Exception:body=''
+        raise RuntimeError(('GitHub' if github else 'CurseForge')+' API returned HTTP '+str(error.code)+(' – '+body if body and not github else '')) from None
     except (urllib.error.URLError,TimeoutError):
         raise RuntimeError('Network response uncertain. Do not retry a reserved upload without checking CurseForge.') from None
 
