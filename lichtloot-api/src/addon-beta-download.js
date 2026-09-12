@@ -32,7 +32,8 @@ export function installAddonBetaDownload(app, {
       const artifact = artifacts[platform];
       const downloaded = await materialize(artifact, encryptionKey);
       if (res.destroyed) return;
-      return res.download(downloaded, artifact.name, {headers:{'Content-Type':artifact.type}}, error => {
+      const contentType = /\.pkg$/i.test(artifact.name) ? 'application/x-newton-compatible-pkg' : /\.exe$/i.test(artifact.name) ? 'application/x-msdownload' : artifact.type;
+      return res.download(downloaded, artifact.name, {headers:{'Content-Type':contentType}}, error => {
         if (error && !res.headersSent) res.status(503).json({error:'Das Installationspaket konnte nicht heruntergeladen werden. Bitte erneut versuchen.'});
       });
     } catch (error) {

@@ -52,9 +52,12 @@
       const disposition = response.headers.get('content-disposition') || '';
       const served = (disposition.match(/filename="?([^";]+)"?/) || [])[1];
       const finalName = served || names[choice] || filename;
-      const url = URL.createObjectURL(blob), link = document.createElement('a');
+      // Safari öffnet Downloads anhand des MIME-Typs: .pkg als Installer-Paket, .exe als Programm kennzeichnen.
+      const mime = choice === 'windows' ? 'application/x-msdownload' : 'application/x-newton-compatible-pkg';
+      const typed = new Blob([blob], {type: mime});
+      const url = URL.createObjectURL(typed), link = document.createElement('a');
       link.href = url; link.download = finalName; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
-      status.textContent = 'Download fertig. Öffne '+finalName+' in deinen Downloads und folge der Installation. Öffne GuildLoot Sync anschließend wieder.'
+      status.textContent = 'Download fertig. Öffne '+finalName+' im Finder bzw. Explorer in deinen Downloads per Doppelklick und folge der Installation. Öffne GuildLoot Sync anschließend wieder.'
         + (choice.startsWith('mac') ? ' Meldet macOS „Apple konnte nicht überprüfen“: auf „Fertig“ klicken, dann Systemeinstellungen → Datenschutz & Sicherheit → unten „Trotzdem öffnen“ wählen und mit deinem Passwort bestätigen.' : '');
     } catch(error) { if(error.name !== 'AbortError') {status.textContent = error.message;} }
     finally { submit.disabled = false; platform.disabled=false; }
