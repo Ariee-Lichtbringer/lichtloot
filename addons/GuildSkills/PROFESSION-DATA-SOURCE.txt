@@ -1,0 +1,13 @@
+GuildLoot Classic Era profession database
+
+Recipe identifiers, profession assignments, skill requirements and reagent quantities
+were extracted from the Classic table and Classic crafting listings in AtlasLootClassic.
+Source: https://github.com/Hoizame/AtlasLootClassic
+Files: AtlasLootClassic/Data/Profession.lua and AtlasLootClassic_Crafting/data.lua
+Retrieved: 2026-09-10
+License of source data: GPL-2.0; see PROFESSION-DATA-LICENSE.txt.
+
+Only the Classic Era recipe listing is included (1,246 unique recipes).
+No TBC, Wrath or Season of Discovery recipe tables are included.
+Localized spell/item names and icons are resolved by the WoW client.
+Herbalism, Skinning and Fishing have no crafting recipes.

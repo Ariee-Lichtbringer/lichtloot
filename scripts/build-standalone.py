@@ -5,7 +5,7 @@ Usage: python3 scripts/build-standalone.py GuildRaidBag
 import hashlib, json, re, sys, zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
-PROJECTS={'GuildRaidBag':{'projectId':1692270,'slug':'guildraidbag'},'GuildSkills':{'projectId':0,'slug':'guildskills'},'GuildBuff':{'projectId':1692275,'slug':'guildbuff'}}
+PROJECTS={'GuildRaidBag':{'projectId':1692270,'slug':'guildraidbag'},'GuildSkills':{'projectId':1692281,'slug':'guildskills'},'GuildBuff':{'projectId':1692275,'slug':'guildbuff'}}
 EXTRAS={'README.md','PROFESSION-DATA-LICENSE.txt','PROFESSION-DATA-SOURCE.txt'}
 
 def build(name):
