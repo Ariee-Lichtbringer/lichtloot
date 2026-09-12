@@ -1,3 +1,8 @@
+# GuildLoot 0.24.20-beta
+
+- Gildenbank-Fenster: /gle bank oder das neue Symbol im Hauptfenster öffnen den Bestand der Bankcharaktere mit Kategorien, Suche, Icons und Tooltips. Gegenstände lassen sich direkt beantragen; die Anträge gehen über GuildLoot Sync (ab 0.3.14) an die Gildenleitung.
+- Reiter „Meine Anträge“ mit Status und „Export“ mit Übertragung über GuildLoot Sync.
+
 # GuildLoot 0.24.19-beta
 
 - Gildenbank-Export liest zusätzlich GBankClassic (Revived): Ist das Addon geladen, exportiert /gle bank alle darin synchronisierten Bankcharaktere auf einmal. Ohne GBankClassic wird wie bisher die eigene Bank des Charakters exportiert.
