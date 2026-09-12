@@ -122,10 +122,12 @@ export function createGuildBank({pool,query,getCharactersByPin,lookupItem}){
   await ensure();const config=await settings(guild);
   const imported=[],unknown=[],skipped=[];
   for(const parsed of exports){
-   if(onlyPlayers&&!onlyPlayers.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm)))){skipped.push(parsed.player);continue;}
-   let result=await importOne(guild,config,parsed);
    const inRoster=roster.some(n=>sameName(n.split('-')[0],parsed.player));
-   if(!result&&config.useGBank&&!onlyPlayers&&inRoster){
+   const ownedByPlayer=!onlyPlayers||onlyPlayers.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm)));
+   // Über die Sync-App dürfen Spieler ihre eigenen Charaktere übertragen; mit GBankClassic zusätzlich die dort geführten Bankalts.
+   if(!ownedByPlayer&&!(config.useGBank&&inRoster)){skipped.push(parsed.player);continue;}
+   let result=await importOne(guild,config,parsed);
+   if(!result&&config.useGBank&&inRoster){
     // Mit GBankClassic: nur Bankcharaktere aus dessen Roster automatisch eintragen, nie den exportierenden Spieler selbst.
     config.characters=normalizeCharacters([...config.characters,{name:parsed.player,server:parsed.realm}]);
     await saveSettings(guild,{characters:config.characters});
