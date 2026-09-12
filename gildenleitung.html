@@ -8649,7 +8649,8 @@ async function reviewArmorRequest(requestId,decision){
     const masterCode=document.getElementById("masterCode").value.trim();
     const result=await railwayApi({action:"guildReviewArmorRequest",masterCode,requestId,decision,note});
     if(!result.success)throw new Error(result.error||"Antrag konnte nicht aktualisiert werden.");
-    setStatus(decision==="approved"?"Gildenbankantrag freigegeben.":decision==="rejected"?"Gildenbankantrag abgelehnt.":"Gildenbankantrag wieder geöffnet.","good");
+    const dm=result.notice?(result.notice.discord?" Der Spieler erhält eine Discord-DM.":" Kein verknüpftes Discord-Konto, der Spieler sieht den Status nur auf der Seite."):"";
+    setStatus((decision==="approved"?"Gildenbankantrag freigegeben.":decision==="rejected"?"Gildenbankantrag abgelehnt.":"Gildenbankantrag wieder geöffnet.")+dm,"good");
     await loadArmorRequestsPanel();
   }catch(error){
     setStatus(error.message||"Antrag konnte nicht aktualisiert werden.","bad");

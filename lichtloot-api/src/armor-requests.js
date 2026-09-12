@@ -117,9 +117,20 @@ export function createArmorRequests({pool,query}){
     const decision=clean(params.decision||params.status).toLowerCase();
     if(!ARMOR_REQUEST_STATUSES.includes(decision))fail('Bitte eine gültige Entscheidung wählen.');
     const note=clean(params.note||params.reviewNote).slice(0,500);
+    const before=await query(`select status from armor_requests where id=$1 and guild_id=$2`,[requestId,guild.id]);
     const updated=await query(`update armor_requests set status=$3,review_note=$4,reviewed_at=case when $3='pending' then null else now() end where id=$1 and guild_id=$2 returning *`,[requestId,guild.id,decision,note]);
     if(!updated.rows.length)fail('Antrag nicht gefunden.',404);
-    return {success:true,entry:mapArmorRequestRow(updated.rows[0])};
+    const row=updated.rows[0];
+    let notice=null;
+    if((decision==='approved'||decision==='rejected')&&before.rows[0]?.status!==decision){
+     // Discord-DM an den Spieler: verknüpftes Konto des Charakters, sonst irgendein Charakter desselben Spielers.
+     const link=await query(`select dpl.discord_user_id from discord_player_links dpl join characters c on c.id=dpl.character_id where dpl.guild_id=$1 and (dpl.character_id=$2 or c.player_id=(select player_id from characters where id=$2)) order by (dpl.character_id=$2) desc,dpl.updated_at desc nulls last limit 1`,[guild.id,row.character_id]).catch(()=>({rows:[]}));
+     const discordUserId=clean(link.rows[0]?.discord_user_id);
+     const payload={discordUserId,player:row.character_name,server:row.server,decision,note,items:(Array.isArray(row.materials)?row.materials:[]).map(m=>({name:m.name,quantity:m.quantity})),item:row.item_name,tier:row.tier,requestId:row.id,failureReason:discordUserId?null:'Kein verknüpftes Discord-Konto für diesen Spieler.'};
+     const queued=await query(`insert into bot_update_queue(guild_id,type,status,payload) values($1,'guild_bank_notice',$2,$3::jsonb) returning id`,[guild.id,discordUserId?'open':'failed',JSON.stringify(payload)]).catch(()=>({rows:[]}));
+     notice={queued:Boolean(queued.rows[0]),discord:Boolean(discordUserId)};
+    }
+    return {success:true,entry:mapArmorRequestRow(row),notice};
    }
    if(action==='guildDeleteArmorRequest'){
     const deleted=await query(`delete from armor_requests where id=$1 and guild_id=$2`,[requestId,guild.id]);
