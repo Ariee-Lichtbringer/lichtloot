@@ -1444,7 +1444,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 <body>
 <div class="overlay">
   <div class="header">
-    <img src="images/content.png" alt="LichtLoot" class="logo-banner">
+    <img src="images/content.png" alt="LichtLoot" class="logo-banner" loading="lazy" decoding="async">
   </div>
   <div class="guild-soon-note"><strong>Hinweis:</strong> Die Registrierung für weitere Gilden kommt bald.</div>
 
@@ -1872,7 +1872,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <div class="guild-tutorial-card">
             <div class="guild-tutorial-shot">
               <span class="guild-tutorial-pointer">Pfeil</span>
-              <img src="images/tutorial/gilde-werden-01-start.png" alt="Startseite mit Button Gilde anmelden">
+              <img src="images/tutorial/gilde-werden-01-start.webp" alt="Startseite mit Button Gilde anmelden" loading="lazy" decoding="async">
             </div>
             <div class="guild-tutorial-body">
               <strong>1. Gilde anmelden</strong>
@@ -1882,7 +1882,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <div class="guild-tutorial-card">
             <div class="guild-tutorial-shot">
               <span class="guild-tutorial-pointer">Formular</span>
-              <img src="images/tutorial/gilde-werden-02-anmelden.png" alt="Formular zum Gilde anmelden ausfüllen">
+              <img src="images/tutorial/gilde-werden-02-anmelden.webp" alt="Formular zum Gilde anmelden ausfüllen" loading="lazy" decoding="async">
             </div>
             <div class="guild-tutorial-body">
               <strong>2. Formular ausfüllen</strong>
@@ -1892,7 +1892,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <div class="guild-tutorial-card">
             <div class="guild-tutorial-shot">
               <span class="guild-tutorial-pointer">Link</span>
-              <img src="images/tutorial/gilde-werden-03-einrichten.png" alt="Gilde einrichten nach Freigabelink">
+              <img src="images/tutorial/gilde-werden-03-einrichten.webp" alt="Gilde einrichten nach Freigabelink" loading="lazy" decoding="async">
             </div>
             <div class="guild-tutorial-body">
               <strong>3. Freigabe-Link öffnen</strong>
@@ -1902,7 +1902,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <div class="guild-tutorial-card">
             <div class="guild-tutorial-shot">
               <span class="guild-tutorial-pointer">Layout</span>
-              <img src="images/tutorial/gilde-werden-04-layout.png" alt="Layout bearbeiten in der Gildenleitung">
+              <img src="images/tutorial/gilde-werden-04-layout.webp" alt="Layout bearbeiten in der Gildenleitung" loading="lazy" decoding="async">
             </div>
             <div class="guild-tutorial-body">
               <strong>4. Lootseite gestalten</strong>
@@ -2299,7 +2299,7 @@ function renderGuildGateList(){
     const isLichtloot=String(guild.slug || "").toLowerCase() === "lichtloot";
     const guildName=isLichtloot ? "Lichtbringer" : (guild.name || titleFromSlug(guild.slug));
     const lootName=lootTitleFromGuild(guild);
-    const emblem=isLichtloot ? '<img src="images/content.png" alt="Lichtbringer">' : '♜';
+    const emblem=isLichtloot ? '<img src="images/content.png" alt="Lichtbringer" loading="lazy" decoding="async">' : '♜';
     return `
       <a class="guild-card" href="${safeHtml(guildLoginUrl(guild.slug))}">
         <span class="guild-name-cell">
@@ -2440,8 +2440,8 @@ function updateGuildConfigPreview(){
   const bgUrl=document.getElementById("configBackgroundUrl")?.value.trim() || "";
   const logoPreview=document.getElementById("configLogoPreview");
   const bgPreview=document.getElementById("configBackgroundPreview");
-  if(logoPreview) logoPreview.innerHTML=logoUrl ? '<img alt="Logo Vorschau" src="'+safeHtml(logoUrl)+'">' : "Logo-Vorschau";
-  if(bgPreview) bgPreview.innerHTML=bgUrl ? '<img alt="Hintergrund Vorschau" src="'+safeHtml(bgUrl)+'">' : "Hintergrund-Vorschau";
+  if(logoPreview) logoPreview.innerHTML=logoUrl ? '<img alt="Logo Vorschau" src="'+safeHtml(logoUrl)+'" loading="lazy" decoding="async">' : "Logo-Vorschau";
+  if(bgPreview) bgPreview.innerHTML=bgUrl ? '<img alt="Hintergrund Vorschau" src="'+safeHtml(bgUrl)+'" loading="lazy" decoding="async">' : "Hintergrund-Vorschau";
 }
 
 function loadGuildImageFile(kind){

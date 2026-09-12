@@ -4268,32 +4268,32 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 <body class="guild-locked">
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
+    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt loading="lazy" decoding="async">
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
-      <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
+      <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Dashboard</span></button>
       <div class="side-group collapsed" id="sideGroupBuffs">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBuffs')"><span>Buffs</span></button>
         <div class="side-group-items">
-          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Hordenbuffs</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupRaidorga">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
-          <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
-          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
-          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
-          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
+          <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.webp" alt="" loading="lazy" decoding="async"><span class="side-label">PO-Anmelder</span></button>
+          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">P0+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Loganalysen</span></button>
+          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Raidleadpanel</span></button>
+          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Loganalysen Upload</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupBackup">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBackup')"><span>Sicherung</span></button>
         <div class="side-group-items">
-          <button class="side-link" type="button" onclick="queueP0PlusBackup()" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
-          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="queueP0PlusBackup()" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">PO+ Punkte</span></button>
+          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Worldbuffs</span></button>
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
@@ -4306,9 +4306,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update')" aria-label="GuildLoot-Update-Hinweis"><span class="side-icon">🛠️</span><span class="side-label">GuildLoot-Update-Hinweis</span></button>
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('bot',true)" aria-label="PO Bot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">PO Bot wieder erreichbar</span></button>
           <button class="side-link master-only" type="button" onclick="openBotOfflineNotice('update',true)" aria-label="GuildLoot wieder erreichbar"><span class="side-icon">✅</span><span class="side-label">GuildLoot wieder erreichbar</span></button>
-          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
-          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
-          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
+          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Spielerlogin</span></button>
+          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
+          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Admin-Werkzeuge</span></button>
         </div>
       </div>
     </nav>
@@ -4317,7 +4317,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 <main class="shell dashboard-main" id="dashboardTop">
   <header class="topbar">
     <div class="brand">
-      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
+      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt loading="lazy" decoding="async">
       <div class="brand-copy">
         <h1>Gildenleitung</h1>
         <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
@@ -4326,7 +4326,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     <div class="nav" aria-label="Navigation">
       <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
       <div class="top-profile">
-        <img src="images/content.png" alt="">
+        <img src="images/content.png" alt="" loading="lazy" decoding="async">
         <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
       </div>
     </div>
@@ -4995,7 +4995,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
       <div class="log-analysis-layout">
         <div class="log-analysis-hero">
           <div class="log-analysis-title">
-            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <img class="log-analysis-mark" src="images/content.png" alt="" loading="lazy" decoding="async">
             <div>
               <h3>Warcraft Logs <span>Auswertungen</span></h3>
               <p>Reports aus dem Logchannel und manuell eingetragene Links.</p>
@@ -5044,7 +5044,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
       <div class="log-analysis-layout">
         <div class="log-analysis-hero">
           <div class="log-analysis-title">
-            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <img class="log-analysis-mark" src="images/content.png" alt="" loading="lazy" decoding="async">
             <div>
               <h3>Combatlog <span>Direktauswertung</span></h3>
               <p>WoWCombatLog.txt hochladen und direkt in LichtLoot auswerten.</p>
@@ -6991,7 +6991,7 @@ function raidHelperClassIconUrl(className){
 function raidHelperClassIconMarkup(className, fallbackIcon, filename){
   const image = filename || RAID_HELPER_CLASS_ICONS[className];
   if(image){
-    return `<img class="raid-helper-class-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(image))}" alt="${escapeAttr(className)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeAttr(fallbackIcon || "◆")}'}))">`;
+    return `<img class="raid-helper-class-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(image))}" alt="${escapeAttr(className)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeAttr(fallbackIcon || "◆")}'}))" loading="lazy" decoding="async">`;
   }
   return `<span>${escapeHtml(fallbackIcon || "◆")}</span>`;
 }
@@ -13923,7 +13923,7 @@ function renderLogAnalyses(){
       <tr>
         <td>
           <div class="log-raid-cell">
-            <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
+            <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="" loading="lazy" decoding="async">
             <div>
               <strong>${escapeHtml(raid)}</strong>
               <span class="log-raid-code">${escapeHtml(entry.reportCode || "")}</span>

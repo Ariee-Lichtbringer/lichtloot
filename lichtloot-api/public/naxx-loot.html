@@ -1855,12 +1855,12 @@ body.random-prio .tooltip-p0{
 
 
 <aside class="loot-side-shell" aria-label="LichtLoot Seitennavigation">
-<img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
+<img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini" loading="lazy" decoding="async">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
   <a class="nav-btn raid-selection-link" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')"><span class="desktop-nav-label">Startseite</span><span class="mobile-nav-label">Raidauswahl</span></a>
   <div class="raid-start-side-nav">
-    <button class="raid-start-dashboard" type="button" onclick="openRaidStartAction('dashboard')"><img src="../images/dashboard-icons/dashboard.jpg" alt=""><span>Dashboard</span></button>
+    <button class="raid-start-dashboard" type="button" onclick="openRaidStartAction('dashboard')"><img src="../images/dashboard-icons/dashboard.jpg" alt="" loading="lazy" decoding="async"><span>Dashboard</span></button>
     <div class="raid-start-group collapsed">
       <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Buffs</span><span>›</span></button>
       <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('worldbuff')">Worldbuffs</button><button type="button" onclick="openRaidStartAction('hordenbuff')">Hordenbuffs</button></div>
@@ -1925,7 +1925,7 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header">
-<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/naxx.jpg" alt="">Naxxramas – Prio-Auswahl</h1>
+<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/naxx.jpg" alt="" loading="lazy" decoding="async">Naxxramas – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 
 <div class="header-tools">
@@ -1961,7 +1961,7 @@ function openRaidStartAction(action){
 
       <div class="player-status-panel">
         <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
-        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
+        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt="" loading="lazy" decoding="async"><span>Plündermeister</span></button>
       </div>
     </div>
 
@@ -3066,7 +3066,7 @@ function buildNaxxT3RewardTooltipHtml(item){
       <strong>T3-Setteile aus diesem Token:</strong>
       ${rewards.map(reward=>`
         <div class="tooltip-token-reward">
-          <img src="${safe(iconSrc(reward))}" alt="">
+          <img src="${safe(iconSrc(reward))}" alt="" loading="lazy" decoding="async">
           <span>${safe(reward.name || "")}</span>
         </div>
       `).join("")}
@@ -10029,7 +10029,7 @@ function reportButtonHtml(payload){
   const json = safeAttr(JSON.stringify(payload || {}));
   return `
     <button class="report-btn" title="Fehler melden" onclick='openReportModal(${json})'>
-      <img src="../images/Brief.webp" alt="" onerror="reportIconFallback(this)">
+      <img src="../images/Brief.webp" alt="" onerror="reportIconFallback(this)" loading="lazy" decoding="async">
       <span class="report-icon-fallback hidden">✉</span>
     </button>
   `;

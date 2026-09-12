@@ -5592,32 +5592,32 @@ body.worldbuff-only .master-only{display:none!important}
 <body class="guild-locked">
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
+    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt loading="lazy" decoding="async">
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
-      <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
+      <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Dashboard</span></button>
       <button class="side-link" type="button" onclick="GuildLootProfessions.open()" aria-label="Berufe skillen" title="Berufe skillen"><span class="side-icon" aria-hidden="true">⚒</span><span class="side-label">Berufe skillen</span></button>
       <div class="side-group collapsed" id="sideGroupBuffs">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBuffs')"><span>Buffs</span></button>
         <div class="side-group-items">
-          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Hordenbuffs</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupRaidorga">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
-          <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
+          <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openAddonRaidSheets()"><span class="side-icon">▦</span><span class="side-label">Raidsheets fürs Addon</span></button>
           <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidsheet" title="Raidsheet"><span class="side-icon">⚔</span><span class="side-label">Raidsheet</span></button>
           <button id="bwlTestSetupSideButton" class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
           <button id="panemGearPlannerSideButton" class="side-link" type="button" onclick="openPanemGearPlanner()" aria-label="Ausrüstungsplaner Beta" title="Ausrüstungsplaner Beta" style="display:none"><span class="side-icon">♜</span><span class="side-label">Ausrüstungsplaner</span></button>
-          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
-          <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
-          <button id="p0ItemSettingsSideButton" class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">P0-Items festlegen</span></button>
-          <button id="logAnalysisSideButton" class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-          <button id="playerAnalysisSideButton" class="side-link player-analysis-subnav" type="button" onclick="openPlayerAnalysis()" aria-label="Spieleranalyse öffnen"><img class="side-icon-img" src="images/dashboard-icons/charakterverwaltung-icon-128.png" alt=""><span class="side-label">Spieleranalyse</span></button>
-          <button id="lootMasterSideButton" class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Plündermeister</span></button>
+          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">PO+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">P0+ Freigabe</span></button>
+          <button id="p0ItemSettingsSideButton" class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">P0-Items festlegen</span></button>
+          <button id="logAnalysisSideButton" class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Loganalysen</span></button>
+          <button id="playerAnalysisSideButton" class="side-link player-analysis-subnav" type="button" onclick="openPlayerAnalysis()" aria-label="Spieleranalyse öffnen"><img class="side-icon-img" src="images/dashboard-icons/charakterverwaltung-icon-128.png" alt="" loading="lazy" decoding="async"><span class="side-label">Spieleranalyse</span></button>
+          <button id="lootMasterSideButton" class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Plündermeister</span></button>
           <button class="side-link" type="button" onclick="openRaidMemberNoticePanel()" aria-label="Raidmitglieder informieren" title="Raidmitglieder informieren"><span class="side-icon">📣</span><span class="side-label">Mitglieder informieren</span></button>
         </div>
       </div>
@@ -5632,8 +5632,8 @@ body.worldbuff-only .master-only{display:none!important}
             <option value="bwl">BWL</option>
             <option value="mc">MC</option>
           </select>
-          <button class="side-link" type="button" onclick="queueP0PlusBackup(null,'sideP0BackupRaid')" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
-          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="queueP0PlusBackup(null,'sideP0BackupRaid')" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">PO+ Punkte</span></button>
+          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Worldbuffs</span></button>
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
@@ -5657,8 +5657,8 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openTrafficStatsPanel()" aria-label="Aufrufstatistik" title="Aufrufstatistik"><span class="side-icon">↗</span><span class="side-label">Aufrufstatistik</span></button>
           
           <button class="side-link master-only" type="button" onclick="openRaidArchivePanel()" aria-label="Raid-Archiv" title="Raid-Archiv"><span class="side-icon">🗄</span><span class="side-label">Raid-Archiv</span></button>
-          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
-          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
+          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Spielerlogins</span></button>
+          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt="" loading="lazy" decoding="async"><span class="side-label">Admin-Werkzeuge</span></button>
         </div>
       </div>
     </nav>
@@ -5667,7 +5667,7 @@ body.worldbuff-only .master-only{display:none!important}
 <main class="shell dashboard-main" id="dashboardTop">
   <header class="topbar">
     <div class="brand">
-      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
+      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt loading="lazy" decoding="async">
       <div class="brand-copy">
         <h1>Gildenleitung</h1>
         <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
@@ -5676,7 +5676,7 @@ body.worldbuff-only .master-only{display:none!important}
     <div class="nav" aria-label="Navigation">
       <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
       <div class="top-profile">
-        <img src="images/content.png" alt="">
+        <img src="images/content.png" alt="" loading="lazy" decoding="async">
         <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
       </div>
     </div>
@@ -6609,7 +6609,7 @@ body.worldbuff-only .master-only{display:none!important}
       <div class="log-analysis-layout">
         <div class="log-analysis-hero">
           <div class="log-analysis-title">
-            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <img class="log-analysis-mark" src="images/content.png" alt="" loading="lazy" decoding="async">
             <div>
               <h3>Warcraft Logs <span>Auswertungen</span></h3>
               <p>Reports aus dem Logchannel und manuell eingetragene Links.</p>
@@ -6646,7 +6646,7 @@ body.worldbuff-only .master-only{display:none!important}
       <div class="log-analysis-layout">
         <div class="log-analysis-hero">
           <div class="log-analysis-title">
-            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <img class="log-analysis-mark" src="images/content.png" alt="" loading="lazy" decoding="async">
             <div>
               <h3>Combatlog <span>Direktauswertung</span></h3>
               <p>WoWCombatLog.txt hochladen und direkt in LichtLoot auswerten.</p>
@@ -8178,7 +8178,7 @@ function renderPanemGearPlanner(){
   slots.innerHTML=PANEM_GEAR_SLOTS.map(slot=>{
     const item=panemGearCurrentForSlot(slot),planned=Boolean(panemGearState.planned[slot]);
     const name=item?.name || "Leer";const enchant=item?.permanentEnchantName || item?.enchant || "";const score=panemGearScore(item);
-    return `<button class="panem-gear-slot ${planned?"panem-gear-planned":""} ${panemGearState.activeSlot===slot?"active":""}" type="button" onclick="openPanemGearSlot('${escapeAttr(slot)}')"><img class="panem-gear-slot-icon" src="${escapeAttr(panemGearIcon(item?.icon || item?.iconUrl || item?.icon_url,item?.itemId || item?.item_id))}" alt=""><span class="panem-gear-slot-copy"><small>${escapeHtml(slot)}${planned?" · geplant":""}</small><strong>${escapeHtml(name)}</strong><em>${escapeHtml(enchant || item?.boss || "Zum Vergleichen anklicken")}</em></span><span class="panem-gear-slot-score">${score?score+" PW":""}</span></button>`;
+    return `<button class="panem-gear-slot ${planned?"panem-gear-planned":""} ${panemGearState.activeSlot===slot?"active":""}" type="button" onclick="openPanemGearSlot('${escapeAttr(slot)}')"><img class="panem-gear-slot-icon" src="${escapeAttr(panemGearIcon(item?.icon || item?.iconUrl || item?.icon_url,item?.itemId || item?.item_id))}" alt="" loading="lazy" decoding="async"><span class="panem-gear-slot-copy"><small>${escapeHtml(slot)}${planned?" · geplant":""}</small><strong>${escapeHtml(name)}</strong><em>${escapeHtml(enchant || item?.boss || "Zum Vergleichen anklicken")}</em></span><span class="panem-gear-slot-score">${score?score+" PW":""}</span></button>`;
   }).join("");
   if(panemGearState.activeSlot)renderPanemGearPicker();
 }
@@ -8223,7 +8223,7 @@ function renderPanemGearPicker(){
   const box=document.getElementById("panemGearPicker");if(!box)return;
   const slot=panemGearState.activeSlot,query=panemGearState.search.toLowerCase();
   const candidates=panemGearState.loot.filter(item=>panemGearMatchesSlot(item,slot) && (!query || [item.name,item.boss,item.raidKey,item.statsText,item.stats_text].join(" ").toLowerCase().includes(query))).sort((a,b)=>panemGearScore(b)-panemGearScore(a)).slice(0,100);
-  box.innerHTML=`<div class="panem-gear-picker-head"><h4>${escapeHtml(slot)} ersetzen</h4><input type="search" value="${escapeAttr(panemGearState.search)}" placeholder="Item oder Boss suchen …" oninput="panemGearState.search=this.value;renderPanemGearPicker()"><button class="small-btn ghost" type="button" style="margin-top:8px" onclick="resetPanemGearSlot('${escapeAttr(slot)}')">Aktuelles WCL-Item verwenden</button></div>${candidates.length?candidates.map((item,index)=>`<button class="panem-gear-item" type="button" onclick="choosePanemGearItem(${index})"><img src="${escapeAttr(panemGearIcon(item.icon || item.iconUrl || item.icon_url,item.itemId || item.item_id))}" alt=""><span><strong>${escapeHtml(item.name || "Item")}</strong><small>${escapeHtml([String(item.raidKey || "").toUpperCase(),item.boss,item.slot || item.type].filter(Boolean).join(" · "))}</small></span><span class="panem-gear-item-score">${panemGearScore(item)} PW</span></button>`).join(""):'<div class="panem-gear-picker-empty">Keine passenden Items gefunden.</div>'}`;
+  box.innerHTML=`<div class="panem-gear-picker-head"><h4>${escapeHtml(slot)} ersetzen</h4><input type="search" value="${escapeAttr(panemGearState.search)}" placeholder="Item oder Boss suchen …" oninput="panemGearState.search=this.value;renderPanemGearPicker()"><button class="small-btn ghost" type="button" style="margin-top:8px" onclick="resetPanemGearSlot('${escapeAttr(slot)}')">Aktuelles WCL-Item verwenden</button></div>${candidates.length?candidates.map((item,index)=>`<button class="panem-gear-item" type="button" onclick="choosePanemGearItem(${index})"><img src="${escapeAttr(panemGearIcon(item.icon || item.iconUrl || item.icon_url,item.itemId || item.item_id))}" alt="" loading="lazy" decoding="async"><span><strong>${escapeHtml(item.name || "Item")}</strong><small>${escapeHtml([String(item.raidKey || "").toUpperCase(),item.boss,item.slot || item.type].filter(Boolean).join(" · "))}</small></span><span class="panem-gear-item-score">${panemGearScore(item)} PW</span></button>`).join(""):'<div class="panem-gear-picker-empty">Keine passenden Items gefunden.</div>'}`;
   box._candidates=candidates;
 }
 
@@ -8846,7 +8846,7 @@ function layoutRaidImageField(key, raidImages){
   return `
     <div class="layout-raid-field field">
       <label>${escapeHtml(option.name || key.toUpperCase())}</label>
-      <img id="layoutRaidPreview_${escapeAttr(key)}" class="layout-raid-preview" src="${escapeAttr(value)}" alt="${escapeAttr(option.name || key)} Vorschau" onerror="this.style.opacity='.2'">
+      <img id="layoutRaidPreview_${escapeAttr(key)}" class="layout-raid-preview" src="${escapeAttr(value)}" alt="${escapeAttr(option.name || key)} Vorschau" onerror="this.style.opacity='.2'" loading="lazy" decoding="async">
       <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(LAYOUT_DEFAULT_RAID_IMAGES[key] || "")}" oninput="updateLayoutRaidImagePreview('${escapeAttr(key)}')">
       <div class="layout-raid-image-actions">
         <button class="small-btn ghost" type="button" onclick="resetLayoutRaidImage('${escapeAttr(key)}')">Standardbild verwenden</button>
@@ -9723,7 +9723,7 @@ function renderDashboardRaidCard(raid){
   const transferBadge=pointsEnabled?`<div class="rc-transfer-status rc-transfer-${transferState}" role="status"><span class="rc-transfer-symbol" aria-hidden="true">${cancelled?'–':transferred||manual?'✓':transferReviewPending?'…':transferOverdue?'!':'○'}</span><span><strong>P0+ ${escapeHtml(pointsLabel)}</strong>${transferred&&Number(raid.p0PlusTransferCount)>0?`<small>${Number(raid.p0PlusTransferCount)} Buchungen für diesen Raid</small>`:''}</span></div>`:'';
   const stage=cancelled?'Abgesagt':p0Only?'P0-Anmelder':raid.raidDate<todayIsoDate()?'Termin vergangen':'Geplant';
   return `<article class="raid-overview-card" style="--raid-action-ink:${ink}" data-raid-id="${escapeAttr(id)}">
-    <div class="rc-content"><header class="rc-header"><img class="rc-image" src="${escapeAttr(image)}" alt="${escapeAttr(raid.raidName||key)}"><div><h4>${escapeHtml(raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||'Raid')}</h4><button type="button" class="rc-date" onclick="editRaidDateTimePopup(${arg})" title="Name, Datum und Uhrzeit ändern">${escapeHtml(formatRaidWeekday(raid.raidDate))} · ${escapeHtml(formatRaidDate(raid.raidDate))}<br>${escapeHtml(raid.raidTime||'—')} Uhr</button></div></header>
+    <div class="rc-content"><header class="rc-header"><img class="rc-image" src="${escapeAttr(image)}" alt="${escapeAttr(raid.raidName||key)}" loading="lazy" decoding="async"><div><h4>${escapeHtml(raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||'Raid')}</h4><button type="button" class="rc-date" onclick="editRaidDateTimePopup(${arg})" title="Name, Datum und Uhrzeit ändern">${escapeHtml(formatRaidWeekday(raid.raidDate))} · ${escapeHtml(formatRaidDate(raid.raidDate))}<br>${escapeHtml(raid.raidTime||'—')} Uhr</button></div></header>
     <div class="rc-states"><span>${stage}</span>${!signupOnly&&!p0Only?`<span>Prioliste ${isOpenStatus(raid.status)?'sichtbar':'verborgen'}</span>`:''}</div>
     ${transferBadge}
     <${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'} class="rc-metrics" ${!p0Only&&raid.raidHelperEnabled!==false?`type="button" onclick="openRaidSignupPopup(${arg})" aria-label="Anmeldungen und Aufstellung für ${escapeAttr(raid.raidName||raid.raid||'diesen Raid')} öffnen"`:''}><span><strong>${p0Only?'—':number(capacity)}</strong><span>Plätze</span></span><span><strong>${p0Only?'—':number(stats.signups)}</strong><span>Angemeldet</span></span><span><strong>${signupOnly?'—':number(stats.prios)}</strong><span>Prios gespeichert</span></span>${!p0Only&&raid.raidHelperEnabled!==false?'<span class="rc-metrics-open">Anmeldungen &amp; Aufstellung öffnen ↗</span>':''}</${!p0Only&&raid.raidHelperEnabled!==false?'button':'div'}>
@@ -11241,7 +11241,7 @@ function raidHelperClassIconUrl(className){
 function raidHelperClassIconMarkup(className, fallbackIcon, filename){
   const image = filename || RAID_HELPER_CLASS_ICONS[className];
   if(image){
-    return `<img class="raid-helper-class-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(image))}" alt="${escapeAttr(className)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeAttr(fallbackIcon || "◆")}'}))">`;
+    return `<img class="raid-helper-class-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(image))}" alt="${escapeAttr(className)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeAttr(fallbackIcon || "◆")}'}))" loading="lazy" decoding="async">`;
   }
   return `<span>${escapeHtml(fallbackIcon || "◆")}</span>`;
 }
@@ -11753,7 +11753,7 @@ function renderRaidHelperCurrentRaidButton(raid){
   const statusText = raid.status || "geschlossen";
   return `
     <article class="raid-helper-current-card${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}">
-      <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}">
+      <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}" loading="lazy" decoding="async">
       <div class="raid-helper-current-card-body">
         <div class="raid-helper-current-card-head">
           <h4>${escapeHtml(raidName)}</h4>
@@ -11946,7 +11946,7 @@ async function renderRaidHelperCurrentDetail(raidId, options={}){
   box.innerHTML = `
     <div class="raid-unified-back"><button class="small-btn ghost" type="button" onclick="closeRaidHelperCurrentEvent()">← Zurück zur Raidliste</button></div>
     <div class="raid-helper-current-detail-head">
-      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
+      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}" loading="lazy" decoding="async">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
         <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${signupOnlyRaid ? "Reiner Raidanmelder" : `Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b>`} · ${escapeHtml(slots || "Slots offen")}</span>
@@ -12673,7 +12673,7 @@ function raidHelperSignupSpecIconMarkup(className, specialization){
   const filename = RAID_HELPER_SPEC_ICONS[classKey]?.[specKey];
   if(!filename) return "";
   const title = specialization ? `Skillung: ${specialization}` : "Skillung";
-  return `<img class="raid-helper-spec-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(filename))}" alt="${escapeAttr(title)}" title="${escapeAttr(title)}" onerror="this.style.display='none'">`;
+  return `<img class="raid-helper-spec-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(filename))}" alt="${escapeAttr(title)}" title="${escapeAttr(title)}" onerror="this.style.display='none'" loading="lazy" decoding="async">`;
 }
 
 function updateRaidHelperSignupEditSpecs(){
@@ -12776,7 +12776,7 @@ function renderRaidHelperLootbag(row){
   if(["approved","freigegeben"].includes(po)){ file = "beutegrun.jpg"; label = "PO freigegeben"; type = "approved"; }
   else if(["pending","offen","wartet"].includes(po)){ file = "beuteorange.jpg"; label = "PO eingetragen"; type = "pending"; }
   else if(row.hasPrio === true || ["true","1","yes","ja"].includes(normalize(row.hasPrio))){ file = "beutelilia.jpg"; label = "P1–P3 eingetragen"; type = "prio"; }
-  return file ? `<span class="raid-helper-lootbag ${type}" title="${escapeAttr(label)}"><img src="images/lootbags/${file}" alt="Lootbag"><span>${escapeHtml(label)}</span></span>` : "";
+  return file ? `<span class="raid-helper-lootbag ${type}" title="${escapeAttr(label)}"><img src="images/lootbags/${file}" alt="Lootbag" loading="lazy" decoding="async"><span>${escapeHtml(label)}</span></span>` : "";
 }
 
 let raidHelperDraggedClassGroup = "";
@@ -13795,7 +13795,7 @@ function renderRaidHelperScheduleRules(){
     const interval=String(schedule.intervalWeeks || 1);
     return `
       <article class="raid-helper-current-card raid-helper-schedule-card" style="--raid-color:${raidHelperRaidColor(raidKey)}">
-        <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}">
+        <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}" loading="lazy" decoding="async">
         <div class="raid-helper-current-card-body">
           <div class="raid-helper-current-card-head"><h4>${escapeHtml(raidName)}</h4></div>
           <div class="raid-helper-current-card-meta">
@@ -13956,7 +13956,7 @@ function renderRaidHelperTemplates(){
     return `
       <article class="raid-helper-template-card" style="--template-accent:${raidHelperRaidColorRgb(raidKey)}">
         <div class="raid-helper-template-visual">
-          <img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raid.name || raidKey.toUpperCase())}">
+          <img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raid.name || raidKey.toUpperCase())}" loading="lazy" decoding="async">
         </div>
         <div class="raid-helper-template-main">
           <div class="raid-helper-template-card-head">
@@ -14374,7 +14374,7 @@ function updateFreeEmbedBuilder(){
   const icons=["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"];
   const topicPrompt=document.getElementById("freeEmbedTopicPrompt")?.value.trim(); const meetingExtra=document.getElementById("freeEmbedMeetingExtra")?.value.trim(); const meetingSignup=document.getElementById("freeEmbedMeetingSignup")?.checked;
   const author=document.getElementById("freeEmbedAuthor")?.value.trim();const thumbnail=document.getElementById("freeEmbedThumbnail")?.value.trim();const imageUrl=document.getElementById("freeEmbedImage")?.value.trim();const mentions=document.getElementById("freeEmbedMentions")?.value.trim();const customFields=String(document.getElementById("freeEmbedCustomFields")?.value||"").split(/\r?\n/).map(line=>{const split=line.indexOf("|");return split>0?{name:line.slice(0,split).trim(),value:line.slice(split+1).trim()}:null}).filter(field=>field?.name&&field?.value);
-  preview.innerHTML=`${mentions?`<div class="free-embed-preview-point" onclick="editFreeEmbedPreviewField('freeEmbedMentions','Erwähnungen')">📣 ${escapeHtml(mentions)}</div>`:""}${author?`<div class="muted" onclick="editFreeEmbedPreviewField('freeEmbedAuthor','Autor')">👤 ${escapeHtml(author)}</div>`:""}${thumbnail?`<img src="${escapeAttr(thumbnail)}" alt="Thumbnail" style="float:right;width:72px;height:72px;object-fit:cover;border-radius:10px;margin:0 0 10px 12px">`:""}<h3 onclick="editFreeEmbedPreviewField('freeEmbedTitle','Überschrift')">${escapeHtml(title)}</h3><p onclick="editFreeEmbedPreviewField('freeEmbedDescription','Beschreibung')">${escapeHtml(description)}</p>${type==="meeting"?`<div class="free-embed-preview-meta">${date?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingDate','Datum')">📅 ${escapeHtml(date)}</span>`:""}${time?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingTime','Uhrzeit')">🕒 ${escapeHtml(time)} Uhr</span>`:""}${location?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingLocation','Ort / Channel')">📍 ${escapeHtml(location)}</span>`:""}</div>`:""}${section?`<strong onclick="editFreeEmbedPreviewField('freeEmbedSectionTitle','Titel der Menüpunkte')">${escapeHtml(section)}</strong>`:""}<div class="free-embed-preview-points" onclick="editFreeEmbedPreviewField('freeEmbedPoints','Menüpunkte')">${(points.length?points:["Dein erster Menüpunkt"]).map((p,i)=>`<div class="free-embed-preview-point">${type==="poll"?(icons[i]||"•"):type==="meeting"?`${i+1}.`:"•"} ${escapeHtml(p)}</div>`).join("")}</div>${customFields.map(field=>`<div class="free-embed-preview-point"><strong>${escapeHtml(field.name)}</strong><br>${escapeHtml(field.value)}</div>`).join("")}${type==="meeting"&&meetingExtra?`<strong>Weitere Informationen</strong><p>${escapeHtml(meetingExtra)}</p>`:""}${type==="meeting"?`<div class="free-embed-preview-point">💬 ${escapeHtml(topicPrompt||"Weiteres Thema vorschlagen")}</div>${meetingSignup?`<div class="free-embed-preview-point">✅ Teilnehmen &nbsp; ❔ Vielleicht &nbsp; ❌ Nicht teilnehmen<br><small>Auswahl mit Charakter und LichtLoot-SpielerLogin/PIN</small></div>`:""}`:""}${imageUrl?`<img src="${escapeAttr(imageUrl)}" alt="Embed-Bild" style="display:block;width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-top:12px">`:""}${footer?`<div class="free-embed-preview-footer" onclick="editFreeEmbedPreviewField('freeEmbedFooter','Fußzeile')">${escapeHtml(footer)}</div>`:""}`;
+  preview.innerHTML=`${mentions?`<div class="free-embed-preview-point" onclick="editFreeEmbedPreviewField('freeEmbedMentions','Erwähnungen')">📣 ${escapeHtml(mentions)}</div>`:""}${author?`<div class="muted" onclick="editFreeEmbedPreviewField('freeEmbedAuthor','Autor')">👤 ${escapeHtml(author)}</div>`:""}${thumbnail?`<img src="${escapeAttr(thumbnail)}" alt="Thumbnail" style="float:right;width:72px;height:72px;object-fit:cover;border-radius:10px;margin:0 0 10px 12px" loading="lazy" decoding="async">`:""}<h3 onclick="editFreeEmbedPreviewField('freeEmbedTitle','Überschrift')">${escapeHtml(title)}</h3><p onclick="editFreeEmbedPreviewField('freeEmbedDescription','Beschreibung')">${escapeHtml(description)}</p>${type==="meeting"?`<div class="free-embed-preview-meta">${date?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingDate','Datum')">📅 ${escapeHtml(date)}</span>`:""}${time?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingTime','Uhrzeit')">🕒 ${escapeHtml(time)} Uhr</span>`:""}${location?`<span onclick="editFreeEmbedPreviewField('freeEmbedMeetingLocation','Ort / Channel')">📍 ${escapeHtml(location)}</span>`:""}</div>`:""}${section?`<strong onclick="editFreeEmbedPreviewField('freeEmbedSectionTitle','Titel der Menüpunkte')">${escapeHtml(section)}</strong>`:""}<div class="free-embed-preview-points" onclick="editFreeEmbedPreviewField('freeEmbedPoints','Menüpunkte')">${(points.length?points:["Dein erster Menüpunkt"]).map((p,i)=>`<div class="free-embed-preview-point">${type==="poll"?(icons[i]||"•"):type==="meeting"?`${i+1}.`:"•"} ${escapeHtml(p)}</div>`).join("")}</div>${customFields.map(field=>`<div class="free-embed-preview-point"><strong>${escapeHtml(field.name)}</strong><br>${escapeHtml(field.value)}</div>`).join("")}${type==="meeting"&&meetingExtra?`<strong>Weitere Informationen</strong><p>${escapeHtml(meetingExtra)}</p>`:""}${type==="meeting"?`<div class="free-embed-preview-point">💬 ${escapeHtml(topicPrompt||"Weiteres Thema vorschlagen")}</div>${meetingSignup?`<div class="free-embed-preview-point">✅ Teilnehmen &nbsp; ❔ Vielleicht &nbsp; ❌ Nicht teilnehmen<br><small>Auswahl mit Charakter und LichtLoot-SpielerLogin/PIN</small></div>`:""}`:""}${imageUrl?`<img src="${escapeAttr(imageUrl)}" alt="Embed-Bild" style="display:block;width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-top:12px" loading="lazy" decoding="async">`:""}${footer?`<div class="free-embed-preview-footer" onclick="editFreeEmbedPreviewField('freeEmbedFooter','Fußzeile')">${escapeHtml(footer)}</div>`:""}`;
 }
 function editFreeEmbedPreviewField(fieldId,label){const field=document.getElementById(fieldId);if(!field)return;const value=prompt(`${label} direkt bearbeiten:`,field.value||"");if(value===null)return;field.value=value;field.dispatchEvent(new Event("input",{bubbles:true}));field.scrollIntoView({behavior:"smooth",block:"center"});field.focus();}
 async function queueFreeDiscordEmbed(updateExisting=false){
@@ -15855,7 +15855,7 @@ function renderRaidHelperPoSignupButton(row){
   const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(raidKey)}" type="button" onclick="selectRaidHelperPoSignup('${escapeAttr(postKey)}')">
-      <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}">
+      <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}" loading="lazy" decoding="async">
       <span>
         <strong>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</strong>
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
@@ -15901,7 +15901,7 @@ function renderRaidHelperPoSignupDetail(postKey){
   const leadPin = row.lichtlootLeadPin || row.leadPin || "-";
   box.innerHTML = `
     <div class="raid-helper-current-detail-head">
-      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}">
+      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}" loading="lazy" decoding="async">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</h4>
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · Prio-PIN ${escapeHtml(pin)} · Lead-PIN ${escapeHtml(leadPin)}</span>
@@ -20794,7 +20794,7 @@ function worldbuffIconUrl(buff){
 }
 
 function renderWorldbuffIcon(buff){
-  return `<img class="buff-icon-img" src="${escapeAttr(worldbuffIconUrl(buff))}" alt="${escapeAttr(buff || "Buff")}">`;
+  return `<img class="buff-icon-img" src="${escapeAttr(worldbuffIconUrl(buff))}" alt="${escapeAttr(buff || "Buff")}" loading="lazy" decoding="async">`;
 }
 
 function renderWorldbuffBadge(buff){
@@ -21795,7 +21795,7 @@ function renderLogAnalyses(){
     return `
       <article class="lead-log-card">
         <div class="lead-log-check"><input class="log-analysis-select" type="checkbox" aria-label="Loganalyse auswählen" value="${escapeAttr(entry.id || "")}" ${selectedLogAnalysisIds.has(String(entry.id || "")) ? "checked" : ""} onchange="toggleLogAnalysisSelection(this.value,this.checked)"></div>
-        <img class="lead-log-thumb" src="${escapeAttr(raidImage)}" alt="">
+        <img class="lead-log-thumb" src="${escapeAttr(raidImage)}" alt="" loading="lazy" decoding="async">
         <div class="lead-log-main"><strong>${escapeHtml(raid)}</strong><small>▣ ${escapeHtml(formatLogAnalysisDate(date))} · ${escapeHtml(entry.reportCode || "")}</small><span>${players ? `${players} Spieler` : "Spielerzahl offen"}</span></div>
         <div class="lead-log-progress"><span class="lead-log-label">Bossfortschritt</span><strong>${kills==null?"–":kills} / ${bosses==null?"–":bosses}</strong><div class="lead-log-progress-track"><div class="lead-log-progress-fill" style="width:${progress}%"></div></div></div>
         <div class="lead-log-metrics"><div class="lead-log-metric"><span class="lead-log-label">Status</span><strong>Bereit</strong></div><div class="lead-log-metric"><span class="lead-log-label">Uhrzeit</span><strong>${escapeHtml(formatLogAnalysisTime(entry)||"–")}</strong></div></div>

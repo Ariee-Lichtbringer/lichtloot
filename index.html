@@ -1545,7 +1545,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     <img src="images/guildloot-logo-concept.webp" alt="GuildLoot" class="logo-banner">
     <nav class="portal-nav" aria-label="Hauptnavigation">
       <a href="#support" data-guild-support>Support</a>
-      <a class="portal-addon-download" href="start.html?view=addon"><img class="portal-addon-icon" src="images/addon-guide/guildloot-icon.png" alt=""><span><strong>Addon Download &amp; Installation</strong><small><img src="images/addon-guide/curseforge.svg" alt=""> CurseForge</small></span><b aria-hidden="true">›</b></a>
+      <a class="portal-addon-download" href="start.html?view=addon"><img class="portal-addon-icon" src="images/addon-guide/guildloot-icon.webp" alt="" loading="lazy" decoding="async"><span><strong>Addon Download &amp; Installation</strong><small><img src="images/addon-guide/curseforge.svg" alt=""> CurseForge</small></span><b aria-hidden="true">›</b></a>
     </nav>
     <button class="portal-profile" type="button" onclick="document.getElementById('loginCard')?.scrollIntoView({behavior:'smooth',block:'center'})">
       <span class="portal-avatar">👤</span>
@@ -1699,7 +1699,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
           <p><span class="ok">✓ SpielerLogin aktiv</span><br>Dein Login ist gespeichert. Du kannst dich jetzt für mehrere Raids eintragen.</p>
           <div class="dashboard-guild-picker">
           <button id="dashboardGuildButton" class="dashboard-guild" type="button" aria-expanded="false" onclick="toggleDashboardGuildMenu()">
-            <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.webp" alt="">
+            <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.webp" alt="" loading="lazy" decoding="async">
             <span class="dashboard-guild-copy"><span>Aktive Lootgilde · wechseln</span><strong id="dashboardGuildName">Lootgilde</strong></span>
             <span class="dashboard-guild-arrow">⌄</span>
           </button>
@@ -2384,7 +2384,7 @@ function renderGuildGateList(){
     const isLichtloot=String(guild.slug || "").toLowerCase() === "lichtloot";
     const guildName=isLichtloot ? "Lichtbringer" : (guild.name || titleFromSlug(guild.slug));
     const lootName=lootTitleFromGuild(guild);
-    const emblem=isLichtloot ? '<img src="images/content.png" alt="Lichtbringer">' : '♜';
+    const emblem=isLichtloot ? '<img src="images/content.png" alt="Lichtbringer" loading="lazy" decoding="async">' : '♜';
     return `
       <a class="guild-card" href="${safeHtml(guildLoginUrl(guild.slug))}">
         <span class="guild-name-cell">
@@ -2540,8 +2540,8 @@ function updateGuildConfigPreview(){
   const bgUrl=document.getElementById("configBackgroundUrl")?.value.trim() || "";
   const logoPreview=document.getElementById("configLogoPreview");
   const bgPreview=document.getElementById("configBackgroundPreview");
-  if(logoPreview) logoPreview.innerHTML=logoUrl ? '<img alt="Logo Vorschau" src="'+safeHtml(logoUrl)+'">' : "Logo-Vorschau";
-  if(bgPreview) bgPreview.innerHTML=bgUrl ? '<img alt="Hintergrund Vorschau" src="'+safeHtml(bgUrl)+'">' : "Hintergrund-Vorschau";
+  if(logoPreview) logoPreview.innerHTML=logoUrl ? '<img alt="Logo Vorschau" src="'+safeHtml(logoUrl)+'" loading="lazy" decoding="async">' : "Logo-Vorschau";
+  if(bgPreview) bgPreview.innerHTML=bgUrl ? '<img alt="Hintergrund Vorschau" src="'+safeHtml(bgUrl)+'" loading="lazy" decoding="async">' : "Hintergrund-Vorschau";
 }
 
 function loadGuildImageFile(kind){
@@ -5018,7 +5018,7 @@ function renderDashboardGuildMenu(){
     const slug=String(guild.slug || '').trim().toLowerCase();
     const active=slug===currentActiveGuildSlug() ? ' active' : '';
     return '<button class="dashboard-guild-option'+active+'" type="button" data-guild-slug="'+safeHtml(slug)+'">'
-      +'<img src="'+safeHtml(guildLogoUrl(guild))+'" alt="">'
+      +'<img src="'+safeHtml(guildLogoUrl(guild))+'" alt="" loading="lazy" decoding="async">'
       +'<span><strong>'+safeHtml(displayGuildName(guild))+'</strong><small>'+(active?'Aktuell ausgewählt':'Zu dieser Lootgilde wechseln')+'</small></span>'
       +'</button>';
   }).join('');
@@ -5108,7 +5108,7 @@ async function loadDashboardForPin(pin){
       const cls=ch.className || ch.klasse || ch.Klasse || '';
       const server=ch.server || ch.Server || '';
       return '<span class="dashboard-char '+classColorClass(cls)+'">'
-        +'<img class="dashboard-class-icon" src="'+safeHtml(classIconUrl(cls))+'" alt="'+safeHtml(cls)+'">'
+        +'<img class="dashboard-class-icon" src="'+safeHtml(classIconUrl(cls))+'" alt="'+safeHtml(cls)+'" loading="lazy" decoding="async">'
         +'<span class="dashboard-char-copy"><strong class="dashboard-char-name">'+safeHtml(name)+'</strong><small>'+safeHtml(cls)+(server?' · '+safeHtml(server):'')+'</small></span>'
         +'</span>';
     }).join('');

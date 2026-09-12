@@ -1408,7 +1408,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
 </script>
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo">
+    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo" loading="lazy" decoding="async">
     <nav class="side-nav" aria-label="Raidlead Navigation">
       <a class="side-link" href="start.html" onclick="event.preventDefault(); window.location.href=guildUrl('start.html')"><span class="side-icon">⌂</span><span>Startseite</span></a>
       <a class="side-link" id="navPrioPage" href="start.html#mein-lichtloot" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#mein-lichtloot')"><span class="side-icon">✦</span><span>Prioseite</span></a>
@@ -1426,7 +1426,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
   <main class="overlay">
     <header class="topbar">
       <div class="brand">
-        <img src="images/content.png" alt="LichtLoot" class="brand-logo">
+        <img src="images/content.png" alt="LichtLoot" class="brand-logo" loading="lazy" decoding="async">
         <div class="brand-copy">
           <h1>Raidlead</h1>
           <p>Raid laden und Prios verwalten.</p>
@@ -1438,7 +1438,7 @@ body.random-raidlead .random-home-link{display:inline-block!important}
         <button class="btn ghost random-home-link" type="button" onclick="window.location.href='index.html'">GuildLoot-Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
-          <img src="images/content.png" alt="">
+          <img src="images/content.png" alt="" loading="lazy" decoding="async">
           <div><strong>Lichtbringer</strong><span>Raidlead</span></div>
         </div>
       </div>
@@ -2099,7 +2099,7 @@ function raidleadSignupSpec(row){
 
 function renderRaidleadMissingPrioChips(rows){
   if(!rows.length)return "Keine – alle angemeldeten Charaktere haben einen Prioeintrag.";
-  return `<span class="missing-prio-list">${rows.map(row=>{const name=String(row.player||row.char||""),className=String(row.className||row.class||""),spec=raidleadSignupSpec(row);return `<span class="missing-player-chip"><img src="${getIconUrl(spec.icon)}" alt=""><span><b class="${getClassColorClass(className)}">${safe(name)}</b><small>${safe(spec.label)}</small></span></span>`;}).join("")}</span>`;
+  return `<span class="missing-prio-list">${rows.map(row=>{const name=String(row.player||row.char||""),className=String(row.className||row.class||""),spec=raidleadSignupSpec(row);return `<span class="missing-player-chip"><img src="${getIconUrl(spec.icon)}" alt="" loading="lazy" decoding="async"><span><b class="${getClassColorClass(className)}">${safe(name)}</b><small>${safe(spec.label)}</small></span></span>`;}).join("")}</span>`;
 }
 
 function renderEntryMetrics(){
