@@ -1,0 +1,22 @@
+#!/bin/sh
+# Nach der Installation: tatsächlichen Installationsort ermitteln (macOS verschiebt Updates dorthin, wo die App
+# schon lag, z. B. ~/Applications), Schreibtisch-Verknüpfung darauf setzen und die App starten.
+console_user=$(/usr/bin/stat -f '%Su' /dev/console)
+home=""
+if [ "$console_user" != "root" ] && [ "$console_user" != "loginwindow" ] && [ -n "$console_user" ]; then
+  home=$(/usr/bin/dscl . -read "/Users/$console_user" NFSHomeDirectory 2>/dev/null | /usr/bin/awk '{print $2}')
+fi
+app=""
+case "$2" in *.app) [ -d "$2" ] && app="$2" ;; esac
+[ -z "$app" ] && [ -d "/Applications/GuildLoot Sync.app" ] && app="/Applications/GuildLoot Sync.app"
+[ -z "$app" ] && [ -n "$home" ] && [ -d "$home/Applications/GuildLoot Sync.app" ] && app="$home/Applications/GuildLoot Sync.app"
+[ -z "$app" ] && app="/Applications/GuildLoot Sync.app"
+if [ -n "$home" ] && [ -d "$home/Desktop" ]; then
+  /bin/ln -sfn "$app" "$home/Desktop/GuildLoot Sync" 2>/dev/null || true
+  /usr/sbin/chown -h "$console_user" "$home/Desktop/GuildLoot Sync" 2>/dev/null || true
+fi
+if [ -n "$home" ]; then
+  console_uid=$(/usr/bin/id -u "$console_user")
+  /bin/launchctl asuser "$console_uid" /usr/bin/sudo -u "$console_user" /usr/bin/open -a "$app" >/dev/null 2>&1 || true
+fi
+exit 0
