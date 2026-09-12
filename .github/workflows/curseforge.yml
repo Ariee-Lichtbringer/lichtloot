@@ -2,37 +2,53 @@ name: Publish GuildLoot to CurseForge
 on:
   push:
     branches: [main]
-    paths: [addon-release/release.json]
+    paths:
+      - addon-release/release.json
+      - addon-release/*.release.json
   workflow_dispatch:
     inputs:
       publish:
-        description: Upload the checked-in addon to CurseForge
+        description: Upload the checked-in addons to CurseForge
         type: boolean
         default: false
 permissions:
   contents: write
-concurrency:
-  group: curseforge-guildloot
-  cancel-in-progress: false
 jobs:
   upload:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        release:
+          - addon-release/release.json
+          - addon-release/GuildRaidBag.release.json
+          - addon-release/GuildBuff.release.json
+          - addon-release/GuildSkills.release.json
+    concurrency:
+      group: curseforge-${{ matrix.release }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Skip addons without a manifest
+        id: manifest
+        run: test -f "${{ matrix.release }}" && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
       - name: Validate ZIP and CurseForge connection, then upload release
+        if: steps.manifest.outputs.present == 'true'
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           GH_TOKEN: ${{ github.token }}
           PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
+          RELEASE_FILE: ${{ matrix.release }}
         run: python3 scripts/curseforge-upload.py
       - name: Save upload receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: curseforge-receipt-${{ github.run_id }}
-          path: curseforge-result.json
+          name: curseforge-receipt-${{ github.run_id }}-${{ strategy.job-index }}
+          path: curseforge-result*.json
           if-no-files-found: ignore

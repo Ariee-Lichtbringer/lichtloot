@@ -1,0 +1,12 @@
+## Interface: 11509
+## Title: GuildRaidBag
+## Notes: Raidvorbereitung: Checklisten je Raid, Taschenprüfung, Auffüllen aus der Bank, Mats-Übersicht (Classic Era)
+## Author: GuildLoot
+## Version: 1.0.0-beta
+## SavedVariables: GuildRaidBagDB
+Core.lua
+ClassicItemData.lua
+RaidcheckData.lua
+RaidChecklist.lua
+RaidBank.lua
+RaidMats.lua
