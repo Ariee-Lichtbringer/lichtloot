@@ -1,3 +1,8 @@
+# GuildLoot 0.24.25-beta
+
+- Raidcheck Mats: Gesegnete Sonnenfrucht, Sonnenfruchtsaft, Angereicherter Manakeks (Argentumdämmerung) und Alterac Manakeks im Nachkauf; mehrere Stapel je Kauf; Hinweise rücken unter die Liste.
+- Gildenbank: Hinweis, wenn für die gewählte Gilde kein Bestand hinterlegt ist.
+
 # GuildLoot 0.24.24-beta
 
 - Symbolleiste: GuildHeal-Symbol mit Haken (Frames ein-/ausblenden, Rechtsklick Einstellungen); GuildHeal auch in der Auswahl des GuildLoot-Hauptsymbols.

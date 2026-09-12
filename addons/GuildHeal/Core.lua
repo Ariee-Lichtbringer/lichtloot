@@ -37,10 +37,12 @@ GH.DISPEL={PRIEST={Magic=true,Disease=true},PALADIN={Magic=true,Poison=true,Dise
 GH.DEBUFF_COLORS={Magic={.2,.6,1},Curse={.6,.2,1},Poison={.2,.8,.2},Disease={.6,.4,0}}
 
 local defaults={
- width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=false,castOnDown=false,hideSolo=false,scale=1,
+ width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=true,castOnDown=false,hideSolo=false,scale=1,
  fadeRange=.4,classColors=true,showPets=false,showAuras=true,showCooldowns=true,aggroBorder=true,nameClick=true,
  emergency=true,emergencyThreshold=50,emergencySound=true,
  overhealWarn=true,overhealThreshold=40,overhealSound=true,overhealSkipTanks=true,tanks='',
+ unitLayout='vertical',healthText='missing',fontSize=11,barTexture='blizzard',bgAlpha=.92,spacing=3,
+ colors={},cdSize=26,cdPosition=nil,cdReadyWarn=true,cdReadySound=true,
  targetOnHeal=false, showTargetFrame=false,showTankFrames=true,bossDebuffSound=true,healerManaWarn=true,healerManaThreshold=20,healerManaSound=true,healthGradient=false,perCharacter=false,sortMode='group',
  position=nil,classes={},
 }
@@ -51,6 +53,8 @@ GH.AURA_DEFAULTS={
 function GH.DB()
  GuildHealDB=GuildHealDB or {}
  for k,v in pairs(defaults) do if GuildHealDB[k]==nil then GuildHealDB[k]=(type(v)=='table' and {} or v) end end
+ -- Einmalig: „UI bearbeiten“ ist ab dieser Version standardmäßig aus (früher hieß das Frames sperren).
+ if not GuildHealDB.editModeReset then GuildHealDB.editModeReset=true;GuildHealDB.locked=true end
  return GuildHealDB
 end
 function GH.PlayerClass() local _,class=UnitClass('player');return class end
@@ -218,6 +222,14 @@ function GH.IsTank(unit)
  if UnitGroupRolesAssigned then local role=UnitGroupRolesAssigned(unit);if role=='TANK' then return true end end
  return false
 end
+GH.BAR_TEXTURES={blizzard={label='Standard',path='Interface\\TargetingFrame\\UI-StatusBar'},flat={label='Glatt',path='Interface\\Buttons\\WHITE8x8'},raid={label='Raidframe',path='Interface\\RaidFrame\\Raid-Bar-Hp-Fill'},minimal={label='Fein',path='Interface\\TargetingFrame\\UI-TargetingFrame-BarFill'}}
+-- Farbakzente: Hintergrund, Lebensbalken (ohne Klassenfarbe), Text, Name, Rahmen (Alpha 0 = kein Rahmen).
+GH.COLOR_DEFAULTS={bg={.05,.07,.1},bar={.2,.75,.3},text={1,.85,.4},name={1,1,1},border={.35,.5,.6,0},incoming={.4,.9,.5}}
+GH.COLOR_LABELS={{'bg','Hintergrund'},{'bar','Lebensbalken ohne Klassenfarbe'},{'text','Lebenstext'},{'name','Name bei Klassenfarbe'},{'border','Rahmen um das Feld'},{'incoming','Eingehende Heilung'}}
+function GH.Color(key) local c=GH.DB().colors[key] or GH.COLOR_DEFAULTS[key];return c[1],c[2],c[3],c[4] end
+function GH.SetColor(key,r,g,b,a) GH.DB().colors[key]={r,g,b,a};if GH.ApplyLayout then GH.ApplyLayout() end end
+function GH.ResetColors() GH.DB().colors={};if GH.ApplyLayout then GH.ApplyLayout() end end
+function GH.BarTexture() local e=GH.BAR_TEXTURES[GH.DB().barTexture or 'blizzard'] or GH.BAR_TEXTURES.blizzard;return e.path end
 function GH.Print(msg) print('|cff2ad1bcGuildHeal:|r '..tostring(msg)) end
 function GH.ClassColor(unit)
  local _,class=UnitClass(unit);local c=class and (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[class]
@@ -233,10 +245,10 @@ end
 SLASH_GUILDHEAL1='/gheal';SLASH_GUILDHEAL2='/guildheal'
 SlashCmdList.GUILDHEAL=function(msg)
  msg=(msg or ''):lower():match('^%s*(.-)%s*$')
- if msg=='lock' or msg=='sperren' then GH.DB().locked=true;GH.ApplyLayout();GH.Print('Frames gesperrt.')
- elseif msg=='unlock' or msg=='entsperren' then GH.DB().locked=false;GH.ApplyLayout();GH.Print('Frames entsperrt: am Anker ziehen.')
+ if msg=='lock' or msg=='sperren' then GH.DB().locked=true;GH.ApplyLayout();if GH.ConfigRefresh then GH.ConfigRefresh() end;GH.Print('UI bearbeiten aus.')
+ elseif msg=='unlock' or msg=='entsperren' or msg=='edit' then GH.DB().locked=false;GH.ApplyLayout();if GH.ConfigRefresh then GH.ConfigRefresh() end;GH.Print('UI bearbeiten an: Griffe ziehen, danach /gheal lock oder den Knopf im Fenster.')
  elseif msg=='reset' then GH.DB().position=nil;GH.ApplyLayout();GH.Print('Position zurückgesetzt.')
  elseif msg=='hilfe' or msg=='help' then
-  for _,line in ipairs({'|cffffcc40GuildHeal Befehle:|r','/gheal – Einstellungen (Klickzauber, Tasten, Ketten, Anzeige, Warnungen)','/gheal lock | unlock – Frames sperren / entsperren','/gheal reset – Position zurücksetzen'}) do print(line) end
+  for _,line in ipairs({'|cffffcc40GuildHeal Befehle:|r','/gheal – Einstellungen (Klickzauber, Tasten, Ketten, Anzeige, Warnungen)','/gheal unlock | lock – UI bearbeiten an / aus (Griffe zum Verschieben)','/gheal reset – Position zurücksetzen'}) do print(line) end
  else GH.ToggleConfig() end
 end

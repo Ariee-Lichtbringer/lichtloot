@@ -150,6 +150,7 @@ function GH.ConfigRefresh()
   local icon=GH.SpellIconOf(value);row.icon:SetTexture(icon);row.icon:SetShown(icon~=nil)
   local active=GH.ChainActive('key'..i);row.chain.text:SetText(active and 'Kette ✓' or '+Kette')
  end
+ local editing=not db.locked;window.editButton.text:SetText(editing and 'UI bearbeiten: an' or 'UI bearbeiten: aus');window.editButton.bg:SetColorTexture(editing and .2 or .12,editing and .45 or .22,editing and .45 or .26,1);window.editButton.text:SetTextColor(editing and 1 or .85,editing and .9 or .9,editing and .4 or .95)
  for key,c in pairs(checks) do c:SetChecked(db[key]==true) end
  for key,s in pairs(sliders) do s.frame.loading=true;s.frame:SetValue(db[key]);if s.frame.Text then s.frame.Text:SetText(s.text..': '..(s.fmt and s.fmt(db[key]) or db[key])) end;s.frame.loading=false end
  local classLabel=UnitClass('player');window.classText:SetText('Belegung für '..(classLabel or 'deine Klasse')..(db.perCharacter and ' (nur '..(UnitName('player') or '')..')' or ' (alle Charaktere dieser Klasse)')..' · links den Modifikator wählen, rechts je Maustaste eintragen. Die Maus liegt dabei über dem Spielerfeld.')
@@ -157,6 +158,8 @@ function GH.ConfigRefresh()
  local boss=GH.BossDebuffs();window.bossList:SetText(#boss>0 and table.concat(boss,', ') or '– keine –')
  if window.tanksInput and not window.tanksInput:HasFocus() then window.tanksInput:SetText(db.tanks or '') end
  for _,b in ipairs(window.sortButtons or {}) do local on=(db.sortMode or 'group')==b.mode;b.bg:SetColorTexture(on and .2 or .12,on and .45 or .22,on and .45 or .26,1) end
+ for _,b in ipairs(window.layoutButtons or {}) do local on=db[b.choiceKey]==b.choiceValue;b.bg:SetColorTexture(on and .2 or .12,on and .45 or .22,on and .45 or .26,1) end
+ for _,sw in ipairs(window.swatches or {}) do local r,g,b,a=GH.Color(sw.key);sw.color:SetColorTexture(r,g,b,(sw.key=='border' and (a or 0)<.05) and .15 or 1) end
 end
 
 local function showPage(name)
@@ -170,13 +173,15 @@ local function build()
  local border=window:CreateTexture(nil,'BORDER');border:SetPoint('TOPLEFT',-1,1);border:SetPoint('BOTTOMRIGHT',1,-1);border:SetColorTexture(.35,.5,.6,.8);border:SetDrawLayer('BORDER',-1)
  local logo=window:CreateTexture(nil,'ARTWORK');logo:SetSize(30,30);logo:SetPoint('TOPLEFT',12,-10);logo:SetTexture(GH.MEDIA..'GuildHeal')
  local title=label(window,'GuildHeal · Einstellungen',50,-14,400,'GameFontNormalLarge');title:SetTextColor(1,.8,.25)
- label(window,'Version '..GH.VERSION..' · /gheal lock sperrt die Frames, /gheal reset setzt die Position zurück.',50,-36,560):SetTextColor(.6,.7,.8)
+ label(window,'Version '..GH.VERSION..' · „UI bearbeiten“ zeigt die Griffe zum Verschieben, /gheal reset setzt die Position zurück.',50,-36,400):SetTextColor(.6,.7,.8)
  button(window,'×',648,-10,22,function() window:Hide() end,22)
+ window.editButton=button(window,'UI bearbeiten: aus',470,-10,170,function() GH.DB().locked=not GH.DB().locked;GH.ApplyLayout();GH.ConfigRefresh() end,22)
+ window.editButton:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_BOTTOM');GameTooltip:SetText('UI bearbeiten');GameTooltip:AddLine('An: Griffe erscheinen über den Spielerfeldern und der Cooldown-Leiste, alles lässt sich ziehen. Aus: Griffe weg, Positionen fest.',1,1,1,true);GameTooltip:Show() end);window.editButton:SetScript('OnLeave',function() GameTooltip:Hide() end)
  window.classText=label(window,'',14,-58,650);window.classText:SetTextColor(.85,.92,1)
- local tabs={{'clicks','Klickzauber'},{'keys','Tasten'},{'display','Anzeige'},{'alerts','Warnungen'}}
+ local tabs={{'clicks','Klickzauber'},{'keys','Tasten'},{'design','Design'},{'display','Anzeige'},{'alerts','Warnungen'}}
  for i,t in ipairs(tabs) do
   local frame=CreateFrame('Frame',nil,window);frame:SetPoint('TOPLEFT',0,-118);frame:SetPoint('BOTTOMRIGHT',0,0);frame:Hide()
-  local tab=button(window,t[2],14+(i-1)*150,-88,144,function() showPage(t[1]) end,24)
+  local tab=button(window,t[2],14+(i-1)*132,-88,126,function() showPage(t[1]) end,24)
   pages[t[1]]={frame=frame,tab=tab}
  end
  -- Reiter 1: Modifikator links, Maustasten und Mausrad rechts (wie VuhDo).
@@ -230,9 +235,54 @@ local function build()
   keyRows[i]=row
  end
  label(p,'Beispiel: F1 = Erneuerung, F2 = Blitzheilung, Maustaste 4 = Machtwort: Schild. Eintrag wie bei den Klickzaubern: Zauber mit Rang, Makro, Gegenstand oder target/menu/stopcasting.',14,-372,640):SetTextColor(.6,.7,.8)
- -- Reiter: Anzeige (Layout, Farben, Sortierung, Zusatzfelder, Auren)
+ -- Reiter: Design (Anordnung, Größe, Balken, Schrift, Text)
+ p=pages.design.frame
+ label(p,'Anordnung',14,-4,300,'GameFontNormal')
+ window.layoutButtons={}
+ local function choice(x,y,w,text,key,value,onChange) local b=button(p,text,x,y,w,function() GH.DB()[key]=value;if onChange then onChange() else GH.ApplyLayout() end;GH.ConfigRefresh() end);b.choiceKey=key;b.choiceValue=value;table.insert(window.layoutButtons,b);return b end
+ label(p,'Spieler einer Gruppe',14,-26,200)
+ choice(14,-42,150,'untereinander','unitLayout','vertical');choice(170,-42,150,'nebeneinander','unitLayout','horizontal')
+ label(p,'Gruppen',14,-74,200)
+ choice(14,-90,150,'nebeneinander','horizontal',true);choice(170,-90,150,'untereinander','horizontal',false)
+ label(p,'Text im Feld',14,-122,200)
+ choice(14,-138,100,'fehlend',
+  'healthText','missing',GH.RefreshAll);choice(118,-138,100,'Prozent','healthText','percent',GH.RefreshAll);choice(222,-138,100,'aktuell/max','healthText','current',GH.RefreshAll)
+ choice(14,-166,100,'beides','healthText','both',GH.RefreshAll);choice(118,-166,100,'nichts','healthText','none',GH.RefreshAll)
+ label(p,'Balkenstruktur',14,-198,200)
+ local i=0;for _,key in ipairs({'blizzard','flat','raid','minimal'}) do choice(14+i*84,-214,80,GH.BAR_TEXTURES[key].label,'barTexture',key);i=i+1 end
+ -- Farbakzente über den WoW-Farbwähler
+ label(p,'Farben',14,-248,300,'GameFontNormal')
+ window.swatches={}
+ local function openColor(key)
+  local r,g,b,a=GH.Color(key);local hasAlpha=key=='border'
+  local function apply() local nr,ng,nb=ColorPickerFrame:GetColorRGB();local na=hasAlpha and (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha() or (1-(OpacitySliderFrame and OpacitySliderFrame:GetValue() or 0))) or nil;GH.SetColor(key,nr,ng,nb,na);GH.ConfigRefresh() end
+  local function cancel(prev) if prev then GH.SetColor(key,prev.r,prev.g,prev.b,hasAlpha and (prev.a or prev.opacity) or nil);GH.ConfigRefresh() end end
+  if ColorPickerFrame.SetupColorPickerAndShow then
+   ColorPickerFrame:SetupColorPickerAndShow({r=r,g=g,b=b,opacity=a or 1,hasOpacity=hasAlpha,swatchFunc=apply,opacityFunc=apply,cancelFunc=cancel})
+  else
+   ColorPickerFrame.func=apply;ColorPickerFrame.opacityFunc=apply;ColorPickerFrame.cancelFunc=cancel;ColorPickerFrame.hasOpacity=hasAlpha;ColorPickerFrame.opacity=1-(a or 1);ColorPickerFrame.previousValues={r=r,g=g,b=b,opacity=1-(a or 1)}
+   ColorPickerFrame:SetColorRGB(r,g,b);ColorPickerFrame:Hide();ColorPickerFrame:Show()
+  end
+ end
+ for idx,entry in ipairs(GH.COLOR_LABELS) do
+  local y=-268-(idx-1)*26
+  local sw=CreateFrame('Button',nil,p);sw:SetSize(22,18);sw:SetPoint('TOPLEFT',14,y);sw.key=entry[1]
+  sw.color=sw:CreateTexture(nil,'ARTWORK');sw.color:SetPoint('TOPLEFT',1,-1);sw.color:SetPoint('BOTTOMRIGHT',-1,1)
+  local frame=sw:CreateTexture(nil,'BACKGROUND');frame:SetAllPoints();frame:SetColorTexture(.8,.85,.9,1)
+  sw:SetScript('OnClick',function(self) openColor(self.key) end)
+  label(p,entry[2],42,y-3,280)
+  table.insert(window.swatches,sw)
+ end
+ button(p,'Standardfarben',14,-428,130,function() GH.ResetColors();GH.ConfigRefresh() end,22)
+ slider(p,'Breite',360,-24,'width',60,140,2)
+ slider(p,'Höhe',360,-70,'height',24,64,2)
+ slider(p,'Skalierung',360,-116,'scale',.6,1.6,.05,function(v) return string.format('%.0f%%',v*100) end)
+ slider(p,'Abstand',360,-162,'spacing',0,10,1)
+ slider(p,'Schriftgröße',360,-208,'fontSize',8,16,1)
+ slider(p,'Hintergrund',360,-254,'bgAlpha',.2,1,.05,function(v) return string.format('%.0f%%',v*100) end)
+ label(p,'Anordnung, Größe und Abstand wirken nur außerhalb des Kampfes; Text, Balken, Schrift und Farben sofort.',360,-300,300):SetTextColor(.6,.7,.8)
+ -- Reiter: Anzeige (Funktionen, Sortierung, Zusatzfelder, Auren)
  p=pages.display.frame
- check(p,'Gruppen nebeneinander',14,-4,'horizontal','Aus: Gruppen untereinander.')
  check(p,'Manabalken anzeigen',14,-28,'showMana')
  check(p,'Debuffs anzeigen',14,-52,'showDebuffs','Entfernbare Debuffs färben den Rahmen: Blau Magie, Lila Fluch, Grün Gift, Braun Krankheit.')
  check(p,'Eingehende Heilung und Überheilung',14,-76,'showIncoming','Angekündigte Heilung im Balken (LibHealComm, wie VuhDo); überschüssige Heilung als oranger Wert (+).')
@@ -244,13 +294,9 @@ local function build()
  check(p,'Heilklick nimmt den Spieler ins Ziel',14,-364,'targetOnHeal','An: jeder Heilzauber per Klick visiert den Spieler zusätzlich an. Aus: dein Ziel bleibt, nur der Name visiert an.',function() GH.ApplyBindings() end)
  check(p,'Zauber beim Drücken auslösen',14,-220,'castOnDown','Zaubert schon beim Drücken der Maustaste statt beim Loslassen.',function() GH.ApplyBindings() end)
  check(p,'Ohne Gruppe ausblenden',14,-244,'hideSolo','Zeigt die Frames nur in Gruppe oder Raid.')
- check(p,'Frames sperren',14,-268,'locked','Gesperrt: kein Griff sichtbar, nichts verschiebbar. Das Zahnrad bleibt.')
  check(p,'Eigenes Feld für mein Ziel',14,-292,'showTargetFrame','Ein größeres Feld über dem Griff zeigt dein aktuelles Ziel.')
  check(p,'Eigene Felder für Tanks',14,-316,'showTankFrames','Haupttank und Hauptassistent im Schlachtzug sowie die Namen unter Warnungen → Tanks bekommen eigene Felder über dem Griff.')
  check(p,'Belegung nur für diesen Charakter',14,-340,'perCharacter','An: Klickzauber und Listen gelten nur für diesen Charakter (startet als Kopie der Klassenbelegung). Aus: für alle Charaktere dieser Klasse.',function() GH.ApplyBindings();GH.ConfigRefresh() end)
- slider(p,'Breite',330,-24,'width',60,140,2)
- slider(p,'Höhe',330,-70,'height',24,64,2)
- slider(p,'Skalierung',330,-116,'scale',.6,1.6,.05,function(v) return string.format('%.0f%%',v*100) end)
  label(p,'Sortierung (wirkt außerhalb des Kampfes)',320,-160,340,'GameFontNormal')
  window.sortButtons={}
  for i,entry in ipairs({{'group','Gruppen 1–8'},{'role','Tanks zuerst'},{'class','Klassen'}}) do
@@ -262,6 +308,11 @@ local function build()
  local addAura;addAura=button(p,'Aura hinzufügen',320,-326,120,function() local dragged=cursorSpell();local function add(name) if not name then return end;local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then return end end;list[#list+1]=name;GH.SetTrackedAuras(list);GH.ConfigRefresh() end;if dragged then add(dragged) else openPicker(addAura,add,{spellsOnly=true}) end end)
  button(p,'Letzte entfernen',446,-326,110,function() local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;table.remove(list);GH.SetTrackedAuras(list);GH.ConfigRefresh() end)
  button(p,'Standard',562,-326,80,function() GH.ResetTrackedAuras();GH.ConfigRefresh() end)
+ label(p,'Abklingzeiten',320,-366,340,'GameFontNormal')
+ slider(p,'Symbolgröße',332,-402,'cdSize',18,48,2)
+ check(p,'Bereit-Meldung auf dem Bildschirm',320,-432,'cdReadyWarn','Großer Text in der Bildschirmmitte, wenn ein belegter Zauber oder ein Schmuckstück wieder bereit ist.')
+ check(p,'Ton bei bereit',320,-456,'cdReadySound')
+ button(p,'Leiste wieder an die Felder heften',320,-486,240,function() GH.DB().cdPosition=nil;GH.ApplyLayout() end,22)
  button(p,'Position zurücksetzen',14,-400,150,function() GH.DB().position=nil;GH.ApplyLayout() end)
  -- Reiter: Warnungen (Notfall, Überheilung, Tanks, Mana, Boss-Debuffs)
  p=pages.alerts.frame

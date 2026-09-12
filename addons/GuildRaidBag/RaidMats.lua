@@ -1,7 +1,7 @@
 local _,GL=...
 local C=GL.RaidChecklist
 local M={};GL.RaidMats=M
-M.items={{17029,'Heilige Kerze'},{17028,'Heilige Kerze (niedriger Rang)'},{17026,'Wilder Dornwurz'},{17021,'Wilde Beeren'},{17020,'Arkanes Pulver'},{21177,'Symbol der Könige'},{17033,'Symbol der Offenbarung'},{17031,'Rune der Teleportation'},{17032,'Rune der Portale'}}
+M.items={{17029,'Heilige Kerze'},{17028,'Heilige Kerze (niedriger Rang)'},{17026,'Wilder Dornwurz'},{17021,'Wilde Beeren'},{17020,'Arkanes Pulver'},{21177,'Symbol der Könige'},{17033,'Symbol der Offenbarung'},{17031,'Rune der Teleportation'},{17032,'Rune der Portale'},{13810,'Gesegnete Sonnenfrucht (Argentumdämmerung)'},{13813,'Gesegneter Sonnenfruchtsaft (Argentumdämmerung)'},{13724,'Angereicherter Manakeks (Argentumdämmerung)'},{19301,'Alterac Manakeks (Alteractal)'}}
 function M.Store()
  local s=C.Store();if not s then return end
  s.mats=s.mats or {enabled=true,targets={}};s.mats.targets=s.mats.targets or {};return s.mats
@@ -28,12 +28,11 @@ function M.Step(dt)
  local s=M.Store();if not s or s.enabled==false then M.Stop();return end
  local counts,readable=C.Inventory();if not readable then M.Stop('Taschen konnten nicht geprüft werden.');return end
  if M.pending then
-  local p=M.pending;p.age=p.age+dt
-  if (counts[p.id]or 0)<p.before+p.quantity then
-   if p.age>=3 then M.Stop('Nachkauf gestoppt: Kauf nicht bestätigt. Bitte Taschen und Gold prüfen.')end
-   return
-  end
-  M.bought=M.bought+p.quantity;M.pending=nil
+  local p=M.pending;p.age=p.age+dt;local got=(counts[p.id]or 0)-p.before
+  if got>=p.quantity then M.bought=M.bought+p.quantity;M.pending=nil
+  elseif p.age>=3 then
+   if got>0 then M.bought=M.bought+got;M.pending=nil else M.Stop('Nachkauf gestoppt: Kauf nicht bestätigt. Bitte Taschen und Gold prüfen.');return end
+  else return end
  end
  for _,item in ipairs(M.items)do
   local id=item[1];local target=tonumber(s.targets[id])or 0;local missing=target-(counts[id]or 0)
@@ -47,8 +46,14 @@ function M.Step(dt)
      -- Merchant quantities are item counts; buy only complete vendor bundles.
      amount=math.floor(amount/bundle)*bundle
      if amount>0 then
-      M.pending={id=id,before=counts[id]or 0,quantity=amount,age=0}
-      BuyMerchantItem(i,amount);return
+      -- Mehrere Stapel in einem Schritt kaufen (z. B. 100 Stück = 5 × 20), Bestätigung über die Taschen abwarten.
+      local total,left,guard=0,missing,0
+      while left>0 and guard<25 do
+       local chunk=math.min(amount,left);chunk=math.floor(chunk/bundle)*bundle;if chunk<=0 then break end
+       if price>0 and (GetMoney()-total/bundle*price)<chunk/bundle*price then break end
+       BuyMerchantItem(i,chunk);total=total+chunk;left=left-chunk;guard=guard+1
+      end
+      if total>0 then M.pending={id=id,before=counts[id]or 0,quantity=total,age=0};return end
      end
     end
    end
@@ -80,21 +85,28 @@ function M.Open(parent)
    edit:SetScript('OnEditFocusLost',save);edit:SetScript('OnEnterPressed',function(self)save(self);self:ClearFocus()end);edit:SetScript('OnEscapePressed',function(self)self:ClearFocus()end)
    M.rows[#M.rows+1]={id=id,name=name,icon=icon,edit=edit,count=label('',690,y-5,110)}
   end
-  M.status=label('',18,-540,850)
-  label('Kauft beim nächsten Öffnen eines Händlers, der diese Reagenzien verkauft.\nFehlendes Gold, volle Taschen oder begrenzter Vorrat können das Auffüllen begrenzen.',18,-580,860)
+  local bottom=-157-#M.items*40-6
+  M.status=label('',18,bottom,850)
+  label('Kauft beim nächsten Öffnen eines Händlers, der diese Reagenzien verkauft.\nFehlendes Gold, volle Taschen oder begrenzter Vorrat können das Auffüllen begrenzen.',18,bottom-40,860)
  end
  local s=M.Store();M.enabled:SetChecked(s.enabled~=false);local counts=C.Inventory()
  for _,row in ipairs(M.rows)do row.edit:SetText(tostring(s.targets[row.id]or 0));row.count:SetText(tostring(counts[row.id]or 0));local name,_,_,_,_,_,_,_,_,icon=GetItemInfo(row.id);local data=GL.ClassicItemsByID and GL.ClassicItemsByID[row.id];row.icon:SetTexture(icon or data and data.icon or 'Interface\\Icons\\INV_Misc_QuestionMark');if name or data then row.name:SetText(name or data.name)end end
  M.status:SetText(M.message or 'Gewünschte Gesamtmenge je Reagenz eintragen.');M.panel:Show()
 end
 local frame=CreateFrame('Frame');frame:RegisterEvent('MERCHANT_SHOW');frame:RegisterEvent('MERCHANT_CLOSED');frame:RegisterEvent('UI_ERROR_MESSAGE');frame:RegisterEvent('BAG_UPDATE_DELAYED')
-frame:SetScript('OnEvent',function(_,event)
+frame:SetScript('OnEvent',function(_,event,...)
  if event=='BAG_UPDATE_DELAYED' then
   if M.RefreshSummary then M.RefreshSummary()end
   if M.panel and M.panel:IsShown()then local counts=C.Inventory();for _,row in ipairs(M.rows)do row.count:SetText(tostring(counts[row.id]or 0))end end;return
  end
  if event=='MERCHANT_CLOSED' then M.Stop();return end
- if event=='UI_ERROR_MESSAGE' then if M.pending then M.Stop('Nachkauf gestoppt. Bitte die Fehlermeldung des Spiels prüfen.')end;return end
+ if event=='UI_ERROR_MESSAGE' then
+  -- Nur echte Kaufhindernisse stoppen (Gold, Taschen, Händler außer Reichweite), andere Meldungen ignorieren.
+  local _,text=...;text=text or ''
+  local blocking={ERR_NOT_ENOUGH_MONEY,ERR_INV_FULL,ERR_VENDOR_TOO_FAR,ERR_ITEM_MAX_COUNT,ERR_BAG_FULL}
+  for _,msg in ipairs(blocking) do if msg and text==msg then if M.pending then M.Stop('Nachkauf gestoppt: '..text) end;return end end
+  return
+ end
  if not GL.db then return end;local s=M.Store();if not s or s.enabled==false then return end
  M.running=true;M.pending=nil;M.bought=0;M.elapsed=0
 end)

@@ -1,3 +1,8 @@
+# GuildLoot Mini-Addons 1.1.2-beta
+
+- GuildHeal: Reiter Tasten (Maus über Feld + Taste), Reiter Design (Anordnung, Text, Balken, Schrift, Farben), Reiter Warnungen, Modus „UI bearbeiten“ mit Griffen, Cooldown-Leiste frei platzierbar mit Bereit-Meldung, Ziel- und Tankfelder, Heilklick visiert wahlweise an, Priester-Vorbelegung mit festen Rängen.
+- GuildRaidBag: Argentumdämmerung-Bufffood und Manakekse im Nachkauf, mehrere Stapel pro Kauf, Hinweise unter der Liste.
+
 # GuildLoot Mini-Addons 1.1.1-beta
 
 - GuildHeal: Heilvorhersage über LibHealComm-4.0 (kompatibel mit VuhDo/HealBot/Grid), Klickzauber je Modifikator für Maustaste 1–5 und Mausrad mit Freitext (Zauber mit Rang, Makro, Gegenstand, Aktionen), Tasten bei Maus über einem Feld, Ketten mit Schmuckstücken und Zusatzzaubern, Klick auf den Namen visiert an, optional visiert jeder Heilklick an.

@@ -31,7 +31,14 @@ local function updateHealth(button)
  else
   local missing=max-hp;local over=hp+incoming-max
   if incoming>0 and over>0 then button.deficit:SetText('+'..GH.Short(over));button.deficit:SetTextColor(1,.55,.15)
-  else button.deficit:SetText(missing>0 and ('-'..GH.Short(missing)) or '');button.deficit:SetTextColor(1,.85,.4) end
+  else
+   local mode=db.healthText or 'missing';local text=''
+   if mode=='missing' then text=missing>0 and ('-'..GH.Short(missing)) or ''
+   elseif mode=='percent' then text=string.format('%d%%',math.floor(hp/max*100+.5))
+   elseif mode=='current' then text=GH.Short(hp)..'/'..GH.Short(max)
+   elseif mode=='both' then text=(missing>0 and ('-'..GH.Short(missing)..' ') or '')..string.format('%d%%',math.floor(hp/max*100+.5)) end
+   button.deficit:SetText(text);button.deficit:SetTextColor(GH.Color('text'))
+  end
  end
  if db.healthGradient then
   local pct=hp/max;local r=pct<.5 and 1 or (1-pct)*2;local g=pct>.5 and 1 or pct*2
@@ -62,7 +69,7 @@ local function updateName(button)
  button.name:SetText(UnitName(unit) or '?')
  local r,g,b=GH.ClassColor(unit)
  if GH.DB().healthGradient then button.name:SetTextColor(r,g,b)
- elseif GH.DB().classColors then button.health:SetStatusBarColor(r,g,b);button.name:SetTextColor(1,1,1) else button.health:SetStatusBarColor(.2,.75,.3);button.name:SetTextColor(r,g,b) end
+ elseif GH.DB().classColors then button.health:SetStatusBarColor(r,g,b);button.name:SetTextColor(GH.Color('name')) else button.health:SetStatusBarColor(GH.Color('bar'));button.name:SetTextColor(r,g,b) end
 end
 local function updateDebuffs(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
@@ -155,6 +162,12 @@ local function updateRange(button)
  button:SetAlpha(inRange and 1 or GH.DB().fadeRange)
 end
 local function updateAll(button) updateName(button);updateHealth(button);updatePower(button);updateDebuffs(button);updateAuras(button);updateThreat(button);updateTarget(button);updateRange(button) end
+function GH.ApplyColors(button)
+ local db=GH.DB()
+ local r,g,b=GH.Color('bg');button.bg:SetColorTexture(r,g,b,db.bgAlpha or .92)
+ local br,bg_,bb,ba=GH.Color('border');button.frameBorder:SetColorTexture(br,bg_,bb,ba or 0)
+ if button.incoming then local ir,ig,ib=GH.Color('incoming');button.incoming:SetColorTexture(ir,ig,ib,.45) end
+end
 function GH.RefreshHealthByGuid(guid)
  for _,button in ipairs(buttons) do local unit=unitOf(button);if unit and button:IsShown() and UnitGUID(unit)==guid then updateHealth(button) end end
 end
@@ -218,15 +231,17 @@ end
 local function styleButton(button)
  local db=GH.DB()
  button:SetSize(db.width,db.height)
- button.bg=button:CreateTexture(nil,'BACKGROUND');button.bg:SetAllPoints();button.bg:SetColorTexture(.05,.07,.1,.92)
+ button.bg=button:CreateTexture(nil,'BACKGROUND');button.bg:SetAllPoints()
+ button.frameBorder=button:CreateTexture(nil,'BACKGROUND',nil,-3);button.frameBorder:SetPoint('TOPLEFT',-1,1);button.frameBorder:SetPoint('BOTTOMRIGHT',1,-1)
+ GH.ApplyColors(button)
  button.border=button:CreateTexture(nil,'BACKGROUND',nil,-1);button.border:SetPoint('TOPLEFT',-2,2);button.border:SetPoint('BOTTOMRIGHT',2,-2);button.border:SetColorTexture(1,1,1,.8);button.border:Hide()
  button.aggro=button:CreateTexture(nil,'BACKGROUND',nil,-2);button.aggro:SetPoint('TOPLEFT',-3,3);button.aggro:SetPoint('BOTTOMRIGHT',3,-3);button.aggro:SetColorTexture(1,.12,.12,1);button.aggro:Hide()
- button.health=CreateFrame('StatusBar',nil,button);button.health:SetStatusBarTexture(BAR);button.health:SetPoint('TOPLEFT',1,-1);button.health:SetPoint('BOTTOMRIGHT',-1,db.showMana and 4 or 1)
+ button.health=CreateFrame('StatusBar',nil,button);button.health:SetStatusBarTexture(GH.BarTexture());button.health:SetPoint('TOPLEFT',1,-1);button.health:SetPoint('BOTTOMRIGHT',-1,db.showMana and 4 or 1)
  local hbg=button.health:CreateTexture(nil,'BACKGROUND');hbg:SetAllPoints();hbg:SetColorTexture(.15,.1,.1,.8)
  button.incoming=button.health:CreateTexture(nil,'ARTWORK',nil,1);button.incoming:SetColorTexture(.4,.9,.5,.45);button.incoming:Hide()
- button.power=CreateFrame('StatusBar',nil,button);button.power:SetStatusBarTexture(BAR);button.power:SetPoint('BOTTOMLEFT',1,1);button.power:SetPoint('BOTTOMRIGHT',-1,1);button.power:SetHeight(3)
- button.name=button.health:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');button.name:SetPoint('TOPLEFT',4,-3);button.name:SetPoint('RIGHT',-22,0);button.name:SetJustifyH('LEFT');button.name:SetWordWrap(false)
- button.deficit=button.health:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');button.deficit:SetPoint('BOTTOMRIGHT',-3,2);button.deficit:SetTextColor(1,.85,.4)
+ button.power=CreateFrame('StatusBar',nil,button);button.power:SetStatusBarTexture(GH.BarTexture());button.power:SetPoint('BOTTOMLEFT',1,1);button.power:SetPoint('BOTTOMRIGHT',-1,1);button.power:SetHeight(3)
+ button.name=button.health:CreateFontString(nil,'OVERLAY');button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.name:SetPoint('TOPLEFT',4,-3);button.name:SetPoint('RIGHT',-22,0);button.name:SetJustifyH('LEFT');button.name:SetWordWrap(false)
+ button.deficit=button.health:CreateFontString(nil,'OVERLAY');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE');button.deficit:SetPoint('BOTTOMRIGHT',-3,2);button.deficit:SetTextColor(1,.85,.4)
  button.debuff=button:CreateTexture(nil,'OVERLAY');button.debuff:SetSize(14,14);button.debuff:SetPoint('TOPRIGHT',-3,-3);button.debuff:Hide()
  button.debuffCount=button:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');button.debuffCount:SetPoint('CENTER',button.debuff,'BOTTOMRIGHT',-2,2)
  button.target=button:CreateTexture(nil,'OVERLAY');button.target:SetAllPoints();button.target:SetColorTexture(1,1,1,.18);button.target:Hide()
@@ -348,11 +363,35 @@ function GH.ApplyBindings()
 end
 
 -- Cooldown-Leiste: Zauber aus Belegungen, Tasten und Ketten sowie genutzte Schmuckstücke, sichtbar solange sie abklingen.
-function GH.BuildCooldownBar()
- if not cdBar then
-  cdBar=CreateFrame('Frame','GuildHealCooldowns',anchor);cdBar:SetSize(10,26);cdBar.items={}
+-- Bereit-Meldung: großer Text in der Bildschirmmitte, wenn ein beobachteter Zauber oder ein Schmuckstück wieder bereit ist.
+local readyFrame
+local function announceReady(text,icon)
+ local db=GH.DB();if not db.cdReadyWarn then return end
+ if not readyFrame then
+  readyFrame=CreateFrame('Frame',nil,UIParent);readyFrame:SetSize(400,60);readyFrame:SetPoint('CENTER',UIParent,'CENTER',0,180);readyFrame:SetFrameStrata('HIGH')
+  readyFrame.icon=readyFrame:CreateTexture(nil,'ARTWORK');readyFrame.icon:SetSize(36,36);readyFrame.icon:SetPoint('LEFT',40,0);readyFrame.icon:SetTexCoord(.08,.92,.08,.92)
+  readyFrame.text=readyFrame:CreateFontString(nil,'OVERLAY');readyFrame.text:SetFont(STANDARD_TEXT_FONT,26,'OUTLINE');readyFrame.text:SetPoint('LEFT',readyFrame.icon,'RIGHT',12,0);readyFrame.text:SetTextColor(.4,1,.5)
+  readyFrame:SetScript('OnUpdate',function(self,dt) self.left=(self.left or 0)-dt;if self.left<=0 then self:Hide() elseif self.left<.8 then self:SetAlpha(self.left/.8) else self:SetAlpha(1) end end)
  end
- cdBar:ClearAllPoints();cdBar:SetPoint('BOTTOMLEFT',extras or anchor,'TOPLEFT',0,4)
+ readyFrame.text:SetText(text..' bereit');readyFrame.icon:SetTexture(icon);readyFrame.icon:SetShown(icon~=nil);readyFrame.left=2.5;readyFrame:SetAlpha(1);readyFrame:Show()
+ if db.cdReadySound and PlaySound then PlaySound(8959,'Master') end
+end
+function GH.BuildCooldownBar()
+ local db=GH.DB()
+ if not cdBar then
+  cdBar=CreateFrame('Frame','GuildHealCooldowns',UIParent);cdBar:SetSize(10,26);cdBar.items={};cdBar:SetMovable(true);cdBar:SetClampedToScreen(true)
+  -- Griff zum Verschieben der Cooldown-Leiste (nur sichtbar, wenn die Frames nicht gesperrt sind).
+  -- Im Bearbeitungsmodus liegt eine transparente Griff-Fläche über der Leiste (ohne Überschrift).
+  cdBar.handle=CreateFrame('Frame',nil,cdBar);cdBar.handle:SetAllPoints();cdBar.handle:SetFrameLevel(cdBar:GetFrameLevel()+10);cdBar.handle:EnableMouse(true);cdBar.handle:RegisterForDrag('LeftButton')
+  local hbg=cdBar.handle:CreateTexture(nil,'BACKGROUND');hbg:SetAllPoints();hbg:SetColorTexture(.16,.6,.55,.45)
+  cdBar.handle:SetScript('OnDragStart',function() if not GH.DB().locked then cdBar:StartMoving() end end)
+  cdBar.handle:SetScript('OnDragStop',function() cdBar:StopMovingOrSizing();local point,_,_,x,y=cdBar:GetPoint();GH.DB().cdPosition={point=point,x=x,y=y} end)
+  cdBar.handle:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('Abklingzeiten verschieben');GameTooltip:AddLine('Ziehen verschiebt die Leiste. Unter Anzeige lässt sie sich wieder an die Felder heften.',1,1,1,true);GameTooltip:Show() end);cdBar.handle:SetScript('OnLeave',function() GameTooltip:Hide() end)
+ end
+ cdBar:ClearAllPoints()
+ if db.cdPosition then cdBar:SetPoint(db.cdPosition.point or 'CENTER',UIParent,db.cdPosition.point or 'CENTER',db.cdPosition.x or 0,db.cdPosition.y or 0) else cdBar:SetPoint('BOTTOMLEFT',extras or anchor,'TOPLEFT',0,4) end
+ cdBar.handle:SetShown(not db.locked and db.showCooldowns~=false);cdBar:SetShown(not db.hidden)
+ local size=db.cdSize or 26;cdBar:SetHeight(size)
  local seen,list={},{}
  local function addSpell(name) if type(name)=='string' and GH.ValidSpell(name) then name=GH.BaseName(name);if not seen[name] then seen[name]=true;list[#list+1]={spell=name} end end end
  local bindings=GH.Bindings();local store=GH.ClassStore();local chains=store.chains or {}
@@ -365,14 +404,14 @@ function GH.BuildCooldownBar()
  for i,entry in ipairs(list) do
   local item=cdBar.items[i]
   if not item then
-   item=CreateFrame('Frame',nil,cdBar);item:SetSize(26,26)
+   item=CreateFrame('Frame',nil,cdBar);item:SetSize(size,size)
    item.icon=item:CreateTexture(nil,'ARTWORK');item.icon:SetAllPoints();item.icon:SetTexCoord(.08,.92,.08,.92)
    item.cd=CreateFrame('Cooldown',nil,item,'CooldownFrameTemplate');item.cd:SetAllPoints();item.cd:SetDrawEdge(false);if item.cd.SetHideCountdownNumbers then item.cd:SetHideCountdownNumbers(true) end
    item.time=item:CreateFontString(nil,'OVERLAY');item.time:SetFont(STANDARD_TEXT_FONT,11,'OUTLINE');item.time:SetPoint('CENTER',0,0)
    item:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');if self.entry.spell then GameTooltip:SetText(self.entry.spell) else GameTooltip:SetInventoryItem('player',self.entry.slot) end;GameTooltip:Show() end);item:SetScript('OnLeave',function() GameTooltip:Hide() end)
    cdBar.items[i]=item
   end
-  item.entry=entry;item:Hide()
+  item.entry=entry;item:Hide();item:SetSize(size,size);item.time:SetFont(STANDARD_TEXT_FONT,math.max(9,math.floor(size*.42)),'OUTLINE');item.wasCooling=nil
   if entry.spell then item.icon:SetTexture(GH.SpellIconOf(entry.spell)) else item.icon:SetTexture(GetInventoryItemTexture('player',entry.slot) or 'Interface\\Icons\\INV_Misc_QuestionMark') end
  end
  for i=#list+1,#cdBar.items do cdBar.items[i]:Hide();cdBar.items[i].entry=nil end
@@ -380,22 +419,27 @@ function GH.BuildCooldownBar()
 end
 function GH.RefreshCooldownBar()
  if not cdBar then return end
- if not GH.DB().showCooldowns then for _,item in ipairs(cdBar.items) do item:Hide() end;return end
- local x=0;local now=GetTime()
+ local db=GH.DB()
+ if not db.showCooldowns then for _,item in ipairs(cdBar.items) do item:Hide() end;cdBar.handle:Hide();return end
+ local x=0;local now=GetTime();local size=db.cdSize or 26
  for _,item in ipairs(cdBar.items) do
   local e=item.entry
   if e then
    local start,duration,enabled
    if e.spell then start,duration,enabled=GetSpellCooldown(e.spell) else start,duration,enabled=GetInventoryItemCooldown('player',e.slot);if e.slot and not GetInventoryItemTexture('player',e.slot) then start=nil end end
-   if start and start>0 and duration and duration>1.6 and enabled~=0 then
+   local cooling=start and start>0 and duration and duration>1.6 and enabled~=0 and (start+duration-now)>0
+   if cooling then
     local left=start+duration-now
-    if left>0 then
-     item:ClearAllPoints();item:SetPoint('BOTTOMLEFT',x,0);x=x+28;item:Show()
-     item.cd:SetCooldown(start,duration);item.time:SetText(left>=60 and string.format('%dm',math.ceil(left/60)) or string.format('%d',math.ceil(left)))
-    else item:Hide() end
-   else item:Hide() end
+    item:ClearAllPoints();item:SetPoint('BOTTOMLEFT',x,0);x=x+size+2;item:Show()
+    item.cd:SetCooldown(start,duration);item.time:SetText(left>=60 and string.format('%dm',math.ceil(left/60)) or string.format('%d',math.ceil(left)))
+    item.wasCooling=true
+   else
+    item:Hide()
+    if item.wasCooling then item.wasCooling=nil;announceReady(e.spell or (GetInventoryItemLink('player',e.slot) and (GetInventoryItemLink('player',e.slot):match('%[(.-)%]')) or 'Schmuckstück'),item.icon:GetTexture()) end
+   end
   end
  end
+ cdBar:SetWidth(math.max(db.locked and 10 or size*3+4,x))
 end
 
 -- Ziel- und Tankfelder: eigene SecureUnitButtons oberhalb des Griffs (Ziel, dann Tanks aus Rollen/Namen).
@@ -445,9 +489,12 @@ function GH.ApplyLayout()
  anchor:ClearAllPoints()
  if db.position then anchor:SetPoint(db.position.point or 'CENTER',UIParent,db.position.point or 'CENTER',db.position.x or 0,db.position.y or 0) else anchor:SetPoint('CENTER',UIParent,'CENTER',0,-220) end
  header:ClearAllPoints()
- if db.horizontal then header:SetAttribute('point','TOP');header:SetAttribute('xOffset',0);header:SetAttribute('yOffset',-3);header:SetAttribute('columnAnchorPoint','LEFT')
- else header:SetAttribute('point','LEFT');header:SetAttribute('xOffset',3);header:SetAttribute('yOffset',0);header:SetAttribute('columnAnchorPoint','TOP') end
- header:SetAttribute('columnSpacing',4);header:SetPoint('TOPLEFT',anchor,'BOTTOMLEFT',0,-2)
+ -- Spieler untereinander (Spalten) oder nebeneinander (Reihen); Gruppen nebeneinander oder untereinander.
+ local gap=db.spacing or 3
+ if db.unitLayout=='horizontal' then header:SetAttribute('point','LEFT');header:SetAttribute('xOffset',gap);header:SetAttribute('yOffset',0)
+ else header:SetAttribute('point','TOP');header:SetAttribute('xOffset',0);header:SetAttribute('yOffset',-gap) end
+ header:SetAttribute('columnAnchorPoint',db.horizontal and 'LEFT' or 'TOP')
+ header:SetAttribute('columnSpacing',gap+1);header:SetPoint('TOPLEFT',anchor,'BOTTOMLEFT',0,-2)
  header:SetAttribute('unitsPerColumn',5);header:SetAttribute('maxColumns',8);header:SetAttribute('showSolo',not db.hideSolo)
  -- Sortierung (nur außerhalb des Kampfes änderbar): Gruppen, Tanks zuerst (Rollen) oder Klassen.
  if db.sortMode=='role' then header:SetAttribute('groupBy','ROLE');header:SetAttribute('groupingOrder','MAINTANK,MAINASSIST,NONE')
@@ -455,10 +502,12 @@ function GH.ApplyLayout()
  else header:SetAttribute('groupBy','GROUP');header:SetAttribute('groupingOrder','1,2,3,4,5,6,7,8') end
  for _,button in ipairs(buttons) do
   if not button.extra then button:SetSize(db.width,db.height) end;button.health:SetPoint('BOTTOMRIGHT',-1,db.showMana and 4 or 1)
+  button.health:SetStatusBarTexture(GH.BarTexture());button.power:SetStatusBarTexture(GH.BarTexture());GH.ApplyColors(button)
+  button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE')
   button.nameZone:SetShown(db.nameClick~=false)
   updateAll(button)
  end
- GH.BuildExtras();GH.ApplyBindings()
+ GH.BuildExtras();GH.ApplyBindings();GH.BuildCooldownBar()
  anchor:EnableMouse(not db.locked);anchor.label:SetShown(not db.locked);anchor.bg:SetShown(not db.locked)
  anchor:SetSize(70,14);anchor.gear:SetAlpha(db.locked and .6 or 1)
 end
@@ -489,7 +538,7 @@ function GH.Initialize()
  anchor.label=anchor:CreateFontString(nil,'OVERLAY');anchor.label:SetFont(STANDARD_TEXT_FONT,9,'OUTLINE');anchor.label:SetPoint('CENTER');anchor.label:SetText('GuildHeal')
  anchor:SetScript('OnDragStart',function(self) if not GH.DB().locked then self:StartMoving() end end)
  anchor:SetScript('OnDragStop',function(self) self:StopMovingOrSizing();local point,_,_,x,y=self:GetPoint();GH.DB().position={point=point,x=x,y=y} end)
- anchor:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal');GameTooltip:AddLine('Ziehen verschiebt die Frames. /gheal lock sperrt und blendet den Griff aus.',1,1,1,true);GameTooltip:Show() end);anchor:SetScript('OnLeave',function() GameTooltip:Hide() end)
+ anchor:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal verschieben');GameTooltip:AddLine('Ziehen verschiebt die Frames. „UI bearbeiten“ im Einstellungsfenster oder /gheal lock beendet den Modus.',1,1,1,true);GameTooltip:Show() end);anchor:SetScript('OnLeave',function() GameTooltip:Hide() end)
  anchor.gear=CreateFrame('Button',nil,anchor);anchor.gear:SetSize(16,16);anchor.gear:SetPoint('LEFT',anchor,'RIGHT',3,0);anchor.gear:SetFrameStrata('LOW')
  local gearIcon=anchor.gear:CreateTexture(nil,'ARTWORK');gearIcon:SetAllPoints();gearIcon:SetTexture('Interface\\Icons\\Trade_Engineering');gearIcon:SetTexCoord(.08,.92,.08,.92)
  anchor.gear:SetHighlightTexture('Interface\\Buttons\\ButtonHilight-Square','ADD')
