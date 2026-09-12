@@ -6994,6 +6994,7 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   let synced = 0;
   let skippedOccupied = 0;
   let stored = 0;
+  let hordeSynced = 0;
   try {
     await client.query("begin");
     // Pro Gilde darf immer nur ein Poster-Snapshot geschrieben werden.
@@ -7060,6 +7061,23 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
         ]
       );
       const event = savedEvent.rows[0];
+      // Rend ist ein Hordenbuff: Termine aus dem WB Ticker landen zusätzlich in der Hordenbuff-Liste,
+      // damit der Bot sie im Hordenbuff-Channel postet und die Gildenleitung sie dort sieht.
+      if (buff === "Rend") {
+        try {
+          await upsertHordenbuffEvent(client, guildId, {
+            datum: eventDate,
+            uhrzeit: eventTime,
+            buff: "Rend",
+            gilde: /horde/i.test(guildName) ? "Horde" : guildName,
+            status: "offen",
+            eventNote: `Automatisch aus dem WB Ticker (${guildName})`
+          });
+          hordeSynced += 1;
+        } catch (error) {
+          console.warn("Rend-Termin aus dem WB Ticker konnte nicht in die Hordenbuff-Liste übernommen werden:", error.message || error);
+        }
+      }
       const caster = clean(entry.charakter || entry.caster || entry.werfer);
       if (caster) {
         const existingEntry = await client.query(
@@ -7150,7 +7168,8 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
     synced,
     skippedOccupied,
     stored,
-    syncVersion: "wb-poster-snapshot-v5"
+    hordeSynced,
+    syncVersion: "wb-poster-snapshot-v6"
   };
 }
 
