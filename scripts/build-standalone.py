@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parent.parent
 PROJECTS={'GuildRaidBag':{'projectId':1692270,'slug':'guildraidbag'},'GuildSkills':{'projectId':1692281,'slug':'guildskills'},'GuildBuff':{'projectId':1692275,'slug':'guildbuff'}}
 EXTRAS={'README.md','PROFESSION-DATA-LICENSE.txt','PROFESSION-DATA-SOURCE.txt'}
 # Ein CurseForge-Projekt für alle Mini-Addons: eine Zip mit drei Addon-Ordnern (Vorgabe der CurseForge-Moderation).
-BUNDLE={'name':'GuildLootMiniAddons','projectId':1692281,'slug':'guildskills','addons':['GuildSkills','GuildBuff','GuildRaidBag']}
+BUNDLE={'name':'GuildLootMiniAddons','projectId':1692281,'slug':'guildloot-mini-addons','addons':['GuildSkills','GuildBuff','GuildRaidBag']}
 
 def files_of(name):
     folder=ROOT/'addons'/name;assert folder.is_dir(),'Unknown addon '+name
