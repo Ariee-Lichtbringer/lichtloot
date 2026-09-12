@@ -26,7 +26,8 @@
   const close=()=>{list.hidden=true;toggle.setAttribute('aria-expanded','false');hideTip();};
   toggle.onclick=()=>{if(select.disabled)return;if(!list.hidden){close();return;}list.hidden=false;toggle.setAttribute('aria-expanded','true');list.querySelector('[aria-selected="true"]')?.focus();};
   toggle.onkeydown=e=>{if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();toggle.click();}};
-  host.addEventListener('focusout',e=>{if(!host.contains(e.relatedTarget))close();});
+  list.addEventListener('mousedown',e=>e.preventDefault());
+  host.addEventListener('focusout',e=>{if(host.contains(e.relatedTarget))return;setTimeout(()=>{if(!host.contains(document.activeElement))close();},0);});
   host.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();toggle.focus();}if(e.target===toggle)return;const options=[...list.children],index=options.indexOf(document.activeElement);let next=index;if(e.key==='ArrowDown')next=(index+1)%options.length;else if(e.key==='ArrowUp')next=(index-1+options.length)%options.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=options.length-1;else return;e.preventDefault();options[next]?.focus();});
   function refresh(){close();toggle.replaceChildren();const item=items.find(i=>i.itemId===select.value);if(item)toggle.append(icon(item),el('span',item.name),el('span','▾'));list.replaceChildren();for(const option of [...select.options]){const record=items.find(i=>i.itemId===option.value);if(!record)continue;const button=decorate(el('button'),record,false);button.type='button';button.setAttribute('role','option');button.setAttribute('aria-selected',String(select.value===record.itemId));button.onclick=()=>{if(select.disabled)return;select.value=record.itemId;close();onchange();toggle.focus();};list.append(button);}}
   return {host,refresh};
