@@ -1,3 +1,10 @@
+# GuildLoot 0.24.24-beta
+
+- Symbolleiste: GuildHeal-Symbol mit Haken (Frames ein-/ausblenden, Rechtsklick Einstellungen); GuildHeal auch in der Auswahl des GuildLoot-Hauptsymbols.
+- Minimap-Symbol: Rechtsklick öffnet die Auswahl der Mini-Addons statt der Buffleiste.
+- Berufsübersicht: Fenster mit –/+/1:1 verkleinern und vergrößern.
+- Gildenbank: klarer Hinweis, wenn für die gewählte Gilde kein Bestand hinterlegt ist.
+
 # GuildLoot 0.24.23-beta
 
 - Eigenes GuildLoot-Symbol für das Whisper-Mini-Addon (Symbolleiste, Mini-Button und Auswahl im GuildLoot-Hauptsymbol).

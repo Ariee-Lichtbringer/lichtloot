@@ -1,3 +1,9 @@
+# GuildLoot Mini-Addons 1.1.1-beta
+
+- GuildHeal: Heilvorhersage über LibHealComm-4.0 (kompatibel mit VuhDo/HealBot/Grid), Klickzauber je Modifikator für Maustaste 1–5 und Mausrad mit Freitext (Zauber mit Rang, Makro, Gegenstand, Aktionen), Tasten bei Maus über einem Feld, Ketten mit Schmuckstücken und Zusatzzaubern, Klick auf den Namen visiert an, optional visiert jeder Heilklick an.
+- GuildHeal: Boss-Debuffs, HoT-Symbole mit Restzeit, Abklingzeiten, Aggro/Bedrohung, Notfall-, Überheilungs- und Mana-Warnung, Tank- und Zielfelder, Farbstufen, Profile je Charakter, Sortierung, Griff mit Zahnrad.
+- GuildSkills: Berufefenster mit –/+/1:1 verkleinern und vergrößern.
+
 # GuildLoot Mini-Addons 1.1.0-beta
 
 - Neu: GuildHeal – einfache Heilerframes mit vorbelegten Klickzaubern je Klasse, Debuff-Anzeige, Reichweite, Manabalken. /gheal öffnet die Einstellungen.

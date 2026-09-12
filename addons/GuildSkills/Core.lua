@@ -46,3 +46,7 @@ frame:SetScript('OnEvent',function(self,event,name)
   print('|cff79e6c5GuildSkills:|r geladen. /gskills öffnet die Berufsübersicht, /gskills symbol blendet das Symbol ein oder aus.')
  end
 end)
+
+-- Fenstergröße der Berufsübersicht (– / + / 1:1 im Fenster), 50 % bis 130 %.
+function GL.ProfessionWindowScale() local db=GL.db or {};return math.max(.5,math.min(1.3,tonumber(db.professionWindowScale) or 1)) end
+function GL.SetProfessionWindowScale(value) if GL.db then GL.db.professionWindowScale=math.max(.5,math.min(1.3,tonumber(value) or 1)) end end

@@ -154,7 +154,7 @@ do
   for i,b in ipairs(rows) do at(b,18,y+85+(i-1)*32) end
   at(detail,474,y+91);at(recipeIcon,430,y+91)
   for i,b in ipairs(reagents) do at(b,430+((i-1)%2)*156,y+224+math.floor((i-1)/2)*45) end
-  actionY=y+477;frame:SetHeight(actionY+51);frame:SetScale(math.min(1,(UIParent:GetHeight()-40)/(actionY+51)))
+  actionY=y+477;frame:SetHeight(actionY+51);frame:SetScale(math.min(1,(UIParent:GetHeight()-40)/(actionY+51))*GL.ProfessionWindowScale())
   for b in pairs(borrowed) do b:ClearAllPoints();b:SetPoint('TOPLEFT',frame,'TOPLEFT',430,-actionY) end
   if quantityControls and chosen then quantityControls:ShowFor(chosen,actionY) end
  end
@@ -185,7 +185,17 @@ do
  function GL.ShowProfessions()
   if not frame then
    if InCombatLockdown() then print('GuildSkills: Berufsübersicht bitte nach dem Kampf öffnen.');return end
-   frame=CreateFrame('Frame','GuildSkillsWindow',UIParent,'BasicFrameTemplateWithInset');frame:SetSize(760,833);frame:SetScale(math.min(1,(UIParent:GetHeight()-40)/833));frame:SetPoint('CENTER');frame:SetFrameStrata('DIALOG');frame:SetClampedToScreen(true);frame:SetMovable(true);frame:EnableMouse(true);frame:RegisterForDrag('LeftButton');frame:SetScript('OnDragStart',frame.StartMoving);frame:SetScript('OnDragStop',frame.StopMovingOrSizing);frame.TitleText:SetText('GuildSkills · Berufe')
+   frame=CreateFrame('Frame','GuildSkillsWindow',UIParent,'BasicFrameTemplateWithInset');frame:SetSize(760,833);frame:SetScale(math.min(1,(UIParent:GetHeight()-40)/833)*GL.ProfessionWindowScale());frame:SetPoint('CENTER');frame:SetFrameStrata('DIALOG');frame:SetClampedToScreen(true);frame:SetMovable(true);frame:EnableMouse(true);frame:RegisterForDrag('LeftButton');frame:SetScript('OnDragStart',frame.StartMoving);frame:SetScript('OnDragStop',frame.StopMovingOrSizing);frame.TitleText:SetText('GuildSkills · Berufe')
+   do
+    local function sizeButton(text,x,delta)
+     local b=CreateFrame('Button',nil,frame);b:SetSize(22,18);b:SetPoint('TOPRIGHT',frame,'TOPRIGHT',x,-4);b:SetFrameLevel(frame:GetFrameLevel()+5)
+     local bg=b:CreateTexture(nil,'BACKGROUND');bg:SetAllPoints();bg:SetColorTexture(.12,.22,.26,.95)
+     local l=b:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');l:SetPoint('CENTER');l:SetText(text)
+     b:SetScript('OnClick',function() GL.SetProfessionWindowScale(delta and (GL.ProfessionWindowScale()+delta) or 1);layoutSections() end)
+     b:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(delta and (delta<0 and 'Fenster verkleinern' or 'Fenster vergrößern') or 'Originalgröße');GameTooltip:Show() end);b:SetScript('OnLeave',function() GameTooltip:Hide() end)
+    end
+    sizeButton('–',-98,-.1);sizeButton('+',-74,.1);sizeButton('1:1',-50,nil)
+   end
    buttons={};rows={};dbButtons={};remoteButtons={}
    characterButton=button(frame,'Charakter',18,-36,440)
    characterButton.icon=characterButton:CreateTexture(nil,'ARTWORK');characterButton.icon:SetPoint('TOPLEFT',4,-3);characterButton.icon:SetSize(24,24)

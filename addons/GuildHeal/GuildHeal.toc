@@ -2,8 +2,13 @@
 ## Title: GuildHeal
 ## Notes: Einfache Heilerframes mit Klickzaubern für Gruppe und Raid (Classic Era). Einstellen mit /gheal.
 ## Author: GuildLoot
-## Version: 1.1.0-beta
+## Version: 1.1.1-beta
 ## SavedVariables: GuildHealDB
+Libs/LibStub.lua
+Libs/CallbackHandler-1.0.lua
+Libs/ChatThrottleLib.lua
+Libs/LibHealComm-4.0.lua
 Core.lua
+Comm.lua
 Frames.lua
 Config.lua
