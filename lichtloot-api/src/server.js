@@ -235,6 +235,7 @@ const corsOptions = {
     callback(null, false);
   },
   methods: ["GET", "POST", "OPTIONS"],
+  exposedHeaders: ["Content-Disposition", "Content-Length"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204
 };

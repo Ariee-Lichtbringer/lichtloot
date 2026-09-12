@@ -9,11 +9,20 @@
   const dialog = document.createElement('dialog');
   dialog.className = 'addon-beta-dialog';
   dialog.setAttribute('aria-labelledby', 'addonBetaTitle');
-  dialog.innerHTML = `<form><h2 id="addonBetaTitle">GuildLoot Sync herunterladen</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option></select><p id="addonBetaHint">Kostenlos und ohne Download-PIN · Sync 0.3.10</p><ol class="sync-download-steps"><li>Installer herunterladen und öffnen. Eine laufende Sync-App vorher beenden.</li><li>In Sync „Vorhandenes Addon verbinden“ wählen, wenn du es über CurseForge installiert hast.</li><li>Gildenprofil mit deinem Spieler-PIN verbinden, synchronisieren und in WoW /reload eingeben.</li></ol><p class="sync-download-note"><strong>Update einer vorhandenen Version:</strong> Sync schließen → heruntergeladene Installationsdatei ausführen → Sync wieder öffnen. Die bisherige Version wird ersetzt. Deine Gildenprofile und Einstellungen bleiben erhalten. Nur herunterladen reicht nicht aus.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
+  dialog.innerHTML = `<form><h2 id="addonBetaTitle">GuildLoot Sync herunterladen</h2><label for="addonBetaPlatform">Download für deinen Computer</label><select id="addonBetaPlatform" required><option value="">Bitte auswählen …</option><option value="windows">Windows · Sync-Setup (.exe)</option><option value="mac-arm64">Mac mit Apple-Chip · Sync-Installer (.pkg)</option><option value="mac-x64">Mac mit Intel · Sync-Installer (.pkg)</option></select><p id="addonBetaHint">Kostenlos und ohne Download-PIN · <span data-sync-version>Sync</span></p><ol class="sync-download-steps"><li>Installer herunterladen und öffnen. Eine laufende Sync-App vorher beenden.</li><li>In Sync „Vorhandenes Addon verbinden“ wählen, wenn du es über CurseForge installiert hast.</li><li>Gildenprofil mit deinem Spieler-PIN verbinden, synchronisieren und in WoW /reload eingeben.</li></ol><p class="sync-download-note"><strong>Update einer vorhandenen Version:</strong> Sync schließen → heruntergeladene Installationsdatei ausführen → Sync wieder öffnen. Die bisherige Version wird ersetzt. Deine Gildenprofile und Einstellungen bleiben erhalten. Nur herunterladen reicht nicht aus.</p><p role="status" aria-live="polite"></p><div class="addon-beta-actions"><button type="submit" class="tool-btn">Herunterladen</button><button type="button" class="tool-btn" data-close>Abbrechen</button></div></form>`;
   document.body.append(dialog);
   const status = dialog.querySelector('[role=status]'), submit = dialog.querySelector('[type=submit]');
   const platform=dialog.querySelector('select');
-  const names={windows:'GuildLoot-Sync-0.3.10-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-0.3.10-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-0.3.10-mac-Intel.pkg'};
+  // Dateinamen und Versionsnummer kommen vom Server, damit die Seite nie eine alte Version anzeigt.
+  const names={windows:'GuildLoot-Sync-Windows-Setup.exe','mac-arm64':'GuildLoot-Sync-mac-Apple-Silicon.pkg','mac-x64':'GuildLoot-Sync-mac-Intel.pkg'};
+  async function loadVersion(){
+    try{
+      const base = typeof RAILWAY_API_URL !== 'undefined' ? RAILWAY_API_URL : location.origin;
+      const data = await (await fetch(new URL('/api/addon-beta/version', base), {cache:'no-store'})).json();
+      if(data && data.success && data.artifacts){ for(const [key,art] of Object.entries(data.artifacts)){ if(art && art.name) names[key]=art.name; } }
+      if(data && data.version){ dialog.querySelectorAll('[data-sync-version]').forEach(el=>{ el.textContent='Sync '+data.version; }); }
+    }catch(error){ /* Anzeige bleibt ohne Versionsnummer */ }
+  }
   platform.value=/Win/i.test(navigator.platform)?'windows':'';
   let controller;
   dialog.querySelector('[data-close]').onclick = () => dialog.close();
@@ -21,7 +30,7 @@
   dialog.addEventListener('click', event => { if(event.target === dialog){ const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close(); } });
   function openDownload(update = false) {
     dialog.querySelector('#addonBetaTitle').textContent = update ? 'GuildLoot Sync aktualisieren' : 'GuildLoot Sync herunterladen';
-    status.textContent = ''; dialog.showModal(); platform.focus();
+    status.textContent = ''; dialog.showModal(); platform.focus(); loadVersion();
   }
   document.querySelectorAll('[data-addon-update]').forEach(button => { button.onclick = () => openDownload(true); });
   document.querySelectorAll('[data-addon-download]').forEach(button => { button.onclick = () => openDownload(); });
@@ -39,9 +48,12 @@
       // Unvollständige Downloads nie als Installer speichern: NSIS meldet sonst "integrity check failed".
       if (expected && blob.size !== expected) throw new Error('Der Download war unvollständig ('+Math.round(blob.size/1048576)+' von '+Math.round(expected/1048576)+' MB). Bitte erneut versuchen, am besten per Kabel oder stabilem WLAN.');
       if (blob.size < 50000000) throw new Error('Der Download war unvollständig. Bitte erneut versuchen.');
+      const disposition = response.headers.get('content-disposition') || '';
+      const served = (disposition.match(/filename="?([^";]+)"?/) || [])[1];
+      const finalName = served || names[choice] || filename;
       const url = URL.createObjectURL(blob), link = document.createElement('a');
-      link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
-      status.textContent = 'Download fertig. Öffne '+filename+' in deinen Downloads und folge der Installation. Öffne GuildLoot Sync anschließend wieder.';
+      link.href = url; link.download = finalName; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+      status.textContent = 'Download fertig. Öffne '+finalName+' in deinen Downloads und folge der Installation. Öffne GuildLoot Sync anschließend wieder.';
     } catch(error) { if(error.name !== 'AbortError') {status.textContent = error.message;} }
     finally { submit.disabled = false; platform.disabled=false; }
   });
