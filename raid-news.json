@@ -1,6 +1,35 @@
 {
   "items": [
     {
+      "id": "addon-02425",
+      "kind": "update",
+      "title": "12.09.2026 — Neue Aktualisierung steht bereit",
+      "text": "GuildLoot Addon 0.24.25-beta und GuildLoot Sync 0.3.18: Gildenbank im Spiel, GuildLoot-Hauptsymbol, Update-Knopf in der Sync-App →",
+      "url": "https://www.curseforge.com/wow/addons/guildloot-classic-era/files/all",
+      "publishedAt": "2026-09-12T18:00:00+02:00"
+    },
+    {
+      "id": "guildloot-guildheal-20260912",
+      "kind": "news",
+      "title": "Neu: GuildHeal – Heilerframes mit Klickzaubern",
+      "text": "Eigenes Heiler-Addon im Paket „GuildLoot Mini-Addons“: Klickzauber je Klasse vorbelegt, Debuffs, HoTs, Aggro, Überheilungs-Warnung, Zauberbalken. /gheal öffnet die Einstellungen.",
+      "url": "https://www.curseforge.com/wow/addons/guildloot-mini-addons/files/all"
+    },
+    {
+      "id": "guildloot-gildenbank-20260912",
+      "kind": "news",
+      "title": "Neu: Gildenbank auf Mein Lichtloot und im Addon",
+      "text": "Bestand der Bankcharaktere mit Icons, Tooltips und Filtern ansehen, Gegenstände beantragen – auf der Website oder im Spiel mit /gle bank. Freigaben kommen als Discord-DM.",
+      "action": "bank"
+    },
+    {
+      "id": "guildloot-sync-0318-20260912",
+      "kind": "news",
+      "title": "GuildLoot Sync 0.3.18: Update und Deinstallation per Knopf",
+      "text": "„Nach Update suchen und installieren“ holt neue Versionen mit Prüfsumme, „Deinstallieren“ entfernt die App. Der Installer legt eine Schreibtisch-Verknüpfung an.",
+      "action": "addon"
+    },
+    {
       "id": "guildloot-raidcheck-20260911",
       "kind": "news",
       "title": "Neu: GuildLoot RaidCheck",
@@ -13,14 +42,6 @@
       "title": "T2,5- und T3-Rüstungsteile beantragen",
       "text": "Rüstungsteile, Token und Materialien direkt über MeinGuildLoot → Charaktere → Rüstungsteile beantragen oder im GuildLoot-Addon anfragen.",
       "action": "armor-requests"
-    },
-    {
-      "id": "addon-0213",
-      "kind": "update",
-      "title": "10.09.2026 · 14:52 Uhr — Neue Aktualisierung steht bereit",
-      "text": "GuildLoot Addon 0.21.3-beta auf CurseForge aktualisieren →",
-      "url": "https://www.curseforge.com/wow/addons/guildloot-classic-era/files/all",
-      "publishedAt": "2026-09-10T14:52:00+02:00"
     },
     {
       "id": "bimmi-hymne",
