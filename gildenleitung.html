@@ -5578,7 +5578,7 @@ body.worldbuff-only .master-only{display:none!important}
 <link rel="stylesheet" href="start-navigation.css?v=20260907-4">
 <script defer src="start-navigation.js?v=20260907-4"></script>
 <link rel="stylesheet" href="guild-management-navigation.css?v=20260907-2">
-<script defer src="guild-management-navigation.js?v=20260907-2"></script>
+<script defer src="guild-management-navigation.js?v=20260912-1"></script>
 <link rel="stylesheet" href="start-search.css?v=20260907-t3-quest-1">
 <script defer src="item-comparison.js?v=20260907-compare-totals-1"></script>
 <script defer src="t3-materials.js?v=20260907-quest-2"></script>
@@ -8599,11 +8599,13 @@ async function loadArmorRequestsPanel(){
       if(box)box.innerHTML='<div class="status bad">Bitte Master-Code eingeben, um Gildenbankanträge zu laden.</div>';
       return;
     }
-    const result=await railwayApi({action:"guildGetArmorRequests",masterCode});
+    const [result,settings,inventory]=await Promise.all([railwayApi({action:"guildGetArmorRequests",masterCode}),railwayApi({action:"guildGetGuildBankSettings",masterCode}),railwayApi({action:"guildGetGuildBankInventory",masterCode},30000)]);
     if(!result.success){
       if(box)box.innerHTML=`<div class="status bad">${escapeHtml(result.error||"Gildenbankanträge konnten nicht geladen werden.")}</div>`;
       return;
     }
+    if(settings.success&&settings.settings)guildBankSettings=settings.settings;
+    guildBankInventory=inventory.success?inventory:null;
     armorRequestEntries=Array.isArray(result.entries)?result.entries:[];
     const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;
     leadershipTaskState.bank=pending;
@@ -8635,7 +8637,20 @@ function renderArmorRequestsPanel(){
       :`<button class="small-btn ghost" type="button" onclick="reviewArmorRequest('${id}','pending')">Wieder öffnen</button>`;
     return `<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(armorRequestStatusLabel(entry.status))}</span>${reviewed}</td><td>${renderAdminGearLink(entry.characterName||"-",entry.server)}<br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td><strong>${escapeHtml(entry.itemName||"")}</strong><div class="muted">${escapeHtml(entry.tier||"")}</div>${token}</td><td><ul style="margin:0;padding-left:18px">${materials}</ul>${note}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${actions}<button class="small-btn danger" type="button" onclick="deleteArmorRequest('${id}')">Löschen</button></div></td></tr>`;
   }).join("");
-  box.innerHTML=`<div class="p0-review-block" style="border-color:#5fe5da"><div class="section-head"><div><h3>Gildenbankanträge <span class="badge warn">${pending} offen</span></h3><p>Anträge der Spieler auf Materialien aus der Gildenbank: T3, T2,5, AQ20 sowie Skarabäen und Götzen. Freigeben, sobald die Materialien ausgegeben werden können.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">${filters.map(([key,label])=>`<button class="small-btn ${armorRequestFilter===key?"primary":"ghost"}" type="button" onclick="setArmorRequestFilter('${key}')">${label}</button>`).join("")}<button class="small-btn ghost" type="button" onclick="loadArmorRequestsPanel()">Aktualisieren</button></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Aus der Gildenbank</th><th>Eingang</th><th>Aktion</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">Keine Anträge in dieser Ansicht.</td></tr>'}</tbody></table></div></div>`;
+  box.innerHTML=`<div id="guildBankAdminView" style="margin-bottom:14px"></div><div id="armorRequestTable" class="p0-review-block" style="border-color:#5fe5da"><div class="section-head"><div><h3>Gildenbankanträge <span class="badge warn">${pending} offen</span></h3><p>Anträge der Spieler auf Materialien aus der Gildenbank: T3, T2,5, AQ20 sowie Skarabäen und Götzen. Freigeben, sobald die Materialien ausgegeben werden können.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">${filters.map(([key,label])=>`<button class="small-btn ${armorRequestFilter===key?"primary":"ghost"}" type="button" onclick="setArmorRequestFilter('${key}')">${label}</button>`).join("")}<button class="small-btn ghost" type="button" onclick="loadArmorRequestsPanel()">Aktualisieren</button></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Aus der Gildenbank</th><th>Eingang</th><th>Aktion</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">Keine Anträge in dieser Ansicht.</td></tr>'}</tbody></table></div></div>`;
+  renderGuildBankAdminView();
+}
+function renderGuildBankAdminView(){
+  const view=document.getElementById("guildBankAdminView");if(!view)return;
+  if(!window.GuildLootBank?.openAdmin){view.innerHTML='<div class="status bad">Die Gildenbank-Ansicht konnte nicht geladen werden. Bitte Seite neu laden.</div>';return;}
+  const inventory=guildBankInventory;
+  window.GuildLootBank.openAdmin(view,{
+    items:inventory?.items||[],characters:inventory?.characters||[],requests:armorRequestEntries,hiddenItems:guildBankSettings.hiddenItems||[],
+    onReview:(id,decision)=>reviewArmorRequest(id,decision),
+    onToggleHidden:(itemId,isHidden)=>{const set=new Set((guildBankSettings.hiddenItems||[]).map(Number));if(isHidden)set.add(itemId);else set.delete(itemId);guildBankSettings.hiddenItems=[...set];saveGuildBankSettings({silent:true});},
+    onOpenSettings:(part)=>{openGuildBankSettingsPanel();setTimeout(()=>{const target=part==="import"?document.getElementById("guildBankImportText"):document.getElementById("guildBankSettingsPanel");target?.scrollIntoView({behavior:"smooth",block:"start"});},400);},
+    onOpenRequests:()=>document.getElementById("armorRequestTable")?.scrollIntoView({behavior:"smooth",block:"start"})
+  });
 }
 async function reviewArmorRequest(requestId,decision){
   const entry=armorRequestEntries.find(item=>String(item.id)===String(requestId));
@@ -8689,7 +8704,7 @@ function renderGuildBankSettingsPanel(){
   const rowHtml=(c)=>`<div class="layout-form-grid" data-bank-row style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px;margin-bottom:6px"><div class="field"><label>Charakter</label><input data-bank-name maxlength="24" value="${escapeAttr(c.name||"")}" placeholder="Name"></div><div class="field"><label>Server</label><input data-bank-server maxlength="40" value="${escapeAttr(c.server||"")}" placeholder="z. B. Everlook"></div><button class="small-btn danger" type="button" onclick="this.closest('[data-bank-row]').remove()" aria-label="Bankcharakter entfernen">Entfernen</button></div>`;
   const inventory=guildBankInventory;
   const scans=(inventory?.characters||[]).map(c=>`<li><strong>${escapeHtml(c.name)}</strong>${c.server?` · ${escapeHtml(c.server)}`:""}: ${c.observedAt?`${c.items} Gegenstände, ${c.quantity} Stück, Stand ${escapeHtml(new Date(c.observedAt*1000).toLocaleString("de-DE"))}`:"noch kein Bestand übertragen"}</li>`).join("");
-  box.innerHTML=`<details id="guildBankSettingsDetails" class="p0-review-block" style="border-color:#f5c542"><summary style="cursor:pointer;font-weight:700">⚙ Bankcharaktere, GBankClassic und Bestand übertragen</summary>
+  box.innerHTML=`<details id="guildBankSettingsDetails" class="p0-review-block" style="border-color:#f5c542" open><summary style="cursor:pointer;font-weight:700">⚙ Bankcharaktere, GBankClassic und Bestand übertragen</summary>
     <div class="section-head" style="margin-top:10px"><div><h3>Bankcharaktere</h3><p>Diese Charaktere sind die Gildenbank. Ein Bankcharakter öffnet im Spiel seine Bank und erzeugt mit <code>/gle bank</code> den Export. Mit GBankClassic exportiert ein beliebiges Mitglied alle Bankcharaktere auf einmal.</p></div></div>
     <div id="guildBankCharacterList">${characters.map(rowHtml).join("")}</div>
     <div class="layout-form-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;gap:8px;margin-top:10px"><div class="field"><label>Weiterer Bankcharakter</label><input id="guildBankNewName" maxlength="24" placeholder="Name"></div><div class="field"><label>Server</label><input id="guildBankNewServer" maxlength="40" placeholder="z. B. Everlook" value="${escapeAttr(characters[0]?.server||"Everlook")}"></div><button class="small-btn primary" type="button" onclick="addGuildBankCharacterRow()">Hinzufügen</button></div>
@@ -8702,16 +8717,7 @@ function renderGuildBankSettingsPanel(){
     <div id="guildBankImportStatus" class="status" style="margin-top:8px"></div>
     <h4 style="margin-top:14px">Letzte Übertragungen</h4><ul>${scans||'<li class="muted">Noch keine Bestände übertragen.</li>'}</ul>
   </details>
-  <div id="guildBankAdminView" style="margin-top:14px"></div>`;
-  const view=document.getElementById("guildBankAdminView");
-  if(!window.GuildLootBank?.openAdmin){view.innerHTML='<div class="status bad">Die Gildenbank-Ansicht konnte nicht geladen werden. Bitte Seite neu laden.</div>';return;}
-  window.GuildLootBank.openAdmin(view,{
-    items:inventory?.items||[],characters:inventory?.characters||[],requests:armorRequestEntries,hiddenItems:guildBankSettings.hiddenItems||[],
-    onReview:(id,decision)=>reviewArmorRequest(id,decision).then(()=>loadGuildBankSettingsPanel()),
-    onToggleHidden:(itemId,isHidden)=>{const set=new Set((guildBankSettings.hiddenItems||[]).map(Number));if(isHidden)set.add(itemId);else set.delete(itemId);guildBankSettings.hiddenItems=[...set];saveGuildBankSettings({silent:true});},
-    onOpenSettings:(part)=>{const d=document.getElementById("guildBankSettingsDetails");if(d){d.open=true;(part==="import"?document.getElementById("guildBankImportText"):d).scrollIntoView({behavior:"smooth",block:"start"});}},
-    onOpenRequests:()=>openArmorRequestsPanel()
-  });
+  <p class="muted" style="margin-top:12px">Der Bestand mit Anträgen wird unter <a href="#" onclick="openArmorRequestsPanel();return false">Gildenbankanträge</a> angezeigt.</p>`;
 }
 function addGuildBankCharacterRow(){
   const name=document.getElementById("guildBankNewName")?.value.trim(),server=document.getElementById("guildBankNewServer")?.value.trim();
@@ -8746,6 +8752,7 @@ async function importGuildBankExport(){
     if(status){const parts=(result.imported||[{character:result.character,items:result.items}]).map(r=>`${r.character}: ${r.items} Gegenstände`);status.textContent=`Übernommen – ${parts.join(", ")}.`+((result.unknown||[]).length?` Nicht eingetragen und daher übersprungen: ${result.unknown.join(", ")}. Unter Bankcharaktere hinzufügen und erneut importieren.`:"")+((result.ignored||[]).length?` Kein Bankcharakter, ignoriert: ${result.ignored.join(", ")}.`:"");}
     document.getElementById("guildBankImportText").value="";
     await loadGuildBankSettingsPanel();
+    if(document.getElementById("armorRequestsPanel")?.open)loadArmorRequestsPanel();
   }catch(error){if(status)status.textContent=error.message||"Import fehlgeschlagen.";}
 }
 function filterGuildBankTable(value){
