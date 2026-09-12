@@ -9517,6 +9517,16 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   const channelId = clean(params.channelId || params.discordChannelId);
+  // Kanalbereinigung wie beim Wochenrhythmus: gilt auch für manuell erstellte Anmelder in einem Kanal,
+  // dessen Rhythmus „Kanal vor dem Posten leeren“ gesetzt hat (oder wenn es explizit angefordert wird).
+  let clearChannelBeforePost = ["1", "true", "yes", "ja"].includes(clean(params.clearChannelBeforePost).toLowerCase());
+  if (!clearChannelBeforePost && /^\d{15,22}$/.test(channelId)) {
+    const scheduled = await query(
+      `select 1 from raid_helper_schedules where guild_id = $1 and discord_channel_id = $2 and enabled = true and clear_channel_before_post = true limit 1`,
+      [guildId, channelId]
+    ).catch(() => ({ rows: [] }));
+    clearChannelBeforePost = scheduled.rows.length > 0;
+  }
   let followupPoPost = params.followupPoPost || null;
   if (typeof followupPoPost === "string") {
     try {
@@ -9598,6 +9608,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         followupPoPost: followupPoPost && typeof followupPoPost === "object" ? followupPoPost : null,
         postMode: "raid_p0",
         raidSignupEnabled: "true",
+        clearChannelBeforePost: clearChannelBeforePost ? "true" : "false",
         source: "gildenleitung"
       }
     }
