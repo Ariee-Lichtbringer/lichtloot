@@ -32310,7 +32310,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       res.set("Cache-Control","no-store");
       return res.json({ ...(await guildBank.manage(guild, action, postParams)), guild: guild.slug });
     }
-    if (action === "getGuildBankInventory" || action === "submitGuildBankExport") {
+    if (action === "getGuildBankInventory" || action === "submitGuildBankExport" || action === "submitGuildBankRequest") {
       enforceSecurityRateLimit(req,"guild-bank",60,60*1000);
       res.set("Cache-Control","no-store");
       return res.json({ ...(await guildBank.player(guild, action, postParams)), guild: guild.slug });

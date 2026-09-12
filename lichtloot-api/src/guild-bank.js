@@ -1,5 +1,6 @@
 // Gildenbank: Bankcharaktere je Gilde, Bestandsimport aus dem Addon und Bestandsabfrage.
 // Classic Era hat keine echte Gildenbank; die Gildenbank sind die konfigurierten Bankcharaktere.
+import { ARMOR_REQUESTS_SCHEMA } from './armor-requests.js';
 const clean=value=>String(value??'').trim();
 function fail(message,statusCode=400){throw Object.assign(new Error(message),{statusCode});}
 const DEFAULT_CHARACTERS={lichtloot:[['Lichtbank','Everlook'],['Raidbankk','Everlook'],['Diambarren','Everlook'],['Lichtleser','Everlook'],['Seiten','Everlook'],['Lichtrunen','Everlook']].map(([name,server])=>({name,server}))};
@@ -105,6 +106,27 @@ export function createGuildBank({pool,query,getCharactersByPin}){
    const pin=clean(params.pin||params.playerPin);if(!pin)fail('Bitte zuerst mit deinem SpielerLogin anmelden.',401);
    const owned=await getCharactersByPin(guild.id,pin);if(!owned.length)fail('SpielerLogin nicht freigegeben.',403);
    if(action==='getGuildBankInventory')return inventory(guild);
+   if(action==='submitGuildBankRequest'){
+    const name=clean(params.character),server=clean(params.server);
+    const character=owned.find(c=>sameName(c.name,name)&&(!server||sameServer(c.server,server)));
+    if(!character)fail('Charakter gehört nicht zu diesem SpielerLogin.',403);
+    const itemId=Number(params.itemId),quantity=Number(params.quantity);
+    if(!Number.isInteger(itemId)||itemId<1||!Number.isInteger(quantity)||quantity<1||quantity>1000)fail('Bitte Gegenstand und Menge angeben.');
+    const stock=await inventory(guild);const item=stock.items.find(i=>i.itemId===itemId);
+    if(!item)fail('Dieser Gegenstand ist aktuell nicht auf der Gildenbank verfügbar.');
+    if(quantity>item.quantity)fail('Aktuell nicht verfügbar: Auf der Gildenbank liegen nur '+item.quantity+' × '+item.name+'.');
+    await query(ARMOR_REQUESTS_SCHEMA);
+    const client=await pool.connect();
+    try{
+     await client.query('begin');
+     const dup=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and status='pending' and created_at>now()-interval '10 minutes' limit 1`,[guild.id,character.id,String(itemId)]);
+     if(dup.rows.length){await client.query('commit');return {success:true,armorRequestId:dup.rows[0].id,status:'saved',duplicate:true};}
+     const count=await client.query(`select count(*)::int as n from armor_requests where guild_id=$1 and character_id=$2 and created_at>now()-interval '1 minute'`,[guild.id,character.id]);
+     if(count.rows[0].n>=5)fail('Bitte kurz warten, bevor du weitere Anträge sendest.',429);
+     const saved=await client.query(`insert into armor_requests(guild_id,player_id,character_id,character_name,server,class_name,tier,item_id,item_name,token,materials) values($1,$2,$3,$4,$5,$6,'Gildenbank',$7,$8,null,$9::jsonb) returning id`,[guild.id,character.playerId||character.player_id||null,character.id,character.name,character.server||'',character.className||character.class_name||'',String(itemId),item.name,JSON.stringify([{itemId,name:item.name,quantity}])]);
+     await client.query('commit');return {success:true,armorRequestId:saved.rows[0].id,status:'saved',available:item.quantity};
+    }catch(error){await client.query('rollback');throw error;}finally{client.release();}
+   }
    if(action==='submitGuildBankExport'){
     const parsed=parseGuildBankExport(params.text||params.export);
     if(!owned.some(c=>sameName(c.name,parsed.player)&&(!parsed.realm||!c.server||sameServer(c.server,parsed.realm))))fail('Der Export stammt von einem Charakter, der nicht zu deinem SpielerLogin gehört.',403);
