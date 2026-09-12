@@ -148,7 +148,7 @@ export function createGuildBank({pool,query,getCharactersByPin,lookupItem}){
   const run=(async()=>{
    let index=0;const worker=async()=>{while(index<missing.length){const id=missing[index++];try{const r=await lookupItem(id);const item=r?.item||{};const tooltip=String(item.tooltipText||'').slice(0,4000);
      await query('insert into guild_bank_items(item_id,name,quality,icon,category,tooltip) values($1,$2,$3,$4,$5,$6) on conflict(item_id) do update set name=excluded.name,quality=excluded.quality,icon=excluded.icon,category=excluded.category,tooltip=excluded.tooltip,fetched_at=now()',[id,clean(item.name).slice(0,120),clean(item.quality)||'common',clean(item.icon).slice(0,80),guildBankCategory(item.name,tooltip),tooltip]);
-    }catch{}finally{enriching.delete(id);}}};
+    }catch(error){console.warn('Gildenbank: Itemdaten für #'+id+' nicht geladen: '+(error?.message||error));}finally{enriching.delete(id);}}};
    await Promise.all([worker(),worker(),worker()]);
   })();
   if(wait)await run;
@@ -162,9 +162,9 @@ export function createGuildBank({pool,query,getCharactersByPin,lookupItem}){
   const metaRows=ids.length?await query('select item_id,name,quality,icon,category,tooltip from guild_bank_items where item_id=any($1::int[])',[ids]):{rows:[]};
   const meta=new Map(metaRows.rows.map(m=>[m.item_id,m]));
   const missing=ids.filter(id=>!meta.has(id));
-  if(missing.length){await enrich(missing.slice(0,30),{wait:true});enrich(missing.slice(30));const again=await query('select item_id,name,quality,icon,category,tooltip from guild_bank_items where item_id=any($1::int[])',[missing.slice(0,30)]);for(const m of again.rows)meta.set(m.item_id,m);}
+  if(missing.length){await enrich(missing.slice(0,60),{wait:true});enrich(missing.slice(60));const again=await query('select item_id,name,quality,icon,category,tooltip from guild_bank_items where item_id=any($1::int[])',[missing.slice(0,60)]);for(const m of again.rows)meta.set(m.item_id,m);}
   const items=rows.rows.map(r=>{const m=meta.get(r.item_id)||{};return {itemId:r.item_id,name:r.name||m.name||('Item #'+r.item_id),quantity:r.quantity,stacks:r.stacks,hidden:hidden.has(r.item_id),icon:m.icon||'',quality:m.quality||'common',category:m.category||guildBankCategory(r.name||m.name,m.tooltip),tooltip:m.tooltip||''};}).filter(i=>includeHidden||!i.hidden);
-  return {success:true,items,characters:config.characters.map(c=>{const scan=scans.rows.find(s=>sameName(s.name,c.name)&&(!c.server||sameServer(s.server,c.server)));return {...c,observedAt:scan?Math.floor(new Date(scan.observed_at).getTime()/1000):null,items:scan?.items||0,quantity:scan?.quantity||0};}),note:config.note};
+  return {success:true,pendingMeta:Math.max(0,missing.length-60),items,characters:config.characters.map(c=>{const scan=scans.rows.find(s=>sameName(s.name,c.name)&&(!c.server||sameServer(s.server,c.server)));return {...c,observedAt:scan?Math.floor(new Date(scan.observed_at).getTime()/1000):null,items:scan?.items||0,quantity:scan?.quantity||0};}),note:config.note};
  }
  return {
   async manage(guild,action,params){

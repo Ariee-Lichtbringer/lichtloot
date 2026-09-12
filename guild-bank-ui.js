@@ -104,6 +104,11 @@
    }
    search.oninput=()=>{state.search=search.value;renderGrid();};charSel.onchange=()=>{state.character=charSel.value;renderCat();renderGrid();};qualSel.onchange=()=>{state.quality=qualSel.value;renderGrid();};sortSel.onchange=()=>{state.sort=sortSel.value;renderGrid();};
    renderCat();renderGrid();renderDetail(null);loadMine();
+   // Icons und Kategorien, die der Server noch nachlädt, nach kurzer Zeit nachziehen.
+   let retries=0;const refill=async()=>{if(!alive()||retries++>=4)return;try{const fresh=await call(context,'getGuildBankInventory');if(!alive())return;const byId=new Map((fresh.items||[]).map(i=>[i.itemId,i]));let changed=false;for(const item of items){const f=byId.get(item.itemId);if(f&&(f.icon!==item.icon||f.category!==item.category||f.quality!==item.quality||f.tooltip!==item.tooltip)){Object.assign(item,{icon:f.icon,category:f.category,quality:f.quality,tooltip:f.tooltip,name:f.name});changed=true;}}
+    if(changed){for(const k in counts)delete counts[k];for(const i of items)counts[i.category||'Verschiedenes']=(counts[i.category||'Verschiedenes']||0)+1;renderCat();renderGrid();}
+    if((fresh.pendingMeta||0)>0||items.some(i=>!i.icon))setTimeout(refill,5000);}catch{}};
+   if((data.pendingMeta||0)>0||items.some(i=>!i.icon))setTimeout(refill,4000);
   }catch(error){if(alive()){root.replaceChildren(el('h3','Gildenbank'),el('p',error.message,'gb-sub'));root._identity=null;}}
  },
  // Gildenleitung: gleiche Ansicht mit Anträgen je Item, Freigabe, Ablehnung und „nicht beantragbar“.
