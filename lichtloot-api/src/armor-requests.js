@@ -63,6 +63,23 @@ export function createArmorRequests({pool,query}){
     const rows=await query(`select * from armor_requests where guild_id=$1 and (player_id=$2 or character_id=$3) order by created_at desc limit 50`,[guild.id,character.player_id,character.id]);
     return {success:true,entries:rows.rows.map(mapArmorRequestRow)};
    }
+   const viaDiscord=!(params.discord===false||String(params.discord??'').toLowerCase()==='false'||String(params.channel??'').toLowerCase()==='none');
+   if(params.action==='submitArmorRequest'&&!viaDiscord){
+    const {item,materials}=validateArmorSelection(character.class_name,params);
+    await ensureSchema();
+    const token=item.tokenId?item.requirements.find(r=>r.itemId===item.tokenId)||null:null;
+    const client=await pool.connect();
+    try{
+     await client.query('begin');
+     await client.query('select pg_advisory_xact_lock(hashtext($1))',[`armor:${guild.id}:${character.player_id}`]);
+     const existing=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and materials=$4::jsonb and status='pending' and created_at>now()-interval '10 minutes' order by created_at desc limit 1`,[guild.id,character.id,item.itemId,JSON.stringify(materials)]);
+     if(existing.rows.length){await client.query('commit');return {success:true,armorRequestId:existing.rows[0].id,status:'saved',duplicate:true};}
+     const count=await client.query(`select count(*)::int as n from armor_requests where guild_id=$1 and character_id=$2 and created_at>now()-interval '1 minute'`,[guild.id,character.id]);
+     if(count.rows[0].n>=5)fail('Bitte kurz warten, bevor du weitere Anträge sendest.',429);
+     const request=await client.query(`insert into armor_requests(guild_id,player_id,character_id,character_name,server,class_name,tier,item_id,item_name,token,materials) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb) returning id`,[guild.id,character.player_id,character.id,character.name,character.server||'',character.class_name||'',item.tier,item.itemId,item.name,token?JSON.stringify(token):null,JSON.stringify(materials)]);
+     await client.query('commit');return {success:true,armorRequestId:request.rows[0].id,status:'saved'};
+    }catch(error){await client.query('rollback');throw error;}finally{client.release();}
+   }
    const settings=await query(`select layout_json from guild_settings where guild_id=$1`,[guild.id]);
    const layout=settings.rows[0]?.layout_json||{};
    const channelId=clean(layout.armorRequestChannelId??(guild.slug==='lichtloot'?'1390681277992272024':''));

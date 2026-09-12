@@ -45,6 +45,7 @@
  .armor-request-panel button:disabled{opacity:.65;cursor:default}.armor-request-panel [role=status]{color:#73e4ce;margin-top:16px}
 
  .armor-item{display:inline-flex;gap:10px;align-items:center;background:transparent;color:#e7c4ff;border:0;text-align:left;font:inherit;cursor:pointer;padding:4px}.armor-item span{min-width:0!important}.armor-item-icon{width:30px;height:30px;flex-shrink:0;border:1px solid #665979;border-radius:4px}.armor-request-panel label{border:0}.armor-material-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #243448}.armor-material-row .armor-item{min-width:260px}.armor-picker{position:relative;min-width:300px;max-width:100%}.armor-picker [role=combobox]{display:flex;align-items:center;gap:12px;width:100%;padding:7px 12px;border:1px solid #42617b;border-radius:7px;background:#111f34;color:#ecf4ff;font:inherit;text-align:left;cursor:pointer}.armor-options{position:absolute;top:100%;left:0;right:0;max-height:330px;overflow:auto;z-index:40;background:#0b1629;border:1px solid #42617b;border-radius:8px;padding:6px;box-shadow:0 10px 30px #0008}.armor-options .armor-item{display:flex;width:100%;padding:8px}.armor-options [aria-selected=true],.armor-options button:hover,.armor-options button:focus{background:#21445a;outline:1px solid #45cbbc}.armor-tooltip{position:fixed;z-index:100100;pointer-events:none;width:min(380px,calc(100vw - 32px));max-height:70vh;overflow:hidden;background:#08090bf5;border:1px solid #85858b;color:#eee;padding:16px;border-radius:5px;box-shadow:0 12px 35px #000b;font-size:14px;line-height:1.4}.armor-tooltip strong{display:block;color:#c653ff;font-size:17px;margin-bottom:12px}.armor-tooltip small{display:block;color:#acb0b8;margin-top:12px}.armor-picker [hidden]{display:none}
+ .armor-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.armor-request-panel button.armor-discord-disabled{background:#2a3648;border-color:#42617b;color:#8fa2b8;opacity:.55;cursor:not-allowed}
  .armor-my-requests{margin-top:22px;border-top:1px solid #243448;padding-top:14px}.armor-my-requests h4{margin:0 0 10px}.armor-my-requests table{width:100%;border-collapse:collapse;font-size:14px}.armor-my-requests th,.armor-my-requests td{padding:8px 6px;border-bottom:1px solid #243448;text-align:left;vertical-align:top}.armor-my-requests th{color:#a3b6cc;font-weight:600}.armor-my-requests small{display:block;margin-top:8px}.armor-status{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}.armor-status-pending{background:#4a3a12;color:#fbbf24}.armor-status-approved{background:#123f2a;color:#4ade80}.armor-status-rejected{background:#4a1d1d;color:#f87171}
  `;document.head.append(style);
  window.GuildLootArmor={async open(root,context){
@@ -96,20 +97,21 @@
     }
     if(item.prerequisite)details.append(el('small','Voraussetzung: '+item.prerequisite+'.'));
     if(item.reputation)details.append(el('small',`Ruf: ${item.reputation.faction} – ${item.reputation.standing}.`));
-    const button=el('button','In Discord anfragen');button.className='primary';button.type='button';button.style.cssText='display:block;margin-top:18px';details.append(button);
+    const actions=el('div');actions.className='armor-actions';
+    const button=el('button','Beantragen');button.className='primary';button.type='button';
+    const discordButton=el('button','In Discord anfragen');discordButton.className='primary armor-discord-disabled';discordButton.type='button';discordButton.disabled=true;discordButton.title='Die Discord-Anfrage ist deaktiviert. Anträge laufen über „Beantragen“ und werden von der Gildenleitung unter Gildenbankanträge freigegeben.';
+    actions.append(button,discordButton);details.append(actions);
+    const note=el('small','Die Gildenleitung sieht deinen Antrag unter „Gildenbankanträge“ und gibt ihn dort frei.');note.style.cssText='display:block;margin-top:8px';details.append(note);
     button.onclick=async()=>{
      const materials=rows.filter(r=>r.check.checked).map(r=>({itemId:r.material.itemId,quantity:Number(r.amount.value)}));
      if(!materials.length){status.textContent='Bitte mindestens ein benötigtes Material auswählen.';return;}
      if(rows.some(r=>r.check.checked&&!r.amount.reportValidity()))return;
-     button.disabled=true;tier.disabled=true;select.disabled=true;rows.forEach(r=>{r.check.disabled=true;r.amount.disabled=true;});status.textContent='Anfrage wird gespeichert …';
+     button.disabled=true;tier.disabled=true;select.disabled=true;rows.forEach(r=>{r.check.disabled=true;r.amount.disabled=true;});status.textContent='Antrag wird gespeichert …';
      try{
-      const result=await call(context,'submitArmorRequest',{itemId:item.itemId,materials});if(!alive())return;
-      status.textContent=result.status==='done'?'Die Anfrage wurde im Discord-Channel veröffentlicht.':'Anfrage gespeichert. Der PO Bot veröffentlicht sie im eingestellten Discord-Channel.';
-      button.textContent='Anfrage gespeichert';
+      const result=await call(context,'submitArmorRequest',{itemId:item.itemId,materials,discord:false});if(!alive())return;
+      status.textContent=result.duplicate?'Dieser Antrag wurde bereits gespeichert und wartet auf die Freigabe.':'Antrag gespeichert. Die Gildenleitung gibt ihn unter „Gildenbankanträge“ frei.';
+      button.textContent='Antrag gespeichert';
       loadMine();
-      let attempts=0;
-      const poll=async()=>{if(!alive()||!root.contains(button)||attempts++>=12)return;try{const state=await call(context,'getArmorRequestStatus',{requestId:result.requestId});if(!alive()||!root.contains(button))return;if(state.status==='done'){status.textContent='Die Anfrage wurde im Discord-Channel veröffentlicht.';return;}if(['failed','error'].includes(state.status)){status.textContent='Anfrage gespeichert, aber der Discord-Versand ist fehlgeschlagen. Bitte die Gildenleitung informieren.';return;}}catch{}setTimeout(poll,5000);};
-      if(result.status!=='done')setTimeout(poll,3000);
      }catch(error){status.textContent=error.message;button.disabled=false;rows.forEach(r=>{r.check.disabled=false;r.amount.disabled=!r.check.checked;});}
      finally{tier.disabled=false;select.disabled=false;}
     };
