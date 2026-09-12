@@ -1,23 +1,23 @@
 export const betaArtifacts = {
   "windows": {
-    "name": "GuildLoot-Sync-0.3.17-Windows-Setup.exe",
+    "name": "GuildLoot-Sync-0.3.18-Windows-Setup.exe",
     "type": "application/octet-stream",
-    "size": 116012212,
-    "sha256": "10a1c4a5f5a21379943ebb9543bb880171e768ccde80099db98f4c9b33d682a8",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.17/GuildLoot-Sync-0.3.17-Windows-Setup.exe.enc?sha256=10a1c4a5f5a21379943ebb9543bb880171e768ccde80099db98f4c9b33d682a8"
+    "size": 116012257,
+    "sha256": "0743d0cd8a989b5b9acd6972b1c2e3bd65b706b81395ab74892306be48e4605a",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.18/GuildLoot-Sync-0.3.18-Windows-Setup.exe.enc?sha256=0743d0cd8a989b5b9acd6972b1c2e3bd65b706b81395ab74892306be48e4605a"
   },
   "mac-arm64": {
-    "name": "GuildLoot-Sync-0.3.17-mac-Apple-Silicon.pkg",
+    "name": "GuildLoot-Sync-0.3.18-mac-Apple-Silicon.pkg",
     "type": "application/octet-stream",
-    "size": 130547003,
-    "sha256": "29f16a724339b235a7f61653bc2cb106c00f5b3c90671c4588ed4fe7a2a2cf98",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.17/GuildLoot-Sync-0.3.17-mac-Apple-Silicon.pkg.enc?sha256=29f16a724339b235a7f61653bc2cb106c00f5b3c90671c4588ed4fe7a2a2cf98"
+    "size": 130547113,
+    "sha256": "01bb120a873eb5f81124cfe3a17148966657b4a7e8f6c177afb4e939bcac57b9",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.18/GuildLoot-Sync-0.3.18-mac-Apple-Silicon.pkg.enc?sha256=01bb120a873eb5f81124cfe3a17148966657b4a7e8f6c177afb4e939bcac57b9"
   },
   "mac-x64": {
-    "name": "GuildLoot-Sync-0.3.17-mac-Intel.pkg",
+    "name": "GuildLoot-Sync-0.3.18-mac-Intel.pkg",
     "type": "application/octet-stream",
-    "size": 136085752,
-    "sha256": "6300002ad9009fafc3c303900f5087e7e60a4e7893b2d6b8dd3f2f22024e23a7",
-    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.17/GuildLoot-Sync-0.3.17-mac-Intel.pkg.enc?sha256=6300002ad9009fafc3c303900f5087e7e60a4e7893b2d6b8dd3f2f22024e23a7"
+    "size": 136085961,
+    "sha256": "4141d934e3744228a1dedb6ea774b9266c80c87209bdce8e28cdcccbf8235206",
+    "url": "https://github.com/Ariee-Lichtbringer/lichtloot/releases/download/guildloot-sync-beta-0.3.18/GuildLoot-Sync-0.3.18-mac-Intel.pkg.enc?sha256=4141d934e3744228a1dedb6ea774b9266c80c87209bdce8e28cdcccbf8235206"
   }
 };
