@@ -24,9 +24,7 @@ jobs:
       matrix:
         release:
           - addon-release/release.json
-          - addon-release/GuildRaidBag.release.json
-          - addon-release/GuildBuff.release.json
-          - addon-release/GuildSkills.release.json
+          - addon-release/GuildLootMiniAddons.release.json
     concurrency:
       group: curseforge-${{ matrix.release }}
       cancel-in-progress: false

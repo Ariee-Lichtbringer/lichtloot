@@ -1,9 +1,0 @@
-{
-  "addon": "GuildBuff",
-  "projectId": 1692275,
-  "slug": "guildbuff",
-  "version": "1.0.1-beta",
-  "releaseType": "beta",
-  "gameVersion": "1.15.9",
-  "sha256": "14e49e07bcc6805200b2b829baff90ce8fef4e63682a520840893e8c21e854a9"
-}

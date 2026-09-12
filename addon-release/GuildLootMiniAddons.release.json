@@ -1,0 +1,14 @@
+{
+  "addon": "GuildLootMiniAddons",
+  "folders": [
+    "GuildSkills",
+    "GuildBuff",
+    "GuildRaidBag"
+  ],
+  "projectId": 1692281,
+  "slug": "guildskills",
+  "version": "1.0.2-beta",
+  "releaseType": "beta",
+  "gameVersion": "1.15.9",
+  "sha256": "ec32afd624699a32f5564a2910739b332f2e0b1dbbcdf70f220e6af7720e4836"
+}

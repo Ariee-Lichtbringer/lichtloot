@@ -42,20 +42,23 @@ def validate():
     zip_path=ROOT/'addon-release'/config['zip']
     data=zip_path.read_bytes()
     assert hashlib.sha256(data).hexdigest()==config['sha256'],'ZIP checksum mismatch'
+    folders=config.get('folders') or [addon]
     with zipfile.ZipFile(zip_path) as archive:
         names=archive.namelist();assert len(names)==len(set(names)) and len(names)<500
-        assert all(n.startswith(addon+'/') and '..' not in n.split('/') for n in names),'Unexpected ZIP path'
+        assert all(any(n.startswith(f+'/') for f in folders) and '..' not in n.split('/') for n in names),'Unexpected ZIP path'
         assert sum(i.file_size for i in archive.infolist())<24000000,'ZIP too large'
         assert archive.testzip() is None,'Damaged ZIP'
-        if addon+'/SyncData.lua' in names:
-            assert archive.read(addon+'/SyncData.lua')==b'GuildLootSyncInbox = nil\n','Personal sync data in release'
-        toc=archive.read(addon+'/'+addon+'.toc').decode()
-        assert '## Version: '+version+'\n' in toc and '## Interface: 11509\n' in toc
-        loaded=[line.strip() for line in toc.splitlines() if line.strip() and not line.startswith('#')]
-        extras=[addon+'.toc','README.md','PROFESSION-DATA-LICENSE.txt','PROFESSION-DATA-SOURCE.txt']
-        media=[n[len(addon)+1:] for n in names if n.startswith(addon+'/Media/')]
-        allowed={addon+'/'+x for x in loaded+extras+media}
-        assert set(names)<=allowed and all(addon+'/'+x in names for x in loaded+[addon+'.toc']),'Unlisted file or missing TOC dependency'
+        for folder in folders:
+            if folder+'/SyncData.lua' in names:
+                assert archive.read(folder+'/SyncData.lua')==b'GuildLootSyncInbox = nil\n','Personal sync data in release'
+            toc=archive.read(folder+'/'+folder+'.toc').decode()
+            assert '## Version: '+version+'\n' in toc and '## Interface: 11509\n' in toc,'TOC version mismatch in '+folder
+            loaded=[line.strip() for line in toc.splitlines() if line.strip() and not line.startswith('#')]
+            extras=[folder+'.toc','README.md','PROFESSION-DATA-LICENSE.txt','PROFESSION-DATA-SOURCE.txt']
+            media=[n[len(folder)+1:] for n in names if n.startswith(folder+'/Media/')]
+            allowed={folder+'/'+x for x in loaded+extras+media}
+            mine={n for n in names if n.startswith(folder+'/')}
+            assert mine<=allowed and all(folder+'/'+x in names for x in loaded+[folder+'.toc']),'Unlisted file or missing TOC dependency in '+folder
     changelog_file=ROOT/'addon-release'/('CHANGELOG.md' if addon=='GuildLootEra' else addon+'.CHANGELOG.md')
     changelog=changelog_file.read_text().strip();assert changelog
     return config,data,changelog

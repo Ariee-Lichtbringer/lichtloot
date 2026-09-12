@@ -1,9 +1,0 @@
-{
-  "addon": "GuildRaidBag",
-  "projectId": 1692270,
-  "slug": "guildraidbag",
-  "version": "1.0.1-beta",
-  "releaseType": "beta",
-  "gameVersion": "1.15.9",
-  "sha256": "69a37cac1fc90d6beb06fe35d8dd9c53b9f57b69b025b40caebf5bda77ea0832"
-}
