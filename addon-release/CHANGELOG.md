@@ -1,3 +1,9 @@
+# GuildLoot 0.24.16-beta
+
+- Buff-Meldung im Raidchat nur noch nach eigenem Zauber: „hat Gruppe … gebufft“ erscheint ausschließlich, wenn der eigene Charakter den Gruppenbuff tatsächlich gewirkt hat. Auffrischungen fremder Buffs lösen keine Meldung mehr aus.
+- Berufe ohne GuildLoot-Account: Berufsfenster, Berufe-Datenbank, Skillguides und das Berufe-Symbol funktionieren ohne Sync-Verbindung.
+- Nur „Berufe synchronisieren“ (charübergreifende Speicherung auf GuildLoot) benötigt weiterhin einen Lichtloot- oder Nachtloot-Account mit GuildLoot Sync.
+
 # GuildLoot 0.24.15-beta
 
 - Banktransfer beschleunigt: bestätigte Verschiebungen werden ohne die bisherige feste Wartezeit weiterverarbeitet.
