@@ -1,6 +1,7 @@
 import { openPlatformGuildLeadership } from "./platform-guild-entry.js";
 import { createArmorRequests } from "./armor-requests.js";
 import { createCharacterProfessions } from "./character-professions.js";
+import { createGuildBank } from "./guild-bank.js";
 import { createSupportDiscordReplies } from "./support-discord-replies.js";
 import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
 import { addonUpdate } from './addon-update.js';
@@ -74,6 +75,7 @@ const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensure
 const raidSheetBridge=createRaidSheetBridge(query);
 const armorRequests=createArmorRequests({pool,query});
 const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
+const guildBank = createGuildBank({query,pool,getCharactersByPin});
 const app = express();
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
@@ -30951,6 +30953,12 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...(await armorRequests.manage(guild, action, req.query)), guild: guild.slug });
     }
 
+    if (action === "guildGetGuildBankSettings" || action === "guildSaveGuildBankSettings" || action === "guildGetGuildBankInventory" || action === "guildDeleteGuildBankStock") {
+      requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
+      res.set("Cache-Control", "no-store");
+      return res.json({ ...(await guildBank.manage(guild, action, req.query)), guild: guild.slug });
+    }
+
     if (action === "guildGetTrafficStats") {
       const stats = await getTrafficStats({ guild, params: req.query });
       return res.json({ ...stats, guild: guild.slug });
@@ -32296,6 +32304,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetPoReleaseRequests") {
       const list = await getPoReleaseRequests({ guildId: guild.id, query: postParams, management: true });
       return res.json({ ...list, guild: guild.slug });
+    }
+    if (action === "guildImportGuildBankExport" || action === "guildSaveGuildBankSettings") {
+      requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+      res.set("Cache-Control","no-store");
+      return res.json({ ...(await guildBank.manage(guild, action, postParams)), guild: guild.slug });
+    }
+    if (action === "getGuildBankInventory" || action === "submitGuildBankExport") {
+      enforceSecurityRateLimit(req,"guild-bank",60,60*1000);
+      res.set("Cache-Control","no-store");
+      return res.json({ ...(await guildBank.player(guild, action, postParams)), guild: guild.slug });
     }
     if (action === "getArmorRequestCatalog" || action === "getArmorRequestStatus" || action === "submitArmorRequest" || action === "getMyArmorRequests") {
       enforceSecurityRateLimit(req,"armor-requests",90,60*1000);

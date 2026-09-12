@@ -11,8 +11,9 @@
   const raid=group('sideGroupRaidorga','Raids & Anmeldungen',[
    take('openRaidHelperPanel','Aktuelle Raids'),makeButton('Raid erstellen',()=>openRaidCreatorFromDashboard()),makeButton('Wochenrhythmen',()=>openRaidHelperPanel('scheduledEvents')),take('openRaidArchivePanel','Raidarchiv')
   ]);
-  const loot=group('sideGroupLoot','Loot & Punkte',[makeButton('P0-Anmeldungen',()=>openRaidHelperPanel('poSignup')),take('openP0ReleasePanel','Freigabeanträge'),take('openArmorRequestsPanel','Gildenbankanträge'),take('openP0PlusPanel','P0+ Punktekonten'),take('openPoItemSettingsPanel','Lootregeln'),take('openRaidleadPanelDirect','Plündermeister')]);
+  const loot=group('sideGroupLoot','Loot & Punkte',[makeButton('P0-Anmeldungen',()=>openRaidHelperPanel('poSignup')),take('openP0ReleasePanel','Freigabeanträge'),take('openP0PlusPanel','P0+ Punktekonten'),take('openPoItemSettingsPanel','Lootregeln'),take('openRaidleadPanelDirect','Plündermeister')]);
   loot.querySelectorAll('.side-link').forEach(button=>{if(['P0-Anmeldungen','Freigabeanträge','Lootregeln'].includes(button.querySelector('.side-label')?.textContent))button.classList.add('guild-prio-only');});
+  const bank=group('sideGroupBank','Gildenbank',[makeButton('Rüstungsteile & Götzen beantragen',()=>openGuildBankRequestPage()),take('openArmorRequestsPanel','Gildenbankanträge'),take('openGuildBankSettingsPanel','Einstellungen')]);
   const members=group('sideGroupMembers','Mitglieder',[take('openPlayerPanel','Spieler & Charaktere'),makeButton('Zugangsanträge',()=>openPendingLoginReview()),take('openIssueInboxPanel','Postfach'),take('openRaidMemberNoticePanel','Mitglieder informieren'),take('openPlayerAnalysis','Spieleranalyse')]);
   const analysis=group('sideGroupAnalysis','Analysen',[take('openLogAnalysisPanel','Loganalysen'),take('openTrafficStatsPanel','Aufrufstatistik')]);
   // Less frequent and guild-specific tools stay available with original visibility restrictions.
@@ -20,7 +21,7 @@
   settings?.querySelector('.side-group-toggle span')?.replaceChildren(document.createTextNode('Einstellungen'));
   if(settings){settings.querySelector('.side-group-items').append(tools);if(backup)settings.querySelector('.side-group-items').append(backup);}
   const buffs=document.getElementById('sideGroupBuffs');if(buffs)buffs.querySelector('.side-group-toggle span').textContent='Worldbuffs';
-  const overview=take('scrollToDashboard','Übersicht');[overview,raid,loot,members,buffs,analysis,settings].filter(Boolean).forEach(g=>nav.append(g));
+  const overview=take('scrollToDashboard','Übersicht');[overview,raid,loot,bank,members,buffs,analysis,settings].filter(Boolean).forEach(g=>nav.append(g));
   nav.addEventListener('click',event=>{const link=event.target.closest('.side-link');if(!link)return;nav.querySelectorAll('.side-link.active').forEach(el=>el.classList.remove('active'));link.classList.add('active');document.body.classList.remove('raid-unified-open');});
   const quick=document.querySelector('.dashboard-quick-action-p0');if(quick)quick.hidden=false;
   const create=document.querySelector('.dashboard-quick-action-raid');if(create){create.querySelector('strong').textContent='RAID ERSTELLEN';create.querySelector('.dashboard-quick-action-copy>span').textContent='Termin, Teilnehmer und P0 gemeinsam anlegen';create.querySelector('.dashboard-quick-action-cta').textContent='Raid erstellen →';}

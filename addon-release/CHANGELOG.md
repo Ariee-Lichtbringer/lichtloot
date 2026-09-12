@@ -1,3 +1,8 @@
+# GuildLoot 0.24.18-beta
+
+- Gildenbank: Bankcharaktere erzeugen mit /gle bank einen Export von Bank und Taschen. Die Gildenleitung importiert ihn auf lichtloot.de unter Gildenbank → Einstellungen; der Bestand wird dort angezeigt und ist Grundlage für Gildenbankanträge.
+- /gle hilfe nennt den neuen Befehl.
+
 # GuildLoot 0.24.17-beta
 
 - Eigene Symbole im GuildLoot-Design für die Mini-Addons Berufe, Buffs und Raidcheck, im Hauptfenster und als freie Schaltflächen.
