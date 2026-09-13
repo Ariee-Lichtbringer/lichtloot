@@ -38,8 +38,8 @@ GH.DEBUFF_COLORS={Magic={.2,.6,1},Curse={.6,.2,1},Poison={.2,.8,.2},Disease={.9,
 function GH.DebuffColor(kind) local c=GH.DB().colors['debuff'..kind] or GH.DEBUFF_COLORS[kind];if not c then return nil end;return c[1],c[2],c[3] end
 
 local defaults={
- width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=true,castOnDown=false,hideSolo=false,scale=1,
- fadeRange=.4,frontStrata=true,classColors=true,showPets=false,showAuras=true,showCooldowns=true,aggroBorder=true,nameClick=true,
+ width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=true,castOnDown=true,hideSolo=false,scale=1,
+ fadeRange=.4,frontStrata=true,classColors=true,showPets=false,showAuras=true,showCooldowns=true,aggroBorder=true,nameClick=false,
  emergency=true,emergencyThreshold=50,emergencySound=true,
  overhealWarn=true,overhealThreshold=40,overhealSound=true,overhealSkipTanks=true,tanks='',
  unitLayout='vertical',healthText='missing',fontSize=11,barTexture='blizzard',bgAlpha=.92,spacing=3,
@@ -61,6 +61,9 @@ function GH.DB()
  for k,v in pairs(defaults) do if GuildHealDB[k]==nil then GuildHealDB[k]=(type(v)=='table' and {} or v) end end
  -- Einmalig: „UI bearbeiten“ ist ab dieser Version standardmäßig aus (früher hieß das Frames sperren).
  if not GuildHealDB.editModeReset then GuildHealDB.editModeReset=true;GuildHealDB.locked=true end
+ -- Einmalig (1.1.5): Zauber lösen beim Drücken aus (wie Blizzards Aktionsleisten und VuhDo) und das ganze Feld heilt;
+ -- der Namensbereich, der nur anvisierte, deckte ein Drittel des Feldes ab und wirkte wie ein „Klick ohne Wirkung“.
+ if not GuildHealDB.clickDefaultsV2 then GuildHealDB.clickDefaultsV2=true;GuildHealDB.castOnDown=true;GuildHealDB.nameClick=false;GuildHealDB.clickDefaultsNotice=true end
  dbReady=GuildHealDB
  return GuildHealDB
 end

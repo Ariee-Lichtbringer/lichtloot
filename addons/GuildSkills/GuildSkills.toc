@@ -2,7 +2,7 @@
 ## Title: GuildSkills
 ## Notes: Berufsübersicht, Berufe-Datenbank, Skillguides und Mengenrechner (Classic Era)
 ## Author: GuildLoot
-## Version: 1.1.4-beta
+## Version: 1.1.5-beta
 ## OptionalDeps: GuildLootEra
 ## SavedVariables: GuildSkillsDB
 Core.lua

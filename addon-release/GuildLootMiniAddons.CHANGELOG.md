@@ -1,3 +1,9 @@
+# GuildLoot Mini-Addons 1.1.5-beta
+
+- GuildHeal reagiert schneller auf Klicks: Zauber lösen jetzt beim Drücken der Maustaste aus statt beim Loslassen (wie Blizzards Aktionsleisten und VuhDo). Bisher musste jeder Klick vollständig gedrückt und losgelassen werden, was beim schnellen Heilen spürbar bremste.
+- GuildHeal: Das ganze Feld heilt. Der Namensbereich oben im Feld, der nur anvisierte, ist standardmäßig aus; er deckte ein Drittel des Feldes ab, und Klicks dort wirkten wie „nichts passiert“. Beides unter /gheal → Anzeige umstellbar („Zauber beim Drücken auslösen“, „Klick auf den Namen visiert an“). Die Umstellung gilt einmalig auch für bestehende Einstellungen, danach bleibt die eigene Wahl.
+- Alle vier Mini-Addons tragen die gemeinsame Version 1.1.5-beta.
+
 # GuildLoot Mini-Addons 1.1.4-beta
 
 - GuildBuff, GuildSkills, GuildRaidBag: Liefen bisher trotz installiertem GuildLoot Era parallel weiter, weil die Prüfung „ist GuildLoot Era aktiv?“ beim eigenen Laden lief und WoW die Mini-Addons alphabetisch vor GuildLoot Era lädt. Folge: doppelter Buffcheck und Meldungen wie „… hat Gruppe 1 gebufft“ im Raidchat, obwohl im GuildLoot-Buffpanel „Raidchat: aus“ stand (GuildBuff hatte seine eigene Einstellung). Jetzt lädt GuildLoot Era per OptionalDeps zuerst, zusätzlich zählt ein aktiviertes, ladbares GuildLoot Era als aktiv.

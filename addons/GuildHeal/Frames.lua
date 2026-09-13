@@ -367,7 +367,7 @@ local function styleButton(button)
  -- Klick auf den Namen: anvisieren (links). Rechtsklick öffnet bewusst kein Einheitenmenü (Blizzard-Popup), sondern tut nichts.
  local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
  nameZone:SetPoint('TOPLEFT',0,0);nameZone:SetPoint('RIGHT',-22,0);nameZone:SetHeight(14);nameZone:SetFrameLevel(button:GetFrameLevel()+5)
- nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:RegisterForClicks('LeftButtonUp')
+ nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:RegisterForClicks(db.castOnDown and 'LeftButtonDown' or 'LeftButtonUp')
  nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) or GameTooltip:IsOwned(button) then GameTooltip:Hide() end;return end;local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren',.7,.85,1);GameTooltip:Show() end end)
  nameZone:HookScript('OnLeave',function() button.nameHover:Hide();GameTooltip:Hide() end)
  button.nameZone=nameZone
@@ -471,7 +471,7 @@ function GH.ApplyBindings()
   for k,v in pairs(attrs) do button:SetAttribute(k,v) end
   button:SetAttribute('_onenter',snippet);button:SetAttribute('_onleave','self:ClearBindings()')
   button.nameZone:SetAttribute('_onenter',snippet);button.nameZone:SetAttribute('_onleave','self:ClearBindings()')
-  button:RegisterForClicks(clicks)
+  button:RegisterForClicks(clicks);button.nameZone:RegisterForClicks(GH.DB().castOnDown and 'LeftButtonDown' or 'LeftButtonUp')
  end
  wipe(currentAttributeKeys);for k in pairs(attrs) do currentAttributeKeys[k]=true end;for _,m in ipairs(macros) do currentAttributeKeys[m.star..'macrotext'..m.suffix]=true end
  header.rangeSpell=rangeSpell
@@ -718,5 +718,6 @@ function GH.Initialize()
   if cdDirty and cdWait<=0 then cdDirty=false;cdWait=.2;GH.RefreshCooldownBar() end
  end)
  header:Show();GH.ApplyLayout()
+ if GuildHealDB.clickDefaultsNotice then GuildHealDB.clickDefaultsNotice=nil;GH.Print('Neu: Zauber lösen beim Drücken der Maustaste aus und das ganze Feld heilt (Namensklick zum Anvisieren ist aus). Beides unter /gheal → Anzeige änderbar.') end
 end
 local login=CreateFrame('Frame');login:RegisterEvent('PLAYER_LOGIN');login:SetScript('OnEvent',function() GH.Initialize();GH.Print('geladen. /gheal öffnet die Einstellungen, /gheal hilfe zeigt die Befehle.') end)
