@@ -21,6 +21,7 @@
     return true;
   }
   async function showRaidMemberNotice(notice){
+    if(new URLSearchParams(location.search).get("random")==="1")return true;
     if(!notice||!notice.active||!notice.text||!notice.version||document.getElementById("raidMemberNoticeModal"))return;
     const guild=currentGuildSlug(),pin=getStoredLichtLootPlayerPin();
     if(!pin)return;
@@ -31,6 +32,7 @@
     document.body.appendChild(modal);const check=modal.querySelector("[data-check]"),button=modal.querySelector("[data-accept]");check.onchange=()=>{button.disabled=!check.checked;button.style.opacity=check.checked?"1":".45";};button.onclick=async()=>{button.disabled=true;const result=await fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptRaidMemberNotice",guild,pin,version:notice.version})}).then(response=>response.json()).catch(()=>({}));if(result.accepted)modal.remove();else button.disabled=false;};
   }
   async function maybeShowWorldbuffAgreement(char,enabled){
+    if(new URLSearchParams(location.search).get("random")==="1")return;
     const page=String(location.pathname||"").toLowerCase();
     if(!/(^|\/)(bwl|ony|zg)-loot\.html$/.test(page)) return;
     if(!enabled || !char || !char.name || document.getElementById("worldbuffRuleAgreementModal")) return;
@@ -65,6 +67,7 @@
   }
 
   async function requireWorldbuffAgreementForSave(candidateItem){
+    if(new URLSearchParams(location.search).get("random")==="1")return true;
     const token=selectedWorldbuffToken(candidateItem);
     if(!token || window.worldbuffAgreementEnabled===false) return true;
     const pin=getStoredLichtLootPlayerPin(),character=String(document.getElementById("playerName")?.value||"").trim(),server=String(document.getElementById("playerServer")?.value||"").trim(),raidKey=String(window.currentRaidId||document.getElementById("raidPin")?.value||"").trim(),guild=currentGuildSlug();

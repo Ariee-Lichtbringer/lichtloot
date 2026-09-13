@@ -4391,7 +4391,21 @@ if(isRandomPrioLink){
 }
 
 function randomCookieValue(name){const prefix=name+"=";return document.cookie.split(";").map(value=>value.trim()).find(value=>value.startsWith(prefix))?.slice(prefix.length)||"";}
-function getRandomParticipantToken(){let token=decodeURIComponent(randomCookieValue("guildloot_random_token")||"");if(!token){const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);token=Array.from(bytes,value=>value.toString(16).padStart(2,"0")).join("");document.cookie="guildloot_random_token="+encodeURIComponent(token)+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";}return token;}
+function getRandomParticipantToken(){
+  if(window.guildlootRandomParticipantToken)return window.guildlootRandomParticipantToken;
+  const key="guildloot_random_token";
+  let token="";
+  try{token=decodeURIComponent(randomCookieValue(key)||"");}catch{}
+  for(const storeName of ["localStorage","sessionStorage"]){
+    if(token.length>=24)break;
+    try{token=window[storeName].getItem(key)||"";}catch{}
+  }
+  if(token.length<24){const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);token=Array.from(bytes,value=>value.toString(16).padStart(2,"0")).join("");}
+  window.guildlootRandomParticipantToken=token;
+  for(const storeName of ["localStorage","sessionStorage"]){try{window[storeName].setItem(key,token);}catch{}}
+  try{document.cookie=key+"="+encodeURIComponent(token)+"; Max-Age=31536000; Path=/; SameSite=Lax; Secure";}catch{}
+  return token;
+}
 function initializeRandomCharacterProfile(){
   getRandomParticipantToken();
   let profile={};try{profile=JSON.parse(decodeURIComponent(randomCookieValue("guildloot_random_profile")||"%7B%7D"));}catch(error){}
@@ -10822,7 +10836,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 })();
 </script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
-<script src="po-release-status.js?v=20260906-stored-status2"></script>
+<script src="po-release-status.js?v=20260913-random-guest"></script>
 <script src="raid-signup-mirror.js?v=20260910-3"></script>
 <script src="../pin-visibility.js"></script>
 <script src="prio-receipt.js?v=20260908"></script>
