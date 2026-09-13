@@ -1,3 +1,8 @@
+# GuildLoot Mini-Addons 1.1.4-beta
+
+- GuildHeal schneller: Notfall- und Überheilungsprüfung laufen 10-mal pro Sekunde statt in jedem Frame über alle Felder (Animationen bleiben flüssig). Die Namenslisten für Boss-Debuffs, ignorierte Debuffs, beobachtete Auren und fehlende Buffs werden gecacht statt bei jedem Aura-Ereignis je Feld über Zauberabfragen neu aufgebaut. Spürbar in 40er-Raids, wo Aura-Ereignisse sehr häufig sind.
+- GuildHeal: Rechtsklick auf ein Feld oder den Spielernamen öffnet kein Blizzard-Einheitenmenü mehr (Freund hinzufügen, Flüstern …). Der Namensbereich reagiert nur noch auf Linksklick (anvisieren), Rechtsklick bleibt frei für eigene Klickzauber. Die Aktion „Einheitenmenü“ ist aus der Auswahl entfernt; alte Belegungen damit werden geleert.
+
 # GuildLoot Mini-Addons 1.1.3-beta
 
 - GuildHeal: Einstellungen lassen sich in das GuildLoot-Era-Hauptfenster einbetten (Seitenleiste → Werkzeuge → GuildHeal).

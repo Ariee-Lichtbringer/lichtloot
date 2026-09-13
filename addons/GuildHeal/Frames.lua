@@ -78,14 +78,29 @@ local function debuffFull(unit,i)
  local a=C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex and C_UnitAuras.GetDebuffDataByIndex(unit,i)
  if a then return a.name,a.icon,a.applications,a.dispelName,a.duration,a.expirationTime end
 end
+-- Namenslisten (Boss-Debuffs, ignorierte Debuffs, beobachtete Auren, fehlende Buffs) werden gecacht:
+-- UNIT_AURA feuert im Raid sehr oft, der Aufbau über GetSpellInfo je Ereignis und Feld kostete spürbar Leistung.
+local auraSets,auraSetsAt,auraSetsGen
+GH.auraGeneration=0
+function GH.InvalidateAuraSets() GH.auraGeneration=(GH.auraGeneration or 0)+1 end
+local function currentAuraSets()
+ local db=GH.DB();local now=GetTime()
+ if auraSets and auraSetsGen==GH.auraGeneration and now-(auraSetsAt or 0)<10 then return auraSets end
+ local bossSet={};for _,n in ipairs(GH.BossDebuffs()) do bossSet[n]=true end
+ local ignored={};for _,n in ipairs(GH.IgnoredDebuffs()) do ignored[n]=true end
+ local tracked=db.showAuras and GH.TrackedAuras() or {}
+ local wanted={};for i,name in ipairs(tracked) do wanted[name]=i end
+ local watch={};if db.missingBuffWatch then for _,name in ipairs(GH.MissingBuffs()) do watch[name]=GH.BuffAliases(name) end end
+ auraSets={bossSet=bossSet,ignored=ignored,tracked=tracked,wanted=wanted,watch=watch,hasBoss=next(bossSet)~=nil,hasWanted=next(wanted)~=nil or next(watch)~=nil}
+ auraSetsAt=now;auraSetsGen=GH.auraGeneration;return auraSets
+end
 local function updateDebuffs(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
  local db=GH.DB();local dispel=GH.DISPEL[GH.PlayerClass()] or {}
  local shown,color,boss
- local bossSet={};for _,n in ipairs(GH.BossDebuffs()) do bossSet[n]=true end
- local ignored={};for _,n in ipairs(GH.IgnoredDebuffs()) do ignored[n]=true end
+ local sets=currentAuraSets();local bossSet,ignored=sets.bossSet,sets.ignored
  local list={};local firstDispel
- if db.showDebuffs or next(bossSet) then
+ if db.showDebuffs or sets.hasBoss then
   for i=1,40 do
    local name,icon,count,kind,duration,expires=debuffFull(unit,i);if not name then break end
    if bossSet[name] and not boss then boss={name=name,icon=icon} end
@@ -126,11 +141,9 @@ end
 local function updateAuras(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
  local db=GH.DB()
- local tracked=db.showAuras and GH.TrackedAuras() or {}
- local wanted={};for i,name in ipairs(tracked) do wanted[name]=i end
- local watch={};if db.missingBuffWatch then for _,name in ipairs(GH.MissingBuffs()) do watch[name]=GH.BuffAliases(name) end end
+ local sets=currentAuraSets();local tracked,wanted,watch=sets.tracked,sets.wanted,sets.watch
  local found={};local present={}
- if next(wanted) or next(watch) then
+ if sets.hasWanted then
   for _,filter in ipairs({'HELPFUL','HARMFUL'}) do
    for i=1,40 do
     local name,icon,count,_,duration,expires,source=auraAt(unit,i,filter);if not name then break end
@@ -214,7 +227,7 @@ end
 function GH.RefreshHealthByGuid(guid)
  for _,button in ipairs(buttons) do local unit=unitOf(button);if unit and button:IsShown() and UnitGUID(unit)==guid then updateHealth(button) end end
 end
-function GH.RefreshAll() for _,button in ipairs(buttons) do updateAll(button) end;GH.RefreshCooldownBar() end
+function GH.RefreshAll() GH.InvalidateAuraSets();for _,button in ipairs(buttons) do updateAll(button) end;GH.RefreshCooldownBar() end
 
 -- Notfall: der Spieler mit den wenigsten Lebenspunkten (in Reichweite, unter der Schwelle) pulsiert gelb, optional mit Ton.
 local emergencyButton,emergencyPulse,lastEmergencySound=nil,0,0
@@ -234,7 +247,7 @@ local function scanEmergency(dt)
   emergencyButton=best
   if best and db.emergencySound and GetTime()-lastEmergencySound>3 then lastEmergencySound=GetTime();if PlaySound then PlaySound(8959,'Master') end end
  end
- if emergencyButton then emergencyPulse=emergencyPulse+dt*6;emergencyButton.emergency:SetAlpha(.35+.35*math.abs(math.sin(emergencyPulse)));emergencyButton.emergency:Show() end
+ if emergencyButton then emergencyButton.emergency:Show() end
 end
 -- Überheilungs-Warnung: läuft ein eigener Zauber auf einen Spieler und würde mehr als die Schwelle davon verpuffen,
 -- blinkt das Feld rot. Abbrechen muss der Spieler selbst (Escape oder /stopcasting), automatisch erlaubt WoW das nicht.
@@ -315,11 +328,11 @@ local function styleButton(button)
   slot.count=slot:CreateFontString(nil,'OVERLAY');slot.count:SetFont(STANDARD_TEXT_FONT,8,'OUTLINE');slot.count:SetPoint('BOTTOMRIGHT',2,-1)
   slot:Hide();button.auras[i]=slot
  end
- -- Klick auf den Namen: anvisieren (links) bzw. Einheitenmenü (rechts), unabhängig von den Heilzaubern.
+ -- Klick auf den Namen: anvisieren (links). Rechtsklick öffnet bewusst kein Einheitenmenü (Blizzard-Popup), sondern tut nichts.
  local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
  nameZone:SetPoint('TOPLEFT',0,0);nameZone:SetPoint('RIGHT',-22,0);nameZone:SetHeight(14);nameZone:SetFrameLevel(button:GetFrameLevel()+5)
- nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:SetAttribute('type2','togglemenu');nameZone:RegisterForClicks('AnyUp')
- nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) or GameTooltip:IsOwned(button) then GameTooltip:Hide() end;return end;local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren · Rechtsklick: Menü',.7,.85,1);GameTooltip:Show() end end)
+ nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:RegisterForClicks('LeftButtonUp')
+ nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) or GameTooltip:IsOwned(button) then GameTooltip:Hide() end;return end;local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren',.7,.85,1);GameTooltip:Show() end end)
  nameZone:HookScript('OnLeave',function() button.nameHover:Hide();GameTooltip:Hide() end)
  button.nameZone=nameZone
  button.nameHover=button.health:CreateTexture(nil,'OVERLAY');button.nameHover:SetPoint('TOPLEFT',0,0);button.nameHover:SetPoint('RIGHT',-22,0);button.nameHover:SetHeight(14);button.nameHover:SetColorTexture(1,1,1,.14);button.nameHover:Hide()
@@ -338,7 +351,7 @@ local function actionAttributes(suffix,value,chain,attrs,macros,star,mod)
  -- Attributname: [*|modifikator-]type<suffix>, z. B. shift-type1 oder *type-ghw3.
  local p=star and '*' or (mod or '')
  if value=='target' then attrs[p..'type'..suffix]='target'
- elseif value=='menu' then attrs[p..'type'..suffix]='togglemenu'
+ elseif value=='menu' then return nil -- Einheitenmenü wird nicht mehr unterstützt (öffnete das Blizzard-Popup)
  elseif value=='focus' then attrs[p..'type'..suffix]='focus'
  elseif value=='assist' then attrs[p..'type'..suffix]='assist'
  elseif value=='stopcasting' then attrs[p..'type'..suffix]='macro';attrs[p..'macrotext'..suffix]='/stopcasting'
@@ -580,7 +593,7 @@ local function onEvent(_,event,unit,...)
  end
  if event=='PLAYER_TARGET_CHANGED' then for _,button in ipairs(buttons) do updateTarget(button) end;if extraButtons.target then GH.RefreshUnitMap();updateAll(extraButtons.target) end;return end
  if event=='GROUP_ROSTER_UPDATE' or event=='PLAYER_ENTERING_WORLD' then if not InCombatLockdown() then GH.BuildExtras() else pendingLayout=true end;GH.RefreshUnitMap();for _,button in ipairs(buttons) do updateAll(button) end;return end
- if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.InvalidateSpellbook(true);GH.ApplyBindings();return end
+ if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.InvalidateSpellbook(true);GH.InvalidateAuraSets();GH.ApplyBindings();return end
  if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else GH.RefreshCooldownBar() end;return end
  local list=unit and byUnit[unit];if not list then return end
  for _,button in ipairs(list) do
@@ -629,11 +642,14 @@ function GH.Initialize()
  driver=CreateFrame('Frame')
  for _,e in ipairs({'UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
  driver:SetScript('OnEvent',onEvent)
- local fast,slow=0,0
+ local fast,slow,scan=0,0,0
  driver:SetScript('OnUpdate',function(_,dt)
-  fast=fast+dt;slow=slow+dt
-  scanEmergency(dt);scanOverheal()
-  for _,button in ipairs(buttons) do if button.bossGlow:IsShown() then button.bossGlow:SetAlpha(.25+.3*math.abs(math.sin(GetTime()*5))) end end
+  fast=fast+dt;slow=slow+dt;scan=scan+dt
+  -- Notfall- und Überheilungsprüfung 10-mal pro Sekunde (vorher in jedem Frame über alle Felder); Animationen laufen weiter je Frame.
+  if scan>=.1 then scanEmergency(scan);scanOverheal();scan=0 end
+  if emergencyButton then emergencyPulse=emergencyPulse+dt*6;emergencyButton.emergency:SetAlpha(.35+.35*math.abs(math.sin(emergencyPulse))) end
+  local now=GetTime();local bossAlpha=.25+.3*math.abs(math.sin(now*5));local overAlpha=.3+.3*math.abs(math.sin(now*8))
+  for _,button in ipairs(buttons) do if button.bossGlow:IsShown() then button.bossGlow:SetAlpha(bossAlpha) end;if button.overhealGlow:IsShown() then button.overhealGlow:SetAlpha(overAlpha) end end
   if fast>=.3 then fast=0;scanAggro();for _,button in ipairs(buttons) do if button:IsShown() then updateRange(button);updateThreat(button) end end end
   if slow>=.5 then slow=0;for _,button in ipairs(buttons) do if button:IsShown() then GH.UpdateAuraTimers(button) end end;GH.RefreshCooldownBar() end
  end)

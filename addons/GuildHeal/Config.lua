@@ -65,7 +65,7 @@ local function openPicker(anchorFrame,onPick,options)
   picker:SetScript('OnEvent',function(self,event) GH.InvalidateSpellbook(event=='SPELLS_CHANGED');if self:IsShown() and not self.pending then self.pending=true;C_Timer.After(.2,function() self.pending=nil;if self:IsShown() then self:Refresh() end end) end end)
   function picker:Refresh()
    local query=(self.search:GetText() or ''):lower();local list={}
-   if not self.options.spellsOnly then list={{clear=true,text='– leer –'},{value='target',text='Ziel anvisieren'},{value='menu',text='Einheitenmenü'},{value='stopcasting',text='Zauber abbrechen (/stopcasting)'}} else list={{clear=true,text='– leer –'}} end
+   if not self.options.spellsOnly then list={{clear=true,text='– leer –'},{value='target',text='Ziel anvisieren'},{value='stopcasting',text='Zauber abbrechen (/stopcasting)'}} else list={{clear=true,text='– leer –'}} end
    for _,s in ipairs(GH.SpellbookSpells()) do
     if query=='' or s.name:lower():find(query,1,true) then
      list[#list+1]={value=s.name,text=s.name..(#s.ranks>1 and '  (höchster Rang)' or ''),icon=s.icon}
@@ -216,7 +216,7 @@ local function build()
   row.chain=button(p,'+Kette',578,y-38,70,function() openChainEditor(row.id,GH.BindingText(GH.Bindings()[row.id])..' ('..b.label..')') end,20)
   rows[i]=row
  end
- label(p,'Name eines Zaubers (auch mit Rang, z. B. Erneuerung(Rang 5)), Makros oder Gegenstands, oder target / focus / assist / menu / stopcasting. Enter übernimmt. Zauber aus dem Zauberbuch lassen sich auch ins Feld ziehen.',210,-350,440):SetTextColor(.6,.7,.8)
+ label(p,'Name eines Zaubers (auch mit Rang, z. B. Erneuerung(Rang 5)), Makros oder Gegenstands, oder target / focus / assist / stopcasting. Enter übernimmt. Zauber aus dem Zauberbuch lassen sich auch ins Feld ziehen.',210,-350,440):SetTextColor(.6,.7,.8)
  button(p,'Standard meiner Klasse',14,-276,170,function() GH.ResetBindings();GH.Print('Klickzauber auf die Vorgabe deiner Klasse gesetzt.') end)
  button(p,'Alle leeren',14,-306,170,function() for _,b in ipairs(GH.BINDINGS) do GH.SetBinding(GH.BindingId(b),nil) end end)
  label(p,'Kette: Schmuckstücke und Zusatzzauber ohne globale Abklingzeit werden vor dem Hauptzauber ausgelöst, sobald sie bereit sind. Klick auf den Namen im Feld visiert immer an.',14,-340,180):SetTextColor(.6,.7,.8)
@@ -240,7 +240,7 @@ local function build()
   row.remove=button(p,'×',568,y,26,function() GH.RemoveKey(i);GH.ConfigRefresh() end,26)
   keyRows[i]=row
  end
- label(p,'Beispiel: F1 = Erneuerung, F2 = Blitzheilung, Maustaste 4 = Machtwort: Schild. Eintrag wie bei den Klickzaubern: Zauber mit Rang, Makro, Gegenstand oder target/menu/stopcasting.',14,-372,640):SetTextColor(.6,.7,.8)
+ label(p,'Beispiel: F1 = Erneuerung, F2 = Blitzheilung, Maustaste 4 = Machtwort: Schild. Eintrag wie bei den Klickzaubern: Zauber mit Rang, Makro, Gegenstand oder target/stopcasting.',14,-372,640):SetTextColor(.6,.7,.8)
  -- Reiter: Design (Anordnung, Größe, Balken, Schrift, Text)
  p=pages.design.frame
  label(p,'Anordnung',14,-4,300,'GameFontNormal')
@@ -295,7 +295,7 @@ local function build()
  check(p,'Abklingzeiten über den Feldern',14,-124,'showCooldowns','Zauber aus Belegungen und Ketten sowie Schmuckstücke, solange sie abklingen.',function() GH.RefreshCooldownBar() end)
  check(p,'Klassenfarben im Balken',14,-148,'classColors')
  check(p,'Balkenfarbe nach Lebenspunkten',14,-172,'healthGradient','Grün, Gelb, Rot je nach Prozent; der Name bleibt in Klassenfarbe.',function() GH.RefreshAll() end)
- check(p,'Klick auf den Namen visiert an',14,-196,'nameClick','Der Namensbereich oben im Feld: Linksklick Ziel, Rechtsklick Menü. Aus: das ganze Feld heilt.')
+ check(p,'Klick auf den Namen visiert an',14,-196,'nameClick','Der Namensbereich oben im Feld: Linksklick visiert an (Rechtsklick tut nichts). Aus: das ganze Feld heilt.')
  check(p,'Heilklick nimmt den Spieler ins Ziel',14,-412,'targetOnHeal','An: jeder Heilzauber per Klick visiert den Spieler zusätzlich an. Aus: dein Ziel bleibt, nur der Name visiert an.',function() GH.ApplyBindings() end)
  check(p,'Zauber beim Drücken auslösen',14,-220,'castOnDown','Zaubert schon beim Drücken der Maustaste statt beim Loslassen.',function() GH.ApplyBindings() end)
  check(p,'Ohne Gruppe ausblenden',14,-244,'hideSolo','Zeigt die Frames nur in Gruppe oder Raid.')

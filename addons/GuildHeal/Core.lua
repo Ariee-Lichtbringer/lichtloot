@@ -29,9 +29,9 @@ GH.DEFAULTS={
  DRUID={['1']={S.healingTouch},['2']={S.regrowth,S.healingTouch},['3']={S.rejuvenation},['shift-1']={S.swiftmend},['shift-2']={S.rebirth},['ctrl-1']={S.removeCurse},['ctrl-2']={S.abolishPoison,S.curePoison},['alt-1']={S.innervate},['alt-2']={'target'}},
  PALADIN={['1']={S.flashOfLight,S.holyLight},['2']={S.holyLight},['3']={S.holyShock},['shift-1']={S.blessingOfProtection},['shift-2']={S.layOnHands},['ctrl-1']={S.cleanse,S.purify},['ctrl-2']={S.blessingOfFreedom},['alt-1']={'target'},['alt-2']={'menu'}},
  SHAMAN={['1']={S.lesserHealingWave,S.healingWave},['2']={S.healingWave},['3']={S.chainHeal},['shift-2']={S.ancestralSpirit},['ctrl-1']={S.shamanCurePoison},['ctrl-2']={S.shamanCureDisease},['alt-1']={'target'},['alt-2']={'menu'}},
- MAGE={['1']={'target'},['2']={'menu'},['ctrl-1']={S.removeLesserCurse}},
+ MAGE={['1']={'target'},['ctrl-1']={S.removeLesserCurse}},
 }
-GH.DEFAULT_OTHER={['1']={'target'},['2']={'menu'}}
+GH.DEFAULT_OTHER={['1']={'target'}}
 -- Entfernbare Debuff-Typen je Klasse (für die farbige Umrandung und das Debuff-Symbol).
 GH.DISPEL={PRIEST={Magic=true,Disease=true},PALADIN={Magic=true,Poison=true,Disease=true},DRUID={Curse=true,Poison=true},SHAMAN={Poison=true,Disease=true},MAGE={Curse=true}}
 GH.DEBUFF_COLORS={Magic={.2,.6,1},Curse={.6,.2,1},Poison={.2,.8,.2},Disease={.9,.15,.15}}
@@ -82,6 +82,7 @@ function GH.Bindings()
     elseif type(opt)=='string' or GH.Known(opt) then value=opt;break end
    end end
   end
+  if value=='menu' then value=nil;saved[id]=false end -- alte Belegung Einheitenmenü entfernen
   if value==false then value=nil end
   out[id]=value
  end
@@ -151,7 +152,7 @@ function GH.SetMissingBuffs(list) GH.ClassStore().missingBuffs=list;if GH.Refres
 function GH.ResetMissingBuffs() GH.ClassStore().missingBuffs=nil;if GH.RefreshAll then GH.RefreshAll() end end
 -- Ignorierte Debuffs (werden nie angezeigt), z. B. Geschwächte Seele oder Verzicht.
 function GH.IgnoredDebuffs() local c=GH.ClassStore();c.ignoredDebuffs=c.ignoredDebuffs or {};return c.ignoredDebuffs end
-function GH.SetIgnoredDebuffs(list) GH.ClassStore().ignoredDebuffs=list;if GH.RefreshAll then GH.RefreshAll() end end
+function GH.SetIgnoredDebuffs(list) GH.ClassStore().ignoredDebuffs=list;if GH.InvalidateAuraSets then GH.InvalidateAuraSets() end;if GH.RefreshAll then GH.RefreshAll() end end
 -- Buff-Gruppen: Gebet/Einzelbuff zählen gleich (Seelenstärke, Intelligenz, Mal der Wildnis, Schattenschutz).
 GH.BUFF_FAMILIES={{1243,21562},{1459,23028},{1126,21850},{976,27683}}
 function GH.BuffAliases(name)
@@ -177,10 +178,10 @@ function GH.MacroText(value,chain,mouseover)
  return table.concat(lines,'\n')
 end
 -- Freitext wie bei VuhDo: Zaubername (mit Rang), Makroname, Gegenstand oder target/focus/assist/menu.
-GH.ACTIONS={target='Ziel anvisieren',focus='Fokus setzen',assist='Assistieren',menu='Einheitenmenü',stopcasting='Zauber abbrechen'}
+GH.ACTIONS={target='Ziel anvisieren',focus='Fokus setzen',assist='Assistieren',stopcasting='Zauber abbrechen'}
 function GH.ParseInput(text)
  text=(text or ''):match('^%s*(.-)%s*$');if text=='' then return nil end
- local lower=text:lower();if lower=='dropdown' then lower='menu' end
+ local lower=text:lower();if lower=='dropdown' or lower=='menu' then return nil end -- Einheitenmenü entfernt
  if GH.ACTIONS[lower] then return lower end
  if GH.ValidSpell(text) then return text end
  if GetMacroIndexByName and GetMacroIndexByName(text)>0 then return 'macro:'..text end
