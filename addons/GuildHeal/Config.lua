@@ -60,6 +60,9 @@ local function openPicker(anchorFrame,onPick,options)
    picker.items[i]=b
   end
   picker:EnableMouseWheel(true);picker:SetScript('OnMouseWheel',function(_,delta) picker.offset=math.max(0,(picker.offset or 0)-delta*3);picker:Refresh() end)
+  -- Rangtexte kommen erst nach dem Nachladen an: Liste dann neu aufbauen.
+  for _,e in ipairs({'SPELL_TEXT_UPDATE','SPELLS_CHANGED'}) do pcall(picker.RegisterEvent,picker,e) end
+  picker:SetScript('OnEvent',function(self,event) GH.InvalidateSpellbook(event=='SPELLS_CHANGED');if self:IsShown() and not self.pending then self.pending=true;C_Timer.After(.2,function() self.pending=nil;if self:IsShown() then self:Refresh() end end) end end)
   function picker:Refresh()
    local query=(self.search:GetText() or ''):lower();local list={}
    if not self.options.spellsOnly then list={{clear=true,text='– leer –'},{value='target',text='Ziel anvisieren'},{value='menu',text='Einheitenmenü'},{value='stopcasting',text='Zauber abbrechen (/stopcasting)'}} else list={{clear=true,text='– leer –'}} end
@@ -155,7 +158,10 @@ function GH.ConfigRefresh()
  for key,s in pairs(sliders) do s.frame.loading=true;s.frame:SetValue(db[key]);if s.frame.Text then s.frame.Text:SetText(s.text..': '..(s.fmt and s.fmt(db[key]) or db[key])) end;s.frame.loading=false end
  local classLabel=UnitClass('player');window.classText:SetText('Belegung für '..(classLabel or 'deine Klasse')..(db.perCharacter and ' (nur '..(UnitName('player') or '')..')' or ' (alle Charaktere dieser Klasse)')..' · links den Modifikator wählen, rechts je Maustaste eintragen. Die Maus liegt dabei über dem Spielerfeld.')
  local auras=GH.TrackedAuras();window.auraList:SetText(#auras>0 and table.concat(auras,', ') or '– keine –')
- local boss=GH.BossDebuffs();window.bossList:SetText(#boss>0 and table.concat(boss,', ') or '– keine –')
+ local boss=GH.BossDebuffs();local shownBoss={};for i=1,math.min(10,#boss) do shownBoss[i]=boss[i] end
+ window.bossList:SetText(#boss>0 and (table.concat(shownBoss,', ')..(#boss>10 and (' … und '..(#boss-10)..' weitere ('..#boss..' gesamt)') or '')) or '– keine –')
+ local ignored=GH.IgnoredDebuffs();window.ignoredList:SetText(#ignored>0 and table.concat(ignored,', ') or '– keine –')
+ local missingBuffs=GH.MissingBuffs();window.missingList:SetText(#missingBuffs>0 and table.concat(missingBuffs,', ') or '– keine –')
  if window.tanksInput and not window.tanksInput:HasFocus() then window.tanksInput:SetText(db.tanks or '') end
  for _,b in ipairs(window.sortButtons or {}) do local on=(db.sortMode or 'group')==b.mode;b.bg:SetColorTexture(on and .2 or .12,on and .45 or .22,on and .45 or .26,1) end
  for _,b in ipairs(window.layoutButtons or {}) do local on=db[b.choiceKey]==b.choiceValue;b.bg:SetColorTexture(on and .2 or .12,on and .45 or .22,on and .45 or .26,1) end
@@ -167,9 +173,9 @@ local function showPage(name)
  closePicker()
 end
 local function build()
- window=CreateFrame('Frame','GuildHealConfig',UIParent);window:SetSize(680,660);window:SetPoint('CENTER');window:SetMovable(true);window:EnableMouse(true);window:SetClampedToScreen(true);window:SetFrameStrata('HIGH')
+ window=CreateFrame('Frame','GuildHealConfig',UIParent);window:SetSize(680,720);window:SetPoint('CENTER');window:SetMovable(true);window:EnableMouse(true);window:SetClampedToScreen(true);window:SetFrameStrata('HIGH')
  window:RegisterForDrag('LeftButton');window:SetScript('OnDragStart',window.StartMoving);window:SetScript('OnDragStop',window.StopMovingOrSizing)
- local bg=window:CreateTexture(nil,'BACKGROUND');bg:SetAllPoints();bg:SetColorTexture(.05,.08,.11,.97)
+ local bg=window:CreateTexture(nil,'BACKGROUND');bg:SetAllPoints();bg:SetColorTexture(.05,.08,.11,.97);window.chromeBg=bg
  local border=window:CreateTexture(nil,'BORDER');border:SetPoint('TOPLEFT',-1,1);border:SetPoint('BOTTOMRIGHT',1,-1);border:SetColorTexture(.35,.5,.6,.8);border:SetDrawLayer('BORDER',-1)
  local logo=window:CreateTexture(nil,'ARTWORK');logo:SetSize(30,30);logo:SetPoint('TOPLEFT',12,-10);logo:SetTexture(GH.MEDIA..'GuildHeal')
  local title=label(window,'GuildHeal · Einstellungen',50,-14,400,'GameFontNormalLarge');title:SetTextColor(1,.8,.25)
@@ -178,10 +184,10 @@ local function build()
  window.editButton=button(window,'UI bearbeiten: aus',470,-10,170,function() GH.DB().locked=not GH.DB().locked;GH.ApplyLayout();GH.ConfigRefresh() end,22)
  window.editButton:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_BOTTOM');GameTooltip:SetText('UI bearbeiten');GameTooltip:AddLine('An: Griffe erscheinen über den Spielerfeldern und der Cooldown-Leiste, alles lässt sich ziehen. Aus: Griffe weg, Positionen fest.',1,1,1,true);GameTooltip:Show() end);window.editButton:SetScript('OnLeave',function() GameTooltip:Hide() end)
  window.classText=label(window,'',14,-58,650);window.classText:SetTextColor(.85,.92,1)
- local tabs={{'clicks','Klickzauber'},{'keys','Tasten'},{'design','Design'},{'display','Anzeige'},{'alerts','Warnungen'}}
+ local tabs={{'clicks','Klickzauber'},{'keys','Tasten'},{'design','Design'},{'display','Anzeige'},{'auras','Buffs/Debuffs'},{'alerts','Warnungen'}}
  for i,t in ipairs(tabs) do
   local frame=CreateFrame('Frame',nil,window);frame:SetPoint('TOPLEFT',0,-118);frame:SetPoint('BOTTOMRIGHT',0,0);frame:Hide()
-  local tab=button(window,t[2],14+(i-1)*132,-88,126,function() showPage(t[1]) end,24)
+  local tab=button(window,t[2],14+(i-1)*110,-88,104,function() showPage(t[1]) end,24)
   pages[t[1]]={frame=frame,tab=tab}
  end
  -- Reiter 1: Modifikator links, Maustasten und Mausrad rechts (wie VuhDo).
@@ -265,12 +271,12 @@ local function build()
   end
  end
  for idx,entry in ipairs(GH.COLOR_LABELS) do
-  local y=-268-(idx-1)*26
-  local sw=CreateFrame('Button',nil,p);sw:SetSize(22,18);sw:SetPoint('TOPLEFT',14,y);sw.key=entry[1]
+  local col=idx>6 and 1 or 0;local y=-268-((idx-1)-col*6)*26;local x=14+col*300
+  local sw=CreateFrame('Button',nil,p);sw:SetSize(22,18);sw:SetPoint('TOPLEFT',x,y);sw.key=entry[1]
   sw.color=sw:CreateTexture(nil,'ARTWORK');sw.color:SetPoint('TOPLEFT',1,-1);sw.color:SetPoint('BOTTOMRIGHT',-1,1)
   local frame=sw:CreateTexture(nil,'BACKGROUND');frame:SetAllPoints();frame:SetColorTexture(.8,.85,.9,1)
   sw:SetScript('OnClick',function(self) openColor(self.key) end)
-  label(p,entry[2],42,y-3,280)
+  label(p,entry[2],x+28,y-3,260)
   table.insert(window.swatches,sw)
  end
  button(p,'Standardfarben',14,-428,130,function() GH.ResetColors();GH.ConfigRefresh() end,22)
@@ -284,14 +290,13 @@ local function build()
  -- Reiter: Anzeige (Funktionen, Sortierung, Zusatzfelder, Auren)
  p=pages.display.frame
  check(p,'Manabalken anzeigen',14,-28,'showMana')
- check(p,'Debuffs anzeigen',14,-52,'showDebuffs','Entfernbare Debuffs färben den Rahmen: Blau Magie, Lila Fluch, Grün Gift, Braun Krankheit.')
+ check(p,'Tooltip beim Überfahren',14,-388,'showTooltips','Zeigt beim Überfahren eines Feldes den Spieler-Tooltip. Standard aus.')
  check(p,'Eingehende Heilung und Überheilung',14,-76,'showIncoming','Angekündigte Heilung im Balken (LibHealComm, wie VuhDo); überschüssige Heilung als oranger Wert (+).')
- check(p,'HoTs und Schilde mit Restzeit',14,-100,'showAuras','Eigene verfolgte Auren erscheinen als kleine Symbole unten links im Feld.',function() GH.RefreshAll() end)
  check(p,'Abklingzeiten über den Feldern',14,-124,'showCooldowns','Zauber aus Belegungen und Ketten sowie Schmuckstücke, solange sie abklingen.',function() GH.RefreshCooldownBar() end)
  check(p,'Klassenfarben im Balken',14,-148,'classColors')
  check(p,'Balkenfarbe nach Lebenspunkten',14,-172,'healthGradient','Grün, Gelb, Rot je nach Prozent; der Name bleibt in Klassenfarbe.',function() GH.RefreshAll() end)
  check(p,'Klick auf den Namen visiert an',14,-196,'nameClick','Der Namensbereich oben im Feld: Linksklick Ziel, Rechtsklick Menü. Aus: das ganze Feld heilt.')
- check(p,'Heilklick nimmt den Spieler ins Ziel',14,-364,'targetOnHeal','An: jeder Heilzauber per Klick visiert den Spieler zusätzlich an. Aus: dein Ziel bleibt, nur der Name visiert an.',function() GH.ApplyBindings() end)
+ check(p,'Heilklick nimmt den Spieler ins Ziel',14,-412,'targetOnHeal','An: jeder Heilzauber per Klick visiert den Spieler zusätzlich an. Aus: dein Ziel bleibt, nur der Name visiert an.',function() GH.ApplyBindings() end)
  check(p,'Zauber beim Drücken auslösen',14,-220,'castOnDown','Zaubert schon beim Drücken der Maustaste statt beim Loslassen.',function() GH.ApplyBindings() end)
  check(p,'Ohne Gruppe ausblenden',14,-244,'hideSolo','Zeigt die Frames nur in Gruppe oder Raid.')
  check(p,'Eigenes Feld für mein Ziel',14,-292,'showTargetFrame','Ein größeres Feld über dem Griff zeigt dein aktuelles Ziel.')
@@ -303,17 +308,54 @@ local function build()
   window.sortButtons[i]=button(p,entry[2],320+(i-1)*112,-180,106,function() GH.DB().sortMode=entry[1];GH.ApplyLayout();GH.ConfigRefresh() end);window.sortButtons[i].mode=entry[1]
  end
  label(p,'Tanks zuerst nutzt die Rollen Haupttank/Hauptassistent des Schlachtzugs. Bitte vom Raidleiter setzen lassen.',320,-208,340):SetTextColor(.6,.7,.8)
- label(p,'Verfolgte Auren (HoTs, Schilde, Schutz-Debuffs)',320,-250,340,'GameFontNormal')
- window.auraList=label(p,'',320,-270,340);window.auraList:SetTextColor(.85,.92,1)
- local addAura;addAura=button(p,'Aura hinzufügen',320,-326,120,function() local dragged=cursorSpell();local function add(name) if not name then return end;local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then return end end;list[#list+1]=name;GH.SetTrackedAuras(list);GH.ConfigRefresh() end;if dragged then add(dragged) else openPicker(addAura,add,{spellsOnly=true}) end end)
- button(p,'Letzte entfernen',446,-326,110,function() local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;table.remove(list);GH.SetTrackedAuras(list);GH.ConfigRefresh() end)
- button(p,'Standard',562,-326,80,function() GH.ResetTrackedAuras();GH.ConfigRefresh() end)
- label(p,'Abklingzeiten',320,-366,340,'GameFontNormal')
- slider(p,'Symbolgröße',332,-402,'cdSize',18,48,2)
- check(p,'Bereit-Meldung auf dem Bildschirm',320,-432,'cdReadyWarn','Großer Text in der Bildschirmmitte, wenn ein belegter Zauber oder ein Schmuckstück wieder bereit ist.')
- check(p,'Ton bei bereit',320,-456,'cdReadySound')
- button(p,'Leiste wieder an die Felder heften',320,-486,240,function() GH.DB().cdPosition=nil;GH.ApplyLayout() end,22)
- button(p,'Position zurücksetzen',14,-400,150,function() GH.DB().position=nil;GH.ApplyLayout() end)
+ label(p,'Abklingzeiten',320,-250,340,'GameFontNormal')
+ slider(p,'Symbolgröße',332,-286,'cdSize',18,48,2)
+ check(p,'Bereit-Meldung auf dem Bildschirm',320,-316,'cdReadyWarn','Großer Text in der Bildschirmmitte, wenn ein belegter Zauber oder ein Schmuckstück wieder bereit ist.')
+ check(p,'Ton bei bereit',320,-340,'cdReadySound')
+ check(p,'Schmuckstücke immer anzeigen',320,-364,'cdTrinkets','Benutzbare Schmuckstücke (Platz 13 und 14) erscheinen in der Leiste, solange sie abklingen, auch ohne Kette.',function() GH.BuildCooldownBar() end)
+ button(p,'Leiste wieder an die Felder heften',320,-394,240,function() GH.DB().cdPosition=nil;GH.ApplyLayout() end,22)
+ label(p,'Zauberbalken',320,-428,340,'GameFontNormal')
+ check(p,'Eigener Zauberbalken statt Blizzard',320,-446,'castbar','Zauberbalken im GuildHeal-Stil mit Symbol, Name und Restzeit. Farbe unter Design. Verschieben: im Modus „UI bearbeiten“ oder außerhalb des Kampfes am Balken ziehen.',function() GH.ApplyCastBar() end)
+ slider(p,'Breite',332,-490,'castbarWidth',120,400,10)
+ slider(p,'Höhe',332,-536,'castbarHeight',14,36,2)
+ button(p,'Zauberbalken-Position zurücksetzen',320,-564,240,function() GH.ResetCastBarPosition() end,22)
+ button(p,'Position zurücksetzen',14,-448,150,function() GH.DB().position=nil;GH.ApplyLayout() end)
+ -- Reiter: Buffs/Debuffs (nach dem Vorbild der VuhDo-Reiter Buffs und Debuffs)
+ p=pages.auras.frame
+ label(p,'Debuffs',14,-4,300,'GameFontNormal')
+ check(p,'Debuffs anzeigen',14,-22,'showDebuffs','Debuff-Symbole oben rechts im Feld. Entfernbare zuerst.',function() GH.RefreshAll() end)
+ check(p,'Nur entfernbare Debuffs',14,-46,'debuffOnlyDispellable','An: nur Debuffs, die deine Klasse entfernen kann. Aus: alle Debuffs, entfernbare zuerst.',function() GH.RefreshAll() end)
+ check(p,'Debuff färbt das ganze Feld',14,-70,'debuffFill','An: der Lebensbalken nimmt die Debuff-Farbe an (Farben unter Design). Aus: nur ein farbiger Rahmen.',function() GH.RefreshAll() end)
+ check(p,'Restzeit am Debuff',14,-94,'debuffTimer',nil,function() GH.RefreshAll() end)
+ check(p,'Stapel anzeigen',14,-118,'debuffStacks',nil,function() GH.RefreshAll() end)
+ check(p,'Ton bei neuem entfernbaren Debuff',14,-142,'debuffSound')
+ slider(p,'Symbole je Feld',26,-188,'debuffMax',1,4,1)
+ slider(p,'Symbolgröße',26,-234,'debuffSize',10,24,1)
+ label(p,'Ignorierte Debuffs (nie anzeigen)',14,-268,300)
+ window.ignoredList=label(p,'',14,-286,300);window.ignoredList:SetTextColor(.85,.92,1)
+ local ignoreInput=CreateFrame('EditBox',nil,p,'InputBoxTemplate');ignoreInput:SetPoint('TOPLEFT',18,-338);ignoreInput:SetSize(200,22);ignoreInput:SetAutoFocus(false);ignoreInput:SetMaxLetters(60)
+ ignoreInput:SetScript('OnEnterPressed',function(self) local name=self:GetText():match('^%s*(.-)%s*$');if name~='' then local list={};for _,n in ipairs(GH.IgnoredDebuffs()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then name=nil;break end end;if name then list[#list+1]=name;GH.SetIgnoredDebuffs(list) end end;self:SetText('');self:ClearFocus();GH.ConfigRefresh() end)
+ ignoreInput:SetScript('OnEscapePressed',function(self) self:ClearFocus() end)
+ button(p,'Letzten entfernen',224,-336,96,function() local list={};for _,n in ipairs(GH.IgnoredDebuffs()) do list[#list+1]=n end;table.remove(list);GH.SetIgnoredDebuffs(list);GH.ConfigRefresh() end,22)
+ label(p,'Name eintippen und Enter, z. B. Geschwächte Seele oder Verzicht.',14,-364,300):SetTextColor(.6,.7,.8)
+ label(p,'Buffs',330,-4,300,'GameFontNormal')
+ check(p,'HoTs und Schilde mit Restzeit',330,-22,'showAuras','Verfolgte Auren als kleine Symbole unten links im Feld.',function() GH.RefreshAll() end)
+ check(p,'Nur eigene HoTs und Schilde',330,-46,'auraOwnOnly','Aus: auch die HoTs anderer Heiler werden angezeigt.',function() GH.RefreshAll() end)
+ slider(p,'Symbole je Feld',342,-92,'auraMax',1,6,1)
+ slider(p,'Symbolgröße',342,-138,'auraSize',10,20,1)
+ label(p,'Verfolgte Auren',330,-172,320,'GameFontNormal')
+ window.auraList=label(p,'',330,-192,320);window.auraList:SetTextColor(.85,.92,1)
+ local addAura;addAura=button(p,'Hinzufügen',330,-248,100,function() local dragged=cursorSpell();local function add(name) if not name then return end;local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then return end end;list[#list+1]=name;GH.SetTrackedAuras(list);GH.ConfigRefresh() end;if dragged then add(dragged) else openPicker(addAura,add,{spellsOnly=true}) end end,22)
+ button(p,'Letzte entfernen',436,-248,110,function() local list={};for _,n in ipairs(GH.TrackedAuras()) do list[#list+1]=n end;table.remove(list);GH.SetTrackedAuras(list);GH.ConfigRefresh() end,22)
+ button(p,'Standard',552,-248,80,function() GH.ResetTrackedAuras();GH.ConfigRefresh() end,22)
+ label(p,'Fehlende Buffs (Buffwatch)',330,-282,320,'GameFontNormal')
+ check(p,'Fehlende Buffs markieren',330,-300,'missingBuffWatch','Fehlt einem Spieler ein beobachteter Buff, erscheint dessen Symbol rot am rechten Rand des Feldes.',function() GH.RefreshAll() end)
+ check(p,'Ton bei fehlendem Buff',330,-324,'missingBuffSound')
+ window.missingList=label(p,'',330,-352,320);window.missingList:SetTextColor(.85,.92,1)
+ local addMissing;addMissing=button(p,'Hinzufügen',330,-398,100,function() local dragged=cursorSpell();local function add(name) if not name then return end;local list={};for _,n in ipairs(GH.MissingBuffs()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then return end end;list[#list+1]=name;GH.SetMissingBuffs(list);GH.ConfigRefresh() end;if dragged then add(dragged) else openPicker(addMissing,add,{spellsOnly=true}) end end,22)
+ button(p,'Letzten entfernen',436,-398,110,function() local list={};for _,n in ipairs(GH.MissingBuffs()) do list[#list+1]=n end;table.remove(list);GH.SetMissingBuffs(list);GH.ConfigRefresh() end,22)
+ button(p,'Standard',552,-398,80,function() GH.ResetMissingBuffs();GH.ConfigRefresh() end,22)
+ label(p,'Standard ist dein eigener Klassenbuff. Gebet und Einzelbuff zählen gleich.',330,-426,320):SetTextColor(.6,.7,.8)
  -- Reiter: Warnungen (Notfall, Überheilung, Tanks, Mana, Boss-Debuffs)
  p=pages.alerts.frame
  label(p,'Notfall',14,-4,300,'GameFontNormal')
@@ -338,6 +380,7 @@ local function build()
  label(p,'Boss-Debuffs (groß im Feld, mit Ton)',330,-204,320,'GameFontNormal')
  window.bossList=label(p,'',330,-224,320);window.bossList:SetTextColor(.85,.92,1)
  check(p,'Ton bei Boss-Debuff',330,-300,'bossDebuffSound')
+ label(p,'Die Standardliste enthält die wichtigen Debuffs der 40er-Raids MC, BWL, AQ40 und Naxxramas und wird automatisch geladen.',330,-262,320):SetTextColor(.6,.7,.8)
  label(p,'Debuff-Name eintragen und Enter drücken:',330,-330,300)
  local bossInput=CreateFrame('EditBox',nil,p,'InputBoxTemplate');bossInput:SetPoint('TOPLEFT',334,-346);bossInput:SetSize(300,22);bossInput:SetAutoFocus(false);bossInput:SetMaxLetters(60)
  bossInput:SetScript('OnEnterPressed',function(self) local name=self:GetText():match('^%s*(.-)%s*$');if name~='' then local list={};for _,n in ipairs(GH.BossDebuffs()) do list[#list+1]=n end;for _,n in ipairs(list) do if n==name then name=nil;break end end;if name then list[#list+1]=name;GH.SetBossDebuffs(list) end end;self:SetText('');self:ClearFocus();GH.ConfigRefresh() end)
@@ -348,6 +391,8 @@ local function build()
  table.insert(UISpecialFrames,'GuildHealConfig')
  showPage('clicks')
 end
+-- Fenster für GuildLoot Era (Einbetten in dessen Hauptfenster).
+function GH.ConfigWindow() if not window then build() end;return window end
 function GH.ToggleConfig()
  if not window then build() end
  if window:IsShown() then window:Hide() else window:Show();GH.ConfigRefresh() end

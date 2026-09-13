@@ -6,7 +6,8 @@ local extraButtons={tanks={}}
 local buttons,byUnit,aggro={},{},{}
 local pendingAttributes,pendingLayout=false,false
 local BAR='Interface\\TargetingFrame\\UI-StatusBar'
-local AURA_SLOTS=4
+local AURA_SLOTS=6
+local DEBUFF_SLOTS=4
 
 local function unitOf(button) return button:GetAttribute('unit') end
 local function auraAt(unit,i,filter)
@@ -40,7 +41,7 @@ local function updateHealth(button)
    button.deficit:SetText(text);button.deficit:SetTextColor(GH.Color('text'))
   end
  end
- if db.healthGradient then
+ if db.healthGradient and not button.debuffTint then
   local pct=hp/max;local r=pct<.5 and 1 or (1-pct)*2;local g=pct>.5 and 1 or pct*2
   button.health:SetStatusBarColor(r*.9,g*.8,.1);local cr,cg,cb=GH.ClassColor(unit);button.name:SetTextColor(cr,cg,cb)
  end
@@ -68,65 +69,103 @@ local function updateName(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
  button.name:SetText(UnitName(unit) or '?')
  local r,g,b=GH.ClassColor(unit)
+ if button.debuffTint then button.name:SetTextColor(1,1,1);return end
  if GH.DB().healthGradient then button.name:SetTextColor(r,g,b)
  elseif GH.DB().classColors then button.health:SetStatusBarColor(r,g,b);button.name:SetTextColor(GH.Color('name')) else button.health:SetStatusBarColor(GH.Color('bar'));button.name:SetTextColor(r,g,b) end
+end
+local function debuffFull(unit,i)
+ if UnitDebuff then local name,icon,count,kind,duration,expires=UnitDebuff(unit,i);return name,icon,count,kind,duration,expires end
+ local a=C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex and C_UnitAuras.GetDebuffDataByIndex(unit,i)
+ if a then return a.name,a.icon,a.applications,a.dispelName,a.duration,a.expirationTime end
 end
 local function updateDebuffs(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
  local db=GH.DB();local dispel=GH.DISPEL[GH.PlayerClass()] or {}
  local shown,color,boss
  local bossSet={};for _,n in ipairs(GH.BossDebuffs()) do bossSet[n]=true end
+ local ignored={};for _,n in ipairs(GH.IgnoredDebuffs()) do ignored[n]=true end
+ local list={};local firstDispel
  if db.showDebuffs or next(bossSet) then
-  local fallback
   for i=1,40 do
-   local name,icon,count,kind=debuffAt(unit,i);if not name then break end
+   local name,icon,count,kind,duration,expires=debuffFull(unit,i);if not name then break end
    if bossSet[name] and not boss then boss={name=name,icon=icon} end
-   if db.showDebuffs then
-    if kind and dispel[kind] and not shown then shown={icon=icon,count=count};color=GH.DEBUFF_COLORS[kind] end
-    if not fallback and icon then fallback={icon=icon,count=count} end
+   if db.showDebuffs and not ignored[name] then
+    local curable=kind and dispel[kind] or false
+    if curable or not db.debuffOnlyDispellable then list[#list+1]={name=name,icon=icon,count=count,kind=kind,expires=expires,curable=curable} end
+    if curable and not firstDispel then firstDispel={name=name,kind=kind} end
    end
   end
-  shown=shown or fallback
+  table.sort(list,function(a,b) if a.curable~=b.curable then return a.curable end;return (a.expires or 0)<(b.expires or 0) end)
  end
+ if firstDispel then shown=list[1];color={GH.DebuffColor(firstDispel.kind)} end
+ -- Symbole (bis zu debuffMax) mit Restzeit und Stapeln
+ local maxIcons=math.max(1,math.min(DEBUFF_SLOTS,db.debuffMax or 1))
+ for i=1,DEBUFF_SLOTS do
+  local slot=button.debuffs[i];local d=list[i]
+  if d and i<=maxIcons then slot.icon:SetTexture(d.icon);slot.expires=d.expires;slot.count:SetText(db.debuffStacks and (d.count or 0)>1 and d.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
+ end
+ -- Ton bei neuem entfernbaren Debuff (einmal je Spieler und Debuff)
+ if firstDispel then
+  if button.debuffWarned~=firstDispel.name then button.debuffWarned=firstDispel.name;if db.debuffSound and PlaySound then PlaySound(8959,'Master') end end
+ else button.debuffWarned=nil end
  if boss then
   button.bossIcon:SetTexture(boss.icon);button.bossIcon:Show();button.bossGlow:Show()
   if button.bossWarned~=boss.name then button.bossWarned=boss.name;if db.bossDebuffSound and PlaySound then PlaySound(8959,'Master') end end
  else button.bossIcon:Hide();button.bossGlow:Hide();button.bossWarned=nil end
- if shown then button.debuff:SetTexture(shown.icon);button.debuff:Show();button.debuffCount:SetText((shown.count or 0)>1 and shown.count or '') else button.debuff:Hide();button.debuffCount:SetText('') end
- if color then button.border:SetColorTexture(color[1],color[2],color[3],.9);button.border:Show();button.borderKind='debuff'
- elseif button.borderKind=='debuff' then button.border:Hide();button.borderKind=nil end
+ button.debuff:Hide();button.debuffCount:SetText('')
+ -- Entfernbarer Debuff: wahlweise das ganze Feld in der Typfarbe einfärben oder nur den Rahmen.
+ if color then
+  if db.debuffFill then button.health:SetStatusBarColor(color[1],color[2],color[3]);button.debuffTint=true;button.border:Hide();button.borderKind=nil
+  else button.border:SetColorTexture(color[1],color[2],color[3],.9);button.border:Show();button.borderKind='debuff' end
+ else
+  if button.borderKind=='debuff' then button.border:Hide();button.borderKind=nil end
+  if button.debuffTint then button.debuffTint=nil;updateName(button) end
+ end
 end
 -- Verfolgte Auren (eigene HoTs/Schilde, Schutz-Debuffs) mit Restzeit.
 local function updateAuras(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
- local tracked=GH.DB().showAuras and GH.TrackedAuras() or {}
+ local db=GH.DB()
+ local tracked=db.showAuras and GH.TrackedAuras() or {}
  local wanted={};for i,name in ipairs(tracked) do wanted[name]=i end
- local found={}
- if next(wanted) then
+ local watch={};if db.missingBuffWatch then for _,name in ipairs(GH.MissingBuffs()) do watch[name]=GH.BuffAliases(name) end end
+ local found={};local present={}
+ if next(wanted) or next(watch) then
   for _,filter in ipairs({'HELPFUL','HARMFUL'}) do
    for i=1,40 do
     local name,icon,count,_,duration,expires,source=auraAt(unit,i,filter);if not name then break end
+    if filter=='HELPFUL' then present[name]=true end
     local order=wanted[name]
-    if order and (filter=='HARMFUL' or source=='player' or source==nil) and not found[name] then found[name]={order=order,icon=icon,count=count,expires=expires,duration=duration} end
+    if order and (filter=='HARMFUL' or not db.auraOwnOnly or source=='player' or source==nil) and not found[name] then found[name]={order=order,icon=icon,count=count,expires=expires,duration=duration} end
    end
   end
  end
  local list={};for _,a in pairs(found) do list[#list+1]=a end;table.sort(list,function(a,b) return a.order<b.order end)
+ local maxIcons=math.max(1,math.min(AURA_SLOTS,db.auraMax or 4));local size=db.auraSize or 12
  for i=1,AURA_SLOTS do
   local slot=button.auras[i];local a=list[i]
-  if a then slot.icon:SetTexture(a.icon);slot.expires=a.expires;slot.count:SetText((a.count or 0)>1 and a.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
+  slot:SetSize(size,size);slot:ClearAllPoints();slot:SetPoint('BOTTOMLEFT',3+(i-1)*(size+2),2)
+  if a and i<=maxIcons then slot.icon:SetTexture(a.icon);slot.expires=a.expires;slot.count:SetText((a.count or 0)>1 and a.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
  end
+ -- Buffwatch: fehlt ein beobachteter Buff, erscheint sein Symbol rot markiert am rechten Rand.
+ local missing
+ if next(watch) and not UnitIsDeadOrGhost(unit) and UnitIsConnected(unit) then
+  for name,aliases in pairs(watch) do local has=false;for alias in pairs(aliases) do if present[alias] then has=true;break end end;if not has then missing=name;break end end
+ end
+ if missing then
+  local _,_,icon=GetSpellInfo(missing);button.missingBuff.icon:SetTexture(icon);button.missingBuff:Show()
+  if button.missingWarned~=missing then button.missingWarned=missing;if db.missingBuffSound and PlaySound then PlaySound(8959,'Master') end end
+ else button.missingBuff:Hide();button.missingWarned=nil end
  GH.UpdateAuraTimers(button)
 end
+local function timerText(slot,now)
+ local left=slot.expires and slot.expires>0 and slot.expires-now or nil
+ if left then slot.time:SetText(left>=60 and string.format('%dm',math.floor(left/60)) or string.format('%d',math.max(0,math.ceil(left))));slot.time:SetTextColor(1,left<5 and .4 or 1,left<5 and .3 or 1) else slot.time:SetText('') end
+end
 function GH.UpdateAuraTimers(button)
- local now=GetTime()
- for i=1,AURA_SLOTS do
-  local slot=button.auras[i]
-  if slot:IsShown() then
-   local left=slot.expires and slot.expires>0 and slot.expires-now or nil
-   if left then slot.time:SetText(left>=60 and string.format('%dm',math.floor(left/60)) or string.format('%d',math.max(0,math.ceil(left))));slot.time:SetTextColor(left<5 and 1 or 1,left<5 and .4 or 1,left<5 and .3 or 1) else slot.time:SetText('') end
-  end
- end
+ local now=GetTime();local db=GH.DB()
+ for i=1,AURA_SLOTS do local slot=button.auras[i];if slot:IsShown() then timerText(slot,now) end end
+ for i=1,DEBUFF_SLOTS do local slot=button.debuffs[i];if slot:IsShown() then if db.debuffTimer then timerText(slot,now) else slot.time:SetText('') end end end
 end
 -- Bedrohung: Blizzard-Bedrohungs-API (Status 2/3 = hat Aggro, hohe Prozent gegen mein Ziel = Warnung),
 -- dazu die Zielsuche als Ersatz, falls der Client keine Bedrohungsdaten liefert.
@@ -162,6 +201,10 @@ local function updateRange(button)
  button:SetAlpha(inRange and 1 or GH.DB().fadeRange)
 end
 local function updateAll(button) updateName(button);updateHealth(button);updatePower(button);updateDebuffs(button);updateAuras(button);updateThreat(button);updateTarget(button);updateRange(button) end
+function GH.LayoutDebuffSlots(button)
+ local size=GH.DB().debuffSize or 14
+ for i=1,DEBUFF_SLOTS do local slot=button.debuffs[i];slot:SetSize(size,size);slot:ClearAllPoints();slot:SetPoint('TOPRIGHT',-3-(i-1)*(size+2),-3) end
+end
 function GH.ApplyColors(button)
  local db=GH.DB()
  local r,g,b=GH.Color('bg');button.bg:SetColorTexture(r,g,b,db.bgAlpha or .92)
@@ -244,6 +287,19 @@ local function styleButton(button)
  button.deficit=button.health:CreateFontString(nil,'OVERLAY');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE');button.deficit:SetPoint('BOTTOMRIGHT',-3,2);button.deficit:SetTextColor(1,.85,.4)
  button.debuff=button:CreateTexture(nil,'OVERLAY');button.debuff:SetSize(14,14);button.debuff:SetPoint('TOPRIGHT',-3,-3);button.debuff:Hide()
  button.debuffCount=button:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');button.debuffCount:SetPoint('CENTER',button.debuff,'BOTTOMRIGHT',-2,2)
+ button.debuffs={}
+ for i=1,DEBUFF_SLOTS do
+  local slot=CreateFrame('Frame',nil,button.health);slot:SetFrameLevel(button.health:GetFrameLevel()+3)
+  slot.icon=slot:CreateTexture(nil,'ARTWORK');slot.icon:SetAllPoints();slot.icon:SetTexCoord(.08,.92,.08,.92)
+  slot.time=slot:CreateFontString(nil,'OVERLAY');slot.time:SetFont(STANDARD_TEXT_FONT,9,'OUTLINE');slot.time:SetPoint('TOP',slot,'BOTTOM',0,1)
+  slot.count=slot:CreateFontString(nil,'OVERLAY');slot.count:SetFont(STANDARD_TEXT_FONT,8,'OUTLINE');slot.count:SetPoint('BOTTOMRIGHT',2,-1)
+  slot:Hide();button.debuffs[i]=slot
+ end
+ GH.LayoutDebuffSlots(button)
+ button.missingBuff=CreateFrame('Frame',nil,button.health);button.missingBuff:SetSize(12,12);button.missingBuff:SetPoint('RIGHT',-3,0);button.missingBuff:SetFrameLevel(button.health:GetFrameLevel()+3)
+ button.missingBuff.icon=button.missingBuff:CreateTexture(nil,'ARTWORK');button.missingBuff.icon:SetAllPoints();button.missingBuff.icon:SetTexCoord(.08,.92,.08,.92);button.missingBuff.icon:SetDesaturated(true)
+ local mark=button.missingBuff:CreateTexture(nil,'OVERLAY');mark:SetPoint('TOPLEFT',-1,1);mark:SetPoint('BOTTOMRIGHT',1,-1);mark:SetColorTexture(1,.2,.2,.35)
+ button.missingBuff:Hide()
  button.target=button:CreateTexture(nil,'OVERLAY');button.target:SetAllPoints();button.target:SetColorTexture(1,1,1,.18);button.target:Hide()
  button.overheal=button.health:CreateFontString(nil,'OVERLAY');button.overheal:SetFont(STANDARD_TEXT_FONT,11,'OUTLINE');button.overheal:SetPoint('CENTER',0,-2);button.overheal:SetTextColor(1,.25,.2);button.overheal:SetText('ÜBERHEILUNG');button.overheal:Hide()
  button.overhealGlow=button:CreateTexture(nil,'OVERLAY',nil,3);button.overhealGlow:SetPoint('TOPLEFT',-3,3);button.overhealGlow:SetPoint('BOTTOMRIGHT',3,-3);button.overhealGlow:SetColorTexture(1,.2,.15,.45);button.overhealGlow:Hide()
@@ -263,11 +319,11 @@ local function styleButton(button)
  local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
  nameZone:SetPoint('TOPLEFT',0,0);nameZone:SetPoint('RIGHT',-22,0);nameZone:SetHeight(14);nameZone:SetFrameLevel(button:GetFrameLevel()+5)
  nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:SetAttribute('type2','togglemenu');nameZone:RegisterForClicks('AnyUp')
- nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren · Rechtsklick: Menü',.7,.85,1);GameTooltip:Show() end end)
+ nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) or GameTooltip:IsOwned(button) then GameTooltip:Hide() end;return end;local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren · Rechtsklick: Menü',.7,.85,1);GameTooltip:Show() end end)
  nameZone:HookScript('OnLeave',function() button.nameHover:Hide();GameTooltip:Hide() end)
  button.nameZone=nameZone
  button.nameHover=button.health:CreateTexture(nil,'OVERLAY');button.nameHover:SetPoint('TOPLEFT',0,0);button.nameHover:SetPoint('RIGHT',-22,0);button.nameHover:SetHeight(14);button.nameHover:SetColorTexture(1,1,1,.14);button.nameHover:Hide()
- button:HookScript('OnEnter',function(self) local unit=unitOf(self);if unit then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);if self.threatPct then GameTooltip:AddLine(string.format('Bedrohung gegen dein Ziel: %d%%',self.threatPct),1,.7,.3) end;GameTooltip:Show() end end)
+ button:HookScript('OnEnter',function(self) if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) then GameTooltip:Hide() end;return end;local unit=unitOf(self);if unit then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);if self.threatPct then GameTooltip:AddLine(string.format('Bedrohung gegen dein Ziel: %d%%',self.threatPct),1,.7,.3) end;GameTooltip:Show() end end)
  button:HookScript('OnLeave',function() GameTooltip:Hide() end)
  button:SetScript('OnAttributeChanged',function(self,name) if name=='unit' then GH.RefreshUnitMap();updateAll(self) end end)
  button.styled=true
@@ -400,7 +456,10 @@ function GH.BuildCooldownBar()
  for _,entry in ipairs(GH.Keys()) do addValue(entry.value) end
  local t13,t14=false,false
  for _,chain in pairs(chains) do for _,extra in ipairs(chain.spells or {}) do addSpell(extra) end;t13=t13 or chain.trinket13;t14=t14 or chain.trinket14 end
- if t13 then list[#list+1]={slot=13} end;if t14 then list[#list+1]={slot=14} end
+ -- Schmuckstücke: immer, wenn gewünscht und ein benutzbares Schmuckstück angelegt ist, sonst nur aus Ketten.
+ local function usable(slot) local link=GetInventoryItemLink('player',slot);return link and GetItemSpell and GetItemSpell(link)~=nil end
+ if t13 or (db.cdTrinkets and usable(13)) then list[#list+1]={slot=13} end
+ if t14 or (db.cdTrinkets and usable(14)) then list[#list+1]={slot=14} end
  for i,entry in ipairs(list) do
   local item=cdBar.items[i]
   if not item then
@@ -500,14 +559,17 @@ function GH.ApplyLayout()
  if db.sortMode=='role' then header:SetAttribute('groupBy','ROLE');header:SetAttribute('groupingOrder','MAINTANK,MAINASSIST,NONE')
  elseif db.sortMode=='class' then header:SetAttribute('groupBy','CLASS');header:SetAttribute('groupingOrder','WARRIOR,PALADIN,DRUID,PRIEST,SHAMAN,MAGE,WARLOCK,ROGUE,HUNTER')
  else header:SetAttribute('groupBy','GROUP');header:SetAttribute('groupingOrder','1,2,3,4,5,6,7,8') end
+ -- Alte Anker aus einer vorherigen Anordnung entfernen, sonst bleiben Reihe und Spalte gleichzeitig verankert (Treppe).
+ for _,button in ipairs(buttons) do if not button.extra then button:ClearAllPoints() end end
+ header:Hide();header:Show()
  for _,button in ipairs(buttons) do
   if not button.extra then button:SetSize(db.width,db.height) end;button.health:SetPoint('BOTTOMRIGHT',-1,db.showMana and 4 or 1)
   button.health:SetStatusBarTexture(GH.BarTexture());button.power:SetStatusBarTexture(GH.BarTexture());GH.ApplyColors(button)
-  button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE')
+  button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE');GH.LayoutDebuffSlots(button)
   button.nameZone:SetShown(db.nameClick~=false)
   updateAll(button)
  end
- GH.BuildExtras();GH.ApplyBindings();GH.BuildCooldownBar()
+ GH.BuildExtras();GH.ApplyBindings();GH.BuildCooldownBar();if GH.ApplyCastBar then GH.ApplyCastBar() end
  anchor:EnableMouse(not db.locked);anchor.label:SetShown(not db.locked);anchor.bg:SetShown(not db.locked)
  anchor:SetSize(70,14);anchor.gear:SetAlpha(db.locked and .6 or 1)
 end
@@ -518,7 +580,7 @@ local function onEvent(_,event,unit,...)
  end
  if event=='PLAYER_TARGET_CHANGED' then for _,button in ipairs(buttons) do updateTarget(button) end;if extraButtons.target then GH.RefreshUnitMap();updateAll(extraButtons.target) end;return end
  if event=='GROUP_ROSTER_UPDATE' or event=='PLAYER_ENTERING_WORLD' then if not InCombatLockdown() then GH.BuildExtras() else pendingLayout=true end;GH.RefreshUnitMap();for _,button in ipairs(buttons) do updateAll(button) end;return end
- if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.ApplyBindings();return end
+ if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.InvalidateSpellbook(true);GH.ApplyBindings();return end
  if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else GH.RefreshCooldownBar() end;return end
  local list=unit and byUnit[unit];if not list then return end
  for _,button in ipairs(list) do
@@ -538,12 +600,16 @@ function GH.Initialize()
  anchor.label=anchor:CreateFontString(nil,'OVERLAY');anchor.label:SetFont(STANDARD_TEXT_FONT,9,'OUTLINE');anchor.label:SetPoint('CENTER');anchor.label:SetText('GuildHeal')
  anchor:SetScript('OnDragStart',function(self) if not GH.DB().locked then self:StartMoving() end end)
  anchor:SetScript('OnDragStop',function(self) self:StopMovingOrSizing();local point,_,_,x,y=self:GetPoint();GH.DB().position={point=point,x=x,y=y} end)
- anchor:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal verschieben');GameTooltip:AddLine('Ziehen verschiebt die Frames. „UI bearbeiten“ im Einstellungsfenster oder /gheal lock beendet den Modus.',1,1,1,true);GameTooltip:Show() end);anchor:SetScript('OnLeave',function() GameTooltip:Hide() end)
+ anchor:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal verschieben');GameTooltip:AddLine('Ziehen am Griff oder am Zahnrad verschiebt die Frames.',1,1,1,true);GameTooltip:Show() end);anchor:SetScript('OnLeave',function() GameTooltip:Hide() end)
  anchor.gear=CreateFrame('Button',nil,anchor);anchor.gear:SetSize(16,16);anchor.gear:SetPoint('LEFT',anchor,'RIGHT',3,0);anchor.gear:SetFrameStrata('LOW')
  local gearIcon=anchor.gear:CreateTexture(nil,'ARTWORK');gearIcon:SetAllPoints();gearIcon:SetTexture('Interface\\Icons\\Trade_Engineering');gearIcon:SetTexCoord(.08,.92,.08,.92)
  anchor.gear:SetHighlightTexture('Interface\\Buttons\\ButtonHilight-Square','ADD')
  anchor.gear:SetScript('OnClick',function() GH.ToggleConfig() end)
- anchor.gear:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal · Einstellungen');GameTooltip:AddLine('Klick öffnet die Einstellungen (/gheal).',1,1,1,true);GameTooltip:Show() end);anchor.gear:SetScript('OnLeave',function() GameTooltip:Hide() end)
+ -- Zahnrad mit gedrückter linker Maustaste ziehen verschiebt die Frames (außerhalb des Kampfes); Klick öffnet die Einstellungen.
+ anchor.gear:RegisterForDrag('LeftButton')
+ anchor.gear:SetScript('OnDragStart',function() if not InCombatLockdown() then GameTooltip:Hide();anchor:StartMoving() end end)
+ anchor.gear:SetScript('OnDragStop',function() anchor:StopMovingOrSizing();local point,_,_,x,y=anchor:GetPoint();GH.DB().position={point=point,x=x,y=y} end)
+ anchor.gear:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal · Einstellungen');GameTooltip:AddLine('Klick öffnet die Einstellungen (/gheal). Mit gedrückter linker Maustaste ziehen verschiebt die Frames.',1,1,1,true);GameTooltip:Show() end);anchor.gear:SetScript('OnLeave',function() GameTooltip:Hide() end)
  extras=CreateFrame('Frame','GuildHealExtras',anchor);extras:SetSize(1,1);extras:SetPoint('BOTTOMLEFT',anchor,'TOPLEFT',0,4)
  header=CreateFrame('Frame','GuildHealHeader',anchor,'SecureGroupHeaderTemplate')
  header:SetAttribute('template','SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')

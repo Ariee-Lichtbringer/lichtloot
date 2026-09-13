@@ -34,7 +34,8 @@ GH.DEFAULTS={
 GH.DEFAULT_OTHER={['1']={'target'},['2']={'menu'}}
 -- Entfernbare Debuff-Typen je Klasse (für die farbige Umrandung und das Debuff-Symbol).
 GH.DISPEL={PRIEST={Magic=true,Disease=true},PALADIN={Magic=true,Poison=true,Disease=true},DRUID={Curse=true,Poison=true},SHAMAN={Poison=true,Disease=true},MAGE={Curse=true}}
-GH.DEBUFF_COLORS={Magic={.2,.6,1},Curse={.6,.2,1},Poison={.2,.8,.2},Disease={.6,.4,0}}
+GH.DEBUFF_COLORS={Magic={.2,.6,1},Curse={.6,.2,1},Poison={.2,.8,.2},Disease={.9,.15,.15}}
+function GH.DebuffColor(kind) local c=GH.DB().colors['debuff'..kind] or GH.DEBUFF_COLORS[kind];if not c then return nil end;return c[1],c[2],c[3] end
 
 local defaults={
  width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=true,castOnDown=false,hideSolo=false,scale=1,
@@ -42,7 +43,8 @@ local defaults={
  emergency=true,emergencyThreshold=50,emergencySound=true,
  overhealWarn=true,overhealThreshold=40,overhealSound=true,overhealSkipTanks=true,tanks='',
  unitLayout='vertical',healthText='missing',fontSize=11,barTexture='blizzard',bgAlpha=.92,spacing=3,
- colors={},cdSize=26,cdPosition=nil,cdReadyWarn=true,cdReadySound=true,
+ colors={},showTooltips=false,debuffFill=true,debuffOnlyDispellable=false,debuffMax=1,debuffSize=14,debuffTimer=true,debuffStacks=true,debuffSound=false,
+ auraSize=12,auraMax=4,auraOwnOnly=true,missingBuffWatch=true,missingBuffSound=false,castbar=true,castbarWidth=240,castbarHeight=22,cdSize=26,cdTrinkets=true,cdPosition=nil,cdReadyWarn=true,cdReadySound=true,
  targetOnHeal=false, showTargetFrame=false,showTankFrames=true,bossDebuffSound=true,healerManaWarn=true,healerManaThreshold=20,healerManaSound=true,healthGradient=false,perCharacter=false,sortMode='group',
  position=nil,classes={},
 }
@@ -119,7 +121,17 @@ function GH.TrackedAuras()
  return list
 end
 -- Boss-Debuffs (Standard über Zauber-IDs aus MC, BWL, AQ40 und Naxxramas), groß und mit Ton hervorgehoben.
-GH.BOSS_DEBUFF_IDS={20475,19659,23170,23169,23154,23155,22687,23340,26180,25646,28169,28410,27808,28522,29213,28542,25471,26476}
+-- 40er-Raids: Molten Core, Blackwing Lair, AQ40, Naxxramas (Zauber-IDs, Namen kommen aus dem Client).
+GH.BOSS_DEBUFF_IDS={
+ -- Molten Core
+ 19702,19703,20604,19408,19716,19713,20475,19659,19695,13879,19776,
+ -- Blackwing Lair
+ 23023,18173,24573,23331,23341,22539,23340,23155,23169,23153,23154,23170,23310,23174,23187,22687,22686,
+ -- AQ40
+ 785,26580,25812,25646,720,25993,26180,26050,26053,26052,26102,26103,26476,26029,26143,25471,
+ -- Naxxramas
+ 28785,28783,28796,28794,29484,28622,28776,29213,29212,29998,29204,29107,28679,28835,28832,28833,28834,28169,28374,28059,28084,28542,28547,28522,27808,28410,27819,
+}
 function GH.BossDebuffs()
  local c=GH.ClassStore();if c.bossDebuffs then return c.bossDebuffs end
  local list,seen={},{};for _,id in ipairs(GH.BOSS_DEBUFF_IDS) do local name=GH.SpellName(id);if name and not seen[name] then seen[name]=true;list[#list+1]=name end end
@@ -128,6 +140,28 @@ end
 function GH.SetBossDebuffs(list) GH.ClassStore().bossDebuffs=list;if GH.RefreshAll then GH.RefreshAll() end end
 function GH.ResetBossDebuffs() GH.ClassStore().bossDebuffs=nil;if GH.RefreshAll then GH.RefreshAll() end end
 GH.HEALER_CLASSES={PRIEST=true,DRUID=true,PALADIN=true,SHAMAN=true}
+-- Buffwatch: Buffs, die auf jedem Spieler vorhanden sein sollen (Standard: der eigene Klassenbuff).
+GH.MISSING_BUFF_DEFAULTS={PRIEST={1243},MAGE={1459},DRUID={1126},PALADIN={},SHAMAN={},WARLOCK={},WARRIOR={},ROGUE={},HUNTER={}}
+function GH.MissingBuffs()
+ local c=GH.ClassStore();if c.missingBuffs then return c.missingBuffs end
+ local list={};for _,id in ipairs(GH.MISSING_BUFF_DEFAULTS[GH.PlayerClass()] or {}) do local name=GH.SpellName(id);if name then list[#list+1]=name end end
+ return list
+end
+function GH.SetMissingBuffs(list) GH.ClassStore().missingBuffs=list;if GH.RefreshAll then GH.RefreshAll() end end
+function GH.ResetMissingBuffs() GH.ClassStore().missingBuffs=nil;if GH.RefreshAll then GH.RefreshAll() end end
+-- Ignorierte Debuffs (werden nie angezeigt), z. B. Geschwächte Seele oder Verzicht.
+function GH.IgnoredDebuffs() local c=GH.ClassStore();c.ignoredDebuffs=c.ignoredDebuffs or {};return c.ignoredDebuffs end
+function GH.SetIgnoredDebuffs(list) GH.ClassStore().ignoredDebuffs=list;if GH.RefreshAll then GH.RefreshAll() end end
+-- Buff-Gruppen: Gebet/Einzelbuff zählen gleich (Seelenstärke, Intelligenz, Mal der Wildnis, Schattenschutz).
+GH.BUFF_FAMILIES={{1243,21562},{1459,23028},{1126,21850},{976,27683}}
+function GH.BuffAliases(name)
+ local out={[name]=true}
+ for _,family in ipairs(GH.BUFF_FAMILIES) do local hit=false;local names={}
+  for _,id in ipairs(family) do local n=GH.SpellName(id);if n then names[#names+1]=n;if n==name then hit=true end end end
+  if hit then for _,n in ipairs(names) do out[n]=true end end
+ end
+ return out
+end
 function GH.SetTrackedAuras(list) GH.ClassStore().auras=list;if GH.RefreshAll then GH.RefreshAll() end end
 function GH.ResetTrackedAuras() GH.ClassStore().auras=nil;if GH.RefreshAll then GH.RefreshAll() end end
 -- Makrotext für Ketten: Schmuckstücke und Zusatzzauber zuerst, dann der Hauptzauber auf das Feld unter der Maus.
@@ -168,27 +202,79 @@ function GH.BindingInput(value)
  return ''
 end
 -- Alle Zauber des Zauberbuchs mit Rängen. 'Name' = höchster Rang, 'Name(Rang 3)' = fester Rang.
-local bookCache,bookTime
+-- Das Zauberbuch zeigt ohne die Option „Alle Zauberränge anzeigen“ nur den höchsten Rang. Die Ränge kommen deshalb
+-- aus den bekannten Zauber-IDs (IsSpellKnown über alle Classic-IDs, einmal je Login bzw. SPELLS_CHANGED).
+-- Der Rangtext (GetSpellSubtext) lädt der Client erst auf Anfrage; bis dahin wird nach ID-Reihenfolge als Rang 1..n gezählt.
+local bookCache,bookTime,rankScan
+local SCAN_MAX_ID=31000
+local RANK_WORD={deDE='Rang',enUS='Rank',enGB='Rank',frFR='Rang',esES='Rango',esMX='Rango',ptBR='Nível',itIT='Grado',ruRU='Уровень'}
+local function rankFormat(prefix,suffix)
+ if prefix==nil then local w=RANK_WORD[GetLocale()] or 'Rank';prefix,suffix=w..' ','' end
+ return function(n) return prefix..n..suffix end
+end
+local function subtext(id) local t=GetSpellSubtext and id and GetSpellSubtext(id);return t and t~='' and t or nil end
+-- name -> Liste bekannter IDs (aufsteigend). Ein Eintrag = kein Rang oder nur ein Rang bekannt.
+local function knownRanks()
+ if rankScan then return rankScan end
+ local byName={};local known=IsSpellKnown or IsPlayerSpell
+ if known and GetSpellInfo then
+  for id=1,SCAN_MAX_ID do
+   if known(id) then local name=GetSpellInfo(id);if name then local l=byName[name];if not l then l={};byName[name]=l end;l[#l+1]=id end end
+  end
+ end
+ rankScan=byName;return byName
+end
 function GH.SpellbookSpells()
  if bookCache and bookTime==GetTime() then return bookCache end
  local list,byName={},{}
  if not GetSpellBookItemName or not GetSpellTabInfo then return list end
+ local book=BOOKTYPE_SPELL or 'spell'
  local tabs=GetNumSpellTabs and GetNumSpellTabs() or 0
+ local entries,prefix,suffix={},nil,nil
  for tab=1,tabs do
   local _,_,offset,count=GetSpellTabInfo(tab)
   for i=offset+1,offset+count do
-   local name,rank=GetSpellBookItemName(i,BOOKTYPE_SPELL or 'spell')
-   local kind,id=GetSpellBookItemInfo(i,BOOKTYPE_SPELL or 'spell')
-   if name and kind=='SPELL' and not IsPassiveSpell(i,BOOKTYPE_SPELL or 'spell') then
-    local _,_,icon=GetSpellInfo(name);rank=rank and rank~='' and rank or nil
-    if not byName[name] then byName[name]={name=name,icon=icon,id=id,ranks={}};list[#list+1]=byName[name] end
-    if rank then table.insert(byName[name].ranks,{rank=rank,full=name..'('..rank..')',id=id}) end
+   local name,rank=GetSpellBookItemName(i,book)
+   local kind,id=GetSpellBookItemInfo(i,book)
+   if name and kind=='SPELL' and not IsPassiveSpell(i,book) then
+    rank=(rank and rank~='' and rank) or subtext(id)
+    if rank and not prefix then local a,b=rank:match('^(.-)%d+(.-)$');if a then prefix,suffix=a,b end end
+    entries[#entries+1]={name=name,rank=rank,id=id}
    end
   end
+ end
+ local ranks=knownRanks()
+ for _,e in ipairs(entries) do
+  if not byName[e.name] then
+   local _,_,icon=GetSpellInfo(e.name);local s={name=e.name,icon=icon,id=e.id,ranks={}};byName[e.name]=s;list[#list+1]=s
+   local ids=ranks[e.name]
+   if ids and #ids>1 then
+    for _,id in ipairs(ids) do local t=subtext(id);if not t then ids.pending=true end;s.ranks[#s.ranks+1]={id=id,rank=t} end
+   elseif e.rank then s.ranks[1]={id=e.id,rank=e.rank} end
+  elseif e.rank then
+   -- Zauberbuch mit allen Rängen: gleichen Namen ergänzen, falls der Scan nichts geliefert hat.
+   local s=byName[e.name];local found=false
+   for _,r in ipairs(s.ranks) do if r.id==e.id then r.rank=r.rank or e.rank;found=true end end
+   if not found then s.ranks[#s.ranks+1]={id=e.id,rank=e.rank} end
+  end
+ end
+ local fmt=rankFormat(prefix,suffix)
+ for _,s in ipairs(list) do
+  local complete=true
+  for _,r in ipairs(s.ranks) do if not (r.rank and r.rank:match('%d+')) then complete=false end end
+  if complete then table.sort(s.ranks,function(a,b) return tonumber(a.rank:match('%d+'))<tonumber(b.rank:match('%d+')) end)
+  else
+   table.sort(s.ranks,function(a,b) return a.id<b.id end)
+   for i,r in ipairs(s.ranks) do if not r.rank then r.rank=fmt(i);if C_Spell and C_Spell.RequestLoadSpellData then pcall(C_Spell.RequestLoadSpellData,r.id) end end end
+  end
+  for _,r in ipairs(s.ranks) do r.full=s.name..'('..r.rank..')' end
+  if #s.ranks>0 then s.id=s.ranks[#s.ranks].id end
  end
  table.sort(list,function(a,b) return a.name<b.name end)
  bookCache,bookTime=list,GetTime();return list
 end
+-- full=true nach SPELLS_CHANGED (neue Zauber), sonst nur Rangtexte nachgeladen.
+function GH.InvalidateSpellbook(full) bookCache=nil;if full then rankScan=nil end end
 -- 'Name(Rang N)' aus dem Zauberbuch, falls dieser Rang bekannt ist.
 function GH.RankedSpell(id,rank)
  local name=GH.SpellName(id);if not name then return nil end
@@ -224,8 +310,9 @@ function GH.IsTank(unit)
 end
 GH.BAR_TEXTURES={blizzard={label='Standard',path='Interface\\TargetingFrame\\UI-StatusBar'},flat={label='Glatt',path='Interface\\Buttons\\WHITE8x8'},raid={label='Raidframe',path='Interface\\RaidFrame\\Raid-Bar-Hp-Fill'},minimal={label='Fein',path='Interface\\TargetingFrame\\UI-TargetingFrame-BarFill'}}
 -- Farbakzente: Hintergrund, Lebensbalken (ohne Klassenfarbe), Text, Name, Rahmen (Alpha 0 = kein Rahmen).
-GH.COLOR_DEFAULTS={bg={.05,.07,.1},bar={.2,.75,.3},text={1,.85,.4},name={1,1,1},border={.35,.5,.6,0},incoming={.4,.9,.5}}
-GH.COLOR_LABELS={{'bg','Hintergrund'},{'bar','Lebensbalken ohne Klassenfarbe'},{'text','Lebenstext'},{'name','Name bei Klassenfarbe'},{'border','Rahmen um das Feld'},{'incoming','Eingehende Heilung'}}
+GH.COLOR_DEFAULTS={bg={.05,.07,.1},bar={.2,.75,.3},text={1,.85,.4},name={1,1,1},border={.35,.5,.6,0},incoming={.4,.9,.5},castbar={.16,.6,.55}}
+GH.COLOR_LABELS={{'bg','Hintergrund'},{'bar','Lebensbalken ohne Klassenfarbe'},{'text','Lebenstext'},{'name','Name bei Klassenfarbe'},{'border','Rahmen um das Feld'},{'incoming','Eingehende Heilung'},{'castbar','Zauberbalken'},{'debuffMagic','Debuff: Magie'},{'debuffCurse','Debuff: Fluch'},{'debuffPoison','Debuff: Gift'},{'debuffDisease','Debuff: Krankheit'}}
+for _,k in ipairs({'Magic','Curse','Poison','Disease'}) do GH.COLOR_DEFAULTS['debuff'..k]=GH.DEBUFF_COLORS[k] end
 function GH.Color(key) local c=GH.DB().colors[key] or GH.COLOR_DEFAULTS[key];return c[1],c[2],c[3],c[4] end
 function GH.SetColor(key,r,g,b,a) GH.DB().colors[key]={r,g,b,a};if GH.ApplyLayout then GH.ApplyLayout() end end
 function GH.ResetColors() GH.DB().colors={};if GH.ApplyLayout then GH.ApplyLayout() end end

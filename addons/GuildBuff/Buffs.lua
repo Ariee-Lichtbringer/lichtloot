@@ -159,6 +159,10 @@ function B.Roster()
    local unit='raid'..i
    if UnitExists(unit) then local row=B.ReadUnit(unit);row.unit=unit;row.group=select(3,GetRaidRosterInfo(i));rows[#rows+1]=row end
   end
+ elseif IsInGroup() then
+  -- Gruppe (kein Raid): Spieler plus party1–4, alle in Gruppe 1.
+  local r=B.ReadUnit('player');r.unit='player';r.group=1;rows[1]=r
+  for i=1,4 do local unit='party'..i;if UnitExists(unit) then local row=B.ReadUnit(unit);row.unit=unit;row.group=1;rows[#rows+1]=row end end
  else local r=B.ReadUnit('player');r.unit='player';r.group=1;rows[1]=r end
  return rows
 end
@@ -380,6 +384,47 @@ function B.CycleClassBlessing(index)
  else s.classSpells=s.classSpells or {};s.classSpells[classes[index]]=nextSpell.id end
  B.Refresh();return true,nextSpell.name
 end
+-- Segen für eine Klasse direkt setzen (Rechtsklick-Menü), statt nur durchzuschalten.
+function B.SetClassBlessing(index,spellId)
+ if InCombatLockdown()then return false,'Segen bitte außerhalb des Kampfes wechseln.' end
+ if select(2,UnitClass('player'))~='PALADIN' or not classes[index]then return false,'Keine Paladin-Klasse ausgewählt.' end
+ local options=knownSpells('PALADIN');local chosen;for _,spell in ipairs(options)do if spell.id==spellId then chosen=spell end end
+ if not chosen then return false,'Segen nicht erlernt.' end
+ local s=settings()
+ if s.mode=='raid' then
+  if not GL.RaidBuffAssignments or not GL.RaidBuffAssignments.ChangeOwnBlessing then return false,'Raidübersicht bitte neu öffnen.' end
+  local ok,err=GL.RaidBuffAssignments.ChangeOwnBlessing(index,chosen.id);if not ok then return false,err end
+ else s.classSpells=s.classSpells or {};s.classSpells[classes[index]]=chosen.id end
+ B.Refresh();return true,chosen.name
+end
+local blessingMenu
+function B.OpenBlessingMenu(index,anchor)
+ if InCombatLockdown() then print('|cff79e6c5GuildBuff:|r Segen bitte außerhalb des Kampfes wechseln.');return end
+ local options=knownSpells('PALADIN');if #options==0 then return end
+ if not blessingMenu then
+  blessingMenu=CreateFrame('Frame',nil,UIParent);blessingMenu:SetFrameStrata('DIALOG');blessingMenu:EnableMouse(true);blessingMenu.rows={}
+  local bg=blessingMenu:CreateTexture(nil,'BACKGROUND');bg:SetAllPoints();bg:SetColorTexture(.04,.07,.1,.97)
+  local border=blessingMenu:CreateTexture(nil,'BORDER');border:SetPoint('TOPLEFT',-1,1);border:SetPoint('BOTTOMRIGHT',1,-1);border:SetColorTexture(.35,.5,.6,.9);border:SetDrawLayer('BORDER',-1)
+  blessingMenu.title=blessingMenu:CreateFontString(nil,'OVERLAY','GameFontNormalSmall');blessingMenu.title:SetPoint('TOPLEFT',8,-6);blessingMenu.title:SetTextColor(1,.8,.25)
+  blessingMenu:SetScript('OnUpdate',function(self) if not self:IsMouseOver(6,-6,-6,6) then self.away=(self.away or 0)+1;if self.away>60 then self:Hide() end else self.away=0 end end)
+ end
+ local current=B.ClassBlessing(index,options,nil)
+ blessingMenu.title:SetText((LOCALIZED_CLASS_NAMES_MALE[classes[index]] or classes[index])..' · Segen wählen')
+ for i,spell in ipairs(options) do
+  local row=blessingMenu.rows[i]
+  if not row then
+   row=CreateFrame('Button',nil,blessingMenu);row:SetSize(200,22);row:SetPoint('TOPLEFT',6,-22-(i-1)*23)
+   local hl=row:CreateTexture(nil,'HIGHLIGHT');hl:SetAllPoints();hl:SetColorTexture(.2,.32,.34,.7)
+   row.icon=row:CreateTexture(nil,'ARTWORK');row.icon:SetSize(18,18);row.icon:SetPoint('LEFT',2,0)
+   row.text=row:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');row.text:SetPoint('LEFT',24,0);row.text:SetPoint('RIGHT',-2,0);row.text:SetJustifyH('LEFT')
+   row:SetScript('OnClick',function(self) local ok,message=B.SetClassBlessing(self.index,self.spellId);print('|cff79e6c5GuildBuff:|r '..(ok and ((LOCALIZED_CLASS_NAMES_MALE[classes[self.index]] or classes[self.index])..': '..message) or message));blessingMenu:Hide() end)
+   blessingMenu.rows[i]=row
+  end
+  row.index=index;row.spellId=spell.id;row.icon:SetTexture(select(3,GetSpellInfo(spell.id)));row.text:SetText(spell.name..(current and current.id==spell.id and '  ✓' or ''));row:Show()
+ end
+ for i=#options+1,#blessingMenu.rows do blessingMenu.rows[i]:Hide() end
+ blessingMenu:SetSize(212,26+#options*23);blessingMenu:ClearAllPoints();blessingMenu:SetPoint('TOPLEFT',anchor,'TOPRIGHT',4,0);blessingMenu.away=0;blessingMenu:Show()
+end
 function B.ApplyAppearance()
  local style,cfg
  if GL.Whispers and GL.Whispers.Preferences then local sound;style,sound,cfg=GL.Whispers.Preferences('buff') end
@@ -590,7 +635,10 @@ function B.Refresh()
   if compact and class~='PALADIN' then buttonSpell=options[buffRow+1] end
   if selection.mode=='raid' and class=='PALADIN' and GL.RaidBuffAssignments then buttonSpell=GL.RaidBuffAssignments.AssignedSpell(UnitGUID('player'),i,options) end
   local buttonGroups=selection.mode=='raid' and GL.RaidBuffAssignments and GL.RaidBuffAssignments.Groups(UnitGUID('player'),buttonSpell and buttonSpell.id or -1) or groups
-  local showButton=(compact and buttonSpell~=nil and ((class=='PALADIN' and selection.mode~='raid') or buttonGroups[i]==true)) or (not compact and buffRow==0)
+  -- Paladin: nur Klassen anzeigen, die in Gruppe oder Raid vertreten sind.
+  local classPresent=true
+  if class=='PALADIN' then classPresent=false;for _,r in ipairs(lastRows) do if r.class==classes[i] then classPresent=true;break end end end
+  local showButton=((compact and buttonSpell~=nil and ((class=='PALADIN' and selection.mode~='raid') or buttonGroups[i]==true)) or (not compact and buffRow==0)) and classPresent
   if i==1 then visibleIndex=0 end
   if showButton then visibleIndex=visibleIndex+1 end
   local enabled=buttonSpell and ((class=='PALADIN' and selection.mode~='raid') or buttonGroups[i])
@@ -644,7 +692,7 @@ function B.Refresh()
   for _,edge in ipairs(b.alertEdges) do edge:SetAlpha(alert and 1 or 0) end
   b.count:SetText(compact and class=='PALADIN' and B.BlessingLabel(buttonSpell,remaining,timerUnknown,blessingMissing,#members) or (missingCount..' fehlen'..(unknownCount>0 and ' ?' or '')));b.count:SetTextColor(missingCount>0 and 1 or .5,missingCount>0 and .8 or 1,.6)
   local targetLabel=class=='PALADIN' and ('Klasse '..(LOCALIZED_CLASS_NAMES_MALE[classes[i]] or classes[i])) or ('Gruppe '..i)
-  local singleHint=class=='PALADIN' and '\nRechtsklick: nächsten erlernten Segen für diese Klasse wählen (außerhalb des Kampfes)' or singleSpell and ('\nRechtsklick: Einzelbuff'..(singleTarget and (' für '..safe(UnitName(singleTarget))) or ' · kein fehlender Buff in Reichweite')) or ''
+  local singleHint=class=='PALADIN' and '\nRechtsklick: Segen für diese Klasse aus der Liste wählen (außerhalb des Kampfes)' or singleSpell and ('\nRechtsklick: Einzelbuff'..(singleTarget and (' für '..safe(UnitName(singleTarget))) or ' · kein fehlender Buff in Reichweite')) or ''
   b.detail=(#missingNames>0 and ('Fehlt bei: '..table.concat(missingNames,', ')..'\n') or '')..missingCount..' ohne Buff · '..#members..(class=='PALADIN' and ' Spieler dieser Klasse' or ' Spieler in der Gruppe')..(unknownCount>0 and (' · '..unknownCount..' nicht prüfbar') or '')..'\n'..(buttonSpell and safe(buttonSpell.name)..' · '..targetLabel..'\n' or '')..(enabled and 'Linksklick: Gruppenbuff' or 'Keine Zuweisung / kein Gruppenbuff')..singleHint..'\n'..(combat and 'Im Kampf: Ziel bleibt fest. Nach dem Kampf neu zugeordnet.' or (target and ('Ziel: '..safe(UnitName(target))) or 'Kein lebendes Ziel in Reichweite.'))
  end
  refreshClassDetail()
@@ -654,9 +702,9 @@ function GL.ToggleBuffs()
  if select(2,UnitClass('player'))=='WARLOCK' and GL.Soulstone then GL.Soulstone.Toggle();return end
  if InCombatLockdown() then print('GuildBuff: Buffleiste außerhalb des Kampfes öffnen/schließen.');return end
  if panel then if classDetail then classDetail:Hide() end;panel:SetShown(not panel:IsShown());GL.db.buffPanelVisible=panel:IsShown();B.Refresh();return end
- panel=CreateFrame('Frame','GuildBuffPanel',UIParent,'BackdropTemplate');panel:SetSize(310,472);panel:SetPoint('CENTER',UIParent,'CENTER',360,0);panel:SetFrameStrata('MEDIUM')
+ panel=CreateFrame('Frame','GuildBuffPanel',UIParent,'BackdropTemplate');panel:SetSize(310,472);local savedPos=GL.db and GL.db.buffPanelPosition;if savedPos and savedPos.point then panel:SetPoint(savedPos.point,UIParent,savedPos.point,savedPos.x or 0,savedPos.y or 0) else panel:SetPoint('CENTER',UIParent,'CENTER',360,0) end;panel:SetFrameStrata('MEDIUM')
  panel:SetBackdrop({bgFile='Interface\\Buttons\\WHITE8X8'});panel:SetBackdropColor(.025,.055,.08,.96);panel:EnableMouse(true);panel:SetMovable(true);panel:RegisterForDrag('LeftButton')
- panel:SetScript('OnDragStart',function() if not InCombatLockdown() then panel:StartMoving() end end);panel:SetScript('OnDragStop',function() panel:StopMovingOrSizing() end)
+ panel:SetScript('OnDragStart',function() if not InCombatLockdown() then panel:StartMoving() end end);panel:SetScript('OnDragStop',function() panel:StopMovingOrSizing();local point,_,_,x,y=panel:GetPoint();if GL.db then GL.db.buffPanelPosition={point=point,x=x,y=y} end end)
  panel.title=label(panel,'GuildBuff · Buffs',10,-10,235)
  panel.tanks=label(panel,'',0,0,200);panel.tanks:SetTextColor(.5,1,.7)
  panel.close=control(panel,'×',272,-5,28,function() GL.ToggleBuffs() end)
@@ -668,7 +716,7 @@ function GL.ToggleBuffs()
   local b=CreateFrame('Button','GuildBuffCast'..i,panel,'SecureActionButtonTemplate');b:SetPoint('TOPLEFT',10,-123-(i-1)*27);b:SetSize(290,25);if select(2,UnitClass('player'))=='PALADIN' then b:RegisterForClicks('LeftButtonUp','LeftButtonDown','RightButtonUp')else b:RegisterForClicks('AnyUp','AnyDown')end
   b:SetScript('PostClick',function(_,which,down)
    if which~='RightButton' or down or select(2,UnitClass('player'))~='PALADIN' then return end
-   local ok,message=B.CycleClassBlessing(i);print('|cff79e6c5GuildBuff:|r '..(ok and ((LOCALIZED_CLASS_NAMES_MALE[classes[i]]or classes[i])..': '..message)or message))
+   B.OpenBlessingMenu(i,b)
   end)
   b.bg=b:CreateTexture(nil,'BACKGROUND');b.bg:SetAllPoints();b.text=label(b,'',32,-5,250);b.count=label(b,'',40,-10,54);b.count:SetFont(STANDARD_TEXT_FONT,10);b.icon=b:CreateTexture(nil,'ARTWORK');b.icon:SetPoint('LEFT',3,0);b.icon:SetSize(22,22)
   -- Texture-only border can update in combat without touching secure attributes.

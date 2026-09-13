@@ -1,5 +1,8 @@
 # GuildLoot Mini-Addons 1.1.2-beta
 
+- GuildHeal: Einstellungen lassen sich in das GuildLoot-Era-Hauptfenster einbetten (Seitenleiste → Werkzeuge → GuildHeal).
+- GuildHeal: Kein Spieler-Tooltip mehr beim Überfahren der Felder, solange „Tooltip beim Überfahren“ aus ist. Bisher zeigte die Blizzard-Vorlage der Felder den Tooltip trotzdem an.
+- GuildHeal: Zauberliste zeigt alle Ränge, auch wenn im Zauberbuch „Alle Zauberränge anzeigen“ aus ist. Die Ränge kommen aus den bekannten Zauber-IDs statt aus dem Zauberbuch; Rangtexte werden nachgeladen und die Liste danach neu aufgebaut. Feste Ränge wie Blitzheilung(Rang 5) gelten damit wieder als bekannt.
 - GuildHeal: Reiter Tasten (Maus über Feld + Taste), Reiter Design (Anordnung, Text, Balken, Schrift, Farben), Reiter Warnungen, Modus „UI bearbeiten“ mit Griffen, Cooldown-Leiste frei platzierbar mit Bereit-Meldung, Ziel- und Tankfelder, Heilklick visiert wahlweise an, Priester-Vorbelegung mit festen Rängen.
 - GuildRaidBag: Argentumdämmerung-Bufffood und Manakekse im Nachkauf, mehrere Stapel pro Kauf, Hinweise unter der Liste.
 

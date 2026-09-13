@@ -11,4 +11,5 @@ Libs/LibHealComm-4.0.lua
 Core.lua
 Comm.lua
 Frames.lua
+CastBar.lua
 Config.lua
