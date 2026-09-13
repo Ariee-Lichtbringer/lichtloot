@@ -469,10 +469,11 @@ local function bakeLua(button,macros)
   button:SetAttribute(m.star..'macrotext'..m.suffix,targetLine..(button:GetAttribute('gh-pre-'..m.key) or '')..'/cast [@'..unit..',exists] '..(button:GetAttribute('gh-main-'..m.key) or ''))
  end
 end
-local function configFunction(attrs,bake)
+-- Achtung: In der sicheren Umgebung dürfen keine Attribute gesetzt werden, die mit „_“ beginnen („Invalid attribute name“).
+-- Die Handler-Snippets (_onenter, _onattributechanged) setzt darum InitButton aus normalem Lua.
+local function configFunction(attrs)
  local db=GH.DB();local lines={('self:SetWidth(%d);self:SetHeight(%d)'):format(db.width,db.height)}
- for k,v in pairs(attrs) do lines[#lines+1]=('self:SetAttribute(%q,%q)'):format(k,v) end
- if bake then lines[#lines+1]=('self:SetAttribute(%q,%q)'):format('_onattributechanged',bake) end
+ for k,v in pairs(attrs) do if k:sub(1,1)~='_' then lines[#lines+1]=('self:SetAttribute(%q,%q)'):format(k,v) end end
  lines[#lines+1]="self:GetParent():CallMethod('InitButton',self:GetName())"
  return table.concat(lines,'\n')
 end
@@ -483,7 +484,7 @@ function GH.ApplyBindings()
  local attrs,macros,keys,rangeSpell=bindingAttributes()
  local snippet=enterSnippet(macros,keys);header.snippet=snippet
  local bake=bakeSnippet(macros);header.bake=bake;header.macros=macros
- header:SetAttribute('initialConfigFunction',configFunction(attrs,bake))
+ header:SetAttribute('initialConfigFunction',configFunction(attrs))
  local clicks=GH.DB().castOnDown and 'AnyDown' or 'AnyUp'
  for _,button in ipairs(buttons) do
   for k in pairs(currentAttributeKeys) do button:SetAttribute(k,nil) end
@@ -718,7 +719,7 @@ function GH.Initialize()
   mapDirty=true;updateAll(button)
  end
  local attrs,macros,keys=bindingAttributes();header.snippet=enterSnippet(macros,keys);header.bake=bakeSnippet(macros);header.macros=macros
- header:SetAttribute('initialConfigFunction',configFunction(attrs,header.bake))
+ header:SetAttribute('initialConfigFunction',configFunction(attrs))
  driver=CreateFrame('Frame')
  for _,e in ipairs({'UNIT_HEALTH','UNIT_HEALTH_FREQUENT','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
  driver:SetScript('OnEvent',onEvent)
