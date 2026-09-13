@@ -25,3 +25,20 @@ const start=server.indexOf('app.get("/api/lichtstats/reports"');const end=server
 vm.runInNewContext(server.slice(start,end),{app:{get:(path,fn)=>gate=fn},resolveGuildSlug:s=>s});let status,payload;
 await gate({query:{guild:'nachtloot'}},{status(n){status=n;return this;},json(d){payload=d;}},error=>{throw error;});assert.equal(status,403);assert.equal(payload.success,false);
 console.log('Production API: guild-scoped pagination and LichtStats guild gate OK');
+
+// Render the actual cards: Lichtbringer use LichtStats; other guilds keep internal analyses.
+const rows={innerHTML:'',querySelectorAll:()=>[]};
+const labels={};
+const ui=vm.createContext({URL,URLSearchParams,location:{href:'https://lichtloot.de/start.html'},CURRENT_GUILD_SLUG:'lichtloot',dashboardLogRaidGroup:'40',document:{getElementById:id=>id==='logsDashboardRows'?rows:(labels[id]??={classList:{add(){},remove(){}},removeAttribute(){}}),querySelector:()=>null}});
+vm.runInContext(fs.readFileSync(new URL('../../raid-chronicle.js',import.meta.url),'utf8'),ui);
+const card={key:'naxx',date:'2026-09-11',analysis,lichtstats:{...stats,url:'https://lichtstats.de/report/ABC'}};
+ui.RaidChronicle.render([card]);
+assert.match(rows.innerHTML,/href="https:\/\/lichtstats.de\/report\/ABC"[^>]*>Auswertung<\/a>/);
+assert.doesNotMatch(rows.innerHTML,/>LichtStats<\/a>|data-analysis/);
+assert.equal(labels.logDashCla.textContent,1);
+ui.CURRENT_GUILD_SLUG='nachtloot';ui.RaidChronicle.render([card]);
+assert.match(rows.innerHTML,/raid-analyse.html\?/);assert.match(rows.innerHTML,/data-analysis/);assert.doesNotMatch(rows.innerHTML,/lichtstats.de/);
+ui.CURRENT_GUILD_SLUG='lichtloot';ui.RaidChronicle.render([{...card,analysis:null}]);
+assert.match(rows.innerHTML,/href="https:\/\/lichtstats.de\/report\/ABC"[^>]*>Auswertung<\/a>/);
+ui.RaidChronicle.render([{...card,lichtstats:null}]);assert.match(rows.innerHTML,/raid-analyse.html\?/);
+console.log('Card links: LichtStats preferred for Lichtbringer, internal fallback and other guilds preserved OK');
