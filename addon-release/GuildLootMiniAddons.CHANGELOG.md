@@ -2,6 +2,7 @@
 
 - GuildHeal reagiert schneller auf Klicks: Zauber lösen jetzt beim Drücken der Maustaste aus statt beim Loslassen (wie Blizzards Aktionsleisten und VuhDo). Bisher musste jeder Klick vollständig gedrückt und losgelassen werden, was beim schnellen Heilen spürbar bremste.
 - GuildHeal: Das ganze Feld heilt. Der Namensbereich oben im Feld, der nur anvisierte, ist standardmäßig aus; er deckte ein Drittel des Feldes ab, und Klicks dort wirkten wie „nichts passiert“. Beides unter /gheal → Anzeige umstellbar („Zauber beim Drücken auslösen“, „Klick auf den Namen visiert an“). Die Umstellung gilt einmalig auch für bestehende Einstellungen, danach bleibt die eigene Wahl.
+- GuildHeal: Klickweg nach VuhDo-Vorbild umgebaut. Jeder Heilzauber ist jetzt ein Makro mit /stopspelltarget davor (ein hängender Zauber-Cursor, etwa nach einem Klick auf die Aktionsleiste, schluckte sonst den Heilklick) und dem Ziel fest im Makrotext. Der Makrotext wird je Feld vorab gesetzt, sobald das Feld seine Einheit bekommt, auch im Kampf; beim Klick ist alles fertig. Lebensänderungen werden sofort gezeichnet statt erst im nächsten Frame.
 - Alle vier Mini-Addons tragen die gemeinsame Version 1.1.5-beta.
 
 # GuildLoot Mini-Addons 1.1.4-beta

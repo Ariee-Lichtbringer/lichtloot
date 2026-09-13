@@ -365,7 +365,7 @@ local function styleButton(button)
  end
  GH.LayoutAuraSlots(button)
  -- Klick auf den Namen: anvisieren (links). Rechtsklick öffnet bewusst kein Einheitenmenü (Blizzard-Popup), sondern tut nichts.
- local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
+ local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')  -- ohne Makros, braucht kein Attribute-Template
  nameZone:SetPoint('TOPLEFT',0,0);nameZone:SetPoint('RIGHT',-22,0);nameZone:SetHeight(14);nameZone:SetFrameLevel(button:GetFrameLevel()+5)
  nameZone:SetAttribute('useparent-unit',true);nameZone:SetAttribute('gh-owner',true);nameZone:SetAttribute('type1','target');nameZone:RegisterForClicks(db.castOnDown and 'LeftButtonDown' or 'LeftButtonUp')
  nameZone:HookScript('OnEnter',function(self) button.nameHover:Show();if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) or GameTooltip:IsOwned(button) then GameTooltip:Hide() end;return end;local unit=unitOf(button);if unit then GameTooltip:SetOwner(button,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);GameTooltip:AddLine('Klick: anvisieren',.7,.85,1);GameTooltip:Show() end end)
@@ -377,7 +377,7 @@ local function styleButton(button)
  -- Einheit gewechselt oder Feld (durch die Unit-Watch erst im nächsten Frame) gezeigt/versteckt: Zuordnung im nächsten
  -- OnUpdate neu aufbauen. Vorher wurde sie sofort gebaut, während das Feld noch versteckt war, und das Feld bekam bis zur
  -- nächsten Gruppenänderung keine Lebens-Events mehr (Balken hingen).
- button:SetScript('OnAttributeChanged',function(self,name) if name=='unit' then mapDirty=true;markAll(self) end end)
+ button:HookScript('OnAttributeChanged',function(self,name) if name=='unit' then mapDirty=true;markAll(self) end end)  -- HookScript: das Attribute-Template hat schon einen Handler
  button:HookScript('OnShow',function(self) mapDirty=true;markAll(self) end)
  button:HookScript('OnHide',function() mapDirty=true end)
  button.styled=true
@@ -408,13 +408,13 @@ local function actionAttributes(suffix,value,chain,attrs,macros,star,mod)
  else
   local name=type(value)=='number' and (GH.Known(value) and GH.SpellName(value)) or (type(value)=='string' and GH.ValidSpell(value) and value)
   if not name then return nil end
-  if (chain and (chain.trinket13 or chain.trinket14 or (chain.spells and #chain.spells>0))) or GH.DB().targetOnHeal then
-   local pre={};chain=chain or {}
-   if chain.trinket13 then pre[#pre+1]='/use 13' end;if chain.trinket14 then pre[#pre+1]='/use 14' end
-   for _,extra in ipairs(chain.spells or {}) do if GH.ValidSpell(extra) then pre[#pre+1]='/cast '..extra end end
-   local key=(mod or '')..suffix
-   attrs[p..'type'..suffix]='macro';attrs['gh-pre-'..key]=table.concat(pre,'\n')..'\n';attrs['gh-main-'..key]=name;macros[#macros+1]={suffix=suffix,star=p,key=key}
-  else attrs[p..'type'..suffix]='spell';attrs[p..'spell'..suffix]=name end
+  -- Wie VuhDo: jeder Heilzauber ist ein Makro mit /stopspelltarget davor (ein hängender Zauber-Cursor würde den Klick
+  -- sonst schlucken) und dem Ziel als [@einheit]. Der Makrotext wird je Feld vorab gebaut (siehe bakeSnippet).
+  local pre={'/stopspelltarget'};chain=chain or {}
+  if chain.trinket13 then pre[#pre+1]='/use 13' end;if chain.trinket14 then pre[#pre+1]='/use 14' end
+  for _,extra in ipairs(chain.spells or {}) do if GH.ValidSpell(extra) then pre[#pre+1]='/cast '..extra end end
+  local key=(mod or '')..suffix
+  attrs[p..'type'..suffix]='macro';attrs['gh-pre-'..key]=table.concat(pre,'\n')..'\n';attrs['gh-main-'..key]=name;macros[#macros+1]={suffix=suffix,star=p,key=key}
   return name
  end
 end
@@ -452,9 +452,27 @@ local function enterSnippet(macros,keys)
  for _,k in ipairs(keys) do lines[#lines+1]=("self:SetBindingClick(true,%q,owner:GetName(),%q)"):format(k.key,k.virtual) end
  return table.concat(lines,'\n')
 end
-local function configFunction(attrs)
+-- Makrotexte werden gesetzt, sobald das Feld seine Einheit bekommt (sicherer _onattributechanged-Handler, läuft auch im
+-- Kampf, wenn der Header Einheiten umsortiert). Beim Klick ist damit alles fertig; der Enter-Handler setzt nur noch Tasten.
+local function bakeSnippet(macros)
+ local lines={"if name~='unit' then return end","local unit=value or 'mouseover'"}
+ local targetLine=GH.DB().targetOnHeal and "'/target [@'..unit..']\\n'.." or ''
+ for _,m in ipairs(macros) do
+  lines[#lines+1]=("self:SetAttribute(%q,"..targetLine.."(self:GetAttribute(%q) or '')..'/cast [@'..unit..',exists] '..(self:GetAttribute(%q) or ''))"):format(m.star..'macrotext'..m.suffix,'gh-pre-'..m.key,'gh-main-'..m.key)
+ end
+ return table.concat(lines,'\n')
+end
+local function bakeLua(button,macros)
+ local unit=button:GetAttribute('unit') or 'mouseover'
+ local targetLine=GH.DB().targetOnHeal and ('/target [@'..unit..']\n') or ''
+ for _,m in ipairs(macros) do
+  button:SetAttribute(m.star..'macrotext'..m.suffix,targetLine..(button:GetAttribute('gh-pre-'..m.key) or '')..'/cast [@'..unit..',exists] '..(button:GetAttribute('gh-main-'..m.key) or ''))
+ end
+end
+local function configFunction(attrs,bake)
  local db=GH.DB();local lines={('self:SetWidth(%d);self:SetHeight(%d)'):format(db.width,db.height)}
  for k,v in pairs(attrs) do lines[#lines+1]=('self:SetAttribute(%q,%q)'):format(k,v) end
+ if bake then lines[#lines+1]=('self:SetAttribute(%q,%q)'):format('_onattributechanged',bake) end
  lines[#lines+1]="self:GetParent():CallMethod('InitButton',self:GetName())"
  return table.concat(lines,'\n')
 end
@@ -464,11 +482,13 @@ function GH.ApplyBindings()
  if InCombatLockdown() then pendingAttributes=true;return end
  local attrs,macros,keys,rangeSpell=bindingAttributes()
  local snippet=enterSnippet(macros,keys);header.snippet=snippet
- header:SetAttribute('initialConfigFunction',configFunction(attrs))
+ local bake=bakeSnippet(macros);header.bake=bake;header.macros=macros
+ header:SetAttribute('initialConfigFunction',configFunction(attrs,bake))
  local clicks=GH.DB().castOnDown and 'AnyDown' or 'AnyUp'
  for _,button in ipairs(buttons) do
   for k in pairs(currentAttributeKeys) do button:SetAttribute(k,nil) end
   for k,v in pairs(attrs) do button:SetAttribute(k,v) end
+  button:SetAttribute('_onattributechanged',bake);bakeLua(button,macros)
   button:SetAttribute('_onenter',snippet);button:SetAttribute('_onleave','self:ClearBindings()')
   button.nameZone:SetAttribute('_onenter',snippet);button.nameZone:SetAttribute('_onleave','self:ClearBindings()')
   button:RegisterForClicks(clicks);button.nameZone:RegisterForClicks(GH.DB().castOnDown and 'LeftButtonDown' or 'LeftButtonUp')
@@ -564,7 +584,7 @@ end
 
 -- Ziel- und Tankfelder: eigene SecureUnitButtons oberhalb des Griffs (Ziel, dann Tanks aus Rollen/Namen).
 local function extraButton(name)
- local b=CreateFrame('Button',name,extras,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate');b.extra=true
+ local b=CreateFrame('Button',name,extras,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate,SecureHandlerAttributeTemplate');b.extra=true
  styleButton(b);table.insert(buttons,b);RegisterUnitWatch(b)
  b:RegisterForClicks(GH.DB().castOnDown and 'AnyDown' or 'AnyUp');return b
 end
@@ -659,6 +679,8 @@ local function onEvent(_,event,unit,...)
  if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else cdDirty=true end;return end
  local list=unit and byUnit[unit];if not list then return end
  local flag=UNIT_FLAGS[event];if not flag then return end
+ -- Leben sofort (wie VuhDo), alles andere gesammelt bis zum nächsten Frame.
+ if flag=='dHealth' then for _,button in ipairs(list) do if button:IsShown() then updateHealth(button) end end;return end
  for _,button in ipairs(list) do mark(button,flag) end
 end
 
@@ -682,7 +704,7 @@ function GH.Initialize()
  anchor.gear:SetScript('OnEnter',function(self) GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('GuildHeal · Einstellungen');GameTooltip:AddLine('Klick öffnet die Einstellungen (/gheal). Mit gedrückter linker Maustaste ziehen verschiebt die Frames.',1,1,1,true);GameTooltip:Show() end);anchor.gear:SetScript('OnLeave',function() GameTooltip:Hide() end)
  extras=CreateFrame('Frame','GuildHealExtras',anchor);extras:SetSize(1,1);extras:SetPoint('BOTTOMLEFT',anchor,'TOPLEFT',0,4)
  header=CreateFrame('Frame','GuildHealHeader',anchor,'SecureGroupHeaderTemplate')
- header:SetAttribute('template','SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
+ header:SetAttribute('template','SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate,SecureHandlerAttributeTemplate')
  header:SetAttribute('showRaid',true);header:SetAttribute('showParty',true);header:SetAttribute('showPlayer',true);header:SetAttribute('showSolo',true)
  header:SetAttribute('groupBy','GROUP');header:SetAttribute('groupingOrder','1,2,3,4,5,6,7,8');header:SetAttribute('sortMethod','INDEX')
  function header:InitButton(name)
@@ -690,12 +712,13 @@ function GH.Initialize()
   styleButton(button);table.insert(buttons,button)
   button:RegisterForClicks(GH.DB().castOnDown and 'AnyDown' or 'AnyUp')
   button:SetAttribute('_onenter',header.snippet);button:SetAttribute('_onleave','self:ClearBindings()')
+  if header.bake then button:SetAttribute('_onattributechanged',header.bake);bakeLua(button,header.macros) end
   button.nameZone:SetAttribute('_onenter',header.snippet);button.nameZone:SetAttribute('_onleave','self:ClearBindings()')
   button.nameZone:SetShown(GH.DB().nameClick~=false)
   mapDirty=true;updateAll(button)
  end
- local attrs,macros,keys=bindingAttributes();header.snippet=enterSnippet(macros,keys)
- header:SetAttribute('initialConfigFunction',configFunction(attrs))
+ local attrs,macros,keys=bindingAttributes();header.snippet=enterSnippet(macros,keys);header.bake=bakeSnippet(macros);header.macros=macros
+ header:SetAttribute('initialConfigFunction',configFunction(attrs,header.bake))
  driver=CreateFrame('Frame')
  for _,e in ipairs({'UNIT_HEALTH','UNIT_HEALTH_FREQUENT','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
  driver:SetScript('OnEvent',onEvent)
