@@ -2857,6 +2857,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <script defer src="start-navigation.js?v=20260907-1"></script>
 <link rel="stylesheet" href="raid-cards-dashboard.css?v=1">
 <link rel="stylesheet" href="/account-refresh.css?v=20260909-2">
+<link rel="stylesheet" href="raid-chronicle.css?v=1"><script src="raid-chronicle.js?v=1"></script>
 </head>
 
 <body class="start-dashboard-body">
@@ -3128,8 +3129,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="start-side-group collapsed" data-start-group="raidinfos" data-start-layout-nav="raidinfos">
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
-          <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span id="logsNavLabel">Logs & Analysen</span></button>
-          <button class="start-side-link" data-start-nav="archive" type="button" onclick="openRaidArchive()"><span aria-hidden="true">▤</span><span>Raidarchiv</span></button>
+          <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span id="logsNavLabel">Raidchronik</span></button>
           <button class="start-side-link" data-start-nav="raidRules" onclick="toggleRaidRulesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span><span id="raidRulesArrow">›</span></button>
           <div id="raidRulesDrawer" class="prio-pages-drawer hidden">
             <button class="prio-page-link" onclick="showRaidRules('mc')"><span>Molten Core</span><span>MC</span></button>
@@ -5329,16 +5329,18 @@ function refreshStartDashboard(){
 }
 
 function showRaidArchiveCenter(raidId="",tab="loot",scope="past"){
-  setDashboardCenterMode("archive");setStartNavActive("archive");
+  if(!raidId&&scope==="past"){showLogsDashboard();return;}
+  setDashboardCenterMode("archive");setStartNavActive("logs");
   const frame=document.getElementById("raidArchiveFrame");
   const url=new URL("raidarchiv.html",location.href);
-  url.search=new URLSearchParams({guild:CURRENT_GUILD_SLUG,embed:"1",scope,...(raidId?{raidId,tab}:{})});
+  url.search=new URLSearchParams({guild:CURRENT_GUILD_SLUG,embed:"1",chronicle:"1",scope,...(raidId?{raidId,tab}:{})});
   if(frame.src!==url.href)frame.src=url.href;
   document.getElementById("raidArchiveSection").scrollIntoView({behavior:"smooth",block:"start"});
 }
 window.addEventListener("message",event=>{
  const frame=document.getElementById("raidArchiveFrame");
  if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
+ if(event.data?.type==="raid-chronicle-back"){showLogsDashboard();return;}
  if(event.data?.type==="raid-archive-height"&&Number.isFinite(event.data.height))frame.style.height=Math.min(100000,Math.max(600,event.data.height))+"px";
 });
 function dashboardArchiveRaidImage(key){
@@ -5381,35 +5383,7 @@ function reloadDashboardRaidAnalysis(){
   if(frame?.src) frame.contentWindow?.location.reload();
 }
 
-function startLogProvider(){
-  return CURRENT_GUILD_SLUG === "lichtloot" ? "lichtstats" : "analysis";
-}
-
-function configureDashboardLogView(){
-  const isLichtstats=startLogProvider() === "lichtstats";
-  const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
-  setText("logsNavLabel",isLichtstats ? "LichtStats" : "Logs & Analysen");
-  const title=document.getElementById("logsDashboardTitle");
-  if(title) title.innerHTML=isLichtstats ? "LichtStats <span>Raidauswertungen</span>" : "Warcraft Logs <span>Auswertungen</span>";
-  setText("logsDashboardDescription",isLichtstats ? "Übersicht der ausgewerteten Raidberichte von lichtstats.de." : "Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.");
-  setText("logDashReportsLabel","Reports");
-  setText("logDashClaLabel",isLichtstats ? "abgeschlossen" : "CLA fertig");
-  setText("logDashRpbLabel",isLichtstats ? "Bosskills" : "RPB fertig");
-  setText("logDashOpenLabel",isLichtstats ? "Wipes" : "offen");
-  const search=document.getElementById("logsDashboardSearch");
-  if(search) search.placeholder=isLichtstats ? "Nach Raid, Zone oder Datum suchen..." : "Nach Raid, Datum, CLA, RPB oder WCL suchen...";
-  const section=document.getElementById("logsDashboardSection");
-  const embed=document.getElementById("lichtstatsEmbed");
-  const loginBar=document.getElementById("lichtstatsLoginBar");
-  if(section){
-    section.classList.toggle("is-lichtstats",isLichtstats);
-  }
-  if(embed){
-    embed.classList.add("hidden");
-    embed.removeAttribute("src");
-  }
-  if(loginBar) loginBar.classList.toggle("hidden",!isLichtstats);
-}
+function configureDashboardLogView(){RaidChronicle.configure();}
 
 let dashboardLogAnalysesCache = [];
 let dashboardLogRaidGroup = "40";
@@ -5518,113 +5492,9 @@ function dashboardLogDuration(value){
   return hours?`${hours}:${String(minutes).padStart(2,"0")}:${String(rest).padStart(2,"0")}`:`${minutes}:${String(rest).padStart(2,"0")}`;
 }
 
-function renderDashboardLogAnalyses(entries){
-  dashboardLogAnalysesCache = Array.isArray(entries) ? entries : [];
-  if(startLogProvider() === "lichtstats"){
-    renderLichtstatsReports(dashboardLogAnalysesCache);
-    return;
-  }
-  const query=document.getElementById("logsDashboardSearch")?.value || "";
-  const groupedList=dashboardLogAnalysesCache.filter(entry=>dashboardLogRaidGroupForEntry(entry) === dashboardLogRaidGroup);
-  const list=groupedList.filter(entry=>dashboardLogMatchesSearch(entry,query));
-  const rows=document.getElementById("logsDashboardRows");
-  const total=groupedList.length;
-  const claDone=groupedList.filter(entry=>dashboardLogStatus(entry,"cla")==="done").length;
-  const rpbDone=groupedList.filter(entry=>dashboardLogStatus(entry,"rpb")==="done").length;
-  const open=groupedList.filter(entry=>dashboardLogStatus(entry,"cla")!=="done" || dashboardLogStatus(entry,"rpb")!=="done").length;
-  const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=String(value); };
-  setText("logDashReports",total);
-  setText("logDashCla",claDone);
-  setText("logDashRpb",rpbDone);
-  setText("logDashOpen",open);
+function renderDashboardLogAnalyses(entries){dashboardLogAnalysesCache=Array.isArray(entries)?entries:[];RaidChronicle.render(dashboardLogAnalysesCache);}
 
-  if(!rows) return;
-  if(!list.length){
-    rows.innerHTML=query ? '<div class="status">Keine passenden Loganalysen gefunden.</div>' : '<div class="status">Noch keine Loganalysen für diesen Reiter vorhanden.</div>';
-    return;
-  }
-  rows.innerHTML=list.slice(0,20).map(entry=>{
-    const raidKey=dashboardLogRaidKey(entry);
-    const raidName=entry.raid || raids[raidKey]?.short || "Raid";
-    const summary=entry.summary&&typeof entry.summary==="object"?entry.summary:{};
-    const claUrl=dashboardLogUrl(entry,"cla");
-    const rpbUrl=dashboardLogUrl(entry,"rpb");
-    const webUrl=entry.id ? `raid-analyse.html?id=${encodeURIComponent(entry.id)}&type=rpb&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}` : "";
-    const expectedBosses={naxx:15,mc:10,bwl:8,aq20:6,aq40:9,ony:1,zg:10}[raidKey]||null;
-    const kills=dashboardLogSummaryNumber(summary,["bossKills","kills","bossesKilled"]),bosses=expectedBosses||dashboardLogSummaryNumber(summary,["totalBosses","bossCount","bosses"]);
-    const progress=bosses?Math.max(0,Math.min(100,Math.round(Number(kills||0)*100/bosses))):0;
-    const players=dashboardLogSummaryNumber(summary,["playerCount","players","raidSize"]),deaths=dashboardLogSummaryNumber(summary,["deathCount","deaths","totalDeaths"]);
-    const bestPull=summary.bestPull||summary.bestFight||"–";
-    const wclUrl=/^https?:\/\//i.test(String(entry.reportUrl||""))?entry.reportUrl:(entry.reportCode?`https://vanilla.warcraftlogs.com/reports/${encodeURIComponent(entry.reportCode)}`:"");
-    return `<div class="log-dashboard-row">
-      <img class="log-dashboard-thumb" src="${safeAttr(dashboardArchiveRaidImage(raidKey))}" alt="">
-      <div class="log-dashboard-card-main"><strong>${safeHtml(raidName)}</strong><small>▣ ${safeHtml(formatRaidDateForDisplay(entry.raidDate||summary.raidDate||""))}${entry.reportCode?` · ${safeHtml(entry.reportCode)}`:""}</small><span>${players==null?"Spielerzahl offen":`${players} Spieler`}</span></div>
-      <div class="log-dashboard-progress"><span class="log-dashboard-card-label">Bossfortschritt</span><strong>${kills==null?"–":kills} / ${bosses==null?"–":bosses}</strong><div class="log-dashboard-progress-track"><i style="width:${progress}%"></i></div><small>${bosses?progress+" %":"Noch nicht ermittelt"}</small></div>
-      <div class="log-dashboard-metrics"><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Dauer</span><strong>${safeHtml(dashboardLogDuration(summary.durationMs||summary.duration))}</strong></div><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Tode</span><strong>${deaths==null?"–":deaths}</strong></div><div class="log-dashboard-metric"><span class="log-dashboard-card-label">Bester Pull</span><strong>${safeHtml(bestPull)}</strong></div></div>
-      <div class="log-dashboard-card-actions">${webUrl?`<button type="button" onclick="openDashboardRaidAnalysis('${safeAttr(webUrl)}')">Details ›</button>`:""}${wclUrl?`<a class="wcl" href="${safeAttr(wclUrl)}" target="_blank" rel="noopener">WCL ↗</a>`:""}${claUrl?`<a class="export" href="${safeAttr(claUrl)}" target="_blank" rel="noopener">CLA öffnen</a>`:""}${rpbUrl?`<a class="export" href="${safeAttr(rpbUrl)}" target="_blank" rel="noopener">RPB öffnen</a>`:""}</div>
-    </div>`;
-  }).join("");
-}
-
-function renderLichtstatsReports(entries){
-  configureDashboardLogView();
-  const query=String(document.getElementById("logsDashboardSearch")?.value || "").trim().toLowerCase();
-  const grouped=(Array.isArray(entries) ? entries : []).filter(entry=>dashboardLogRaidGroupForEntry(entry) === dashboardLogRaidGroup);
-  const list=grouped.filter(entry=>{
-    if(!query) return true;
-    const text=[entry.name,entry.zone,formatRaidDateForDisplay(entry.raidDate),entry.status,entry.logId].filter(Boolean).join(" ").toLowerCase();
-    return query.split(/\s+/).every(part=>text.includes(part));
-  });
-  const completed=grouped.filter(entry=>String(entry.status || "").toLowerCase()==="completed").length;
-  const bossKills=grouped.reduce((sum,entry)=>sum + (Number(entry.bossKills) || 0),0);
-  const wipes=grouped.reduce((sum,entry)=>sum + (Number(entry.wipeCount) || 0),0);
-  const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value);};
-  setText("logDashReports",grouped.length);
-  setText("logDashCla",completed);
-  setText("logDashRpb",bossKills);
-  setText("logDashOpen",wipes);
-  const rows=document.getElementById("logsDashboardRows");
-  if(!rows) return;
-  if(!list.length){
-    rows.innerHTML=query ? '<div class="status">Keine passenden LichtStats-Auswertungen gefunden.</div>' : '<div class="status">Noch keine LichtStats-Auswertungen für diesen Reiter vorhanden.</div>';
-    return;
-  }
-  rows.innerHTML=list.slice(0,25).map(entry=>{
-    const raidKey=dashboardLogRaidKey(entry);
-    const status=String(entry.status || "").toLowerCase();
-    const statusLabel=status==="completed" ? "fertig" : status==="failed" ? "Fehler" : status==="processing" ? "läuft" : "wartet";
-    const badgeClass=status==="completed" ? "done" : status==="failed" ? "fail" : "wait";
-    const actions=[
-      entry.url ? `<a class="rpb" href="${safeAttr(entry.url)}" target="_blank" rel="noopener">Auswertung</a>` : "",
-      entry.logUrl ? `<a class="wcl" href="${safeAttr(entry.logUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
-    ].filter(Boolean).join("");
-    return `<div class="log-dashboard-row">
-      <div class="log-dashboard-raid"><img src="${safeAttr(dashboardArchiveRaidImage(raidKey))}" alt=""><div><strong>${safeHtml(entry.zone || entry.name || "Raid")}</strong><span>${safeHtml(entry.name || entry.logId || "")}</span></div></div>
-      <div class="log-dashboard-date">${safeHtml(formatRaidDateForDisplay(entry.raidDate || ""))}<br>${Number(entry.playerCount)||0} Spieler</div>
-      <div class="log-dashboard-badges"><span class="log-badge ${badgeClass}">${safeHtml(statusLabel)}</span><span class="log-badge done">${Number(entry.bossKills)||0}/${Number(entry.totalBosses)||0} Bosse</span><span class="log-badge ${Number(entry.wipeCount)>0 ? "wait" : "done"}">${Number(entry.wipeCount)||0} Wipes</span></div>
-      <div class="log-dashboard-actions">${actions || '<span class="log-badge wait">kein Link</span>'}</div>
-    </div>`;
-  }).join("");
-}
-
-async function loadDashboardLogAnalyses(){
-  const rows=document.getElementById("logsDashboardRows");
-  configureDashboardLogView();
-  const isLichtstats=startLogProvider() === "lichtstats";
-  if(rows) rows.innerHTML='<div class="status">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
-  try{
-    const data=isLichtstats
-      ? await fetchRailwayApi("/api/lichtstats/reports?limit=100")
-      : await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
-    dashboardLogAnalysesCache = isLichtstats ? (data.reports || []) : (data.analyses || []);
-    renderDashboardLogAnalyses(dashboardLogAnalysesCache);
-  }catch(error){
-    console.warn("Raidauswertungen konnten nicht geladen werden:", error);
-    if(rows) rows.innerHTML='<div class="status bad">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
-    dashboardLogAnalysesCache = [];
-    renderDashboardLogAnalyses([]);
-  }
-}
+async function loadDashboardLogAnalyses(){return RaidChronicle.load();}
 
 function syncHiddenPinFromDashboard(){
   const pin=hydrateDashboardPlayerPin();

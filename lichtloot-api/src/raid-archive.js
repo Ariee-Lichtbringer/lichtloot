@@ -1,3 +1,4 @@
+import {receiptKey} from './raid-loot-assignments.js';
 // Public raid overview: explicit field allowlists, no credentials or raw exports.
 export function archiveLoot(payloads) {
   const seen = new Set(), receipts = [];
@@ -5,7 +6,7 @@ export function archiveLoot(payloads) {
     const key = `${payload.sessionId}:${row.id}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    receipts.push({player:row.recipient,itemId:row.itemId,item:row.itemName,
+    receipts.push({receiptKey:receiptKey(payload.sessionId,row.id),player:row.recipient,itemId:row.itemId,item:row.itemName,
       quantity:row.quantity,time:row.observedAt});
   }
   return receipts.sort((a,b)=>a.time-b.time);
@@ -43,7 +44,7 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const raidId = String(req.query.raidId || '');
       const current = req.query.scope === 'current';
       const offset = Math.max(0, Math.min(100000, Number.parseInt(req.query.offset,10)||0));
-      const exists = await query("select to_regclass('guildloot_era_logs') as logs");
+      const exists = await query("select to_regclass('guildloot_era_logs') as logs, to_regclass('raid_loot_assignments') as assignments");
       const completed = exists.rows[0]?.logs ? 'exists (select 1 from guildloot_era_logs gl where gl.guild_id=raids.guild_id and gl.raid_id=raids.id)' : 'false';
       const result = await query(`select id, external_raid_id, name, raid_type, raid_date, raid_time, (raid_date < timezone('Europe/Berlin',now())::date) as past
         from raids where guild_id=$1 and deleted_at is null
@@ -73,6 +74,11 @@ export function installRaidArchive(app, {query, requireGuild, resolveGuildSlug, 
       const receipts=includeConfirmedAwards(archiveLoot(logs.rows.map(row=>row.payload)),priorities.prios||[]);
       const metadata=await getItemMetadata([...new Set(receipts.map(row=>row.itemId))]);
       const loot=decorateLoot(receipts,priorities.prios||[],metadata);
+      if(exists.rows[0]?.assignments){
+        const saved=await query('select receipt_key,player_name,server,revision,updated_at from raid_loot_assignments where guild_id=$1 and raid_id=$2',[guild.id,result.rows[0].id]);
+        const byKey=new Map(saved.rows.map(row=>[row.receipt_key,row]));
+        for(const row of loot){const value=byKey.get(row.receiptKey);if(value)row.assignment={name:value.player_name,server:value.server,revision:value.revision,updatedAt:value.updated_at};}
+      }
       res.setHeader('Cache-Control','no-store');
       res.json({success:true,raid:raids[0],prios,priosVisible,hasLootLog:logs.rows.length>0,loot});
     } catch(error) { next(error); }

@@ -41,7 +41,7 @@
       ['Worldbuff eintragen','Eigene Buff-Termine verwalten','worldbuff buff eintragen hinzufügen planen verschieben',()=>{account();showMeinLichtLootSection('worldbuffs');}],
       ['Worldbuffs ansehen','Alle kommenden Worldbuffs','worldbuff buffs termine ony nef rend',()=>showBuffOverview('worldbuff')],
       ['Postfach öffnen','Deine Nachrichten','postfach nachrichten mail inbox',()=>{account();openPlayerMailbox();}],
-      ['Loganalyse','Raids und Kampflogs auswerten','logs loganalyse analyse auswertung',()=>showLogsDashboard()]
+      ['Raidchronik','Auswertungen, Priolisten und Raidloot','raidchronik raidarchiv archiv vergangene raids logs lichtstats loganalyse analyse auswertung prioliste raidloot',()=>showLogsDashboard()]
     ];
     entries.push(['Berufe-Schnellguide','Alle Classic-Berufe von 1 bis 300 mit Materialien','berufe beruf profession schnellguide guide skill skillen leveln 1 300 material materialien',()=>window.GuildLootProfessions?.open()]);
     for(const [id,name,aliases] of window.GuildLootProfessions?.catalog||[])entries.push([name+': 1–300', 'Skillweg, Materialbedarf und Ausbildung', name+' '+aliases+' beruf guide skill skillen leveln material 1 300',()=>window.GuildLootProfessions.open(id)]);

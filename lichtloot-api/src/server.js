@@ -6,6 +6,7 @@ import { createSupportDiscordReplies } from "./support-discord-replies.js";
 import { buildPrioConfirmation, queuePrioConfirmation, prioDmStatus } from "./prio-save-confirmation.js";
 import { addonUpdate } from './addon-update.js';
 import { archiveItemMetadata } from './raid-archive-items.js';
+import {installRaidLootAssignments} from './raid-loot-assignments.js';
 import { installRaidArchive } from './raid-archive.js';
 import { installAddonBetaAdmin } from './addon-beta-admin.js';
 import { installAddonBetaDownload } from './addon-beta-download.js';
@@ -519,6 +520,7 @@ app.get("/health", (req, res) => {
 
 app.get("/api/lichtstats/reports", async (req, res, next) => {
   try {
+    if(resolveGuildSlug(req.query.guild)!=="lichtloot")return res.status(403).json({success:false,error:"LichtStats ist nur für die Lichtbringer verfügbar."});
     if (!lichtstatsApiToken) {
       res.status(503).json({ success: false, error: "LICHTSTATS_API_TOKEN ist nicht eingerichtet." });
       return;
@@ -650,6 +652,7 @@ app.get("/api/dashboard", async (req, res, next) => {
 });
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
+installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
@@ -20468,6 +20471,7 @@ async function getPublicLogAnalyses({ guildId, query: params }) {
   await ensureLogAnalysisSheetExportsTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 12), 1), 40);
+  const offset=Math.max(0,Math.min(100000,Number.parseInt(params.offset,10)||0));
   const sheetOnly = ["1", "true", "ja", "yes"].includes(clean(params.sheetOnly || params.webReady).toLowerCase());
   const result = await query(
     `select la.*,
@@ -20498,13 +20502,14 @@ async function getPublicLogAnalyses({ guildId, query: params }) {
          )
        )
      order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
-     limit $2`,
-    [guildId, limit, sheetOnly]
+     limit $2 offset $4`,
+    [guildId, limit+1, sheetOnly, offset]
   );
 
   return {
     success: true,
-    analyses: result.rows.map(normalizeLogAnalysis)
+    analyses: result.rows.slice(0,limit).map(normalizeLogAnalysis),
+    hasMore:result.rows.length>limit
   };
 }
 
