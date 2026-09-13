@@ -3126,6 +3126,22 @@ async function findPlayerByPin(guildId, pin) {
   return result.rows[0] || null;
 }
 
+// Plündermeister-Freigabe im Addon: von der Gildenleitung unter Raidregeln eingetragene Charaktere
+// (layout.eraRules.addonMasterPlayers) führen Addon-Aufträge ohne Lead- oder Master-PIN aus.
+const ADDON_GRANT_ACTIONS = new Set(["publishAddonPrios", "verifyAddonMaster", "guildSavePrio", "raidleadSavePrio", "setRaidStatus", "guildSetRaidStatus", "uploadAddonRaid", "guildSetPrioBench"]);
+async function addonMasterGrantedCharacter(guild, params) {
+  const pin = clean(params.playerPin || params.characterPin || params.pin);
+  const wanted = clean(params.addonGrantCharacter).toLowerCase();
+  if (!pin || !wanted) return null;
+  const settings = await query("select layout_json from guild_settings where guild_id=$1", [guild.id]);
+  const list = settings.rows[0]?.layout_json?.eraRules?.addonMasterPlayers;
+  if (!Array.isArray(list) || !list.length) return null;
+  const granted = new Set(list.map(v => clean(v).toLowerCase().split("-")[0]).filter(Boolean));
+  if (!granted.has(wanted)) return null;
+  const characters = await getCharactersByPin(guild.id, pin);
+  const own = characters.find(c => clean(c.name).toLowerCase() === wanted);
+  return own ? own.name : null;
+}
 async function getPlayerDisplayNameByPin(guildId, pin) {
   const result = await query(
     `select coalesce((
@@ -32057,6 +32073,20 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
+
+    if (clean(postParams.addonGrant) === "1" && ADDON_GRANT_ACTIONS.has(action) && clean(postParams.random) !== "1") {
+      const grantGuild = await requireGuild(resolveGuildSlug(postParams.guild));
+      const grantedName = await addonMasterGrantedCharacter(grantGuild, postParams);
+      if (!grantedName) return res.status(403).json({ success: false, error: "Kein Plündermeister-Zugang im Addon für diesen Charakter. Die Gildenleitung trägt ihn unter Raidregeln → „Plündermeister im Addon ohne PIN“ ein." });
+      await loadMasterCodeOverrides();
+      const grantCode = clean(masterCodeOverrides.get(String(grantGuild.id))) || clean(masterCode);
+      postParams.masterCode = grantCode;
+      if (action === "publishAddonPrios" || action === "verifyAddonMaster") postParams.leadPin = grantCode;
+      else {
+        const grantRaid = clean(postParams.raidId) ? await findP0DiscordRaid(grantGuild.id, postParams) : null;
+        postParams.leadPin = grantRaid?.lead_pin || grantCode;
+      }
+    }
 
     if (action === "guildRefreshActiveSignups") {
       const refreshGuild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
