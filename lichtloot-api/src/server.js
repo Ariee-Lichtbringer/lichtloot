@@ -26270,8 +26270,10 @@ async function setRandomRaidStatus(params = {}) {
   const raid = await findRandomRaid(params, "lead");
   if (!raid || clean(params.leadPin).toLowerCase() !== clean(raid.lead_pin).toLowerCase()) { const error=new Error("Falsche Random LeadPIN.");error.statusCode=403;throw error; }
   const status=normalizeStatus(params.status || params.raidStatus);
-  const result=await randomQuery(`update random_raids set status=$2,published=$2 in ('geöffnet','veröffentlicht','published'),updated_at=now() where id=$1 returning *`,[raid.id,status]);
-  return {success:true,...normalizeRandomRaidRow(result.rows[0])};
+  // Archivieren/Löschen: archived_at setzen, damit PrioPIN und Lead-PIN den Raid nicht mehr finden (Addon „Raid löschen“).
+  const archive=["archiviert","archive","archived","gelöscht","geloescht","deleted"].includes(status.toLowerCase());
+  const result=await randomQuery(`update random_raids set status=$2,published=$2 in ('geöffnet','veröffentlicht','published'),archived_at=case when $3 then now() else archived_at end,updated_at=now() where id=$1 returning *`,[raid.id,status,archive]);
+  return {success:true,archived:archive,...normalizeRandomRaidRow(result.rows[0])};
 }
 
 async function setRandomPrioBench(params = {}) {
