@@ -483,7 +483,7 @@ end
 -- Bereit-Meldung: großer Text in der Bildschirmmitte, wenn ein beobachteter Zauber oder ein Schmuckstück wieder bereit ist.
 local readyFrame
 local function announceReady(text,icon)
- local db=GH.DB();if not db.cdReadyWarn then return end
+ local db=GH.DB();if not db.cdReadyWarn or db.hidden then return end
  if not readyFrame then
   readyFrame=CreateFrame('Frame',nil,UIParent);readyFrame:SetSize(400,60);readyFrame:SetPoint('CENTER',UIParent,'CENTER',0,180);readyFrame:SetFrameStrata('HIGH')
   readyFrame.icon=readyFrame:CreateTexture(nil,'ARTWORK');readyFrame.icon:SetSize(36,36);readyFrame.icon:SetPoint('LEFT',40,0);readyFrame.icon:SetTexCoord(.08,.92,.08,.92)
@@ -598,6 +598,8 @@ function GH.FramesShown() return not GH.DB().hidden end
 function GH.ToggleFrames()
  local db=GH.DB();db.hidden=not db.hidden
  if InCombatLockdown() then pendingLayout=true;GH.Print('Ein-/Ausblenden wird nach dem Kampf übernommen.') else GH.ApplyLayout() end
+ -- Zauberbalken sofort mit umschalten, auch im Kampf (kein geschützter Frame).
+ if GH.ApplyCastBar then GH.ApplyCastBar() end
  return not db.hidden
 end
 function GH.ApplyLayout()

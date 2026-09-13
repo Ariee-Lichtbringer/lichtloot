@@ -64,7 +64,9 @@ function GH.CastBarPreview(show)
 end
 function GH.ApplyCastBar()
  local d=db();build()
- if d.castbar==false then hideBlizzard(false);GH.CastBarPreview(false);bar:Hide();return end
+ -- Aus, wenn der Zauberbalken abgewählt ist oder GuildHeal ausgeblendet wurde (Haken in der GuildLoot-Seitenleiste, /gheal):
+ -- dann bekommt Blizzard seinen Balken zurück.
+ if d.castbar==false or d.hidden then hideBlizzard(false);GH.CastBarPreview(false);bar.casting=false;bar.fade=nil;bar:Hide();return end
  hideBlizzard(true);applyStyle()
  GH.CastBarPreview(not d.locked)
 end
