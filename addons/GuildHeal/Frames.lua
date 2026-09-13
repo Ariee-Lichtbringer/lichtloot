@@ -633,6 +633,16 @@ function GH.ApplyLayout()
  GH.BuildExtras();GH.ApplyBindings();GH.BuildCooldownBar();if GH.ApplyCastBar then GH.ApplyCastBar() end
  anchor:EnableMouse(not db.locked);anchor.label:SetShown(not db.locked);anchor.bg:SetShown(not db.locked)
  anchor:SetSize(70,14);anchor.gear:SetAlpha(db.locked and .6 or 1)
+ GH.ApplyStrata()
+end
+-- Ebene der Heilfelder: standardmäßig HIGH, damit sie über Addon-Fenstern (z. B. dem GuildLoot-Buffpanel, Ebene MEDIUM)
+-- liegen. Im Raid reichte das 8-spaltige Raster unter solche Fenster, und die Fenster schluckten die Klicks (kein Zauber).
+function GH.ApplyStrata()
+ if not anchor or InCombatLockdown() then return end
+ local strata=GH.DB().frontStrata~=false and 'HIGH' or 'LOW'
+ anchor:SetFrameStrata(strata);anchor.gear:SetFrameStrata(strata);header:SetFrameStrata(strata);extras:SetFrameStrata(strata)
+ if cdBar then cdBar:SetFrameStrata(strata) end
+ for _,button in ipairs(buttons) do button:SetFrameStrata(strata);if button.nameZone then button.nameZone:SetFrameStrata(strata) end end
 end
 
 local UNIT_FLAGS={UNIT_HEALTH='dHealth',UNIT_HEALTH_FREQUENT='dHealth',UNIT_MAXHEALTH='dHealth',UNIT_HEAL_PREDICTION='dHealth',UNIT_CONNECTION='dHealth',

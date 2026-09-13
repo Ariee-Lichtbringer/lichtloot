@@ -39,7 +39,7 @@ function GH.DebuffColor(kind) local c=GH.DB().colors['debuff'..kind] or GH.DEBUF
 
 local defaults={
  width=84,height=38,horizontal=true,showMana=true,showDebuffs=true,showIncoming=true,locked=true,castOnDown=false,hideSolo=false,scale=1,
- fadeRange=.4,classColors=true,showPets=false,showAuras=true,showCooldowns=true,aggroBorder=true,nameClick=true,
+ fadeRange=.4,frontStrata=true,classColors=true,showPets=false,showAuras=true,showCooldowns=true,aggroBorder=true,nameClick=true,
  emergency=true,emergencyThreshold=50,emergencySound=true,
  overhealWarn=true,overhealThreshold=40,overhealSound=true,overhealSkipTanks=true,tanks='',
  unitLayout='vertical',healthText='missing',fontSize=11,barTexture='blizzard',bgAlpha=.92,spacing=3,
