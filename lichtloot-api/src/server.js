@@ -3133,14 +3133,16 @@ async function addonMasterGrantedCharacter(guild, params) {
   const pin = clean(params.playerPin || params.characterPin || params.pin);
   const wanted = clean(params.addonGrantCharacter).toLowerCase();
   if (!pin || !wanted) return null;
-  const settings = await query("select layout_json from guild_settings where guild_id=$1", [guild.id]);
-  const list = settings.rows[0]?.layout_json?.eraRules?.addonMasterPlayers;
-  if (!Array.isArray(list) || !list.length) return null;
-  const granted = new Set(list.map(v => clean(v).toLowerCase().split("-")[0]).filter(Boolean));
-  if (!granted.has(wanted)) return null;
   const characters = await getCharactersByPin(guild.id, pin);
   const own = characters.find(c => clean(c.name).toLowerCase() === wanted);
-  return own ? own.name : null;
+  if (!own) return null;
+  // Zugriffsrecht „Plündermeister im Addon – ohne PIN“ (Spielerlogins) oder Rolle Gildenleitung; alte Namensliste unter Raidregeln bleibt gültig.
+  const permissions = Array.isArray(own.permissions) ? own.permissions.map(clean) : [];
+  if (permissions.includes("addon_master") || normalizePlayerRole(own.role || own.playerRole) === "gildenleitung") return own.name;
+  const settings = await query("select layout_json from guild_settings where guild_id=$1", [guild.id]);
+  const list = settings.rows[0]?.layout_json?.eraRules?.addonMasterPlayers;
+  const granted = new Set((Array.isArray(list) ? list : []).map(v => clean(v).toLowerCase().split("-")[0]).filter(Boolean));
+  return granted.has(wanted) ? own.name : null;
 }
 async function getPlayerDisplayNameByPin(guildId, pin) {
   const result = await query(
@@ -28823,7 +28825,7 @@ async function setPlayerLoginAccess({ guildId, query: params }) {
   };
   const allowedPermissions = new Set([
     "create_raids","manage_worldbuffs","guild_admin",
-    "loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases",
+    "loot_master","addon_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases",
     "po_class_warrior","po_class_paladin","po_class_hunter","po_class_rogue","po_class_priest",
     "po_class_shaman","po_class_mage","po_class_warlock","po_class_druid"
   ]);
