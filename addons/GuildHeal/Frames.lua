@@ -16,6 +16,8 @@ local function mark(button,flag)
  button[flag]=true
 end
 local byGuid={}
+local mapDirty=false     -- Zuordnung Einheit→Feld neu aufbauen (Feld gezeigt/versteckt oder Einheit gewechselt)
+local function markAll(button) mark(button,'dName');mark(button,'dHealth');mark(button,'dPower');mark(button,'dAura');mark(button,'dThreat') end
 local glowActive=false   -- irgendein Boss-/Überheilungs-Leuchten sichtbar (sonst keine Alpha-Schleife je Frame)
 local cdDirty=false      -- Cooldown-Leiste neu zeichnen (SPELL_UPDATE_COOLDOWN feuert bei jedem Zauber mehrfach)
 
@@ -372,7 +374,12 @@ local function styleButton(button)
  button.nameHover=button.health:CreateTexture(nil,'OVERLAY');button.nameHover:SetPoint('TOPLEFT',0,0);button.nameHover:SetPoint('RIGHT',-22,0);button.nameHover:SetHeight(14);button.nameHover:SetColorTexture(1,1,1,.14);button.nameHover:Hide()
  button:HookScript('OnEnter',function(self) if not GH.DB().showTooltips then if GameTooltip:IsOwned(self) then GameTooltip:Hide() end;return end;local unit=unitOf(self);if unit then GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetUnit(unit);if self.threatPct then GameTooltip:AddLine(string.format('Bedrohung gegen dein Ziel: %d%%',self.threatPct),1,.7,.3) end;GameTooltip:Show() end end)
  button:HookScript('OnLeave',function() GameTooltip:Hide() end)
- button:SetScript('OnAttributeChanged',function(self,name) if name=='unit' then GH.RefreshUnitMap();updateAll(self) end end)
+ -- Einheit gewechselt oder Feld (durch die Unit-Watch erst im nächsten Frame) gezeigt/versteckt: Zuordnung im nächsten
+ -- OnUpdate neu aufbauen. Vorher wurde sie sofort gebaut, während das Feld noch versteckt war, und das Feld bekam bis zur
+ -- nächsten Gruppenänderung keine Lebens-Events mehr (Balken hingen).
+ button:SetScript('OnAttributeChanged',function(self,name) if name=='unit' then mapDirty=true;markAll(self) end end)
+ button:HookScript('OnShow',function(self) mapDirty=true;markAll(self) end)
+ button:HookScript('OnHide',function() mapDirty=true end)
  button.styled=true
 end
 function GH.RefreshUnitMap()
@@ -628,14 +635,14 @@ function GH.ApplyLayout()
  anchor:SetSize(70,14);anchor.gear:SetAlpha(db.locked and .6 or 1)
 end
 
-local UNIT_FLAGS={UNIT_HEALTH='dHealth',UNIT_MAXHEALTH='dHealth',UNIT_HEAL_PREDICTION='dHealth',UNIT_CONNECTION='dHealth',
+local UNIT_FLAGS={UNIT_HEALTH='dHealth',UNIT_HEALTH_FREQUENT='dHealth',UNIT_MAXHEALTH='dHealth',UNIT_HEAL_PREDICTION='dHealth',UNIT_CONNECTION='dHealth',
  UNIT_POWER_UPDATE='dPower',UNIT_MAXPOWER='dPower',UNIT_DISPLAYPOWER='dPower',UNIT_AURA='dAura',UNIT_THREAT_SITUATION_UPDATE='dThreat',UNIT_NAME_UPDATE='dName'}
 local function onEvent(_,event,unit,...)
  if event=='PLAYER_REGEN_ENABLED' then
   if pendingLayout then pendingLayout=false;GH.ApplyLayout() elseif pendingAttributes then pendingAttributes=false;GH.ApplyBindings() end;return
  end
  if event=='PLAYER_TARGET_CHANGED' then for _,button in ipairs(buttons) do updateTarget(button) end;if extraButtons.target then GH.RefreshUnitMap();updateAll(extraButtons.target) end;return end
- if event=='GROUP_ROSTER_UPDATE' or event=='PLAYER_ENTERING_WORLD' then if not InCombatLockdown() then GH.BuildExtras() else pendingLayout=true end;GH.RefreshUnitMap();for _,button in ipairs(buttons) do updateAll(button) end;return end
+ if event=='GROUP_ROSTER_UPDATE' or event=='PLAYER_ENTERING_WORLD' then if not InCombatLockdown() then GH.BuildExtras() else pendingLayout=true end;GH.RefreshUnitMap();mapDirty=true;for _,button in ipairs(buttons) do updateAll(button) end;return end
  if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.InvalidateSpellbook(true);GH.InvalidateAuraSets();GH.ApplyBindings();return end
  if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else cdDirty=true end;return end
  local list=unit and byUnit[unit];if not list then return end
@@ -673,15 +680,16 @@ function GH.Initialize()
   button:SetAttribute('_onenter',header.snippet);button:SetAttribute('_onleave','self:ClearBindings()')
   button.nameZone:SetAttribute('_onenter',header.snippet);button.nameZone:SetAttribute('_onleave','self:ClearBindings()')
   button.nameZone:SetShown(GH.DB().nameClick~=false)
-  GH.RefreshUnitMap();updateAll(button)
+  mapDirty=true;updateAll(button)
  end
  local attrs,macros,keys=bindingAttributes();header.snippet=enterSnippet(macros,keys)
  header:SetAttribute('initialConfigFunction',configFunction(attrs))
  driver=CreateFrame('Frame')
- for _,e in ipairs({'UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
+ for _,e in ipairs({'UNIT_HEALTH','UNIT_HEALTH_FREQUENT','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
  driver:SetScript('OnEvent',onEvent)
  local fast,slow,scan,cdWait=0,0,0,0
  driver:SetScript('OnUpdate',function(_,dt)
+  if mapDirty then mapDirty=false;GH.RefreshUnitMap() end
   flush()
   fast=fast+dt;slow=slow+dt;scan=scan+dt;cdWait=cdWait-dt
   -- Notfall- und Überheilungsprüfung 10-mal pro Sekunde (vorher in jedem Frame über alle Felder); Animationen laufen weiter je Frame.
