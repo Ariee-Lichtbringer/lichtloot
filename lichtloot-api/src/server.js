@@ -26151,6 +26151,16 @@ function normalizeRandomRaidRow(row) {
   };
 }
 
+// Öffentliche Antworten (PrioPIN reicht) dürfen die Lead-PIN nicht verraten. Sie bleibt nur
+// enthalten, wenn der Aufrufer die passende Lead-PIN selbst mitgeschickt hat.
+function publicRandomRaidRow(raid, params = {}) {
+  const row = normalizeRandomRaidRow(raid);
+  if (!row) return row;
+  const given = clean(params.leadPin || params.raidleadPin);
+  if (!given || given.toLowerCase() !== clean(raid.lead_pin).toLowerCase()) delete row.leadPin;
+  return row;
+}
+
 function isRandomRaidRequest(params = {}) {
   return ["1", "true", "yes", "ja"].includes(clean(params.random).toLowerCase());
 }
@@ -26232,7 +26242,7 @@ async function getRandomPublishedPrios(params = {}) {
     `select p.*,c.name as player,c.server,c.class_name,c.spec_name,c.participant_hash from random_prios p join random_characters c on c.id=p.character_id where p.raid_id=$1 order by lower(c.name)`,
     [raid.id]
   );
-  const normalized = normalizeRandomRaidRow(raid);
+  const normalized = publicRandomRaidRow(raid, params);
   return { success: true, ...normalized, open: raid.status === "geöffnet", prios: result.rows.map((row,index)=>({
     id:row.id,rowNumber:index+1,Spieler:row.player,player:row.player,Server:row.server,server:row.server,Klasse:row.class_name,className:row.class_name,
     P1:row.p1_item_name||"",p1:row.p1_item_name||"",P1ItemId:row.p1_item_id||"",p1ItemId:row.p1_item_id||"",P2:row.p2_item_name||"",p2:row.p2_item_name||"",P2ItemId:row.p2_item_id||"",p2ItemId:row.p2_item_id||"",P3:row.p3_item_name||"",p3:row.p3_item_name||"",P3ItemId:row.p3_item_id||"",p3ItemId:row.p3_item_id||"",P0:row.p0_item_name||"",p0:row.p0_item_name||"",P0ItemId:row.p0_item_id||"",p0ItemId:row.p0_item_id||"",p0Selected:Boolean(row.p0_selected),PoSelected:Boolean(row.p0_selected),p0Plus:false,bench:Boolean(row.bench),staffBenched:Boolean(row.bench),specName:row.spec_name||"",ownedByBrowser:Boolean(participantHash&&row.participant_hash===participantHash)
@@ -26297,7 +26307,7 @@ async function findRandomRaidByPrioPin(params = {}) {
     [prioPin]
   );
   if (!result.rows[0]) return { success: false, error: "Kein Raid zu dieser Random PrioPIN gefunden." };
-  return { success: true, ...normalizeRandomRaidRow(result.rows[0]) };
+  return { success: true, ...publicRandomRaidRow(result.rows[0], params) };
 }
 
 async function findRaidByPrioPin({ guildId, query: params }) {
