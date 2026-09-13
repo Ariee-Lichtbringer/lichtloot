@@ -102,9 +102,14 @@ SlashCmdList.GUILDBUFF=function(msg)
  if msg=='symbol' or msg=='button' then GL.ToggleLauncher() elseif msg=='plan' and GL.RaidBuffAssignments then GL.RaidBuffAssignments.Open() else GL.ToggleBuffs() end
 end
 local function addonLoaded(name)
- if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(name) end
- if IsAddOnLoaded then return IsAddOnLoaded(name) end
- return false
+ -- Geladen oder zum Laden vorgesehen: WoW lädt Addons alphabetisch, dieses Addon also vor GuildLootEra. IsAddOnLoaded allein
+ -- war deshalb beim ADDON_LOADED immer falsch, und das Addon lief parallel zu GuildLoot Era (doppelte Meldungen im Raidchat).
+ if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded(name) then return true end
+ if IsAddOnLoaded and IsAddOnLoaded(name) then return true end
+ local loadable,state
+ if C_AddOns and C_AddOns.GetAddOnInfo then local _,_,_,l=C_AddOns.GetAddOnInfo(name);loadable=l elseif GetAddOnInfo then local _,_,_,l=GetAddOnInfo(name);loadable=l end
+ if C_AddOns and C_AddOns.GetAddOnEnableState then state=C_AddOns.GetAddOnEnableState(name,UnitName('player')) elseif GetAddOnEnableState then state=GetAddOnEnableState(UnitName('player'),name) end
+ return loadable==true and (tonumber(state) or 0)>0
 end
 local frame=CreateFrame('Frame');frame:RegisterEvent('ADDON_LOADED');frame:RegisterEvent('PLAYER_LOGIN')
 frame:SetScript('OnEvent',function(self,event,name)

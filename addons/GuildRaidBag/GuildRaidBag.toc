@@ -3,6 +3,7 @@
 ## Notes: Raidvorbereitung: Checklisten je Raid, Taschenprüfung, Auffüllen aus der Bank, Mats-Übersicht (Classic Era)
 ## Author: GuildLoot
 ## Version: 1.1.4-beta
+## OptionalDeps: GuildLootEra
 ## SavedVariables: GuildRaidBagDB
 Core.lua
 ClassicItemData.lua

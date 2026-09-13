@@ -3,6 +3,7 @@
 ## Notes: Raid-Buffcheck, Buffeinteilung, Ablaufwarnungen und Seelenstein-Leiste (Classic Era)
 ## Author: GuildLoot
 ## Version: 1.1.4-beta
+## OptionalDeps: GuildLootEra
 ## SavedVariables: GuildBuffDB
 ## SavedVariablesPerCharacter: GuildBuffCharDB
 Core.lua
