@@ -8,6 +8,16 @@ local pendingAttributes,pendingLayout=false,false
 local BAR='Interface\\TargetingFrame\\UI-StatusBar'
 local AURA_SLOTS=6
 local DEBUFF_SLOTS=4
+-- Einheiten-Events werden nicht sofort verarbeitet, sondern je Feld bis zum nächsten Frame gesammelt:
+-- im Raid kommen UNIT_HEALTH/UNIT_AURA für dieselbe Einheit mehrfach je Frame, gezeichnet wird ohnehin erst danach.
+local pending,pendingCount={},0
+local function mark(button,flag)
+ if not button.dirty then button.dirty=true;pendingCount=pendingCount+1;pending[pendingCount]=button end
+ button[flag]=true
+end
+local byGuid={}
+local glowActive=false   -- irgendein Boss-/Überheilungs-Leuchten sichtbar (sonst keine Alpha-Schleife je Frame)
+local cdDirty=false      -- Cooldown-Leiste neu zeichnen (SPELL_UPDATE_COOLDOWN feuert bei jedem Zauber mehrfach)
 
 local function unitOf(button) return button:GetAttribute('unit') end
 local function auraAt(unit,i,filter)
@@ -91,85 +101,89 @@ local function currentAuraSets()
  local tracked=db.showAuras and GH.TrackedAuras() or {}
  local wanted={};for i,name in ipairs(tracked) do wanted[name]=i end
  local watch={};if db.missingBuffWatch then for _,name in ipairs(GH.MissingBuffs()) do watch[name]=GH.BuffAliases(name) end end
- auraSets={bossSet=bossSet,ignored=ignored,tracked=tracked,wanted=wanted,watch=watch,hasBoss=next(bossSet)~=nil,hasWanted=next(wanted)~=nil or next(watch)~=nil}
+ auraSets={bossSet=bossSet,ignored=ignored,tracked=tracked,wanted=wanted,watch=watch,hasBoss=next(bossSet)~=nil,hasWatch=next(watch)~=nil,hasWanted=next(wanted)~=nil or next(watch)~=nil}
  auraSetsAt=now;auraSetsGen=GH.auraGeneration;return auraSets
 end
-local function updateDebuffs(button)
+-- Auren und Debuffs in einem Durchlauf: UNIT_AURA feuert im Raid sehr oft. Je Ereignis ein Scan der schädlichen
+-- Auren (Debuff-Symbole, Boss-Debuffs, verfolgte Schutz-Debuffs) und nur bei beobachteten Auren ein Scan der
+-- nützlichen, mit wiederverwendeten Tabellen. Symbolplätze werden nicht mehr je Aufruf neu verankert (GH.LayoutAuraSlots).
+local debuffList,foundList,foundByName,present={},{},{},{}
+local function byDebuff(a,b) if a.curable~=b.curable then return a.curable end;return (a.expires or 0)<(b.expires or 0) end
+local function byOrder(a,b) return a.order<b.order end
+local function updateAuraState(button)
  local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
  local db=GH.DB();local dispel=GH.DISPEL[GH.PlayerClass()] or {}
- local shown,color,boss
- local sets=currentAuraSets();local bossSet,ignored=sets.bossSet,sets.ignored
- local list={};local firstDispel
- if db.showDebuffs or sets.hasBoss then
+ local sets=currentAuraSets();local bossSet,ignored,wanted,watch=sets.bossSet,sets.ignored,sets.wanted,sets.watch
+ local showDebuffs,ownOnly=db.showDebuffs,db.auraOwnOnly
+ wipe(debuffList);wipe(foundList);wipe(foundByName);wipe(present)
+ local boss,firstName,firstKind
+ if showDebuffs or sets.hasBoss or sets.hasWanted then
   for i=1,40 do
    local name,icon,count,kind,duration,expires=debuffFull(unit,i);if not name then break end
-   if bossSet[name] and not boss then boss={name=name,icon=icon} end
-   if db.showDebuffs and not ignored[name] then
+   if not boss and bossSet[name] then boss=name;button.bossIcon:SetTexture(icon) end
+   if showDebuffs and not ignored[name] then
     local curable=kind and dispel[kind] or false
-    if curable or not db.debuffOnlyDispellable then list[#list+1]={name=name,icon=icon,count=count,kind=kind,expires=expires,curable=curable} end
-    if curable and not firstDispel then firstDispel={name=name,kind=kind} end
+    if curable or not db.debuffOnlyDispellable then debuffList[#debuffList+1]={icon=icon,count=count,expires=expires,curable=curable} end
+    if curable and not firstName then firstName,firstKind=name,kind end
    end
+   local order=wanted[name]
+   if order and not foundByName[name] then local a={order=order,icon=icon,count=count,expires=expires};foundByName[name]=a;foundList[#foundList+1]=a end
   end
-  table.sort(list,function(a,b) if a.curable~=b.curable then return a.curable end;return (a.expires or 0)<(b.expires or 0) end)
+  if #debuffList>1 then table.sort(debuffList,byDebuff) end
  end
- if firstDispel then shown=list[1];color={GH.DebuffColor(firstDispel.kind)} end
- -- Symbole (bis zu debuffMax) mit Restzeit und Stapeln
+ if sets.hasWanted then
+  for i=1,40 do
+   local name,icon,count,_,duration,expires,source=auraAt(unit,i,'HELPFUL');if not name then break end
+   present[name]=true
+   local order=wanted[name]
+   if order and (not ownOnly or source=='player' or source==nil) and not foundByName[name] then local a={order=order,icon=icon,count=count,expires=expires};foundByName[name]=a;foundList[#foundList+1]=a end
+  end
+  if #foundList>1 then table.sort(foundList,byOrder) end
+ end
+ -- Debuff-Symbole (bis zu debuffMax) mit Restzeit und Stapeln
  local maxIcons=math.max(1,math.min(DEBUFF_SLOTS,db.debuffMax or 1))
  for i=1,DEBUFF_SLOTS do
-  local slot=button.debuffs[i];local d=list[i]
+  local slot=button.debuffs[i];local d=debuffList[i]
   if d and i<=maxIcons then slot.icon:SetTexture(d.icon);slot.expires=d.expires;slot.count:SetText(db.debuffStacks and (d.count or 0)>1 and d.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
  end
  -- Ton bei neuem entfernbaren Debuff (einmal je Spieler und Debuff)
- if firstDispel then
-  if button.debuffWarned~=firstDispel.name then button.debuffWarned=firstDispel.name;if db.debuffSound and PlaySound then PlaySound(8959,'Master') end end
+ if firstName then
+  if button.debuffWarned~=firstName then button.debuffWarned=firstName;if db.debuffSound and PlaySound then PlaySound(8959,'Master') end end
  else button.debuffWarned=nil end
  if boss then
-  button.bossIcon:SetTexture(boss.icon);button.bossIcon:Show();button.bossGlow:Show()
-  if button.bossWarned~=boss.name then button.bossWarned=boss.name;if db.bossDebuffSound and PlaySound then PlaySound(8959,'Master') end end
+  button.bossIcon:Show();button.bossGlow:Show();glowActive=true
+  if button.bossWarned~=boss then button.bossWarned=boss;if db.bossDebuffSound and PlaySound then PlaySound(8959,'Master') end end
  else button.bossIcon:Hide();button.bossGlow:Hide();button.bossWarned=nil end
- button.debuff:Hide();button.debuffCount:SetText('')
  -- Entfernbarer Debuff: wahlweise das ganze Feld in der Typfarbe einfärben oder nur den Rahmen.
- if color then
-  if db.debuffFill then button.health:SetStatusBarColor(color[1],color[2],color[3]);button.debuffTint=true;button.border:Hide();button.borderKind=nil
-  else button.border:SetColorTexture(color[1],color[2],color[3],.9);button.border:Show();button.borderKind='debuff' end
+ local r,g,b;if firstKind then r,g,b=GH.DebuffColor(firstKind) end
+ if r then
+  if db.debuffFill then button.health:SetStatusBarColor(r,g,b);button.debuffTint=true;button.border:Hide();button.borderKind=nil
+  else button.border:SetColorTexture(r,g,b,.9);button.border:Show();button.borderKind='debuff' end
  else
   if button.borderKind=='debuff' then button.border:Hide();button.borderKind=nil end
   if button.debuffTint then button.debuffTint=nil;updateName(button) end
  end
-end
--- Verfolgte Auren (eigene HoTs/Schilde, Schutz-Debuffs) mit Restzeit.
-local function updateAuras(button)
- local unit=unitOf(button);if not unit or not UnitExists(unit) then return end
- local db=GH.DB()
- local sets=currentAuraSets();local tracked,wanted,watch=sets.tracked,sets.wanted,sets.watch
- local found={};local present={}
- if sets.hasWanted then
-  for _,filter in ipairs({'HELPFUL','HARMFUL'}) do
-   for i=1,40 do
-    local name,icon,count,_,duration,expires,source=auraAt(unit,i,filter);if not name then break end
-    if filter=='HELPFUL' then present[name]=true end
-    local order=wanted[name]
-    if order and (filter=='HARMFUL' or not db.auraOwnOnly or source=='player' or source==nil) and not found[name] then found[name]={order=order,icon=icon,count=count,expires=expires,duration=duration} end
-   end
-  end
- end
- local list={};for _,a in pairs(found) do list[#list+1]=a end;table.sort(list,function(a,b) return a.order<b.order end)
- local maxIcons=math.max(1,math.min(AURA_SLOTS,db.auraMax or 4));local size=db.auraSize or 12
+ -- Verfolgte Auren (eigene HoTs/Schilde, Schutz-Debuffs) mit Restzeit.
+ local maxAuras=math.max(1,math.min(AURA_SLOTS,db.auraMax or 4))
  for i=1,AURA_SLOTS do
-  local slot=button.auras[i];local a=list[i]
-  slot:SetSize(size,size);slot:ClearAllPoints();slot:SetPoint('BOTTOMLEFT',3+(i-1)*(size+2),2)
-  if a and i<=maxIcons then slot.icon:SetTexture(a.icon);slot.expires=a.expires;slot.count:SetText((a.count or 0)>1 and a.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
+  local slot=button.auras[i];local a=foundList[i]
+  if a and i<=maxAuras then slot.icon:SetTexture(a.icon);slot.expires=a.expires;slot.count:SetText((a.count or 0)>1 and a.count or '');slot:Show() else slot.expires=nil;slot:Hide() end
  end
  -- Buffwatch: fehlt ein beobachteter Buff, erscheint sein Symbol rot markiert am rechten Rand.
  local missing
- if next(watch) and not UnitIsDeadOrGhost(unit) and UnitIsConnected(unit) then
+ if sets.hasWatch and not UnitIsDeadOrGhost(unit) and UnitIsConnected(unit) then
   for name,aliases in pairs(watch) do local has=false;for alias in pairs(aliases) do if present[alias] then has=true;break end end;if not has then missing=name;break end end
  end
  if missing then
-  local _,_,icon=GetSpellInfo(missing);button.missingBuff.icon:SetTexture(icon);button.missingBuff:Show()
+  if button.missingShown~=missing then local _,_,icon=GetSpellInfo(missing);button.missingBuff.icon:SetTexture(icon);button.missingShown=missing end
+  button.missingBuff:Show()
   if button.missingWarned~=missing then button.missingWarned=missing;if db.missingBuffSound and PlaySound then PlaySound(8959,'Master') end end
  else button.missingBuff:Hide();button.missingWarned=nil end
  GH.UpdateAuraTimers(button)
+end
+function GH.LayoutAuraSlots(button)
+ local size=GH.DB().auraSize or 12
+ for i=1,AURA_SLOTS do local slot=button.auras[i];slot:SetSize(size,size);slot:ClearAllPoints();slot:SetPoint('BOTTOMLEFT',3+(i-1)*(size+2),2) end
 end
 local function timerText(slot,now)
  local left=slot.expires and slot.expires>0 and slot.expires-now or nil
@@ -194,6 +208,7 @@ local function updateThreat(button)
   else button.threatPct=nil end
   if level<2 then local guid=UnitGUID(unit);if guid and aggro[guid] then level=2 end end
  end
+ if button.threatLevel==level then return end;button.threatLevel=level
  if level==2 then button.aggro:SetColorTexture(1,.12,.12,1);button.aggro:Show()
  elseif level==1 then button.aggro:SetColorTexture(1,.65,.1,1);button.aggro:Show()
  else button.aggro:Hide() end
@@ -211,9 +226,26 @@ local function updateRange(button)
   if spell then local r=IsSpellInRange(spell,unit);if r==1 then inRange=true elseif r==0 then inRange=false end end
   if inRange==nil then local ok,checked=UnitInRange(unit);if checked then inRange=ok else inRange=true end end
  end
- button:SetAlpha(inRange and 1 or GH.DB().fadeRange)
+ local alpha=inRange and 1 or GH.DB().fadeRange
+ if button.rangeAlpha~=alpha then button.rangeAlpha=alpha;button:SetAlpha(alpha) end
 end
-local function updateAll(button) updateName(button);updateHealth(button);updatePower(button);updateDebuffs(button);updateAuras(button);updateThreat(button);updateTarget(button);updateRange(button) end
+local function updateAll(button) updateName(button);updateHealth(button);updatePower(button);updateAuraState(button);updateThreat(button);updateTarget(button);updateRange(button) end
+-- Gesammelte Einheiten-Events eines Frames abarbeiten (je Feld höchstens einmal je Art).
+local function flush()
+ if pendingCount==0 then return end
+ local n=pendingCount;pendingCount=0
+ for i=1,n do
+  local button=pending[i];pending[i]=nil;button.dirty=nil
+  if button:IsShown() then
+   if button.dName then updateName(button) end
+   if button.dHealth then updateHealth(button) end
+   if button.dPower then updatePower(button) end
+   if button.dAura then updateAuraState(button) end
+   if button.dThreat then updateThreat(button) end
+  end
+  button.dName,button.dHealth,button.dPower,button.dAura,button.dThreat=nil,nil,nil,nil,nil
+ end
+end
 function GH.LayoutDebuffSlots(button)
  local size=GH.DB().debuffSize or 14
  for i=1,DEBUFF_SLOTS do local slot=button.debuffs[i];slot:SetSize(size,size);slot:ClearAllPoints();slot:SetPoint('TOPRIGHT',-3-(i-1)*(size+2),-3) end
@@ -225,7 +257,8 @@ function GH.ApplyColors(button)
  if button.incoming then local ir,ig,ib=GH.Color('incoming');button.incoming:SetColorTexture(ir,ig,ib,.45) end
 end
 function GH.RefreshHealthByGuid(guid)
- for _,button in ipairs(buttons) do local unit=unitOf(button);if unit and button:IsShown() and UnitGUID(unit)==guid then updateHealth(button) end end
+ local list=guid and byGuid[guid];if not list then return end
+ for _,button in ipairs(list) do mark(button,'dHealth') end
 end
 function GH.RefreshAll() GH.InvalidateAuraSets();for _,button in ipairs(buttons) do updateAll(button) end;GH.RefreshCooldownBar() end
 
@@ -265,7 +298,7 @@ local function scanOverheal()
    end
   end
   if warn then
-   button.overheal:Show();button.overhealGlow:Show();button.overhealGlow:SetAlpha(.3+.3*math.abs(math.sin(GetTime()*8)))
+   button.overheal:Show();button.overhealGlow:Show();glowActive=true
    if not overhealWarned[button] then overhealWarned[button]=true;if db.overhealSound and PlaySound then PlaySound(8960,'Master') end end
   else button.overheal:Hide();button.overhealGlow:Hide();overhealWarned[button]=nil end
  end
@@ -328,6 +361,7 @@ local function styleButton(button)
   slot.count=slot:CreateFontString(nil,'OVERLAY');slot.count:SetFont(STANDARD_TEXT_FONT,8,'OUTLINE');slot.count:SetPoint('BOTTOMRIGHT',2,-1)
   slot:Hide();button.auras[i]=slot
  end
+ GH.LayoutAuraSlots(button)
  -- Klick auf den Namen: anvisieren (links). Rechtsklick öffnet bewusst kein Einheitenmenü (Blizzard-Popup), sondern tut nichts.
  local nameZone=CreateFrame('Button',button:GetName()..'Name',button,'SecureUnitButtonTemplate,SecureHandlerEnterLeaveTemplate')
  nameZone:SetPoint('TOPLEFT',0,0);nameZone:SetPoint('RIGHT',-22,0);nameZone:SetHeight(14);nameZone:SetFrameLevel(button:GetFrameLevel()+5)
@@ -342,8 +376,15 @@ local function styleButton(button)
  button.styled=true
 end
 function GH.RefreshUnitMap()
- wipe(byUnit)
- for _,button in ipairs(buttons) do local unit=unitOf(button);if unit and button:IsShown() then byUnit[unit]=byUnit[unit] or {};table.insert(byUnit[unit],button) end end
+ wipe(byUnit);wipe(byGuid)
+ for _,button in ipairs(buttons) do
+  local unit=unitOf(button)
+  if unit and button:IsShown() then
+   byUnit[unit]=byUnit[unit] or {};table.insert(byUnit[unit],button)
+   local guid=UnitGUID(unit);if guid then byGuid[guid]=byGuid[guid] or {};table.insert(byGuid[guid],button) end
+  end
+ end
+ if GH.InvalidateTanks then GH.InvalidateTanks() end
 end
 
 -- Attribute für Klick- und Tastenzauber. Ketten werden als Makro gesetzt; das Ziel trägt der Enter-Handler ein.
@@ -578,7 +619,7 @@ function GH.ApplyLayout()
  for _,button in ipairs(buttons) do
   if not button.extra then button:SetSize(db.width,db.height) end;button.health:SetPoint('BOTTOMRIGHT',-1,db.showMana and 4 or 1)
   button.health:SetStatusBarTexture(GH.BarTexture());button.power:SetStatusBarTexture(GH.BarTexture());GH.ApplyColors(button)
-  button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE');GH.LayoutDebuffSlots(button)
+  button.name:SetFont(STANDARD_TEXT_FONT,db.fontSize or 11,'OUTLINE');button.deficit:SetFont(STANDARD_TEXT_FONT,math.max(8,(db.fontSize or 11)-1),'OUTLINE');GH.LayoutDebuffSlots(button);GH.LayoutAuraSlots(button)
   button.nameZone:SetShown(db.nameClick~=false)
   updateAll(button)
  end
@@ -587,6 +628,8 @@ function GH.ApplyLayout()
  anchor:SetSize(70,14);anchor.gear:SetAlpha(db.locked and .6 or 1)
 end
 
+local UNIT_FLAGS={UNIT_HEALTH='dHealth',UNIT_MAXHEALTH='dHealth',UNIT_HEAL_PREDICTION='dHealth',UNIT_CONNECTION='dHealth',
+ UNIT_POWER_UPDATE='dPower',UNIT_MAXPOWER='dPower',UNIT_DISPLAYPOWER='dPower',UNIT_AURA='dAura',UNIT_THREAT_SITUATION_UPDATE='dThreat',UNIT_NAME_UPDATE='dName'}
 local function onEvent(_,event,unit,...)
  if event=='PLAYER_REGEN_ENABLED' then
   if pendingLayout then pendingLayout=false;GH.ApplyLayout() elseif pendingAttributes then pendingAttributes=false;GH.ApplyBindings() end;return
@@ -594,15 +637,10 @@ local function onEvent(_,event,unit,...)
  if event=='PLAYER_TARGET_CHANGED' then for _,button in ipairs(buttons) do updateTarget(button) end;if extraButtons.target then GH.RefreshUnitMap();updateAll(extraButtons.target) end;return end
  if event=='GROUP_ROSTER_UPDATE' or event=='PLAYER_ENTERING_WORLD' then if not InCombatLockdown() then GH.BuildExtras() else pendingLayout=true end;GH.RefreshUnitMap();for _,button in ipairs(buttons) do updateAll(button) end;return end
  if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' then GH.InvalidateSpellbook(true);GH.InvalidateAuraSets();GH.ApplyBindings();return end
- if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else GH.RefreshCooldownBar() end;return end
+ if event=='SPELL_UPDATE_COOLDOWN' or event=='BAG_UPDATE_COOLDOWN' or event=='PLAYER_EQUIPMENT_CHANGED' then if event=='PLAYER_EQUIPMENT_CHANGED' then GH.BuildCooldownBar() else cdDirty=true end;return end
  local list=unit and byUnit[unit];if not list then return end
- for _,button in ipairs(list) do
-  if event=='UNIT_HEALTH' or event=='UNIT_MAXHEALTH' or event=='UNIT_HEAL_PREDICTION' or event=='UNIT_CONNECTION' then updateHealth(button)
-  elseif event=='UNIT_POWER_UPDATE' or event=='UNIT_MAXPOWER' or event=='UNIT_DISPLAYPOWER' then updatePower(button)
-  elseif event=='UNIT_AURA' then updateDebuffs(button);updateAuras(button)
-  elseif event=='UNIT_THREAT_SITUATION_UPDATE' then updateThreat(button)
-  elseif event=='UNIT_NAME_UPDATE' then updateName(button) end
- end
+ local flag=UNIT_FLAGS[event];if not flag then return end
+ for _,button in ipairs(list) do mark(button,flag) end
 end
 
 function GH.Initialize()
@@ -642,16 +680,22 @@ function GH.Initialize()
  driver=CreateFrame('Frame')
  for _,e in ipairs({'UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_POWER_UPDATE','UNIT_MAXPOWER','UNIT_DISPLAYPOWER','UNIT_AURA','UNIT_CONNECTION','UNIT_NAME_UPDATE','PLAYER_TARGET_CHANGED','GROUP_ROSTER_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_REGEN_ENABLED','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','SPELL_UPDATE_COOLDOWN','BAG_UPDATE_COOLDOWN','PLAYER_EQUIPMENT_CHANGED','UNIT_HEAL_PREDICTION','UNIT_THREAT_SITUATION_UPDATE'}) do pcall(driver.RegisterEvent,driver,e) end
  driver:SetScript('OnEvent',onEvent)
- local fast,slow,scan=0,0,0
+ local fast,slow,scan,cdWait=0,0,0,0
  driver:SetScript('OnUpdate',function(_,dt)
-  fast=fast+dt;slow=slow+dt;scan=scan+dt
+  flush()
+  fast=fast+dt;slow=slow+dt;scan=scan+dt;cdWait=cdWait-dt
   -- Notfall- und Überheilungsprüfung 10-mal pro Sekunde (vorher in jedem Frame über alle Felder); Animationen laufen weiter je Frame.
   if scan>=.1 then scanEmergency(scan);scanOverheal();scan=0 end
   if emergencyButton then emergencyPulse=emergencyPulse+dt*6;emergencyButton.emergency:SetAlpha(.35+.35*math.abs(math.sin(emergencyPulse))) end
-  local now=GetTime();local bossAlpha=.25+.3*math.abs(math.sin(now*5));local overAlpha=.3+.3*math.abs(math.sin(now*8))
-  for _,button in ipairs(buttons) do if button.bossGlow:IsShown() then button.bossGlow:SetAlpha(bossAlpha) end;if button.overhealGlow:IsShown() then button.overhealGlow:SetAlpha(overAlpha) end end
+  if glowActive then
+   local now=GetTime();local bossAlpha=.25+.3*math.abs(math.sin(now*5));local overAlpha=.3+.3*math.abs(math.sin(now*8));local any=false
+   for _,button in ipairs(buttons) do if button.bossGlow:IsShown() then button.bossGlow:SetAlpha(bossAlpha);any=true end;if button.overhealGlow:IsShown() then button.overhealGlow:SetAlpha(overAlpha);any=true end end
+   glowActive=any
+  end
   if fast>=.3 then fast=0;scanAggro();for _,button in ipairs(buttons) do if button:IsShown() then updateRange(button);updateThreat(button) end end end
-  if slow>=.5 then slow=0;for _,button in ipairs(buttons) do if button:IsShown() then GH.UpdateAuraTimers(button) end end;GH.RefreshCooldownBar() end
+  if slow>=.5 then slow=0;for _,button in ipairs(buttons) do if button:IsShown() then GH.UpdateAuraTimers(button) end end;cdDirty=true end
+  -- Cooldown-Leiste höchstens 5-mal pro Sekunde neu zeichnen (SPELL_UPDATE_COOLDOWN kommt bei jedem Zauber mehrfach).
+  if cdDirty and cdWait<=0 then cdDirty=false;cdWait=.2;GH.RefreshCooldownBar() end
  end)
  header:Show();GH.ApplyLayout()
 end

@@ -1,6 +1,8 @@
 # GuildLoot Mini-Addons 1.1.4-beta
 
 - GuildHeal schneller: Notfall- und Überheilungsprüfung laufen 10-mal pro Sekunde statt in jedem Frame über alle Felder (Animationen bleiben flüssig). Die Namenslisten für Boss-Debuffs, ignorierte Debuffs, beobachtete Auren und fehlende Buffs werden gecacht statt bei jedem Aura-Ereignis je Feld über Zauberabfragen neu aufgebaut. Spürbar in 40er-Raids, wo Aura-Ereignisse sehr häufig sind.
+- GuildHeal, zweite Leistungsrunde: Einheiten-Events (Leben, Mana, Auren) werden je Feld bis zum nächsten Frame gesammelt statt jedes Ereignis sofort zu verarbeiten; Auren und Debuffs werden in einem Durchlauf gelesen statt in zwei; Symbolplätze werden nicht mehr bei jeder Aura-Änderung neu verankert; die Einstellungstabelle wird nicht mehr bei jedem Zugriff komplett durchlaufen; Reichweiten-, Bedrohungs- und Leucht-Anzeigen werden nur noch bei Änderung gesetzt; die Cooldown-Leiste wird höchstens 5-mal pro Sekunde neu gezeichnet; Tank-Erkennung wird 3 Sekunden gemerkt.
+- GuildHeal: Neuer Befehl /gheal cpu misst die CPU-Zeit je Addon (Messung einschalten, /reload, im Raid spielen, /gheal cpu zeigt die Verteilung; /gheal cpu aus beendet die Messung).
 - GuildHeal: Rechtsklick auf ein Feld oder den Spielernamen öffnet kein Blizzard-Einheitenmenü mehr (Freund hinzufügen, Flüstern …). Der Namensbereich reagiert nur noch auf Linksklick (anvisieren), Rechtsklick bleibt frei für eigene Klickzauber. Die Aktion „Einheitenmenü“ ist aus der Auswahl entfernt; alte Belegungen damit werden geleert.
 
 # GuildLoot Mini-Addons 1.1.3-beta

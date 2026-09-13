@@ -52,11 +52,16 @@ local defaults={
 GH.AURA_DEFAULTS={
  PRIEST={139,17,6788,6346,10060},DRUID={774,8936,2893,29166},PALADIN={1022,1044,25771,6940},SHAMAN={29203,16177},
 }
+-- GH.DB() wird in jedem Event-Handler mehrfach aufgerufen; die Vorgaben werden darum nur einmal je Sitzung
+-- eingetragen statt bei jedem Aufruf über alle Schlüssel zu laufen.
+local dbReady
 function GH.DB()
+ if dbReady and dbReady==GuildHealDB then return GuildHealDB end
  GuildHealDB=GuildHealDB or {}
  for k,v in pairs(defaults) do if GuildHealDB[k]==nil then GuildHealDB[k]=(type(v)=='table' and {} or v) end end
  -- Einmalig: „UI bearbeiten“ ist ab dieser Version standardmäßig aus (früher hieß das Frames sperren).
  if not GuildHealDB.editModeReset then GuildHealDB.editModeReset=true;GuildHealDB.locked=true end
+ dbReady=GuildHealDB
  return GuildHealDB
 end
 function GH.PlayerClass() local _,class=UnitClass('player');return class end
@@ -299,7 +304,9 @@ function GH.SpellIconOf(value)
  local base=GH.BaseName(value);for _,s in ipairs(GH.SpellbookSpells()) do if s.name==base then return s.icon end end
 end
 -- Tank-Erkennung: Haupttank/Hauptassistent im Schlachtzug oder Namen aus der Einstellung (kommagetrennt).
-function GH.IsTank(unit)
+local tankCache={}
+function GH.InvalidateTanks() wipe(tankCache) end
+local function tankLookup(unit)
  local name=UnitName(unit);if not name then return false end
  local list=GH.DB().tanks or ''
  for entry in list:gmatch('[^,;]+') do entry=entry:match('^%s*(.-)%s*$');if entry~='' and entry:lower()==name:lower() then return true end end
@@ -308,6 +315,13 @@ function GH.IsTank(unit)
  end
  if UnitGroupRolesAssigned then local role=UnitGroupRolesAssigned(unit);if role=='TANK' then return true end end
  return false
+end
+-- Ergebnis je Einheit 3 Sekunden merken: die Suche über Tank-Namen und Schlachtzugsliste lief sonst 10-mal pro Sekunde.
+function GH.IsTank(unit)
+ local guid=UnitGUID(unit);if not guid then return tankLookup(unit) end
+ local now=GetTime();local c=tankCache[guid]
+ if c and now-c.at<3 then return c.tank end
+ local tank=tankLookup(unit);tankCache[guid]={tank=tank,at=now};return tank
 end
 GH.BAR_TEXTURES={blizzard={label='Standard',path='Interface\\TargetingFrame\\UI-StatusBar'},flat={label='Glatt',path='Interface\\Buttons\\WHITE8x8'},raid={label='Raidframe',path='Interface\\RaidFrame\\Raid-Bar-Hp-Fill'},minimal={label='Fein',path='Interface\\TargetingFrame\\UI-TargetingFrame-BarFill'}}
 -- Farbakzente: Hintergrund, Lebensbalken (ohne Klassenfarbe), Text, Name, Rahmen (Alpha 0 = kein Rahmen).
@@ -336,7 +350,20 @@ SlashCmdList.GUILDHEAL=function(msg)
  if msg=='lock' or msg=='sperren' then GH.DB().locked=true;GH.ApplyLayout();if GH.ConfigRefresh then GH.ConfigRefresh() end;GH.Print('UI bearbeiten aus.')
  elseif msg=='unlock' or msg=='entsperren' or msg=='edit' then GH.DB().locked=false;GH.ApplyLayout();if GH.ConfigRefresh then GH.ConfigRefresh() end;GH.Print('UI bearbeiten an: Griffe ziehen, danach /gheal lock oder den Knopf im Fenster.')
  elseif msg=='reset' then GH.DB().position=nil;GH.ApplyLayout();GH.Print('Position zurückgesetzt.')
+ elseif msg=='cpu' or msg=='cpu an' then
+  if GetCVar('scriptProfile')~='1' then SetCVar('scriptProfile','1');GH.Print('CPU-Messung eingeschaltet. Bitte /reload, ein paar Minuten im Raid spielen und dann erneut /gheal cpu eingeben. Danach mit /gheal cpu aus abschalten, die Messung selbst kostet Leistung.')
+  else
+   UpdateAddOnCPUUsage()
+   local num=(C_AddOns and C_AddOns.GetNumAddOns) or GetNumAddOns;local info=(C_AddOns and C_AddOns.GetAddOnInfo) or GetAddOnInfo
+   local rows,total={},0
+   for i=1,num() do local name=info(i);local ms=GetAddOnCPUUsage(i) or 0;if ms>0 then total=total+ms;rows[#rows+1]={name=name,ms=ms} end end
+   table.sort(rows,function(a,b) return a.ms>b.ms end)
+   GH.Print(string.format('CPU-Zeit aller Addons seit Login bzw. letztem Aufruf: %.1f s',total/1000))
+   for i=1,math.min(10,#rows) do local r=rows[i];print(string.format('  %2d%%  %.1f s  %s',total>0 and r.ms/total*100 or 0,r.ms/1000,r.name)) end
+   ResetCPUUsage()
+  end
+ elseif msg=='cpu aus' then SetCVar('scriptProfile','0');GH.Print('CPU-Messung aus (wirkt nach /reload).')
  elseif msg=='hilfe' or msg=='help' then
-  for _,line in ipairs({'|cffffcc40GuildHeal Befehle:|r','/gheal – Einstellungen (Klickzauber, Tasten, Ketten, Anzeige, Warnungen)','/gheal unlock | lock – UI bearbeiten an / aus (Griffe zum Verschieben)','/gheal reset – Position zurücksetzen'}) do print(line) end
+  for _,line in ipairs({'|cffffcc40GuildHeal Befehle:|r','/gheal – Einstellungen (Klickzauber, Tasten, Ketten, Anzeige, Warnungen)','/gheal unlock | lock – UI bearbeiten an / aus (Griffe zum Verschieben)','/gheal reset – Position zurücksetzen','/gheal cpu – CPU-Zeit je Addon messen (zum Suchen von Leistungsfressern), /gheal cpu aus beendet die Messung'}) do print(line) end
  else GH.ToggleConfig() end
 end
