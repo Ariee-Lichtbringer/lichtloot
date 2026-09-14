@@ -26656,11 +26656,19 @@ async function deleteGuildPrio({ guildId, query: params }) {
 async function getP0Plus(guildId, params = {}) {
   await ensureUnlinkedP0PlusSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  let sharedZgScope = false;
+  if (raidType === "zg") {
+    const guildResult = await query("select slug from guilds where id=$1 limit 1", [guildId]);
+    sharedZgScope = guildResult.rows[0]?.slug === "lichtloot";
+  }
   const addonExport = String(params.addon || "") === "1";
   const values = [guildId];
   let raidClause = "";
   if (raidType && raidType !== "raid") {
-    values.push(raidTypeSearchValues(raidType));
+    const searchValues = sharedZgScope
+      ? Array.from(new Set(["zg", "zg-mittwoch", "zg-prime", "zg-late"].flatMap(raidTypeSearchValues)))
+      : raidTypeSearchValues(raidType);
+    values.push(searchValues);
     raidClause = `and lower(coalesce(i.raid_type, '')) = any($${values.length})`;
   }
   const result = await query(
@@ -26704,15 +26712,16 @@ async function getP0Plus(guildId, params = {}) {
 
   const grouped = new Map();
   result.rows.forEach(row => {
+    const effectiveRaid = sharedZgScope ? "zg" : row.raid;
     const key = [
-      clean(row.raid).toLowerCase(),
+      clean(effectiveRaid).toLowerCase(),
       clean(row.item).toLowerCase(),
       clean(row.player).toLowerCase(),
       clean(row.server).toLowerCase(),
       ...(addonExport ? [clean(row.item_game_id)] : [])
     ].join("|");
     const current = grouped.get(key) || {
-      raid: row.raid,
+      raid: effectiveRaid,
       ...(addonExport ? {itemId: row.item_game_id || null} : {}),
       item: row.item,
       quality: row.quality || "",
@@ -27370,23 +27379,26 @@ async function setP0PlusPoints({ guildId, query: params }) {
 
 async function resolveZgPointTarget(client, guildId, raid, requestedTarget = "") {
   const source = normalizeRaidType(raid.raid_type);
-  const variants = ["zg-prime", "zg-late", "zg-mittwoch"];
-  if (source !== "zg" && !variants.includes(source)) return requestedTarget || source;
+  const variants = ["zg", "zg-prime", "zg-late", "zg-mittwoch"];
+  if (!variants.includes(source)) return requestedTarget || source;
+  const guild = await client.query("select slug from guilds where id=$1", [guildId]);
+  const sharedZgPoints = guild.rows[0]?.slug === "lichtloot";
   const recorded = await client.query(`select distinct raid_type from p0plus_point_audit
     where guild_id=$1 and raid_id=$2 and action in ('raid_transfer','item_received_pending','item_received_clear')
       and raid_type = any($3)`, [guildId, raid.id, variants]);
   const targets = [...new Set(recorded.rows.map(row => row.raid_type))];
-  let target = source === "zg" ? targets[0] : source;
-  if (targets.length > 1 || (source !== "zg" && targets.some(value => value !== source))) {
+  let target = targets[0] || "";
+  if (targets.length > 1) {
     throw Object.assign(new Error("Dieser ZG-Raid hat widersprüchliche P0+-Zuordnungen. Bitte die Zuordnung prüfen."), {statusCode:409});
   }
   if (!target) {
-    const guild = await client.query("select slug from guilds where id=$1", [guildId]);
     const date = new Date(raid.raid_date);
     if (guild.rows[0]?.slug === "nachtloot" && date.getUTCDay() === 3) target = "zg-mittwoch";
+    else if (sharedZgPoints) target = "zg";
     else if (variants.includes(requestedTarget)) target = requestedTarget;
+    else if (source !== "zg") target = source;
   }
-  if (!target || (requestedTarget && requestedTarget !== "zg" && requestedTarget !== target)) {
+  if (!target || (!sharedZgPoints && requestedTarget && requestedTarget !== "zg" && requestedTarget !== target)) {
     throw Object.assign(new Error("Das P0+-Ziel passt nicht zu diesem ZG-Raid. Prime, Late und Mittwoch müssen getrennt bleiben."), {statusCode:400});
   }
   return target;

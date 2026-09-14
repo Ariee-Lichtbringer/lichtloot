@@ -4829,6 +4829,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   align-items:center;
   margin-bottom:8px;
 }
+.p0-raid-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.p0-raid-tabs .small-btn[aria-selected="true"]{border-color:var(--gold);background:rgba(245,197,66,.16);color:var(--gold)}
 .p0-create-form{
   display:grid;
   grid-template-columns:140px minmax(180px,1fr) minmax(240px,1.4fr) 110px auto;
@@ -18803,6 +18805,10 @@ function openP0PlusTransferDialog(raidId){
   const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id||"")===String(raidId));
   if(!raid){setStatus("Raid wurde nicht gefunden.","bad");return;}
   const fixedTarget = getRaidKey(raid);
+  if (CURRENT_GUILD_SLUG === "lichtloot" && ["zg","zg-prime","zg-late","zg-mittwoch"].includes(fixedTarget)) {
+    transferP0PlusFromGuild(raidId, "zg");
+    return;
+  }
   if (["zg-prime","zg-late","zg-mittwoch"].includes(fixedTarget) || (CURRENT_GUILD_SLUG === "nachtloot" && fixedTarget === "zg")) {
     transferP0PlusFromGuild(raidId, fixedTarget === "zg" ? "zg-mittwoch" : fixedTarget);
     return;
@@ -18853,13 +18859,13 @@ async function transferP0PlusFromGuild(raidId,targetRaid="",options={}){
     return;
   }
   const destination=String(targetRaid||getRaidKey(raid)).trim().toLowerCase();
-  if(!["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(destination)){
+  if(!["mc","bwl","aq40","aq20","naxx","zg","zg-mittwoch","zg-prime","zg-late"].includes(destination)){
     setStatus("P0+ Übertragung ist für diesen Raid nicht aktiviert.", "bad");
     return false;
   }
 
   const label = `${raid.raidName || raid.raid || "Raid"} ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim();
-  const destinationLabel={"zg-prime":"ZG Prime","zg-late":"ZG Late-Night","zg-mittwoch":"ZG Mittwoch"}[destination]||RAID_OPTIONS[destination]?.name||destination.toUpperCase();
+  const destinationLabel={zg:"Alle ZG · gemeinsame Punktetabelle","zg-prime":"ZG Prime","zg-late":"ZG Late-Night","zg-mittwoch":"ZG Mittwoch"}[destination]||RAID_OPTIONS[destination]?.name||destination.toUpperCase();
   const ok = options.skipConfirm || confirm(`P0+ Punkte für ${label} nach ${destinationLabel} übertragen?`);
   if(!ok) return false;
 
@@ -19240,7 +19246,12 @@ async function loadP0PlusPanel(){
 }
 
 function renderP0PlusModalContent(){
-  const raids = Array.from(new Set(p0PlusEntries.map(entry => entry.raid).filter(Boolean))).sort();
+  const sharedZgPoints = CURRENT_GUILD_SLUG === "lichtloot";
+  const raidOptions = [
+    ["", "Alle Raids"], ...(sharedZgPoints ? [["zg-all", "Alle ZG"], ["zg-general", "ZG allgemein"]] : []),
+    ["zg-prime", "ZG Prime"], ["zg-late", "ZG Late"], ["zg-mittwoch", "ZG Mittwoch"], ["mc", "MC"], ["bwl", "BWL"],
+    ["aq40", "AQ40"], ["naxx", "NAXX"], ["aq20", "AQ20"], ["ony", "ONY"]
+  ];
   document.getElementById("p0PlusPanelContent").innerHTML = `
     <div class="p0-review-block">
       <div class="section-head">
@@ -19250,10 +19261,12 @@ function renderP0PlusModalContent(){
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
       </div>
+      <div class="p0-raid-tabs" role="tablist" aria-label="PO+ Punktetabelle auswählen">
+        ${(sharedZgPoints ? [["zg-all","Alle ZG"],["zg-general","ZG gemeinsam"],["zg-prime","ZG Prime (Altbestand)"],["zg-late","ZG Late (Altbestand)"]] : [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG Prime"],["zg-late","ZG Late"]]).map(([value,label]) => `<button class="small-btn ghost" type="button" role="tab" data-p0-raid-tab="${value}" aria-selected="false" onclick="selectP0RaidScope('${value}')">${label}</button>`).join("")}
+      </div>
       <div class="p0-toolbar">
-        <select id="p0RaidFilter" onchange="renderP0PlusRows()">
-          <option value="">Alle Raids</option>
-          ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
+        <select id="p0RaidFilter" onchange="syncP0RaidTabs(); renderP0PlusRows()">
+          ${raidOptions.map(([value,label]) => `<option value="${value}">${label}</option>`).join("")}
         </select>
         <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
         <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
@@ -19320,6 +19333,39 @@ function renderP0PlusModalContent(){
     </div>
   `;
   renderP0PlusRows();
+}
+
+const P0_ZG_RAIDS = new Set(["zg", "zg-mittwoch", "zg-prime", "zg-late"]);
+
+function selectP0RaidScope(scope){
+  const filter = document.getElementById("p0RaidFilter");
+  if(!filter) return;
+  filter.value = scope;
+  syncP0RaidTabs();
+  renderP0PlusRows();
+}
+
+function syncP0RaidTabs(){
+  const selected = document.getElementById("p0RaidFilter")?.value || "";
+  document.querySelectorAll("[data-p0-raid-tab]").forEach(tab => {
+    tab.setAttribute("aria-selected", String(tab.dataset.p0RaidTab === selected));
+  });
+}
+
+function aggregateP0PlusRows(entries, label){
+  const grouped = new Map();
+  entries.forEach(entry => {
+    const key = [entry.player, entry.server, entry.item, entry.slot, entry.accountLinked === false ? "0" : "1"].map(normalize).join("|");
+    const current = grouped.get(key) || {...entry, raid:label, count:0, points:0, aggregate:true, sourceRaids:new Set()};
+    current.count += Number(entry.count ?? entry.points ?? 0);
+    current.points = current.count;
+    current.sourceRaids.add(normalize(entry.raid));
+    const entryTime = new Date(entry.createdAt || entry.created_at || 0).getTime();
+    const currentTime = new Date(current.createdAt || current.created_at || 0).getTime();
+    if(entryTime > currentTime){ current.createdAt = entry.createdAt || entry.created_at; current.created_at = current.createdAt; }
+    grouped.set(key,current);
+  });
+  return Array.from(grouped.values());
 }
 
 async function loadP0ReleasePanel(){
@@ -20256,9 +20302,13 @@ function renderP0PlusRows(){
 
   const raidFilter = normalize(document.getElementById("p0RaidFilter").value);
   const search = normalize(document.getElementById("p0Search").value);
-  const rows = p0PlusEntries.filter(entry => {
+  let scopedEntries = p0PlusEntries;
+  if(raidFilter === "zg-all") scopedEntries = aggregateP0PlusRows(p0PlusEntries.filter(entry => P0_ZG_RAIDS.has(normalize(entry.raid))), "Alle ZG");
+  else if(raidFilter === "zg-general") scopedEntries = p0PlusEntries.filter(entry => normalize(entry.raid) === "zg");
+  const rows = scopedEntries.filter(entry => {
     const haystack = normalize([entry.raid, entry.player, entry.item, entry.slot].join(" "));
-    return (!raidFilter || normalize(entry.raid) === raidFilter) && (!search || haystack.includes(search));
+    const scopeMatches = !raidFilter || raidFilter === "zg-all" || raidFilter === "zg-general" || normalize(entry.raid) === raidFilter;
+    return scopeMatches && (!search || haystack.includes(search));
   }).sort((a, b) => {
     const raidCompare = String(a.raid || "").localeCompare(String(b.raid || ""));
     if(raidCompare) return raidCompare;
@@ -20275,20 +20325,21 @@ function renderP0PlusRows(){
   tbody.innerHTML = rows.map((entry, index) => {
     const sourceIndex = p0PlusEntries.indexOf(entry);
     const inputId = `p0Points_${sourceIndex}`;
+    const aggregate = entry.aggregate === true;
     return `
       <tr>
         <td>${escapeHtml(entry.raid || "-")}</td>
         <td>${renderAdminGearLink(entry.player || "-",entry.server)}</td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>${escapeHtml(entry.slot || "-")}</td>
-        <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
+        <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}" ${aggregate?'disabled title="Summe aus allen zugehörigen ZG-Tabellen"':''}></td>
         <td>${escapeHtml(formatDateTime(entry.createdAt || entry.created_at || entry.updatedAt || entry.updated_at) || "-")}</td>
         <td>
-          <div class="actions">
+          ${aggregate?'<span class="muted">In der Einzelansicht bearbeiten</span>':`<div class="actions">
             <button class="small-btn ghost" type="button" onclick="addP0PlusInput(${sourceIndex},0.5)">+0.5 Bench</button>
             <button class="small-btn primary" type="button" onclick="saveP0PlusPoints(${sourceIndex})">Speichern</button>
             <button class="small-btn danger" type="button" onclick="setP0PlusInput(${sourceIndex},0); saveP0PlusPoints(${sourceIndex})">Entfernen</button>
-          </div>
+          </div>`}
         </td>
       </tr>
     `;
