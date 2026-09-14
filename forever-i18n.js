@@ -4,7 +4,11 @@ let lang=new URLSearchParams(location.search).get('lang');
 if(!['de','en'].includes(lang)){try{lang=localStorage.getItem('guildloot_forever_language');}catch{} }
 if(!['de','en'].includes(lang))lang='de';
 document.documentElement.lang=lang;
-const pairs=`Klassen|Classes
+const pairs=`Bekannte Classic-Rezepte|Known Classic recipes
+813 Rezeptgegenstände, nach Beruf sortiert.|813 recipe items, grouped by profession.
+Dieser Bestand ist auch in Classic gelistet und bestätigt keine neuen Forever-Rezepte. Klassenzauberbücher und Bücher zum Erhöhen der Berufsstufe sind ausgeklammert. Reine Lehrerrezepte sind nicht enthalten. Zutaten und Herstellungseffekte zeigt die Detailkarte, soweit verfügbar.|These items are also listed in Classic and do not confirm new Forever recipes. Class spellbooks and profession-rank manuals are excluded. Trainer-only recipes are not included. Available reagents and crafting effects are shown in the detail card.
+Rezepte werden geladen …|Loading recipes …
+Klassen|Classes
 Völker|Races
 Fähigkeiten|Abilities
 Klassen in WoW Forever|Classes in WoW Forever

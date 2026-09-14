@@ -6,7 +6,7 @@
   const categories = {0:'Verbrauchbar',1:'Behälter',2:'Waffe',4:'Rüstung',5:'Reagenz',6:'Munition',7:'Handwerksmaterial',9:'Rezept',10:'Währung',11:'Köcher',12:'Questgegenstand',13:'Schlüssel',15:'Verschiedenes',16:'Glyphe',18:'WoW-Marke'};
   const slots = {1:'Kopf',2:'Hals',3:'Schulter',4:'Hemd',5:'Brust',6:'Taille',7:'Beine',8:'Füße',9:'Handgelenke',10:'Hände',11:'Finger',12:'Schmuck',13:'Einhändig',14:'Schild',15:'Distanz',16:'Rücken',17:'Zweihändig',18:'Tasche',19:'Wappenrock',20:'Robe',21:'Waffenhand',22:'Schildhand',23:'Nebenhand',24:'Munition',25:'Wurfwaffe',26:'Distanz',28:'Relikt'};
   const statNames = {agi:'Beweglichkeit',str:'Stärke',sta:'Ausdauer',int:'Intelligenz',spi:'Willenskraft',armor:'Rüstung',dura:'Haltbarkeit',health:'Gesundheit',mana:'Mana',dps:'Schaden pro Sekunde',speed:'Waffentempo',dmgmin1:'Minimaler Schaden',dmgmax1:'Maximaler Schaden',atkpwr:'Angriffskraft',mleatkpwr:'Nahkampfangriffskraft',rgdatkpwr:'Distanzangriffskraft',splpwr:'Zaubermacht',spldmg:'Zauberschaden',splheal:'Heilung',manargn:'Mana alle 5 Sekunden',healthrgn:'Gesundheit alle 5 Sekunden',def:'Verteidigung',block:'Blockchance',blockrtng:'Blockwertung',blockvalue:'Blockwert',dodgertng:'Ausweichwertung',dodge:'Ausweichchance',parry:'Parierchance',critstrkrtng:'Kritische Trefferwertung',mlecritstrkrtng:'Kritische Nahkampftrefferwertung',splcritstrkrtng:'Kritische Zaubertrefferwertung',hitrtng:'Trefferwertung',mlehitrtng:'Nahkampftrefferwertung',splhitrtng:'Zaubertrefferwertung',firres:'Feuerwiderstand',frores:'Frostwiderstand',natres:'Naturwiderstand',shares:'Schattenwiderstand',arcres:'Arkanwiderstand',holres:'Heiligwiderstand'};
-  let data, pending, filtered=[],page=1, opener, setData, activeSet=null, setClass=1, itemView="sets", sourceData, activeZone=null;
+  let data, pending, filtered=[],page=1, opener, setData, activeSet=null, setClass=1, itemView="sets", sourceData, activeZone=null, recipeData, activeProfession=null, recipeIds=new Set();
   const perPage=48;
   const node=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
   const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('de');
@@ -85,13 +85,13 @@
   ];
   function setName(s){return language==='de'?s.nameDe:s.name;}
   function setView(view){
-    hideHover();itemView=view;window.ForeverItemNavigation=view==='zone'&&activeZone?(activeZone.kind==='raid'?'loot':'dungeon-lootlisten'):'itemdatenbank';dispatchEvent(new Event('forever-item-navigation'));
-    $('itemSetBrowser').hidden=view!=='sets';$('itemSetSelection').hidden=!['set','zone'].includes(view);$('itemFilters').hidden=!['all','zone'].includes(view);$('itemResults').hidden=view==='sets';$('itemPagination').hidden=!['all','zone'].includes(view);$('itemCount').hidden=view==='sets';
+    hideHover();itemView=view;window.ForeverItemNavigation=view==='recipes'?'berufe':view==='zone'&&activeZone?(activeZone.kind==='raid'?'loot':'dungeon-lootlisten'):'itemdatenbank';dispatchEvent(new Event('forever-item-navigation'));
+    $('itemSetBrowser').hidden=view!=='sets';$('itemSetSelection').hidden=!['set','zone','recipes'].includes(view);$('itemFilters').hidden=!['all','zone','recipes'].includes(view);$('itemResults').hidden=view==='sets';$('itemPagination').hidden=!['all','zone','recipes'].includes(view);$('itemCount').hidden=view==='sets';
     $('itemSetsView').setAttribute('aria-pressed',String(view==='sets'||view==='set'));$('itemAllView').setAttribute('aria-pressed',String(view==='all'));
     if(!data)return;
-    if(view!=='zone')activeZone=null;if($('itemSetBonuses'))$('itemSetBonuses').hidden=view!=='set';$('itemSetBack').textContent=tr('← Zurück zu den Sets');
+    if(view!=='zone')activeZone=null;if(view!=='recipes')activeProfession=null;if($('itemSetBonuses'))$('itemSetBonuses').hidden=view!=='set';$('itemSetBack').textContent=tr('← Zurück zu den Sets');
     if(view==='sets'){activeSet=null;renderSets();}else if(view==='all'){activeSet=null;filter();}
-    const u=new URL(location.href);u.searchParams.delete('zone');if(view==='zone'&&activeZone)u.searchParams.set('zone',activeZone.id);if(view==='set'&&activeSet){u.searchParams.set('set',activeSet.id);u.searchParams.delete('items');}else{u.searchParams.delete('set');if(view==='all')u.searchParams.set('items','all');else u.searchParams.delete('items');}history.replaceState(null,'',u);
+    const u=new URL(location.href);u.searchParams.delete('profession');if(view==='recipes'&&activeProfession)u.searchParams.set('profession',activeProfession.id);u.searchParams.delete('zone');if(view==='zone'&&activeZone)u.searchParams.set('zone',activeZone.id);if(view==='set'&&activeSet){u.searchParams.set('set',activeSet.id);u.searchParams.delete('items');}else{u.searchParams.delete('set');if(view==='all')u.searchParams.set('items','all');else u.searchParams.delete('items');}history.replaceState(null,'',u);
   }
   function renderSets(){
     const host=$('itemSetCards');host.replaceChildren();
@@ -118,25 +118,25 @@
   function initSets(){
     const host=$('itemSetClasses');
     for(const [id,name,iconName,color] of [...classInfo,[0,'Weitere Sets','inv_chest_chain_04','#ecd09a']]){const b=node('button','talent-class-card');b.type='button';b.dataset.class=id;b.style.setProperty('--class-color',color);b.append(icon({icon:iconName}),node('span','',tr(name)));b.onclick=()=>{setClass=id;renderSets();};host.append(b);}
-    $('itemSetsView').onclick=()=>setView('sets');$('itemAllView').onclick=()=>setView('all');$('itemSetBack').onclick=()=>{if(activeZone){location.href='forever.html'+(language==='en'?'?lang=en':'')+'#'+(activeZone.kind==='raid'?'loot':'dungeon-lootlisten');}else setView('sets');};
+    $('itemSetsView').onclick=()=>setView('sets');$('itemAllView').onclick=()=>setView('all');$('itemSetBack').onclick=()=>{if(activeProfession){location.href='forever.html'+(language==='en'?'?lang=en':'')+'#berufe';}else if(activeZone){location.href='forever.html'+(language==='en'?'?lang=en':'')+'#'+(activeZone.kind==='raid'?'loot':'dungeon-lootlisten');}else setView('sets');};
   }
   function filter(){
     if(!data)return;
     const q=norm($('itemSearch').value).trim(),cat=$('itemCategory').value,quality=$('itemQuality').value,slot=$('itemSlot').value,cl=Number($('itemClass').value),min=$('itemLevelMin').value,max=$('itemLevelMax').value;
-    filtered=data.items.filter(x=>(!activeZone||sourceData.assignments[x.id]?.[activeZone.id])&&(!q||x.search.includes(q))&&(!cat||String(x.classs)===cat)&&(!quality||String(x.quality)===quality)&&(!slot||String(x.slot)===slot)&&(!cl||!x.stats.classes||(x.stats.classes&cl))&&(min===''||Number(x.level||0)>=Number(min))&&(max===''||Number(x.level||0)<=Number(max)));
+    filtered=data.items.filter(x=>(!activeProfession||recipeIds.has(x.id))&&(!activeZone||sourceData.assignments[x.id]?.[activeZone.id])&&(!q||x.search.includes(q))&&(!cat||String(x.classs)===cat)&&(!quality||String(x.quality)===quality)&&(!slot||String(x.slot)===slot)&&(!cl||!x.stats.classes||(x.stats.classes&cl))&&(min===''||Number(x.level||0)>=Number(min))&&(max===''||Number(x.level||0)<=Number(max)));
     const sort=$('itemSort').value;
     filtered.sort(sort==='level-desc'?(a,b)=>(b.level||0)-(a.level||0)||a.name.localeCompare(b.name,'de'):sort==='quality-desc'?(a,b)=>b.quality-a.quality||(b.level||0)-(a.level||0):sort==='id'?(a,b)=>a.id-b.id:(a,b)=>a.name.localeCompare(b.name,'de'));
     page=1;render();
   }
   function render(){
     hideHover();const list=$('itemResults');list.replaceChildren();
-    $('itemCount').textContent=number(filtered.length)+' von '+number(activeZone?activeZone.count:data.count)+' Gegenständen';
+    $('itemCount').textContent=number(filtered.length)+' von '+number(activeProfession?activeProfession.count:activeZone?activeZone.count:data.count)+' Gegenständen';
     const pages=Math.max(1,Math.ceil(filtered.length/perPage));page=Math.min(page,pages);
     $('itemPage').textContent='Seite '+page+' von '+pages;$('itemPrevious').disabled=page===1;$('itemNext').disabled=page===pages;
     if(!filtered.length){list.append(node('p','items-empty',itemView==='set'?(language==='en'?'No pieces from this set are currently available in the item database.':'Für dieses Set sind derzeit keine Teile in der Itemdatenbank verfügbar.'):'Keine passenden Gegenstände. Ändere die Suche oder setze die Filter zurück.'));return;}
     for(const x of filtered.slice((page-1)*perPage,page*perPage)){
       const card=node('button','item-card q'+x.quality);card.type='button';card.append(icon(x));
-      const copy=node('span','item-card-copy');if(confirmedNew(x)){card.classList.add('item-forever-new');markNew(copy,x);}copy.append(node('strong','item-name',x.name),node('span','item-meta',(slots[x.slot]||categories[x.classs]||'Gegenstand')+' · Gegenstandsstufe '+(x.level||0)),node('small','item-meta',qualities[x.quality]+' · ID '+x.id));if(activeZone){const indices=sourceData.assignments[x.id]?.[activeZone.id]||[];const names=[...new Set(indices.map(i=>x.sourcemore?.[i]?.n).filter(Boolean))];copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+(names.join(' · ')||(language==='en'?'Zone drop; no specific boss listed':'Gebietsdrop; kein einzelner Boss angegeben'))));}card.append(copy);card.onpointerenter=e=>{if(e.pointerType!=='touch')showHover(x,card);};card.onpointerleave=()=>{if(dismissedAnchor===card)dismissedAnchor=null;delayHide();};card.onfocus=()=>{dismissedAnchor=null;if(card.dataset.touch!=='true')showHover(x,card);};card.onblur=()=>{if(dismissedAnchor===card)dismissedAnchor=null;hideHover();};card.onpointerdown=e=>{card.dataset.touch=String(e.pointerType==='touch');};card.onclick=()=>open(x,card);list.append(card);
+      const copy=node('span','item-card-copy');if(confirmedNew(x)){card.classList.add('item-forever-new');markNew(copy,x);}copy.append(node('strong','item-name',x.name),node('span','item-meta',(slots[x.slot]||categories[x.classs]||'Gegenstand')+' · Gegenstandsstufe '+(x.level||0)),node('small','item-meta',qualities[x.quality]+' · ID '+x.id));if(activeZone){const indices=sourceData.assignments[x.id]?.[activeZone.id]||[];const names=[...new Set(indices.map(i=>x.sourcemore?.[i]?.n).filter(Boolean))];copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+(names.join(' · ')||(language==='en'?'Zone drop; no specific boss listed':'Gebietsdrop; kein einzelner Boss angegeben'))));}if(activeProfession){copy.append(node('span','item-meta',language==='en'?'Classic recipe item':'Classic-Rezeptgegenstand'));if(x.stats.reqskillrank)copy.append(node('span','item-meta',(language==='en'?'Required skill: ':'Benötigte Fertigkeit: ')+x.stats.reqskillrank));const sources=[...new Set((x.sourcemore||[]).map(s=>s.n).filter(Boolean))];if(sources.length)copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+sources.join(' · ')));}card.append(copy);card.onpointerenter=e=>{if(e.pointerType!=='touch')showHover(x,card);};card.onpointerleave=()=>{if(dismissedAnchor===card)dismissedAnchor=null;delayHide();};card.onfocus=()=>{dismissedAnchor=null;if(card.dataset.touch!=='true')showHover(x,card);};card.onblur=()=>{if(dismissedAnchor===card)dismissedAnchor=null;hideHover();};card.onpointerdown=e=>{card.dataset.touch=String(e.pointerType==='touch');};card.onclick=()=>open(x,card);list.append(card);
     }
   }
   function open(x,button){
@@ -153,6 +153,23 @@
     const u=new URL(location.href);u.searchParams.set('item',x.id);u.hash='itemdatenbank';history.replaceState(null,'',u);
     if(!d.open)d.showModal();
   }
+  let recipesPending;
+  function loadRecipes(){return recipesPending||(recipesPending=fetch('forever-recipes.json?v=20260914').then(r=>{if(!r.ok)throw Error('Recipes unavailable');return r.json();}).catch(e=>{recipesPending=null;throw e;}));}
+  function selectProfession(profession){
+    activeProfession=profession;recipeIds=new Set(profession.ids);activeSet=null;setView('recipes');
+    $('itemSetTitle').textContent=(language==='en'?profession.nameEn:profession.nameDe)+(language==='en'?' · Classic recipes':' · Classic-Rezepte');
+    $('itemSetBack').textContent=language==='en'?'← Back to professions':'← Zurück zu den Berufen';
+    $('itemSetInfo').textContent=language==='en'?'Recipe items also listed in Classic. Not confirmed new Forever recipes. Trainer-only recipes are not included. Available reagents and crafting effects appear in the detail card; the database can contain unavailable entries.':'Rezeptgegenstände, die auch in Classic gelistet sind. Keine bestätigten neuen Forever-Rezepte. Reine Lehrerrezepte sind nicht enthalten. Verfügbare Zutaten und Herstellungseffekte stehen in der Detailkarte; die Datenbank kann nicht erhältliche Einträge enthalten.';
+    filter();
+  }
+  async function renderRecipeLinks(){
+    const host=$('professionRecipeLinks');if(!host)return;
+    try{const recipes=await loadRecipes();host.replaceChildren();for(const profession of recipes.professions){
+      const card=node('article','character-card');const head=node('div','character-heading');head.append(icon(profession),node('h3','',language==='en'?profession.nameEn:profession.nameDe));card.append(head,node('p','',profession.count+(language==='en'?' Classic recipe items':' Classic-Rezeptgegenstände')));
+      const a=node('a','loot-link',language==='en'?'Browse recipes →':'Rezepte ansehen →');a.href='forever.html?profession='+profession.id+(language==='en'?'&lang=en':'')+'#itemdatenbank';card.append(a);host.append(card);
+    }}catch(e){host.textContent=language==='en'?'Recipes could not be loaded. Please reload.':'Rezepte konnten nicht geladen werden. Bitte lade die Seite erneut.';}
+  }
+  renderRecipeLinks();
   let sourcesPending;
   function loadSources(){return sourcesPending||(sourcesPending=fetch('forever-loot-sources.json?v=20260914').then(r=>{if(!r.ok)throw Error('Loot sources unavailable');return r.json();}).catch(e=>{sourcesPending=null;throw e;}));}
   function zoneName(z){return language==='en'?z.nameEn:z.nameDe;}
@@ -178,11 +195,11 @@
       const r=await fetch('forever-items-data.json?v=20260914');if(!r.ok)throw Error('HTTP '+r.status);const incoming=await r.json();if(incoming.items.length!==incoming.count)throw Error('Unvollständige Daten');
       if(language==='en'){const er=await fetch('forever-items-en.json?v=20260914');if(!er.ok)throw Error('English item data unavailable');const english=await er.json();if(Object.keys(english).length!==incoming.count)throw Error('Incomplete English data');for(const x of incoming.items)Object.assign(x,english[x.id]);}
       const sr=await fetch('forever-sets-data.json?v=20260914');if(!sr.ok)throw Error('Set data unavailable');setData=await sr.json();
-      sourceData=await loadSources();data=incoming;for(const x of data.items)x.search=norm(x.name+' '+x.id+' '+(x.sourcemore||[]).map(s=>s.n||'').join(' '));
+      sourceData=await loadSources();recipeData=await loadRecipes();data=incoming;for(const x of data.items)x.search=norm(x.name+' '+x.id+' '+(x.sourcemore||[]).map(s=>s.n||'').join(' '));
       for(const [id,label] of Object.entries(categories)){if(data.items.some(x=>x.classs===Number(id))){const o=node('option','',label);o.value=id;$('itemCategory').append(o);}}
       qualities.forEach((label,id)=>{const o=node('option','',label);o.value=id;$('itemQuality').append(o);});
       for(const [id,label] of Object.entries(slots)){const o=node('option','',label);o.value=id;$('itemSlot').append(o);}
-      $('itemLoading').hidden=true;initSets();const params=new URL(location.href).searchParams;const requestedSet=setData.sets.find(s=>s.id===Number(params.get('set')));const requestedZone=sourceData.zones.find(z=>z.id===Number(params.get('zone')));if(requestedZone){selectZone(requestedZone);}else if(requestedSet){setClass=requestedSet.classes?.[0]||0;selectSet(requestedSet);}else setView(params.get('items')==='all'||params.has('item')?'all':'sets');
+      $('itemLoading').hidden=true;initSets();const params=new URL(location.href).searchParams;const requestedSet=setData.sets.find(s=>s.id===Number(params.get('set')));const requestedZone=sourceData.zones.find(z=>z.id===Number(params.get('zone')));const requestedProfession=recipeData.professions.find(p=>p.id===params.get('profession'));if(requestedProfession){selectProfession(requestedProfession);}else if(requestedZone){selectZone(requestedZone);}else if(requestedSet){setClass=requestedSet.classes?.[0]||0;selectSet(requestedSet);}else setView(params.get('items')==='all'||params.has('item')?'all':'sets');
       const requested=Number(new URL(location.href).searchParams.get('item'));if(requested){const x=data.items.find(x=>x.id===requested);if(x)open(x);}
     }catch(e){$('itemLoading').textContent='Die Itemdatenbank konnte nicht geladen werden. Bitte erneut versuchen.';$('itemRetry').hidden=false;data=null;}finally{pending=null;}})();return pending;
   }
@@ -193,7 +210,7 @@
   $('itemDialogClose').onclick=()=>$('itemDialog').close();
   $('itemDialog').addEventListener('close',()=>{const u=new URL(location.href);u.searchParams.delete('item');history.replaceState(null,'',u);opener?.focus();hideHover();});
   $('itemDialog').addEventListener('click',e=>{if(e.target===$('itemDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
-  addEventListener('forever-item-home',()=>{const u=new URL(location.href);for(const key of ['zone','set','item','items'])u.searchParams.delete(key);history.replaceState(null,'',u);setView('sets');});
+  addEventListener('forever-item-home',()=>{const u=new URL(location.href);for(const key of ['zone','set','item','items','profession'])u.searchParams.delete(key);history.replaceState(null,'',u);setView('sets');});
   addEventListener('forever-panel',e=>{hideHover();if(e.detail==='itemdatenbank')start();else if($('itemDialog').open)$('itemDialog').close();});
   if(location.hash==='#itemdatenbank')start();
 })();
