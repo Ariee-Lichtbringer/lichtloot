@@ -478,6 +478,20 @@
           grid-template-columns: 1fr;
         }
       }
+
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+      .loot-link { display: inline-flex; align-items: center; justify-content: center; padding: 11px 16px; border: 1px solid #34758a; border-radius: 9px; background: rgba(55,177,191,.13); color: var(--cyan); font-weight: 800; text-decoration: none; }
+      .loot-link:hover { background: rgba(55,177,191,.26); border-color: var(--cyan); }
+      a:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+      .loot-heading { margin-top: 24px; }
+      .loot-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; margin-top: 24px; background: var(--panel); }
+      .loot-table { border-collapse: collapse; width: 100%; table-layout: fixed; text-align: left; }
+      .loot-table caption { text-align: left; padding: 20px; color: var(--gold); font-weight: 850; border-bottom: 1px solid var(--line); }
+      .loot-table th { overflow-wrap: anywhere; padding: 16px 20px; background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+      .loot-table td { overflow-wrap: anywhere; padding: 50px 20px; text-align: center; color: var(--muted); }
+      .loot-empty { display: block; color: var(--text); font-size: 18px; margin-bottom: 8px; }
+      @media (max-width: 760px) { .loot-table th { padding: 12px 6px; font-size: 10px; letter-spacing: 0; } .loot-heading .pill { display: inline-block; margin-top: 14px; } }
+      .loot-navigation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
     </style>
   </head>
   <body>
@@ -788,11 +802,13 @@
                 <b>20 Spieler</b>
                 <h3>Hyjal Summit</h3>
                 <p>Der große neue Progressionsraid zum Auftakt.</p>
+              <a class="loot-link" href="#loot-hyjal-summit" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Hyjal Summit</span></a>
               </article>
               <article class="raid">
                 <b>10 Spieler</b>
                 <h3>Barrow Deeps</h3>
                 <p>Ein kompakter Endgame-Raid für kleinere Gruppen.</p>
+              <a class="loot-link" href="#loot-barrow-deeps" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Barrow Deeps</span></a>
               </article>
               <article class="raid">
                 <b>40 Spieler</b>
@@ -800,6 +816,7 @@
                 <p>
                   Der klassische Schlachtzug bleibt Teil des ersten Fahrplans.
                 </p>
+              <a class="loot-link" href="#loot-onyxias-hort" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Onyxias Hort</span></a>
               </article>
             </div>
           </section>
@@ -841,43 +858,27 @@
               </article>
             </div>
           </section>
-          <section class="section" id="loot">
-            <div class="section-head">
-              <h2>Lootlisten &amp; GuildLoot</h2>
-              <p>
-                Der Bereich ist vorbereitet und wird schrittweise mit echten
-                Spieldaten gefüllt.
-              </p>
-            </div>
-            <div class="grid3">
-              <article class="card">
-                <div class="copy">
-                  <span class="tag">Als Nächstes</span>
-                  <h3>Dungeon-Loot</h3>
-                  <p>Boss, Gegenstand, Slot, Rüstungsklasse und Dropquelle.</p>
-                </div>
-              </article>
-              <article class="card">
-                <div class="copy">
-                  <span class="tag">Ab Raidstart</span>
-                  <h3>Raid-Loot</h3>
-                  <p>
-                    Vollständige Tabellen für Barrow Deeps, Hyjal Summit und
-                    weitere Raids.
-                  </p>
-                </div>
-              </article>
-              <article class="card">
-                <div class="copy">
-                  <span class="tag">GuildLoot</span>
-                  <h3>Prios &amp; Planung</h3>
-                  <p>
-                    Später direkte Verbindung mit Anmeldung, Wunschliste und
-                    P0/P0+.
-                  </p>
-                </div>
-              </article>
-            </div>
+          <section class="section" id="loot"><div class="section-head"><h2>Raid-Lootlisten</h2><p>Die Lootseiten für die drei bekannten Raids sind vorbereitet. Gegenstände und Dropquellen ergänzen wir mit den Daten aus der Beta.</p></div><div class="raid-grid"><article class="raid"><b>20 Spieler</b><h3>Hyjal Summit</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="#loot-hyjal-summit" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Hyjal Summit</span></a></article><article class="raid"><b>10 Spieler</b><h3>Barrow Deeps</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="#loot-barrow-deeps" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Barrow Deeps</span></a></article><article class="raid"><b>40 Spieler</b><h3>Onyxias Hort</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="#loot-onyxias-hort" data-forever-panel>Lootseite öffnen<span class="sr-only"> · Onyxias Hort</span></a></article></div></section>
+          <section class="section raid-loot" id="loot-hyjal-summit" aria-labelledby="title-hyjal-summit">
+            <a class="loot-link" href="#raids" data-forever-panel>← Zur Raidübersicht</a>
+            <div class="section-head loot-heading"><div><span class="tag">WoW Forever · Raid-Loot · 20 Spieler</span><h2 id="title-hyjal-summit" tabindex="-1">Hyjal Summit</h2></div><span class="pill">Beta ausstehend</span></div>
+            <div class="notice"><strong>Lootdaten folgen mit der Beta.</strong><br>Hier findest du später die Gegenstände und ihre Dropquellen für Hyjal Summit. Aktuell sind noch keine Lootdaten hinterlegt.</div>
+            <div class="loot-table-wrap" role="region" aria-label="Loottabelle Hyjal Summit" tabindex="0"><table class="loot-table"><caption>Lootübersicht · Hyjal Summit</caption><thead><tr><th scope="col">Gegenstand</th><th scope="col">Boss / Quelle</th><th scope="col">Slot</th><th scope="col">Rüstungsklasse</th></tr></thead><tbody><tr><td colspan="4"><strong class="loot-empty">Noch keine Gegenstände verfügbar</strong>Die Lootliste wird mit den Daten aus der Beta ergänzt.</td></tr></tbody></table></div>
+            <div class="loot-navigation"><a class="loot-link" href="#loot" data-forever-panel>Alle Raid-Lootseiten</a><a class="loot-link" href="#loot-barrow-deeps" data-forever-panel>Barrow Deeps →</a></div>
+          </section>
+          <section class="section raid-loot" id="loot-barrow-deeps" aria-labelledby="title-barrow-deeps">
+            <a class="loot-link" href="#raids" data-forever-panel>← Zur Raidübersicht</a>
+            <div class="section-head loot-heading"><div><span class="tag">WoW Forever · Raid-Loot · 10 Spieler</span><h2 id="title-barrow-deeps" tabindex="-1">Barrow Deeps</h2></div><span class="pill">Beta ausstehend</span></div>
+            <div class="notice"><strong>Lootdaten folgen mit der Beta.</strong><br>Hier findest du später die Gegenstände und ihre Dropquellen für Barrow Deeps. Aktuell sind noch keine Lootdaten hinterlegt.</div>
+            <div class="loot-table-wrap" role="region" aria-label="Loottabelle Barrow Deeps" tabindex="0"><table class="loot-table"><caption>Lootübersicht · Barrow Deeps</caption><thead><tr><th scope="col">Gegenstand</th><th scope="col">Boss / Quelle</th><th scope="col">Slot</th><th scope="col">Rüstungsklasse</th></tr></thead><tbody><tr><td colspan="4"><strong class="loot-empty">Noch keine Gegenstände verfügbar</strong>Die Lootliste wird mit den Daten aus der Beta ergänzt.</td></tr></tbody></table></div>
+            <div class="loot-navigation"><a class="loot-link" href="#loot" data-forever-panel>Alle Raid-Lootseiten</a><a class="loot-link" href="#loot-onyxias-hort" data-forever-panel>Onyxias Hort →</a></div>
+          </section>
+          <section class="section raid-loot" id="loot-onyxias-hort" aria-labelledby="title-onyxias-hort">
+            <a class="loot-link" href="#raids" data-forever-panel>← Zur Raidübersicht</a>
+            <div class="section-head loot-heading"><div><span class="tag">WoW Forever · Raid-Loot · 40 Spieler</span><h2 id="title-onyxias-hort" tabindex="-1">Onyxias Hort</h2></div><span class="pill">Beta ausstehend</span></div>
+            <div class="notice"><strong>Lootdaten folgen mit der Beta.</strong><br>Hier findest du später die Gegenstände und ihre Dropquellen für Onyxias Hort. Aktuell sind noch keine Lootdaten hinterlegt.</div>
+            <div class="loot-table-wrap" role="region" aria-label="Loottabelle Onyxias Hort" tabindex="0"><table class="loot-table"><caption>Lootübersicht · Onyxias Hort</caption><thead><tr><th scope="col">Gegenstand</th><th scope="col">Boss / Quelle</th><th scope="col">Slot</th><th scope="col">Rüstungsklasse</th></tr></thead><tbody><tr><td colspan="4"><strong class="loot-empty">Noch keine Gegenstände verfügbar</strong>Die Lootliste wird mit den Daten aus der Beta ergänzt.</td></tr></tbody></table></div>
+            <div class="loot-navigation"><a class="loot-link" href="#loot" data-forever-panel>Alle Raid-Lootseiten</a><a class="loot-link" href="#loot-hyjal-summit" data-forever-panel>Hyjal Summit →</a></div>
           </section>
           <aside class="notice">
             <strong>Quellen und Stand:</strong> Medien und Eckdaten stammen aus
@@ -919,15 +920,17 @@
           ),
         );
         links.forEach((a) => {
-          const active = a.hash === "#" + (overview ? "start" : name);
+          const active = a.hash === "#" + (overview ? "start" : name.startsWith("loot-") ? "loot" : name);
           a.classList.toggle("active", active);
           a.setAttribute("aria-current", active ? "page" : "false");
         });
         if (writeHash)
-          history.replaceState(null, "", "#" + (overview ? "start" : name));
+          history.pushState(null, "", "#" + (overview ? "start" : name));
+        document.title = name.startsWith("loot-") && document.getElementById(name) ? document.getElementById(name).querySelector("h2").textContent + " · Loot · WoW Forever · GuildLoot" : "WoW Forever · GuildLoot";
+        if (writeHash) document.getElementById(name)?.querySelector("h2")?.focus({ preventScroll: true });
         scrollTo({ top: 0, behavior: "smooth" });
       }
-      links.forEach((a) =>
+      [...links, ...document.querySelectorAll("[data-forever-panel]")].forEach((a) =>
         a.addEventListener("click", (event) => {
           event.preventDefault();
           showPanel(a.hash.slice(1));
