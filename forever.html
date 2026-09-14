@@ -492,6 +492,8 @@
       .loot-empty { display: block; color: var(--text); font-size: 18px; margin-bottom: 8px; }
       @media (max-width: 760px) { .loot-table th { padding: 12px 6px; font-size: 10px; letter-spacing: 0; } .loot-heading .pill { display: inline-block; margin-top: 14px; } }
       .loot-navigation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
+      .professions-heading{margin-top:36px}.professions-table{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.professions-table table{width:100%;border-collapse:collapse;text-align:left}.professions-table th,.professions-table td{padding:16px;border-bottom:1px solid var(--line)}.professions-table th{background:var(--panel2);color:var(--cyan)}.professions-table tr:last-child td{border-bottom:0}.professions-note{color:var(--muted);line-height:1.6}.professions-gallery{margin-top:24px}.professions-gallery img{object-fit:contain;background:#07131d}.professions-source{margin-top:24px}.professions-feature .copy p{color:var(--muted);line-height:1.55}.professions-feature img{height:auto;aspect-ratio:16/9}.professions-feature .list{margin-top:24px}@media(max-width:760px){.professions-table th,.professions-table td{padding:12px 8px;font-size:12px;overflow-wrap:anywhere}.professions-table table{table-layout:fixed}}
+      .ruleset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}@media(max-width:1100px){.ruleset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.ruleset-grid{grid-template-columns:1fr}}
     </style>
   </head>
   <body>
@@ -508,6 +510,7 @@
           ><a href="#systeme"><i>⚙</i>Spielsysteme</a
           ><a href="#talente"><i>◆</i>Talentbäume</a
           ><a href="#raids"><i>⚔</i>Raids</a><a href="#videos"><i>▶</i>Videos</a
+          ><a href="#berufe"><i>⚒</i>Berufe</a
           ><a href="#loot"><i>▣</i>Lootlisten</a
           ><a class="back" href="start.html?guild=lichtloot"
             ><i>←</i>GuildLoot</a
@@ -657,6 +660,16 @@
                 Von Blizzard bestätigte Details aus dem „What’s Next“-Panel.
               </p>
             </div>
+            <div class="section-head"><h2>Spielstile statt Realm-Auswahl</h2><p>Forever ersetzt klassische Servernamen durch getrennte Regelwelten.</p></div>
+            <div class="ruleset-grid">
+              <article class="card"><div class="copy"><span class="tag">Zum Start</span><h3>Normal</h3><p>PvE mit einvernehmlichem PvP.</p></div></article>
+              <article class="card"><div class="copy"><span class="tag">Zum Start</span><h3>PvP</h3><p>In umkämpften Gebieten können Gegner der anderen Fraktion angreifen.</p></div></article>
+              <article class="card"><div class="copy"><span class="tag">Zum Start</span><h3>Roleplay</h3><p>Rollenspiel mit besonderen Vorgaben für Namen und Verhalten.</p></div></article>
+              <article class="card"><div class="copy"><span class="tag">Nach dem Release</span><h3>Hardcore</h3><p>Der Tod ist endgültig. Danach ist ein Transfer in einen anderen Spielstil mit Wiederbelebung möglich.</p></div></article>
+            </div>
+            <div class="facts"><article class="card"><div class="copy"><h3>Gemeinsam spielen</h3><p>Gruppen, Dungeons und Raids benötigen denselben Spielstil. Horde und Allianz bleiben getrennt. Stimmt eure Wahl deshalb mit Freunden und Gilde ab.</p></div></article><article class="card"><div class="copy"><h3>Account-Fortschritt</h3><p>Normal, PvP und Roleplay teilen Sammlungen und Vermächtnispunkte. Fortschritt wird nicht nach Hardcore übernommen; nach einem Tod kann Hardcore-Fortschritt beim Transfer verfügbar werden.</p></div></article><article class="card"><div class="copy"><h3>Sprache und Namen</h3><p>Eine Sprachpräferenz und wiederkehrende Begegnungen sollen Gemeinschaften fördern. Charaktere erhalten zwei Namen; die Kombination ist innerhalb einer Region eindeutig.</p></div></article></div>
+            <div class="notice professions-source"><strong>Angekündigtes System · Stand 14. September 2026.</strong> Quelle: <a href="https://www.goldgoblin.net/wow-forever-schafft-klassische-server-ab-diese-vier-spielstile-ersetzen-die-realms/" target="_blank" rel="noopener noreferrer">GoldGoblin: Die vier Spielstile ↗</a>.</div>
+            <div class="section-head professions-heading"><h2>Weitere Spielsysteme</h2></div>
             <div class="grid3">
               <article class="card">
                 <div class="copy">
@@ -857,6 +870,23 @@
                 ><strong>What’s Next · BlizzCon 2026</strong>
               </article>
             </div>
+          </section>
+          <section class="section" id="berufe" aria-labelledby="professions-title">
+            <div class="section-head"><h2 id="professions-title">Berufe in WoW Forever</h2><p>Rezepte, gemeinsame Lager und Fortschritt für deinen Account.</p></div>
+            <div class="feature professions-feature">
+              <article class="feature-card"><img src="https://wow.4fansites.de/bilder/news/wow-forever-berufe.webp" alt="Vorschau auf die Berufe in WoW Forever" loading="lazy"><div class="copy"><span class="tag">Handwerk</span><h3>Über 600 neue Rezepte</h3><p>Alle Berufe erhalten Ergänzungen für unterschiedliche Fertigkeitsstufen. Bestimmte Dungeonbosse liefern seltene Baupläne. Gekochtes Essen verbessert Attribute und die Erfahrung durch besiegte Gegner.</p></div></article>
+              <article class="card"><div class="copy"><span class="tag">Gemeinsam unterwegs</span><h3>Vom Lagerfeuer zum Treffpunkt</h3><p>Lager können Händler, Reparaturen und Arbeitsplätze bieten. Nach einer kurzen Rast wirken Stärkungen eine Stunde.</p><ul class="list"><li>Einfaches Feuer: drei Objekte</li><li>Verbesserte Feuer: fünf oder zehn Objekte</li><li>Ein Beitrag pro Spieler; gemeinsame Abklingzeit: eine Stunde</li></ul></div></article>
+            </div>
+            <div class="section-head professions-heading"><h2>Was dein Beruf beiträgt</h2><p>Je Beruf sind drei Lagerobjekte vorgesehen; erste Varianten beginnen bei Fertigkeit 20.</p></div>
+            <div class="professions-table" role="region" aria-label="Berufe und Lagerobjekte" tabindex="0"><table><thead><tr><th scope="col">Beruf</th><th scope="col">Objekt</th><th scope="col">Nutzen</th></tr></thead><tbody>
+            <tr><td>Schmiedekunst</td><td>Schleifstein</td><td>Angriffskraft</td></tr><tr><td>Schneiderei</td><td>Fraktionsbanner</td><td>Willenskraft</td></tr><tr><td>Kräuterkunde</td><td>Räucherkerze</td><td>Intelligenz</td></tr><tr><td>Alchemie</td><td>Labor</td><td>Arbeitsplatz</td></tr><tr><td>Lederverarbeitung</td><td>Gerbgestell</td><td>Fortgeschrittene Rezepte</td></tr><tr><td>Kochkunst</td><td>Größeres Feuer</td><td>Mehr Lagerplätze</td></tr></tbody></table></div>
+            <p class="professions-note">Entsprechende Klassenbuffs und Lagerboni sind nicht stapelbar.</p>
+            <div class="grid3 professions-gallery">
+              <article class="card media-card"><img src="https://wow.4fansites.de/bilder/news/wow-forever-berufe-rezepte.webp" alt="Gezeigte Berufsrezepte für WoW Forever" loading="lazy"><div class="copy"><h3>Neue Herstellungsmöglichkeiten</h3></div></article>
+              <article class="card media-card"><img src="https://wow.4fansites.de/bilder/news/wow-forever-lager.webp" alt="Vorschau auf ein Lager in WoW Forever" loading="lazy"><div class="copy"><h3>Handwerk im Lager</h3></div></article>
+              <article class="card media-card"><img src="https://wow.4fansites.de/bilder/news/wow-forever-vermaechtnisbaum.webp" alt="Vorschau auf den Vermächtnisbaum" loading="lazy"><div class="copy"><h3>Vermächtnis für Sammler</h3><p>„Reiche Ernte“ erhöht Materialerträge beim Bergbau, Kräutersammeln und Kürschnern. Punkte werden accountweit verdient und pro Charakter verteilt: zunächst bis zu 16 von 65 erreichbaren Punkten.</p></div></article>
+            </div>
+            <div class="notice professions-source"><strong>Vorschau · Stand 14. September 2026.</strong> Details können sich während der Beta ändern. Informationen und Abbildungen: <a href="https://wow.4fansites.de/news,11368,World-of-Warcraft-Forever-Berufe-im-UEberblick-Rezepte-Lager-und-Boni.html" target="_blank" rel="noopener noreferrer">4Fansites: Berufe, Lager und Boni ↗</a>.</div>
           </section>
           <section class="section" id="loot"><div class="section-head"><h2>Raid-Lootlisten</h2><p>Die Lootseiten für die drei bekannten Raids sind vorbereitet. Gegenstände und Dropquellen ergänzen wir mit den Daten aus der Beta.</p></div><div class="raid-grid"><article class="raid"><b>20 Spieler</b><h3>Hyjal Summit</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-hyjal-summit-loot.html">Lootseite öffnen<span class="sr-only"> · Hyjal Summit</span></a></article><article class="raid"><b>10 Spieler</b><h3>Barrow Deeps</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-barrow-deeps-loot.html">Lootseite öffnen<span class="sr-only"> · Barrow Deeps</span></a></article><article class="raid"><b>40 Spieler</b><h3>Onyxias Hort</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-onyxias-hort-loot.html">Lootseite öffnen<span class="sr-only"> · Onyxias Hort</span></a></article></div></section>
           <aside class="notice">
