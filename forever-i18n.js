@@ -4,7 +4,12 @@ let lang=new URLSearchParams(location.search).get('lang');
 if(!['de','en'].includes(lang)){try{lang=localStorage.getItem('guildloot_forever_language');}catch{} }
 if(!['de','en'].includes(lang))lang='de';
 document.documentElement.lang=lang;
-const pairs=`Entdecken|Explore
+const pairs=`Goldener Rahmen: bestätigte neue Forever-Items.|Gold border: confirmed new Forever items.
+Bekannte Fundortzuordnungen|Known source assignments
+Wowhead-Datenstand vom 14. September 2026. Übernommene Classic-Daten, für Forever noch nicht bestätigt. Die Listen enthalten nur bisher eindeutig zugeordnete Items.|Wowhead data as of 14 September 2026. Inherited Classic data, not yet confirmed for Forever. These lists contain only items with known source assignments.
+Lootlisten werden geladen …|Loading loot lists …
+Bekannte Classic-Zuordnungen ansehen; Forever-Loot noch nicht bestätigt.|View known Classic assignments; Forever loot is not yet confirmed.
+Entdecken|Explore
 Übersicht|Overview
 Welten & News|World & News
 Spielsysteme|Game systems
