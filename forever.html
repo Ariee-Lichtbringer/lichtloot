@@ -495,6 +495,8 @@
       .professions-heading{margin-top:36px}.professions-table{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.professions-table table{width:100%;border-collapse:collapse;text-align:left}.professions-table th,.professions-table td{padding:16px;border-bottom:1px solid var(--line)}.professions-table th{background:var(--panel2);color:var(--cyan)}.professions-table tr:last-child td{border-bottom:0}.professions-note{color:var(--muted);line-height:1.6}.professions-gallery{margin-top:24px}.professions-gallery img{object-fit:contain;background:#07131d}.professions-source{margin-top:24px}.professions-feature .copy p{color:var(--muted);line-height:1.55}.professions-feature img{height:auto;aspect-ratio:16/9}.professions-feature .list{margin-top:24px}@media(max-width:760px){.professions-table th,.professions-table td{padding:12px 8px;font-size:12px;overflow-wrap:anywhere}.professions-table table{table-layout:fixed}}
       .ruleset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}@media(max-width:1100px){.ruleset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.ruleset-grid{grid-template-columns:1fr}}
     </style>
+    <link rel="stylesheet" href="forever-talents.css?v=20260914">
+    <script defer src="forever-talents.js?v=20260914"></script>
   </head>
   <body>
     <div class="shell">
@@ -769,38 +771,20 @@
               </article>
             </div>
           </section>
-          <section class="section" id="talente">
-            <div class="section-head">
-              <h2>Veröffentlichte Talentbäume</h2>
-              <p>
-                Erstes offizielles Beispiel; Werte und Verbindungen können sich
-                in der Beta noch ändern.
-              </p>
-            </div>
-            <div class="talent-layout">
-              <article class="feature-card talent-shot">
-                <img
-                  src="images/forever/paladin-talents.png"
-                  alt="Offiziell gezeigter Paladin-Talentbaum mit Heilig, Schutz und Vergeltung"
-                  loading="lazy"
-                />
-              </article>
-              <article class="card talent-copy">
-                <span class="tag">Paladin · Vorschau</span>
-                <h3>Drei Spezialisierungen</h3>
-                <ul class="list">
-                  <li>Heilig</li>
-                  <li>Schutz</li>
-                  <li>Vergeltung</li>
-                  <li>Primärer und gesperrter sekundärer Baum sichtbar</li>
-                </ul>
-                <p>
-                  Weitere Klassenbäume ergänzen wir, sobald Blizzard sie
-                  veröffentlicht oder die Beta verlässlich ausgelesen werden
-                  kann.
-                </p>
-              </article>
-            </div>
+          <section class="section" id="talente" aria-labelledby="talent-title">
+            <div class="section-head"><h2 id="talent-title">Forever-Talentplaner</h2><p>Neun Klassen, drei Talentbäume und 51 Punkte. Plane deinen Build und teile ihn per Link.</p></div>
+            <div class="notice">Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen liegen derzeit auf Englisch vor. Datenstand: 14. September 2026.</div>
+            <div class="talent-toolbar"><label>Klasse<select id="talentClass" aria-label="Klasse auswählen"></select></label><span class="talent-points" id="talentPoints"></span><button type="button" id="talentReset">Alle Punkte zurücksetzen</button><label class="talent-compare"><input type="checkbox" id="talentClassic">Classic-Vergleich anzeigen</label></div>
+            <p id="talentHelp" class="talent-hint">Linksklick: Punkt hinzufügen · Rechtsklick oder Minus-Taste: entfernen · Umschalt-Klick: auffüllen. Auf dem Handy stehen Plus und Minus in den Talentdetails zur Verfügung.</p>
+            <p class="talent-hint">★ Neu in Forever · ◆ Geändert · ? Classic-Daten, für Forever noch unbestätigt</p>
+            <div id="talentLoading" class="talent-loading">Talentbäume werden geladen …</div><div class="talent-trees" id="talentTrees"></div>
+            <aside id="talentDetails" class="talent-details" aria-label="Talentbeschreibung"></aside>
+            <p id="talentMessage" class="talent-message" role="status" aria-live="polite"></p>
+            <div class="talent-share-tools"><input id="talentShare" readonly aria-label="Link zu deinem Build"><button type="button" id="talentCopy">Build-Link kopieren</button><a id="talentOriginal" class="loot-link" href="https://wowforevertalents.com/shaman/" target="_blank" rel="noopener noreferrer">Build im Original öffnen ↗</a></div>
+            <div class="talent-share-tools"><input id="talentImport" placeholder="Build-Code oder Link einfügen" aria-label="Build importieren"><button type="button" id="talentImportButton">Importieren</button></div>
+            <div class="talent-storage"><label>Build-Name<input id="talentName" maxlength="80" placeholder="Mein Build"></label><button id="talentSave" type="button">Im Browser speichern</button><label>Meine Builds<select id="talentSaved"></select></label></div>
+            <div class="notice">Talentdaten: <a href="https://wowforevertalents.com/about/" target="_blank" rel="noopener noreferrer">WoW Forever Talents ↗</a>. Voraussetzungen und Punkte werden geprüft. Eigene Builds bleiben in diesem Browser; über den Build-Link kannst du sie weitergeben.
+            <div class="talent-extras"><a class="loot-link" href="https://wowforevertalents.com/builds/" target="_blank" rel="noopener noreferrer">Community-Builds ↗</a><a class="loot-link" href="https://wowforevertalents.com/" target="_blank" rel="noopener noreferrer">Weitere Werkzeuge im Original ↗</a></div></div>
           </section>
           <section class="section" id="raids">
             <div class="section-head">
@@ -890,7 +874,7 @@
           </section>
           <section class="section" id="loot"><div class="section-head"><h2>Raid-Lootlisten</h2><p>Die Lootseiten für die drei bekannten Raids sind vorbereitet. Gegenstände und Dropquellen ergänzen wir mit den Daten aus der Beta.</p></div><div class="raid-grid"><article class="raid"><b>20 Spieler</b><h3>Hyjal Summit</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-hyjal-summit-loot.html">Lootseite öffnen<span class="sr-only"> · Hyjal Summit</span></a></article><article class="raid"><b>10 Spieler</b><h3>Barrow Deeps</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-barrow-deeps-loot.html">Lootseite öffnen<span class="sr-only"> · Barrow Deeps</span></a></article><article class="raid"><b>40 Spieler</b><h3>Onyxias Hort</h3><p>Lootdaten folgen mit der Beta.</p><a class="loot-link" href="loot/forever-onyxias-hort-loot.html">Lootseite öffnen<span class="sr-only"> · Onyxias Hort</span></a></article></div></section>
           <aside class="notice">
-            <strong>Quellen und Stand:</strong> Medien und Eckdaten stammen aus
+            <strong>Grundlagen und Medien:</strong> Die ursprünglichen Eckdaten stammen aus
             den offiziellen Blizzard-Beiträgen vom 12.–13. September 2026.
             Beta-Inhalte können sich ändern.
             <a
@@ -939,6 +923,7 @@
           history.pushState(null, "", "#" + (overview ? "start" : name));
         document.title = name.startsWith("loot-") && document.getElementById(name) ? document.getElementById(name).querySelector("h2").textContent + " · Loot · WoW Forever · GuildLoot" : "WoW Forever · GuildLoot";
         if (writeHash) document.getElementById(name)?.querySelector("h2")?.focus({ preventScroll: true });
+        dispatchEvent(new CustomEvent("forever-panel", {detail: overview ? "start" : name}));
         scrollTo({ top: 0, behavior: "smooth" });
       }
       [...links, ...document.querySelectorAll("[data-forever-panel]")].forEach((a) =>
