@@ -504,9 +504,10 @@
     <script defer src="forever-i18n.js?v=20260914-recipes"></script>
     <script defer src="forever-talents.js?v=20260914-de"></script>
   <link rel="stylesheet" href="forever-items.css?v=20260914-sources">
-    <script defer src="forever-items.js?v=20260914-recipes"></script>
+    <link rel="stylesheet" href="forever-planning.css?v=20260914-planning"><script defer src="forever-planning.js?v=20260914-planning"></script>
+    <script defer src="forever-items.js?v=20260914-planning"></script>
     <link rel="stylesheet" href="forever-character.css?v=20260914">
-    <script defer src="forever-character.js?v=20260914"></script>
+    <script defer src="forever-character.js?v=20260914-planning"></script>
   </head>
   <body>
     <div class="shell">
@@ -520,6 +521,7 @@
           <div class="nav-group" role="group" aria-labelledby="nav-discover">
             <small id="nav-discover">Entdecken</small>
             <a class="active" href="#start"><i aria-hidden="true">⌂</i>Übersicht</a>
+            <a href="#aenderungen"><span aria-hidden="true">✧</span><span data-plan-de="Was ist neu?" data-plan-en="What’s new?">Was ist neu?</span></a>
             <a href="#news"><i aria-hidden="true">✦</i>Welten &amp; News</a>
             <a href="#videos"><i aria-hidden="true">▶</i>Videos</a>
           </div>
@@ -532,6 +534,7 @@
             <a href="#talente"><i aria-hidden="true">◆</i>Talentbäume</a>
             <a href="#berufe"><i aria-hidden="true">⚒</i>Berufe</a>
           </div>
+          <div class="nav-group" role="group" aria-labelledby="nav-plan"><small id="nav-plan" data-plan-de="Meine Planung" data-plan-en="My plans">Meine Planung</small><a href="#favoriten"><span aria-hidden="true">☆</span><span data-plan-de="Favoriten" data-plan-en="Favorites">Favoriten</span></a><a href="#materialrechner"><span aria-hidden="true">▤</span><span data-plan-de="Materialrechner" data-plan-en="Material calculator">Materialrechner</span></a></div>
           <div class="nav-group" role="group" aria-labelledby="nav-loot">
             <small id="nav-loot">Ausrüstung &amp; Loot</small>
             <a href="#itemdatenbank"><i aria-hidden="true">▤</i>Itemdatenbank</a>
@@ -805,11 +808,15 @@
             <p id="talentMessage" class="talent-message" role="status" aria-live="polite"></p>
             <div class="talent-share-tools"><input id="talentShare" readonly aria-label="Link zu deinem Build"><button type="button" id="talentCopy">Build-Link kopieren</button><a id="talentOriginal" class="loot-link" href="https://wowforevertalents.com/shaman/" target="_blank" rel="noopener noreferrer">Build im Original öffnen ↗</a></div>
             <div class="talent-share-tools"><input id="talentImport" placeholder="Build-Code oder Link einfügen" aria-label="Build importieren"><button type="button" id="talentImportButton">Importieren</button></div>
-            <div class="talent-storage"><label>Build-Name<input id="talentName" maxlength="80" placeholder="Mein Build"></label><button id="talentSave" type="button">Im Browser speichern</button><label>Meine Builds<select id="talentSaved"></select></label></div>
+            <div class="character-actions"><button type="button" id="favoriteBuild" data-plan-de="☆ Build merken" data-plan-en="☆ Save favorite build">☆ Build merken</button><a class="loot-link" href="#favoriten" data-forever-panel data-plan-de="Meine Favoriten" data-plan-en="My favorites">Meine Favoriten</a></div><div class="talent-storage"><label>Build-Name<input id="talentName" maxlength="80" placeholder="Mein Build"></label><button id="talentSave" type="button">Im Browser speichern</button><label>Meine Builds<select id="talentSaved"></select></label></div>
             <div class="notice">Talentdaten: <a href="https://wowforevertalents.com/about/" target="_blank" rel="noopener noreferrer">WoW Forever Talents ↗</a>. Voraussetzungen und Punkte werden geprüft. Eigene Builds bleiben in diesem Browser; über den Build-Link kannst du sie weitergeben.
             <div class="talent-extras"><a class="loot-link" href="https://wowforevertalents.com/builds/" target="_blank" rel="noopener noreferrer">Community-Builds ↗</a><a class="loot-link" href="https://wowforevertalents.com/" target="_blank" rel="noopener noreferrer">Weitere Werkzeuge im Original ↗</a></div></div>
           </section>
 
+
+          <section class="section" id="favoriten"><div class="section-head"><h2 tabindex="-1" data-plan-de="Meine Favoriten" data-plan-en="My favorites">Meine Favoriten</h2></div><p data-plan-de="Items, Rezepte und Builds in diesem Browser merken – ohne Login. Beim Löschen der Browserdaten gehen sie verloren." data-plan-en="Save items, recipes and builds in this browser without signing in. Clearing browser data removes them.">Items, Rezepte und Builds in diesem Browser merken – ohne Login. Beim Löschen der Browserdaten gehen sie verloren.</p><div id="favoriteTypes" class="character-actions"></div><div id="favoriteList" class="character-grid"></div></section>
+          <section class="section" id="materialrechner"><div class="section-head"><h2 tabindex="-1" data-plan-de="Materialrechner" data-plan-en="Material calculator">Materialrechner</h2></div><p data-plan-de="Wähle Rezepte und die Anzahl der Herstellungsvorgänge. Gleiche Zutaten werden zusammengezählt. Die Liste bleibt in diesem Browser gespeichert." data-plan-en="Choose recipes and crafting counts. Matching ingredients are added together. This list is saved in this browser.">Wähle Rezepte und die Anzahl der Herstellungsvorgänge. Gleiche Zutaten werden zusammengezählt. Die Liste bleibt in diesem Browser gespeichert.</p><div class="plan-box"><label><span data-plan-de="Rezept suchen" data-plan-en="Find recipe">Rezept suchen</span><input id="planSearch" type="search" placeholder="Rezeptname …"></label><label><span data-plan-de="Beruf" data-plan-en="Profession">Beruf</span><select id="planProfession"></select></label><div id="planRecipeResults" class="plan-results"></div></div><div id="craftQueue"></div><div class="plan-box"><h3 data-plan-de="Einkaufsliste" data-plan-en="Shopping list">Einkaufsliste</h3><p data-plan-de="Rohbedarf für die gewählten Herstellungsvorgänge, ohne Abzug deines Inventars. Zwischenprodukte werden nicht automatisch aufgelöst." data-plan-en="Materials needed for the selected crafts, before deducting your inventory. Intermediate ingredients are not automatically expanded.">Rohbedarf für die gewählten Herstellungsvorgänge, ohne Abzug deines Inventars. Zwischenprodukte werden nicht automatisch aufgelöst.</p><div id="shoppingList"></div><button id="copyShopping" type="button" data-plan-de="Einkaufsliste kopieren" data-plan-en="Copy shopping list">Einkaufsliste kopieren</button><textarea id="shoppingFallback" readonly hidden aria-label="Einkaufsliste"></textarea></div></section>
+          <section class="section" id="aenderungen"><div class="section-head"><h2 tabindex="-1" data-plan-de="Was ist neu?" data-plan-en="What’s new?">Was ist neu?</h2></div><p data-plan-de="Änderungen an unserer Forever-Seite und ihren Daten. Das sind keine offiziellen Patchnotes." data-plan-en="Updates to our Forever site and its data. These are not official patch notes.">Änderungen an unserer Forever-Seite und ihren Daten. Das sind keine offiziellen Patchnotes.</p><div id="foreverChangeLog"></div></section>
           <section class="section" id="itemdatenbank" aria-labelledby="item-title">
             <div class="section-head"><h2 id="item-title" tabindex="-1">Itemdatenbank</h2><p>Alle verfügbaren Gegenstände aus Wowheads Forever-Datenbank – mit deutschen Namen, Werten und Quellen.</p></div>
             <div class="notice">Datenstand: 14. September 2026 · Vorschau vor der Beta. Enthält auch übernommene Classic- und interne Datenbankeinträge. Werte und Fundorte sind noch keine Bestätigung für die neuen Forever-Raids. Einige interne Namen sind bei der Quelle noch nicht übersetzt.</div>
@@ -907,7 +914,7 @@
 <section class="section" id="faehigkeiten"><div class="section-head"><h2 tabindex="-1">Fähigkeiten</h2><p>Zauber und Angriffe nach Klasse, Bereich und Rang durchsuchen.</p></div><div class="notice">Vorschau vom 14. September 2026. Fähigkeiten und Volksboni basieren auf gezeigten Inhalten und Classic-Daten; Beta-Werte und deutsche Bezeichnungen können sich ändern.</div><p class="character-loading">Daten werden geladen …</p><div id="abilityClasses" class="character-choices" aria-label="Klasse wählen"></div><label for="abilitySearch">Fähigkeit suchen</label><input id="abilitySearch" class="character-search" type="search" placeholder="Name oder Beschreibung …"><div id="abilitySchools" class="character-chips" aria-label="Bereich wählen"></div><div id="abilityStatuses" class="character-chips" aria-label="Vorschaustatus wählen"></div><p id="abilityCount" aria-live="polite"></p><p>Mouseover zeigt die Kurzinfo. Anklicken öffnet alle Ränge und den Classic-Vergleich.</p><div id="abilityCards" class="character-grid"></div><p class="character-muted">Quellen: <a href="https://www.wowhead.com/forever/guide/new-race-class-combinations" target="_blank" rel="noopener noreferrer">Wowhead: Völker und Klassen</a> · <a href="https://www.wowforevertalents.com/abilities/" target="_blank" rel="noopener noreferrer">Forever Talents: Fähigkeiten</a> · <a href="https://worldofwarcraft.blizzard.com/en-us/news/24303313" target="_blank" rel="noopener noreferrer">Blizzard: Deep Dive</a></p></section>
           <section class="section" id="berufe" aria-labelledby="professions-title">
             <div class="section-head"><h2 id="professions-title">Berufe in WoW Forever</h2><p>Rezepte, gemeinsame Lager und Fortschritt für deinen Account.</p></div>
-            <div class="section-head professions-heading"><h2>Bekannte Classic-Rezepte</h2><p>813 Rezeptgegenstände, nach Beruf sortiert.</p></div><p class="professions-note">Dieser Bestand ist auch in Classic gelistet und bestätigt keine neuen Forever-Rezepte. Klassenzauberbücher und Bücher zum Erhöhen der Berufsstufe sind ausgeklammert. Reine Lehrerrezepte sind nicht enthalten. Zutaten und Herstellungseffekte zeigt die Detailkarte, soweit verfügbar.</p><div id="professionRecipeLinks" class="character-grid"><p>Rezepte werden geladen …</p></div><div class="feature professions-feature">
+            <div class="section-head professions-heading"><h2>Bekannte Classic-Rezepte</h2><p>813 Rezeptgegenstände, nach Beruf sortiert.</p></div><p class="professions-note">Dieser Bestand ist auch in Classic gelistet und bestätigt keine neuen Forever-Rezepte. Klassenzauberbücher und Bücher zum Erhöhen der Berufsstufe sind ausgeklammert. Reine Lehrerrezepte sind nicht enthalten. Zutaten und Herstellungseffekte zeigt die Detailkarte, soweit verfügbar.</p><p><a class="loot-link" href="#materialrechner" data-forever-panel data-plan-de="Materialrechner öffnen →" data-plan-en="Open material calculator →">Materialrechner öffnen →</a></p><div id="professionRecipeLinks" class="character-grid"><p>Rezepte werden geladen …</p></div><div class="feature professions-feature">
               <article class="feature-card"><img src="https://wow.4fansites.de/bilder/news/wow-forever-berufe.webp" alt="Vorschau auf die Berufe in WoW Forever" loading="lazy"><div class="copy"><span class="tag">Handwerk</span><h3>Über 600 neue Rezepte</h3><p>Alle Berufe erhalten Ergänzungen für unterschiedliche Fertigkeitsstufen. Bestimmte Dungeonbosse liefern seltene Baupläne. Gekochtes Essen verbessert Attribute und die Erfahrung durch besiegte Gegner.</p></div></article>
               <article class="card"><div class="copy"><span class="tag">Gemeinsam unterwegs</span><h3>Vom Lagerfeuer zum Treffpunkt</h3><p>Lager können Händler, Reparaturen und Arbeitsplätze bieten. Nach einer kurzen Rast wirken Stärkungen eine Stunde.</p><ul class="list"><li>Einfaches Feuer: drei Objekte</li><li>Verbesserte Feuer: fünf oder zehn Objekte</li><li>Ein Beitrag pro Spieler; gemeinsame Abklingzeit: eine Stunde</li></ul></div></article>
             </div>
@@ -948,6 +955,7 @@
         </footer>
       </main>
     </div>
+    <p id="planningStatus" class="planning-status" role="status" aria-live="polite"></p>
     <dialog id="itemDialog" class="item-dialog" aria-labelledby="itemDialogTitle"><button type="button" id="itemDialogClose" class="item-dialog-close" aria-label="Itemkarte schließen">×</button><h3 id="itemDialogTitle"></h3><div id="itemDialogContent"></div></dialog>
     <script>
       const main = document.querySelector(".main");

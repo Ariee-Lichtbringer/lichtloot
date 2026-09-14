@@ -89,7 +89,7 @@
     $('itemSetBrowser').hidden=view!=='sets';$('itemSetSelection').hidden=!['set','zone','recipes'].includes(view);$('itemFilters').hidden=!['all','zone','recipes'].includes(view);$('itemResults').hidden=view==='sets';$('itemPagination').hidden=!['all','zone','recipes'].includes(view);$('itemCount').hidden=view==='sets';
     $('itemSetsView').setAttribute('aria-pressed',String(view==='sets'||view==='set'));$('itemAllView').setAttribute('aria-pressed',String(view==='all'));
     if(!data)return;
-    if(view!=='zone')activeZone=null;if(view!=='recipes')activeProfession=null;if($('itemSetBonuses'))$('itemSetBonuses').hidden=view!=='set';$('itemSetBack').textContent=tr('← Zurück zu den Sets');
+    if(view!=='zone')activeZone=null;if(view!=='recipes')activeProfession=null;if($('itemSetBonuses'))$('itemSetBonuses').hidden=view!=='set';$('itemSetBack').textContent=tr('← Zurück zu den Sets');if($('recipeFilters'))$('recipeFilters').hidden=view!=='recipes';
     if(view==='sets'){activeSet=null;renderSets();}else if(view==='all'){activeSet=null;filter();}
     const u=new URL(location.href);u.searchParams.delete('profession');if(view==='recipes'&&activeProfession)u.searchParams.set('profession',activeProfession.id);u.searchParams.delete('zone');if(view==='zone'&&activeZone)u.searchParams.set('zone',activeZone.id);if(view==='set'&&activeSet){u.searchParams.set('set',activeSet.id);u.searchParams.delete('items');}else{u.searchParams.delete('set');if(view==='all')u.searchParams.set('items','all');else u.searchParams.delete('items');}history.replaceState(null,'',u);
   }
@@ -123,7 +123,7 @@
   function filter(){
     if(!data)return;
     const q=norm($('itemSearch').value).trim(),cat=$('itemCategory').value,quality=$('itemQuality').value,slot=$('itemSlot').value,cl=Number($('itemClass').value),min=$('itemLevelMin').value,max=$('itemLevelMax').value;
-    filtered=data.items.filter(x=>(!activeProfession||recipeIds.has(x.id))&&(!activeZone||sourceData.assignments[x.id]?.[activeZone.id])&&(!q||x.search.includes(q))&&(!cat||String(x.classs)===cat)&&(!quality||String(x.quality)===quality)&&(!slot||String(x.slot)===slot)&&(!cl||!x.stats.classes||(x.stats.classes&cl))&&(min===''||Number(x.level||0)>=Number(min))&&(max===''||Number(x.level||0)<=Number(max)));
+    filtered=data.items.filter(x=>(!activeProfession||(recipeIds.has(x.id)&&(!window.ForeverPlanning||window.ForeverPlanning.recipeMatches(x))))&&(!activeZone||sourceData.assignments[x.id]?.[activeZone.id])&&(!q||x.search.includes(q))&&(!cat||String(x.classs)===cat)&&(!quality||String(x.quality)===quality)&&(!slot||String(x.slot)===slot)&&(!cl||!x.stats.classes||(x.stats.classes&cl))&&(min===''||Number(x.level||0)>=Number(min))&&(max===''||Number(x.level||0)<=Number(max)));
     const sort=$('itemSort').value;
     filtered.sort(sort==='level-desc'?(a,b)=>(b.level||0)-(a.level||0)||a.name.localeCompare(b.name,'de'):sort==='quality-desc'?(a,b)=>b.quality-a.quality||(b.level||0)-(a.level||0):sort==='id'?(a,b)=>a.id-b.id:(a,b)=>a.name.localeCompare(b.name,'de'));
     page=1;render();
@@ -151,12 +151,13 @@
     body.append(node('p','item-disclaimer','Forever-Datenbankeintrag bei Wowhead. Verfügbarkeit, Werte und Fundorte können sich bis zur Beta ändern. Übernommene Classic-Einträge sind keine Bestätigung für Beute in neuen Forever-Raids.'));
     const a=node('a','loot-link','Vollständige Effekte und Quelle bei Wowhead ↗');a.href=link(x);a.target='_blank';a.rel='noopener noreferrer';body.append(a);
     const u=new URL(location.href);u.searchParams.set('item',x.id);u.hash='itemdatenbank';history.replaceState(null,'',u);
+    window.ForeverPlanning?.itemOpen({item:x,host:body,profession:recipeData?.professions.find(p=>p.ids.includes(x.id)),details:itemDetails,statNames});
     if(!d.open)d.showModal();
   }
   let recipesPending;
   function loadRecipes(){return recipesPending||(recipesPending=fetch('forever-recipes.json?v=20260914').then(r=>{if(!r.ok)throw Error('Recipes unavailable');return r.json();}).catch(e=>{recipesPending=null;throw e;}));}
   function selectProfession(profession){
-    activeProfession=profession;recipeIds=new Set(profession.ids);activeSet=null;setView('recipes');
+    $('itemFilters').reset();activeProfession=profession;recipeIds=new Set(profession.ids);activeSet=null;setView('recipes');if($('recipeProfession'))$('recipeProfession').value=profession.id;
     $('itemSetTitle').textContent=(language==='en'?profession.nameEn:profession.nameDe)+(language==='en'?' · Classic recipes':' · Classic-Rezepte');
     $('itemSetBack').textContent=language==='en'?'← Back to professions':'← Zurück zu den Berufen';
     $('itemSetInfo').textContent=language==='en'?'Recipe items also listed in Classic. Not confirmed new Forever recipes. Trainer-only recipes are not included. Available reagents and crafting effects appear in the detail card; the database can contain unavailable entries.':'Rezeptgegenstände, die auch in Classic gelistet sind. Keine bestätigten neuen Forever-Rezepte. Reine Lehrerrezepte sind nicht enthalten. Verfügbare Zutaten und Herstellungseffekte stehen in der Detailkarte; die Datenbank kann nicht erhältliche Einträge enthalten.';
@@ -199,12 +200,12 @@
       for(const [id,label] of Object.entries(categories)){if(data.items.some(x=>x.classs===Number(id))){const o=node('option','',label);o.value=id;$('itemCategory').append(o);}}
       qualities.forEach((label,id)=>{const o=node('option','',label);o.value=id;$('itemQuality').append(o);});
       for(const [id,label] of Object.entries(slots)){const o=node('option','',label);o.value=id;$('itemSlot').append(o);}
-      $('itemLoading').hidden=true;initSets();const params=new URL(location.href).searchParams;const requestedSet=setData.sets.find(s=>s.id===Number(params.get('set')));const requestedZone=sourceData.zones.find(z=>z.id===Number(params.get('zone')));const requestedProfession=recipeData.professions.find(p=>p.id===params.get('profession'));if(requestedProfession){selectProfession(requestedProfession);}else if(requestedZone){selectZone(requestedZone);}else if(requestedSet){setClass=requestedSet.classes?.[0]||0;selectSet(requestedSet);}else setView(params.get('items')==='all'||params.has('item')?'all':'sets');
+      $('itemLoading').hidden=true;initSets();window.ForeverPlanning?.recipeFilterUI(recipeData.professions,filter);const params=new URL(location.href).searchParams;const requestedClass=Number(params.get('setClass'));if(classInfo.some(c=>c[0]===requestedClass))setClass=requestedClass;const requestedSet=setData.sets.find(s=>s.id===Number(params.get('set')));const requestedZone=sourceData.zones.find(z=>z.id===Number(params.get('zone')));const requestedProfession=recipeData.professions.find(p=>p.id===params.get('profession'));if(requestedProfession){selectProfession(requestedProfession);}else if(requestedZone){selectZone(requestedZone);}else if(requestedSet){setClass=requestedSet.classes?.[0]||0;selectSet(requestedSet);}else setView(params.get('items')==='all'||params.has('item')?'all':'sets');
       const requested=Number(new URL(location.href).searchParams.get('item'));if(requested){const x=data.items.find(x=>x.id===requested);if(x)open(x);}
     }catch(e){$('itemLoading').textContent='Die Itemdatenbank konnte nicht geladen werden. Bitte erneut versuchen.';$('itemRetry').hidden=false;data=null;}finally{pending=null;}})();return pending;
   }
   for(const id of ['itemSearch','itemCategory','itemQuality','itemSlot','itemClass','itemLevelMin','itemLevelMax','itemSort'])$(id).addEventListener(id==='itemSearch'?'input':'change',filter);
-  $('itemReset').onclick=()=>{$('itemFilters').reset();filter();};
+  $('itemReset').onclick=()=>{$('itemFilters').reset();if(activeProfession&&$('recipeProfession'))$('recipeProfession').value=activeProfession.id;filter();};
   $('itemPrevious').onclick=()=>{page--;render();$('itemCount').scrollIntoView({block:'start'});};$('itemNext').onclick=()=>{page++;render();$('itemCount').scrollIntoView({block:'start'});};
   $('itemRetry').onclick=()=>{$('itemRetry').hidden=true;start();};
   $('itemDialogClose').onclick=()=>$('itemDialog').close();
@@ -212,5 +213,6 @@
   $('itemDialog').addEventListener('click',e=>{if(e.target===$('itemDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
   addEventListener('forever-item-home',()=>{const u=new URL(location.href);for(const key of ['zone','set','item','items','profession'])u.searchParams.delete(key);history.replaceState(null,'',u);setView('sets');});
   addEventListener('forever-panel',e=>{hideHover();if(e.detail==='itemdatenbank')start();else if($('itemDialog').open)$('itemDialog').close();});
+  window.ForeverItemTools={selectProfession:id=>{const p=recipeData?.professions.find(p=>p.id===id);if(p)selectProfession(p);}};
   if(location.hash==='#itemdatenbank')start();
 })();
