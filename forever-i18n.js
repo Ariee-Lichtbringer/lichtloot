@@ -4,7 +4,43 @@ let lang=new URLSearchParams(location.search).get('lang');
 if(!['de','en'].includes(lang)){try{lang=localStorage.getItem('guildloot_forever_language');}catch{} }
 if(!['de','en'].includes(lang))lang='de';
 document.documentElement.lang=lang;
-const pairs=`Charakter|Character
+const pairs=`Klassen|Classes
+Völker|Races
+Fähigkeiten|Abilities
+Klassen in WoW Forever|Classes in WoW Forever
+Neun Klassen mit ihren Talentbäumen, Fähigkeiten und spielbaren Völkern.|Nine classes with their talent trees, abilities and playable races.
+Vorschau vom 14. September 2026. Fähigkeiten und Volksboni basieren auf gezeigten Inhalten und Classic-Daten; Beta-Werte und deutsche Bezeichnungen können sich ändern.|Preview as of 14 September 2026. Abilities and racials draw on shown content and Classic data; beta values and German names may change.
+Völker und Volksfähigkeiten|Races and racial abilities
+Klassenwahl, Fraktionen und Volksboni im Überblick.|Class choices, factions and racial bonuses at a glance.
+Skyborne: Magier nur bei der Allianz, Schamanen nur bei der Horde.|Skyborne: Mages are Alliance only; Shamans are Horde only.
+Neue Kombinationen: Mensch–Jäger, Zwerg–Schamane, Gnom–Priester, Ork–Magier, Troll–Hexenmeister und Untoter–Paladin.|New combinations: Human Hunter, Dwarf Shaman, Gnome Priest, Orc Mage, Troll Warlock and Undead Paladin.
+Daten werden geladen …|Loading data …
+In der Vorschau entfernte Classic-Volksfähigkeiten|Classic racials removed in the preview
+Alle Klassen-Völker-Kombinationen|All class-race combinations
+★ Neue Kombination · ✓ Verfügbar · — Nicht verfügbar|★ New combination · ✓ Available · — Not available
+Zauber und Angriffe nach Klasse, Bereich und Rang durchsuchen.|Browse spells and attacks by class, school and rank.
+Fähigkeit suchen|Search abilities
+Name oder Beschreibung …|Name or description …
+Mouseover zeigt die Kurzinfo. Anklicken öffnet alle Ränge und den Classic-Vergleich.|Hover for a quick description. Click for all ranks and the Classic comparison.
+Wowhead: Völker und Klassen|Wowhead: races and classes
+Forever Talents: Fähigkeiten|Forever Talents: abilities
+Berufsboni aus der Vorschau|Profession bonuses from the preview
+Aus BlizzCon-Aufnahmen übertragen; noch keine endgültigen Beta-Tooltips.|Transcribed from BlizzCon footage; not final beta tooltips.
+Vorschau · Werte noch vorläufig|Preview · Values are provisional
+Vollständige Rezeptlisten, Materialmengen und endgültige Werte sind noch offen. Quelle der Berufsboni:|Full recipe lists, material quantities and final values remain open. Profession bonus source:
+Forever Talents · Stand 13. September 2026|Forever Talents · As of 13 September 2026
+Offiziell bestätigt: über 600 neue Rezepte, erste Lagerobjekte ab Fertigkeit 20 und Baupläne von Dungeonbossen.|Officially confirmed: over 600 new recipes, first campsite objects at skill 20 and blueprints from dungeon bosses.
+Blizzard: Deep Dive vom 13. September 2026|Blizzard: Deep Dive on 13 September 2026
+Längere und stärkere Elixiere und Fläschchen, aufwertbarer Stein der Weisen.|Longer and stronger elixirs and flasks; an upgradable Philosopher’s Stone.
+Reparaturfunktion, Gürtelschnallen und neue Rezepte.|Repair utility, belt buckles and new recipes.
+Ringverzauberungen, Splitterumwandlung und Stabherstellung.|Ring enchants, shard conversion and staff crafting.
+Zusätzliche Geräte, Bomben und Schmuckstücke; gnomische und goblinische Spezialisierung.|Additional devices, bombs and trinkets; Gnomish and Goblin specializations.
+Magiewiderstand, zusätzliche Kräuter und bessere Chancen auf seltenen Lotus.|Magic resistance, extra herbs and improved chances of rare lotus.
+Rüstungssets, Rüstungsverbesserungen und erhöhte Reitgeschwindigkeit.|Armor sets, armor enhancements and increased mounted speed.
+5% mehr maximale Gesundheit und zusätzliche Erze.|5% more maximum health and additional ore.
+5% mehr Schaden gegen Wildtiere und Drachkin sowie seltene Häute.|5% more damage against Beasts and Dragonkin, plus rare hides.
+Berufseigene Stickereien, zusätzliche Stoffbeute und neue Rezepte.|Profession-specific embroideries, extra cloth drops and new recipes.
+Charakter|Character
 Ausrüstung & Loot|Gear & Loot
 Raidübersicht|Raid overview
 Goldener Rahmen: bestätigte neue Forever-Items.|Gold border: confirmed new Forever items.
