@@ -495,11 +495,11 @@
       .professions-heading{margin-top:36px}.professions-table{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.professions-table table{width:100%;border-collapse:collapse;text-align:left}.professions-table th,.professions-table td{padding:16px;border-bottom:1px solid var(--line)}.professions-table th{background:var(--panel2);color:var(--cyan)}.professions-table tr:last-child td{border-bottom:0}.professions-note{color:var(--muted);line-height:1.6}.professions-gallery{margin-top:24px}.professions-gallery img{object-fit:contain;background:#07131d}.professions-source{margin-top:24px}.professions-feature .copy p{color:var(--muted);line-height:1.55}.professions-feature img{height:auto;aspect-ratio:16/9}.professions-feature .list{margin-top:24px}@media(max-width:760px){.professions-table th,.professions-table td{padding:12px 8px;font-size:12px;overflow-wrap:anywhere}.professions-table table{table-layout:fixed}}
       .ruleset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}@media(max-width:1100px){.ruleset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.ruleset-grid{grid-template-columns:1fr}}
     </style>
-    <link rel="stylesheet" href="forever-talents.css?v=20260914-cards">
-    <script defer src="forever-i18n.js?v=20260914"></script>
-    <script defer src="forever-talents.js?v=20260914-cards"></script>
-  <link rel="stylesheet" href="forever-items.css?v=20260914">
-    <script defer src="forever-items.js?v=20260914"></script>
+    <link rel="stylesheet" href="forever-talents.css?v=20260914-de">
+    <script defer src="forever-i18n.js?v=20260914-sets"></script>
+    <script defer src="forever-talents.js?v=20260914-de"></script>
+  <link rel="stylesheet" href="forever-items.css?v=20260914-hover">
+    <script defer src="forever-items.js?v=20260914-hover"></script>
   </head>
   <body>
     <div class="shell">
@@ -778,7 +778,7 @@
           </section>
           <section class="section" id="talente" aria-labelledby="talent-title">
             <div class="section-head"><h2 id="talent-title">Forever-Talentplaner</h2><p>Neun Klassen, drei Talentbäume und 51 Punkte. Plane deinen Build und teile ihn per Link.</p></div>
-            <div class="notice">Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen liegen derzeit auf Englisch vor. Datenstand: 14. September 2026.</div>
+            <div class="notice">Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen sind auf Deutsch übersetzt; neue Forever-Bezeichnungen sind noch vorläufig. Datenstand: 14. September 2026.</div>
             <div id="talentClasses" class="talent-class-grid" role="group" aria-label="Klasse auswählen"></div><div class="talent-toolbar"><span class="talent-points" id="talentPoints"></span><button type="button" id="talentReset">Alle Punkte zurücksetzen</button><label class="talent-compare"><input type="checkbox" id="talentClassic">Classic-Vergleich anzeigen</label></div>
             <p id="talentHelp" class="talent-hint">Linksklick: Punkt hinzufügen · Rechtsklick oder Minus-Taste: entfernen · Umschalt-Klick: auffüllen. Auf dem Handy öffnet Antippen die Talentkarte mit Plus und Minus.</p>
             <p class="talent-hint">★ Neu in Forever · ◆ Geändert · ? Classic-Daten, für Forever noch unbestätigt</p>
@@ -795,7 +795,10 @@
           <section class="section" id="itemdatenbank" aria-labelledby="item-title">
             <div class="section-head"><h2 id="item-title" tabindex="-1">Itemdatenbank</h2><p>Alle verfügbaren Gegenstände aus Wowheads Forever-Datenbank – mit deutschen Namen, Werten und Quellen.</p></div>
             <div class="notice">Datenstand: 14. September 2026 · Vorschau vor der Beta. Enthält auch übernommene Classic- und interne Datenbankeinträge. Werte und Fundorte sind noch keine Bestätigung für die neuen Forever-Raids. Einige interne Namen sind bei der Quelle noch nicht übersetzt.</div>
-            <form id="itemFilters" class="items-filters" onsubmit="return false">
+            <div class="item-view-switch" role="group" aria-label="Ansicht wählen"><button type="button" id="itemSetsView" aria-pressed="true">Klassensets</button><button type="button" id="itemAllView" aria-pressed="false">Alle Gegenstände durchsuchen</button></div>
+            <div id="itemSetBrowser"><div id="itemSetClasses" class="talent-class-grid" role="group" aria-label="Klasse auswählen"></div><h3 id="itemSetHeading"></h3><div id="itemSetCards" class="items-results"></div></div>
+            <div id="itemSetSelection" hidden><button type="button" id="itemSetBack">← Zurück zu den Sets</button><h3 id="itemSetTitle"></h3><p id="itemSetInfo"></p></div>
+            <form id="itemFilters" class="items-filters" hidden onsubmit="return false">
               <label class="items-search">Gegenstände suchen<input id="itemSearch" type="search" placeholder="Name, Gegenstands-ID oder Quelle …"></label>
               <label>Kategorie<select id="itemCategory"><option value="">Alle Kategorien</option></select></label>
               <label>Qualität<select id="itemQuality"><option value="">Alle Qualitäten</option></select></label>
@@ -808,8 +811,8 @@
             </form>
             <p id="itemLoading" role="status">Itemdatenbank wird beim Öffnen geladen …</p><button id="itemRetry" type="button" hidden>Erneut versuchen</button>
             <p id="itemCount" class="items-summary" role="status" aria-live="polite"></p>
-            <div id="itemResults" class="items-results"></div>
-            <div class="items-pagination"><button type="button" id="itemPrevious" disabled>← Zurück</button><span id="itemPage"></span><button type="button" id="itemNext" disabled>Weiter →</button></div>
+            <div id="itemResults" class="items-results" hidden></div>
+            <div class="items-pagination" id="itemPagination" hidden><button type="button" id="itemPrevious" disabled>← Zurück</button><span id="itemPage"></span><button type="button" id="itemNext" disabled>Weiter →</button></div>
             <p class="professions-note">Daten und Icons: <a href="https://www.wowhead.com/forever/de/items" target="_blank" rel="noopener noreferrer">Wowhead Forever ↗</a>. Klicke auf einen Gegenstand für Werte, Fundorte und den Link zu vollständigen Effekten.</p>
           </section>
           <section class="section" id="raids">

@@ -92,7 +92,7 @@ Evergreen-Welt|Evergreen world
 Weitere Raids, Dungeons, PvP, Weltinhalte, Hardcore und die Überarbeitung eines bekannten Raids sind bereits angekündigt.|More raids, dungeons, PvP, world content, Hardcore and a reworked familiar raid have already been announced.
 Forever-Talentplaner|Forever talent planner
 Neun Klassen, drei Talentbäume und 51 Punkte. Plane deinen Build und teile ihn per Link.|Nine classes, three talent trees and 51 points. Plan your build and share it with a link.
-Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen liegen derzeit auf Englisch vor. Datenstand: 14. September 2026.|Preview based on Classic data and observed Forever changes. Unconfirmed talents are marked with “?”. Talent names and descriptions are currently in English. Data as of 14 September 2026.
+Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen sind auf Deutsch übersetzt; neue Forever-Bezeichnungen sind noch vorläufig. Datenstand: 14. September 2026.|Preview based on Classic data and observed Forever changes. Unconfirmed talents are marked with “?”. New Forever talent names are provisional. Data as of 14 September 2026.
 Klasse auswählen|Choose a class
 Alle Punkte zurücksetzen|Reset all points
 Classic-Vergleich anzeigen|Show Classic comparison
@@ -335,7 +335,12 @@ Punkt nicht möglich: Maximum oder Voraussetzungen prüfen.|Cannot add a point: 
 Dieser Punkt wird noch für andere Talente benötigt.|This point is still required by other talents.
 Wähle ein Talent für die Beschreibung. Linksklick: +1 · Rechtsklick: −1 · Umschalt-Klick: auffüllen.|Select a talent to see its description. Left-click: +1 · Right-click: −1 · Shift-click: fill.
 Sprache auswählen|Choose language`;
-const extra=`Dungeon-Lootlisten|Dungeon loot lists
+const extra=`Ansicht wählen|Choose view
+Klassensets|Class sets
+Alle Gegenstände durchsuchen|Search all items
+← Zurück zu den Sets|← Back to sets
+Weitere Sets|Other sets
+Dungeon-Lootlisten|Dungeon loot lists
 Die neun angekündigten Dungeons. Hier findest du künftig ihre Gegenstände und Dropquellen.|The nine announced dungeons. Their items and drop sources will be listed here.
 Lootliste öffnen|Open loot list
 ← Alle Dungeon-Lootlisten|← All dungeon loot lists
