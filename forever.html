@@ -495,8 +495,8 @@
       .professions-heading{margin-top:36px}.professions-table{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.professions-table table{width:100%;border-collapse:collapse;text-align:left}.professions-table th,.professions-table td{padding:16px;border-bottom:1px solid var(--line)}.professions-table th{background:var(--panel2);color:var(--cyan)}.professions-table tr:last-child td{border-bottom:0}.professions-note{color:var(--muted);line-height:1.6}.professions-gallery{margin-top:24px}.professions-gallery img{object-fit:contain;background:#07131d}.professions-source{margin-top:24px}.professions-feature .copy p{color:var(--muted);line-height:1.55}.professions-feature img{height:auto;aspect-ratio:16/9}.professions-feature .list{margin-top:24px}@media(max-width:760px){.professions-table th,.professions-table td{padding:12px 8px;font-size:12px;overflow-wrap:anywhere}.professions-table table{table-layout:fixed}}
       .ruleset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}@media(max-width:1100px){.ruleset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.ruleset-grid{grid-template-columns:1fr}}
     </style>
-    <link rel="stylesheet" href="forever-talents.css?v=20260914">
-    <script defer src="forever-talents.js?v=20260914"></script>
+    <link rel="stylesheet" href="forever-talents.css?v=20260914-cards">
+    <script defer src="forever-talents.js?v=20260914-cards"></script>
   </head>
   <body>
     <div class="shell">
@@ -774,8 +774,8 @@
           <section class="section" id="talente" aria-labelledby="talent-title">
             <div class="section-head"><h2 id="talent-title">Forever-Talentplaner</h2><p>Neun Klassen, drei Talentbäume und 51 Punkte. Plane deinen Build und teile ihn per Link.</p></div>
             <div class="notice">Vorschau auf Basis von Classic-Daten und beobachteten Forever-Änderungen. Nicht bestätigte Talente sind mit „?“ gekennzeichnet. Talentnamen und Beschreibungen liegen derzeit auf Englisch vor. Datenstand: 14. September 2026.</div>
-            <div class="talent-toolbar"><label>Klasse<select id="talentClass" aria-label="Klasse auswählen"></select></label><span class="talent-points" id="talentPoints"></span><button type="button" id="talentReset">Alle Punkte zurücksetzen</button><label class="talent-compare"><input type="checkbox" id="talentClassic">Classic-Vergleich anzeigen</label></div>
-            <p id="talentHelp" class="talent-hint">Linksklick: Punkt hinzufügen · Rechtsklick oder Minus-Taste: entfernen · Umschalt-Klick: auffüllen. Auf dem Handy stehen Plus und Minus in den Talentdetails zur Verfügung.</p>
+            <div id="talentClasses" class="talent-class-grid" role="group" aria-label="Klasse auswählen"></div><div class="talent-toolbar"><span class="talent-points" id="talentPoints"></span><button type="button" id="talentReset">Alle Punkte zurücksetzen</button><label class="talent-compare"><input type="checkbox" id="talentClassic">Classic-Vergleich anzeigen</label></div>
+            <p id="talentHelp" class="talent-hint">Linksklick: Punkt hinzufügen · Rechtsklick oder Minus-Taste: entfernen · Umschalt-Klick: auffüllen. Auf dem Handy öffnet Antippen die Talentkarte mit Plus und Minus.</p>
             <p class="talent-hint">★ Neu in Forever · ◆ Geändert · ? Classic-Daten, für Forever noch unbestätigt</p>
             <div id="talentLoading" class="talent-loading">Talentbäume werden geladen …</div><div class="talent-trees" id="talentTrees"></div>
             <aside id="talentDetails" class="talent-details" aria-label="Talentbeschreibung"></aside>
