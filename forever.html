@@ -94,6 +94,11 @@
         );
         color: #fff;
       }
+      .nav-group {display:grid;gap:3px}
+      .nav-group small {font-size:11px;letter-spacing:.1em;margin:14px 11px 6px}
+      .nav-group:first-child small {margin-top:0}
+      .nav-group+.nav-group {border-top:1px solid #28556466;padding-top:4px}
+      @media(max-width:760px){.nav-group{flex:0 0 190px;align-content:start}.side .nav-group small{display:block;margin:4px 10px 8px}.nav-group+.nav-group{border-top:0;border-left:1px solid #28556466;padding:0 0 0 8px}.nav-group a{padding:8px 10px;font-size:14px}.nav>.back{align-self:flex-end}.nav{align-items:stretch}}
       .nav i {
         width: 22px;
         color: var(--cyan);
@@ -496,10 +501,10 @@
       .ruleset-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}@media(max-width:1100px){.ruleset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.ruleset-grid{grid-template-columns:1fr}}
     </style>
     <link rel="stylesheet" href="forever-talents.css?v=20260914-de">
-    <script defer src="forever-i18n.js?v=20260914-sources"></script>
+    <script defer src="forever-i18n.js?v=20260914-navigation"></script>
     <script defer src="forever-talents.js?v=20260914-de"></script>
   <link rel="stylesheet" href="forever-items.css?v=20260914-sources">
-    <script defer src="forever-items.js?v=20260914-sources"></script>
+    <script defer src="forever-items.js?v=20260914-navigation"></script>
   </head>
   <body>
     <div class="shell">
@@ -508,20 +513,28 @@
           class="side-logo"
           src="images/wow-forever-logo.jpg"
           alt="World of Warcraft Forever"
-        /><small>Entdecken</small>
+        />
         <nav class="nav" aria-label="Forever Navigation">
-          <a class="active" href="#start"><i>⌂</i>Übersicht</a
-          ><a href="#news"><i>✦</i>Welten &amp; News</a
-          ><a href="#systeme"><i>⚙</i>Spielsysteme</a
-          ><a href="#talente"><i>◆</i>Talentbäume</a
-          ><a href="#raids"><i>⚔</i>Raids</a><a href="#videos"><i>▶</i>Videos</a
-          ><a href="#berufe"><i>⚒</i>Berufe</a
-          ><a href="#itemdatenbank"><i>▤</i>Itemdatenbank</a
-          ><a href="#loot"><i>▣</i>Raid-Lootlisten</a
-          ><a href="#dungeon-lootlisten"><i>◇</i>Dungeon-Lootlisten</a
-          ><a class="back" href="start.html?guild=lichtloot"
-            ><i>←</i>GuildLoot</a
-          >
+          <div class="nav-group" role="group" aria-labelledby="nav-discover">
+            <small id="nav-discover">Entdecken</small>
+            <a class="active" href="#start"><i aria-hidden="true">⌂</i>Übersicht</a>
+            <a href="#news"><i aria-hidden="true">✦</i>Welten &amp; News</a>
+            <a href="#videos"><i aria-hidden="true">▶</i>Videos</a>
+          </div>
+          <div class="nav-group" role="group" aria-labelledby="nav-character">
+            <small id="nav-character">Charakter</small>
+            <a href="#systeme"><i aria-hidden="true">⚙</i>Spielsysteme</a>
+            <a href="#talente"><i aria-hidden="true">◆</i>Talentbäume</a>
+            <a href="#berufe"><i aria-hidden="true">⚒</i>Berufe</a>
+          </div>
+          <div class="nav-group" role="group" aria-labelledby="nav-loot">
+            <small id="nav-loot">Ausrüstung &amp; Loot</small>
+            <a href="#itemdatenbank"><i aria-hidden="true">▤</i>Itemdatenbank</a>
+            <a href="#raids"><i aria-hidden="true">⚔</i>Raidübersicht</a>
+            <a href="#loot"><i aria-hidden="true">▣</i>Raid-Lootlisten</a>
+            <a href="#dungeon-lootlisten"><i aria-hidden="true">◇</i>Dungeon-Lootlisten</a>
+          </div>
+          <a class="back" href="start.html?guild=lichtloot"><i aria-hidden="true">←</i>GuildLoot</a>
         </nav>
       </aside>
       <main class="main">
@@ -934,6 +947,11 @@
       const panels = [...document.querySelectorAll(".content > .section")];
       const links = [...document.querySelectorAll('.nav a[href^="#"]')];
       main.classList.add("panel-mode");
+      function updateNavigation(name) {
+        const target=name==="itemdatenbank" ? (window.ForeverItemNavigation||name) : name.startsWith("dungeon-") ? "dungeon-lootlisten" : name.startsWith("loot-") ? "loot" : name;
+        links.forEach(a=>{const active=a.hash==="#"+target;a.classList.toggle("active",active);if(active)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+      }
+      addEventListener("forever-item-navigation",()=>{if(location.hash==="#itemdatenbank")updateNavigation("itemdatenbank");});
       function showPanel(name, writeHash = true) {
         const raidPages = {"loot-hyjal-summit":"hyjal-summit", "loot-barrow-deeps":"barrow-deeps", "loot-onyxias-hort":"onyxias-hort"};
         if (raidPages[name]) { location.replace("loot/forever-" + raidPages[name] + "-loot.html"); return; }
@@ -945,11 +963,7 @@
             overview ? p.id === "overview" : p.id === name,
           ),
         );
-        links.forEach((a) => {
-          const active = a.hash === "#" + (overview ? "start" : name.startsWith("dungeon-") ? "dungeon-lootlisten" : name.startsWith("loot-") ? "loot" : name);
-          a.classList.toggle("active", active);
-          a.setAttribute("aria-current", active ? "page" : "false");
-        });
+        updateNavigation(overview ? "start" : name);
         if (writeHash)
           history.pushState(null, "", "#" + (overview ? "start" : name));
         document.title = name.startsWith("loot-") && document.getElementById(name) ? document.getElementById(name).querySelector("h2").textContent + " · Loot · WoW Forever · GuildLoot" : "WoW Forever · GuildLoot";
@@ -960,6 +974,7 @@
       [...links, ...document.querySelectorAll("[data-forever-panel]")].forEach((a) =>
         a.addEventListener("click", (event) => {
           event.preventDefault();
+          if(a.closest(".nav")&&a.hash==="#itemdatenbank")dispatchEvent(new Event("forever-item-home"));
           showPanel(a.hash.slice(1));
         }),
       );

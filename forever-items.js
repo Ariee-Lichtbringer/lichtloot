@@ -85,7 +85,7 @@
   ];
   function setName(s){return language==='de'?s.nameDe:s.name;}
   function setView(view){
-    hideHover();itemView=view;
+    hideHover();itemView=view;window.ForeverItemNavigation=view==='zone'&&activeZone?(activeZone.kind==='raid'?'loot':'dungeon-lootlisten'):'itemdatenbank';dispatchEvent(new Event('forever-item-navigation'));
     $('itemSetBrowser').hidden=view!=='sets';$('itemSetSelection').hidden=!['set','zone'].includes(view);$('itemFilters').hidden=!['all','zone'].includes(view);$('itemResults').hidden=view==='sets';$('itemPagination').hidden=!['all','zone'].includes(view);$('itemCount').hidden=view==='sets';
     $('itemSetsView').setAttribute('aria-pressed',String(view==='sets'||view==='set'));$('itemAllView').setAttribute('aria-pressed',String(view==='all'));
     if(!data)return;
@@ -193,6 +193,7 @@
   $('itemDialogClose').onclick=()=>$('itemDialog').close();
   $('itemDialog').addEventListener('close',()=>{const u=new URL(location.href);u.searchParams.delete('item');history.replaceState(null,'',u);opener?.focus();hideHover();});
   $('itemDialog').addEventListener('click',e=>{if(e.target===$('itemDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
+  addEventListener('forever-item-home',()=>{const u=new URL(location.href);for(const key of ['zone','set','item','items'])u.searchParams.delete(key);history.replaceState(null,'',u);setView('sets');});
   addEventListener('forever-panel',e=>{hideHover();if(e.detail==='itemdatenbank')start();else if($('itemDialog').open)$('itemDialog').close();});
   if(location.hash==='#itemdatenbank')start();
 })();
