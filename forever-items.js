@@ -13,6 +13,39 @@
   const number=n=>Number(n).toLocaleString(language==='de'?'de-DE':'en-US',{maximumFractionDigits:2});
   const link=x=>'https://www.wowhead.com/forever/'+(language==='de'?'de/':'')+'item='+x.id;
   function icon(x){const img=node('img','item-icon');img.src='https://wow.zamimg.com/images/wow/icons/large/'+encodeURIComponent(x.icon)+'.jpg';img.alt='';img.loading='lazy';img.onerror=()=>{img.onerror=null;img.src='https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg';};return img;}
+  const detailCache=new Map();
+  async function itemDetails(id){
+    if(!detailCache.has(id))detailCache.set(id,(async()=>{
+      const response=await fetch('https://nether.wowhead.com/tooltip/item/'+Number(id)+'?dataEnv=16&locale='+(language==='de'?3:0),{signal:AbortSignal.timeout(15000)});
+      if(!response.ok)throw Error('Item details: '+response.status);
+      const result=await response.json();if(!result.tooltip)throw Error('Missing item details');return result.tooltip;
+    })().catch(error=>{detailCache.delete(id);throw error;}));
+    return detailCache.get(id);
+  }
+  // Rebuild the source markup with a small allowlist; never execute remote HTML.
+  function detailMarkup(html){
+    const source=new DOMParser().parseFromString(html,'text/html'),fragment=document.createDocumentFragment();
+    const tags=new Set(['TABLE','TBODY','TR','TD','TH','BR','B','STRONG','SPAN','DIV','A','I','SMALL']);
+    function copy(original,parent){
+      if(original.nodeType===3){parent.append(document.createTextNode(original.textContent));return;}
+      if(original.nodeType!==1||['SCRIPT','STYLE','IFRAME','OBJECT','SVG','IMG'].includes(original.tagName))return;
+      const el=tags.has(original.tagName)?document.createElement(original.tagName.toLowerCase()):document.createElement('span');
+      for(const cl of original.classList)if(/^(q[0-9]?|c[0-9]+|indent|moneygold|moneysilver|moneycopper|whtt-[a-z-]+|wowhead-tooltip-item-classes)$/.test(cl))el.classList.add(cl);
+      if(original.tagName==='A'){
+        try{const url=new URL(original.getAttribute('href'),'https://www.wowhead.com');if(url.protocol==='https:'&&url.hostname==='www.wowhead.com'){el.href=url.href;el.target='_blank';el.rel='noopener noreferrer';}}catch{}
+      }
+      for(const child of original.childNodes)copy(child,el);parent.append(el);
+    }
+    for(const child of source.body.childNodes)copy(child,fragment);return fragment;
+  }
+  function fillDetails(host,html,x){
+    host.replaceChildren();host.classList.add('item-full-details');host.append(detailMarkup(html));
+    host.append(node('p','item-hover-id','ItemID: '+x.id));
+  }
+  function loadDetails(host,x,valid,done){
+    const status=node('p','item-detail-status',language==='en'?'Loading full item details …':'Vollständige Itemdetails werden geladen …');host.append(status);
+    itemDetails(x.id).then(html=>{if(!valid())return;fillDetails(host,html,x);done?.();}).catch(()=>{if(valid())status.textContent=language==='en'?'Full details could not be loaded. Please try again or open Wowhead.':'Vollständige Details konnten nicht geladen werden. Bitte erneut versuchen oder Wowhead öffnen.';});
+  }
   let hoverTip,hoverAnchor,hoverTimer,dismissedAnchor;
   const tr=s=>window.ForeverI18n?.t(s)||s;
   function hideHover(){clearTimeout(hoverTimer);if(hoverTip)hoverTip.hidden=true;hoverAnchor?.removeAttribute('aria-describedby');hoverAnchor=null;}
@@ -39,6 +72,7 @@
     hoverTip.append(stats);const req=x.reqlevel||x.stats.reqlevel;if(req)hoverTip.append(node('p','item-hover-level',language==='en'?'Requires level '+req:'Benötigt Stufe '+req));
     const sources=[...new Set((x.sourcemore||[]).map(s=>s.n).filter(Boolean))];
     if(sources.length){const footer=node('p','item-hover-source');footer.append(node('strong','',language==='en'?'Source: ':'Quelle: '),document.createTextNode(sources.join(' · ')));hoverTip.append(footer);}
+    loadDetails(hoverTip,x,()=>hoverAnchor===anchor&&!hoverTip.hidden,positionHover);
     hoverTip.hidden=false;anchor.setAttribute('aria-describedby',hoverTip.id);positionHover();
   }
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&hoverTip&&!hoverTip.hidden){e.preventDefault();e.stopPropagation();dismissedAnchor=hoverAnchor;hideHover();}});
@@ -61,6 +95,7 @@
     const selected=classInfo.find(c=>c[0]===setClass);$('itemSetHeading').textContent=selected?tr(selected[1])+' · Sets':(language==='en'?'Other sets':'Weitere Sets');
     $('itemSetClasses').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.class)===setClass)));
     const sets=setData.sets.filter(s=>setClass?(s.classes||[]).includes(setClass):!s.classes?.length).sort((a,b)=>a.minlevel-b.minlevel||setName(a).localeCompare(setName(b),language));
+    $('itemSetHeading').textContent+=' · '+sets.length+' Sets';
     for(const set of sets){
       const b=node('button','item-set-card q'+set.quality);b.type='button';b.dataset.setId=set.id;
       const images=node('span','item-set-icons');const pieces=set.pieces.map(id=>data.items.find(x=>x.id===id)).filter(Boolean);for(const x of pieces.slice(0,4))images.append(icon(x));
@@ -72,6 +107,10 @@
     activeSet=set;setView('set');$('itemSetTitle').textContent=setName(set);const ids=new Set(set.pieces);filtered=data.items.filter(x=>ids.has(x.id));page=1;render();
     const missing=set.pieces.length-filtered.length;$('itemSetInfo').textContent=language==='en'?filtered.length+' available pieces'+(missing?' · '+missing+' pieces not listed in the item database':''):filtered.length+' verfügbare Set-Teile'+(missing?' · '+missing+' Teile nicht in der Itemdatenbank vorhanden':'');
     $('itemCount').textContent=filtered.length+(language==='en'?' set pieces':' Set-Teile');
+    let bonuses=$('itemSetBonuses');if(!bonuses){bonuses=node('div','item-set-bonuses');bonuses.id='itemSetBonuses';$('itemSetSelection').append(bonuses);}bonuses.replaceChildren();
+    if(filtered[0]){const status=node('p','',language==='en'?'Loading set bonuses …':'Setboni werden geladen …');bonuses.append(status);
+      itemDetails(filtered[0].id).then(html=>{if(activeSet!==set)return;const markup=node('div');markup.append(detailMarkup(html));const bonus=Array.from(markup.querySelectorAll('span.q0')).find(e=>/\(\d+\)\s*Set/.test(e.textContent));bonuses.replaceChildren(node('h3','',language==='en'?'Set bonuses':'Setboni'));if(bonus)bonuses.append(bonus);else bonuses.append(node('p','',language==='en'?'No set bonuses listed for this item.':'Für diesen Gegenstand sind keine Setboni aufgeführt.'));}).catch(()=>{if(activeSet===set)status.textContent=language==='en'?'Set bonuses could not be loaded.':'Setboni konnten nicht geladen werden.';});
+    }
   }
   function initSets(){
     const host=$('itemSetClasses');
@@ -104,6 +143,7 @@
     const dl=node('dl','item-stats');
     for(const [key,label] of Object.entries(statNames)){const val=x.stats[key]??x[key];if(val!==undefined&&val!==0){dl.append(node('dt','',label),node('dd','',number(val)));}}
     body.append(dl);
+    const summary=Array.from(body.children);const full=node('div','item-full-details');body.prepend(full);const selectedId=x.id;d.dataset.itemId=String(selectedId);loadDetails(full,x,()=>d.open&&d.dataset.itemId===String(selectedId),()=>{for(const child of summary)child.remove();});
     if(x.sourcemore?.length){body.append(node('h4','','In der Datenbank aufgeführte Quellen'));const ul=node('ul');for(const source of x.sourcemore){if(source.n)ul.append(node('li','',source.n));}body.append(ul);}
     body.append(node('p','item-disclaimer','Forever-Datenbankeintrag bei Wowhead. Verfügbarkeit, Werte und Fundorte können sich bis zur Beta ändern. Übernommene Classic-Einträge sind keine Bestätigung für Beute in neuen Forever-Raids.'));
     const a=node('a','loot-link','Vollständige Effekte und Quelle bei Wowhead ↗');a.href=link(x);a.target='_blank';a.rel='noopener noreferrer';body.append(a);
