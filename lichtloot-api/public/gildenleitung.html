@@ -7188,7 +7188,7 @@ let poReleaseRequests = [];
 let selectedPoReleaseRequestIds = new Set();
 let poReleaseSearch = "";
 let poReleaseAttendanceFilter = "all";
-const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],...(CURRENT_GUILD_SLUG === "lichtloot" ? [["zg","Alle ZG"]] : [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]])];
 const PO_RELEASE_COLUMNS_KEY = `lichtloot:p0-release-columns:${CURRENT_GUILD_SLUG}`;
 const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
 let poReleaseVisibleColumns = (() => {try{const saved=JSON.parse(localStorage.getItem(PO_RELEASE_COLUMNS_KEY)||"null");if(Array.isArray(saved))return new Set(saved.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));}catch(_error){}return new Set(PO_RELEASE_RAIDS.map(([raid])=>raid));})();
@@ -19434,7 +19434,7 @@ function renderP0ReleasePanelContent(){
       <div class="section-head">
         <div>
           <h3>P0+ Freigabe</h3>
-          <p>Die Freigaben gelten getrennt für MC, BWL, AQ40, AQ20, NAXX, ZG Mittwoch, ZG PRIME und ZG LATE.</p>
+          <p>${CURRENT_GUILD_SLUG === "lichtloot" ? "Für Lichtbringer gilt eine gemeinsame P0+ Freigabe für alle ZG-Raids." : "Die Freigaben gelten getrennt für MC, BWL, AQ40, AQ20, NAXX, ZG Mittwoch, ZG PRIME und ZG LATE."}</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0ReleasePanel()">Neu laden</button>
       </div>
@@ -19604,7 +19604,7 @@ function openPoReleaseRequestReview(index){
 }
 
 function poReleaseRaidLabel(raid){
-  const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", aq20:"P0+ Freigabe AQ20", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
+  const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", aq20:"P0+ Freigabe AQ20", naxx:"P0+ Freigabe NAXX", zg:"P0+ Alle ZG", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
   return labels[raid] || String(raid || "").toUpperCase();
 }
 
@@ -19658,7 +19658,7 @@ function poReleaseCheckHtml(entry, raid, index){
   const attendanceColor=raid.startsWith("zg-") && attended>=3 ? "#4ade80" : attended<=3?"#f87171":attended<=7?"#fbbf24":"#4ade80";
   const attendanceHtml = attendance && Number(attendance.total) > 0
     ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="${attendance.source === 'prio-list' ? 'GuildLoot-Priolisten' : 'Warcraft Logs'} · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${displayTotal} Teilnahmen</span>`
-    : (["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(raid) ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="Noch keine Teilnahmen erfasst">0/${attendanceWindow} Teilnahmen</span>` : '');
+    : (["mc","bwl","aq40","aq20","naxx","zg","zg-mittwoch","zg-prime","zg-late"].includes(raid) ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="Noch keine Teilnahmen erfasst">0/${attendanceWindow} Teilnahmen</span>` : '');
   const stateHtml = checked
     ? `<span class="po-release-state active${lowAttendance ? " low-attendance" : ""}" title="${escapeAttr(lowAttendance ? `${poReleaseRaidLabel(raid)} · Warnung: nur ${Number(attendance.attended)}/${displayTotal} Teilnahmen` : poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
     : `<button class="po-release-state empty" type="button" title="${escapeAttr(poReleaseRaidLabel(raid))} erteilen" onclick="setPoReleaseDirect(${Number(index)}, '${escapeAttr(raid)}', true)">offen</button>`;
@@ -19797,9 +19797,7 @@ function choosePoReleaseRaid(entry, enabled){
           <option value="aq40">Ahn'Qiraj 40</option>
           <option value="aq20">Ahn'Qiraj 20</option>
           <option value="naxx">Naxxramas</option>
-          <option value="zg-mittwoch">ZG Mittwoch</option>
-          <option value="zg-prime">ZG PRIME</option>
-          <option value="zg-late">ZG LATE</option>
+          ${CURRENT_GUILD_SLUG === "lichtloot" ? '<option value="zg">Alle ZG</option>' : '<option value="zg-mittwoch">ZG Mittwoch</option><option value="zg-prime">ZG PRIME</option><option value="zg-late">ZG LATE</option>'}
         </select>
         <div class="raid-helper-notify-actions">
           <button class="small-btn ghost" type="button" data-po-release-cancel>Abbrechen</button>

@@ -4523,7 +4523,7 @@ async function notificationMessageTemplate(guildId,notificationKey){
   return clean(result.rows[0]?.message_template);
 }
 
-const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
+const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "aq20", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late"];
 
 function poReleaseDisplaySettingsFromLayout(layout = {}) {
   const saved = layout?.poReleaseVisibleRaids;
@@ -5263,7 +5263,7 @@ async function getP0ReleaseList(guildId = "") {
 function normalizePoReleaseRaid(value) {
   const raid = normalizeRaidType(value);
   if (["p1p3", "p1-p3", "p1_p3"].includes(clean(value).toLowerCase())) return "p1p3";
-  return ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
+  return ["mc", "bwl", "aq40", "aq20", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
 }
 
 function normalizePoReleaseCharacterName(value) {
@@ -6009,7 +6009,7 @@ async function getCharacterPoReleaseRows(guildId) {
         playerPin: row.player_pin || "",
         releases: {
           p1p3: false,
-          mc: false, bwl: false, aq40: false, naxx: false,
+          mc: false, bwl: false, aq40: false, naxx: false, zg: false,
           "zg-mittwoch": false, "zg-prime": false, "zg-late": false
         },
         approvedBy: {},
@@ -6084,7 +6084,11 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
 
 async function setCharacterPoRelease({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
-  const raid = normalizePoReleaseRaid(params.raid || params.raidType);
+  let raid = normalizePoReleaseRaid(params.raid || params.raidType);
+  if (["zg-mittwoch", "zg-prime", "zg-late"].includes(raid)) {
+    const guildResult = await query("select slug from guilds where id=$1 limit 1", [guildId]);
+    if (guildResult.rows[0]?.slug === "lichtloot") raid = "zg";
+  }
   const characterId = clean(params.characterId || params.charId);
   const enabled = !["false", "0", "no", "nein", "delete", "remove"].includes(clean(params.enabled || params.value || "true").toLowerCase());
   if (!raid) {
@@ -6137,7 +6141,7 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
 }
 
-const PO_RELEASE_DM_RAID_LABELS={mc:"Molten Core",bwl:"Blackwing Lair",aq40:"AQ40",naxx:"Naxxramas","zg-mittwoch":"ZG Mittwoch","zg-prime":"ZG Prime","zg-late":"ZG Late",aq20:"AQ20"};
+const PO_RELEASE_DM_RAID_LABELS={mc:"Molten Core",bwl:"Blackwing Lair",aq40:"AQ40",naxx:"Naxxramas",zg:"Alle ZG","zg-mittwoch":"ZG Mittwoch","zg-prime":"ZG Prime","zg-late":"ZG Late",aq20:"AQ20"};
 async function sendPoReleaseGrantedDm({guildId,query:params={}}){
   requireMasterCode(params.masterCode);
   const characterId=clean(params.characterId||params.charId);
@@ -6279,7 +6283,11 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
 
 async function checkCharacterPoRelease({ guildId, query: params = {} }) {
   requireMasterOrQueueToken(params);
-  const raid = normalizePoReleaseRaid(params.raid || params.raidType || params.raidName);
+  let raid = normalizePoReleaseRaid(params.raid || params.raidType || params.raidName);
+  if (["zg-mittwoch", "zg-prime", "zg-late"].includes(raid)) {
+    const guildResult = await query("select slug from guilds where id=$1 limit 1", [guildId]);
+    if (guildResult.rows[0]?.slug === "lichtloot") raid = "zg";
+  }
   if (!raid) return { success: true, allowed: true, raid: "" };
   const pin = params.playerPin || params.pin || params.spielerLogin;
   const charName = params.player || params.char || params.character || params.spieler;
