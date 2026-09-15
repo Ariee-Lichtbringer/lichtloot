@@ -39,7 +39,8 @@
     for(const child of source.body.childNodes)copy(child,fragment);return fragment;
   }
   function confirmedNew(x){return sourceData?.confirmedNewItems?.some(entry=>entry.id===x.id&&entry.source&&entry.verifiedAt);}
-  function markNew(host,x){if(!confirmedNew(x))return;host.classList.add('item-forever-new');host.append(node('span','item-new-badge',language==='en'?'New in Forever':'Neu in Forever'));}
+  function possibleForever(x){return sourceData?.possibleForeverItems?.some(entry=>entry.id===x.id);}
+  function markNew(host,x){if(!confirmedNew(x)&&!possibleForever(x))return;host.classList.add('item-forever-new');host.append(node('span','item-new-badge',possibleForever(x)?(language==='en'?'Unconfirmed in Forever, but possible':'In Forever nicht bestätigt, aber möglich'):(language==='en'?'New in Forever':'Neu in Forever')));}
   function fillDetails(host,html,x){
     host.replaceChildren();host.classList.add('item-full-details');host.append(detailMarkup(html));
     host.append(node('p','item-hover-id','ItemID: '+x.id));markNew(host,x);
@@ -136,12 +137,12 @@
     if(!filtered.length){list.append(node('p','items-empty',itemView==='set'?(language==='en'?'No pieces from this set are currently available in the item database.':'Für dieses Set sind derzeit keine Teile in der Itemdatenbank verfügbar.'):'Keine passenden Gegenstände. Ändere die Suche oder setze die Filter zurück.'));return;}
     for(const x of filtered.slice((page-1)*perPage,page*perPage)){
       const card=node('button','item-card q'+x.quality);card.type='button';card.append(icon(x));
-      const copy=node('span','item-card-copy');if(confirmedNew(x)){card.classList.add('item-forever-new');markNew(copy,x);}copy.append(node('strong','item-name',x.name),node('span','item-meta',(slots[x.slot]||categories[x.classs]||'Gegenstand')+' · Gegenstandsstufe '+(x.level||0)),node('small','item-meta',qualities[x.quality]+' · ID '+x.id));if(activeZone){const indices=sourceData.assignments[x.id]?.[activeZone.id]||[];const names=[...new Set(indices.map(i=>x.sourcemore?.[i]?.n).filter(Boolean))];copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+(names.join(' · ')||(language==='en'?'Zone drop; no specific boss listed':'Gebietsdrop; kein einzelner Boss angegeben'))));}if(activeProfession){copy.append(node('span','item-meta',language==='en'?'Classic recipe item':'Classic-Rezeptgegenstand'));if(x.stats.reqskillrank)copy.append(node('span','item-meta',(language==='en'?'Required skill: ':'Benötigte Fertigkeit: ')+x.stats.reqskillrank));const sources=[...new Set((x.sourcemore||[]).map(s=>s.n).filter(Boolean))];if(sources.length)copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+sources.join(' · ')));}card.append(copy);card.onpointerenter=e=>{if(e.pointerType!=='touch')showHover(x,card);};card.onpointerleave=()=>{if(dismissedAnchor===card)dismissedAnchor=null;delayHide();};card.onfocus=()=>{dismissedAnchor=null;if(card.dataset.touch!=='true')showHover(x,card);};card.onblur=()=>{if(dismissedAnchor===card)dismissedAnchor=null;hideHover();};card.onpointerdown=e=>{card.dataset.touch=String(e.pointerType==='touch');};card.onclick=()=>open(x,card);list.append(card);
+      const copy=node('span','item-card-copy');if(confirmedNew(x)||possibleForever(x)){card.classList.add('item-forever-new');markNew(copy,x);}copy.append(node('strong','item-name',x.name),node('span','item-meta',(slots[x.slot]||categories[x.classs]||'Gegenstand')+' · Gegenstandsstufe '+(x.level||0)),node('small','item-meta',qualities[x.quality]+' · ID '+x.id));if(activeZone){const indices=sourceData.assignments[x.id]?.[activeZone.id]||[];const names=[...new Set(indices.map(i=>x.sourcemore?.[i]?.n).filter(Boolean))];copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+(names.join(' · ')||(language==='en'?'Zone drop; no specific boss listed':'Gebietsdrop; kein einzelner Boss angegeben'))));}if(activeProfession){copy.append(node('span','item-meta',language==='en'?'Classic recipe item':'Classic-Rezeptgegenstand'));if(x.stats.reqskillrank)copy.append(node('span','item-meta',(language==='en'?'Required skill: ':'Benötigte Fertigkeit: ')+x.stats.reqskillrank));const sources=[...new Set((x.sourcemore||[]).map(s=>s.n).filter(Boolean))];if(sources.length)copy.append(node('span','item-meta item-loot-source',(language==='en'?'Source: ':'Quelle: ')+sources.join(' · ')));}card.append(copy);card.onpointerenter=e=>{if(e.pointerType!=='touch')showHover(x,card);};card.onpointerleave=()=>{if(dismissedAnchor===card)dismissedAnchor=null;delayHide();};card.onfocus=()=>{dismissedAnchor=null;if(card.dataset.touch!=='true')showHover(x,card);};card.onblur=()=>{if(dismissedAnchor===card)dismissedAnchor=null;hideHover();};card.onpointerdown=e=>{card.dataset.touch=String(e.pointerType==='touch');};card.onclick=()=>open(x,card);list.append(card);
     }
   }
   function open(x,button){
     hideHover();opener=button||document.activeElement;const d=$('itemDialog');$('itemDialogTitle').textContent=x.name;$('itemDialogTitle').className='q'+x.quality;
-    const body=$('itemDialogContent');body.replaceChildren(icon(x));
+    const body=$('itemDialogContent');body.replaceChildren(icon(x));d.classList.toggle('item-forever-new',!!(confirmedNew(x)||possibleForever(x)));const flag=node('div');markNew(flag,x);body.append(flag);
     body.append(node('p','',qualities[x.quality]+' · '+(slots[x.slot]||categories[x.classs]||'Gegenstand')),node('p','','Gegenstandsstufe '+(x.level||0)+(x.reqlevel||x.stats.reqlevel?' · Benötigt Stufe '+(x.reqlevel||x.stats.reqlevel):'')));
     const dl=node('dl','item-stats');
     for(const [key,label] of Object.entries(statNames)){const val=x.stats[key]??x[key];if(val!==undefined&&val!==0){dl.append(node('dt','',label),node('dd','',number(val)));}}
@@ -172,7 +173,7 @@
   }
   renderRecipeLinks();
   let sourcesPending;
-  function loadSources(){return sourcesPending||(sourcesPending=fetch('forever-loot-sources.json?v=20260914').then(r=>{if(!r.ok)throw Error('Loot sources unavailable');return r.json();}).catch(e=>{sourcesPending=null;throw e;}));}
+  function loadSources(){return sourcesPending||(sourcesPending=fetch('forever-loot-sources.json?v=20260915-gold').then(r=>{if(!r.ok)throw Error('Loot sources unavailable');return r.json();}).catch(e=>{sourcesPending=null;throw e;}));}
   function zoneName(z){return language==='en'?z.nameEn:z.nameDe;}
   function selectZone(zone){
     activeZone=zone;activeSet=null;setView('zone');$('itemSetTitle').textContent=zoneName(zone);$('itemSetBack').textContent=language==='en'?'← Back to loot lists':'← Zurück zu den Lootlisten';
