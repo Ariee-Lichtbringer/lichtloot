@@ -47,6 +47,7 @@ Berufseigene Stickereien, zusätzliche Stoffbeute und neue Rezepte.|Profession-s
 Charakter|Character
 Ausrüstung & Loot|Gear & Loot
 Raidübersicht|Raid overview
+In Forever nicht bestätigt, aber möglich|Unconfirmed in Forever, but possible
 Goldener Rahmen: In Forever nicht bestätigt, aber möglich. Markiert sind 413 Einträge mit Quellenhinweisen auf fehlende reguläre Erhältlichkeit in Classic Era.|Gold border: Unconfirmed in Forever, but possible. Marks 413 entries with source indications that they were not regularly obtainable in Classic Era.
 Bekannte Fundortzuordnungen|Known source assignments
 Wowhead-Datenstand vom 14. September 2026. Übernommene Classic-Daten, für Forever noch nicht bestätigt. Die Listen enthalten nur bisher eindeutig zugeordnete Items.|Wowhead data as of 14 September 2026. Inherited Classic data, not yet confirmed for Forever. These lists contain only items with known source assignments.
