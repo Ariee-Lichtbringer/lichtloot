@@ -1,3 +1,4 @@
+import {installAccessSecurity, hashSecurityAnswer, verifySecurityAnswer, migrateSecurityAnswers, redactAccessDetails} from './auth-security.js';
 import { openPlatformGuildLeadership } from "./platform-guild-entry.js";
 import { createArmorRequests } from "./armor-requests.js";
 import { createCharacterProfessions } from "./character-professions.js";
@@ -198,7 +199,6 @@ const defaultAllowedOrigins = [
   "https://lichtloot.de",
   "https://www.lichtloot.de",
   "https://lichtloot-production.up.railway.app",
-  "null"
 ];
 const configuredAllowedOrigins = clean(process.env.CORS_ORIGIN)
   .split(",")
@@ -216,17 +216,10 @@ function normalizeCorsOrigin(origin) {
 }
 const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredAllowedOrigins].map(normalizeCorsOrigin));
 function isAllowedCorsOrigin(origin) {
-  const normalized = normalizeCorsOrigin(origin);
-  if (!normalized || allowedOrigins.has("*") || allowedOrigins.has(normalized)) return true;
-  try {
-    const { protocol, hostname } = new URL(normalized);
-    return protocol === "https:" || protocol === "http:"
-      ? Boolean(hostname)
-      : false;
-  } catch {
-    return false;
-  }
+  if (!origin) return true; // Native clients do not send an Origin header.
+  return allowedOrigins.has(normalizeCorsOrigin(origin));
 }
+
 const corsOptions = {
   origin(origin, callback) {
     if (isAllowedCorsOrigin(origin)) {
@@ -245,6 +238,7 @@ app.options("*", cors(corsOptions));
 app.use("/api/combat-log/import", express.text({ type: "*/*", limit: "120mb" }));
 app.use(express.json({ limit: "80mb" }));
 app.use(express.urlencoded({ extended: true, limit: "80mb" }));
+installAccessSecurity(app, { allowedOrigins, enforceTransport: process.env.ENFORCE_SECURE_TRANSPORT === "true" ? true : process.env.ENFORCE_SECURE_TRANSPORT === "browser" ? "browser" : false });
 
 // Alte Lootseiten laden einzelne P0+-Bausteine noch per JSONP. Railway
 // liefert normalerweise JSON; mit einem gueltigen Callback-Namen wird die
@@ -21188,12 +21182,12 @@ async function reportIssue({ guildId, query: params }) {
       clean(params.points),
       reportPlayer,
       reportServer,
-      clean(params.note),
-      clean(params.page),
+      redactAccessDetails(clean(params.note)),
+      redactAccessDetails(clean(params.page)),
       clean(params.createdAt || params.originalDate),
       clean(params.status) || "new",
       requestedReferenceId || `LL-${randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`,
-      clean(params.technicalDetails || params.details).slice(0, 12000),
+      redactAccessDetails(clean(params.technicalDetails || params.details)).slice(0, 12000),
       clean(params.actionName || params.actionContext),
       clean(params.httpStatus)
     ]
@@ -28347,7 +28341,7 @@ async function createPlayerWithCharacter({
       `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
        values ($1, $2, $3, $4, 'pending')
        returning id, player_pin, approval_status, created_at`,
-      [guildId, pin, clean(securityQuestion) || null, clean(securityAnswer) || null]
+      [guildId, pin, clean(securityQuestion) || null, await hashSecurityAnswer(securityAnswer)]
     );
 
     const characterResult = await client.query(
@@ -30648,7 +30642,8 @@ async function resetPlayerPinBySecurity({guildId,charName,server,securityQuestio
   if(result.rows.length>1||!normalizePlayerSecurityQuestion(player.security_question)||!clean(player.security_answer)){
     const error=new Error('Für dieses Konto ist keine persönliche Sicherheitsfrage für den Selbst-Reset hinterlegt oder die Zuordnung ist nicht eindeutig. Bitte wende dich an den Support. Ein durch die Raidleitung angelegter Eintrag kann so nicht zurückgesetzt werden.');error.statusCode=409;throw error;
   }
-  if(normalizePlayerSecurityQuestion(player.security_question)!==question||clean(player.security_answer).normalize('NFC').toLowerCase()!==answer){
+  if(!player.security_answer.startsWith('scrypt-v1$')){const hashed=await hashSecurityAnswer(player.security_answer);await query('update players set security_answer=$1 where id=$2 and security_answer=$3',[hashed,player.id,player.security_answer]);player.security_answer=hashed;}
+  if(normalizePlayerSecurityQuestion(player.security_question)!==question||!(await verifySecurityAnswer(player.security_answer,answer))){
     const error=new Error('Sicherheitsfrage oder Antwort ist nicht korrekt. Verwende die Frage und Antwort, die du bei der Erstellung selbst gewählt hast.');error.statusCode=403;throw error;
   }
   try{await query('update players set player_pin=$1,updated_at=now() where id=$2 and guild_id=$3',[pin,player.id,guildId]);}
@@ -30684,7 +30679,7 @@ app.post("/api/dkp", async (req, res, next) => {
   } catch(error) { next(error); }
 });
 
-app.get("/api/apps-script", async (req, res, next) => {
+async function legacyAppsScript(req, res, next) {
   try {
     const action = clean(req.query.action);
     // Railway kann mehrere Serverinstanzen parallel betreiben. Mastercode-
@@ -31900,7 +31895,8 @@ app.get("/api/apps-script", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+}
+app.get("/api/apps-script", legacyAppsScript);
 
 app.post("/api/combat-log/import", async (req, res, next) => {
   try {
@@ -31918,6 +31914,7 @@ app.post("/api/combat-log/import", async (req, res, next) => {
 
 app.post("/api/apps-script", async (req, res, next) => {
   try {
+    if(req.body?.__transport === "get"){req.query={...req.body};delete req.query.callback;delete req.query.__transport;return legacyAppsScript(req,res,next);}
     const action = clean(req.body?.action || req.query?.action);
     if (action === "saveCharacterProfessions" || action === "getCharacterProfessions") {
       const params = req.body || {};
@@ -32936,9 +32933,9 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...cleared, guild: guild.slug });
     }
 
-    const error = new Error("Unbekannte POST-Aktion.");
-    error.statusCode = 404;
-    throw error;
+    req.query = { ...req.query, ...req.body };
+    delete req.query.callback;
+    return legacyAppsScript(req, res, next);
   } catch (error) {
     next(error);
   }
@@ -33010,7 +33007,7 @@ app.get("/api/guilds/:guildSlug/characters", async (req, res, next) => {
   }
 });
 
-app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res, next) => {
+async function listPlayerCharacters(req, res, next) {
   try {
     const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
     await ensurePlayerRoleSchema();
@@ -33023,13 +33020,15 @@ app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res
          and coalesce(p.is_blocked, false) = false
          and p.approval_status = 'approved'
        order by c.name asc`,
-      [guild.id, req.params.pin]
+      [guild.id, req.body?.pin || req.params.pin]
     );
     res.json({ success: true, guild: guild.slug, characters: result.rows });
   } catch (error) {
     next(error);
   }
-});
+}
+app.post("/api/guilds/:guildSlug/players/characters", listPlayerCharacters);
+app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", listPlayerCharacters);
 
 app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
   const client = await pool.connect();
@@ -33050,7 +33049,7 @@ app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
       `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
        values ($1, $2, $3, $4, 'pending')
        returning id, player_pin, approval_status, created_at`,
-      [guild.id, playerPin, securityQuestion || null, securityAnswer || null]
+      [guild.id, playerPin, securityQuestion || null, await hashSecurityAnswer(securityAnswer)]
     );
     const player = playerResult.rows[0];
     const characterResult = await client.query(
@@ -33111,10 +33110,10 @@ app.use((req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  console.error(error);
+  console.error("API request failed", {status:error.statusCode||500, path:redactAccessDetails(req.path)});
   res.status(error.statusCode || 500).json({
     success: false,
-    error: error.message || "Internal server error"
+    error: error.statusCode && error.statusCode < 500 ? error.message : "Interner Fehler. Bitte den Support kontaktieren."
   });
 });
 
@@ -33194,6 +33193,7 @@ async function runMissingPrioReminderTick() {
 }
 
 app.listen(port, () => {
+  migrateSecurityAnswers(query).then(count=>console.log("Security answer hashes migrated:",count)).catch(()=>console.error("Security answer migration failed; retry on next startup."));
   const scheduledP0Tick = () => p0Scheduler.tick().catch(() => console.error("P0-Zeitplanung konnte nicht verarbeitet werden."));
   scheduledP0Tick();
   setInterval(scheduledP0Tick, 250).unref();

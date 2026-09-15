@@ -2813,21 +2813,8 @@ async def discord_channel_sync_loop():
 
 
 def api_get(params):
-    guild_slug = normalize_guild_slug((params or {}).get("guild") or (params or {}).get("guildSlug") or current_guild_slug())
-    query_params = {**(params or {}), "guild": guild_slug, "guildSlug": guild_slug}
-    query = urllib.parse.urlencode(query_params)
-    url = API_URL + "?" + query
-    try:
-        with urllib.request.urlopen(url, timeout=30) as response:
-            return parse_api_response(response, "GET", url)
-    except urllib.error.HTTPError as error:
-        try:
-            raw = error.read().decode("utf-8")
-            parsed = json.loads(raw)
-            detail = parsed.get("error") or raw
-        except Exception:
-            detail = error.reason or str(error)
-        raise RuntimeError(f"HTTP Error {error.code}: {detail}") from error
+    # The API accepts legacy read actions via POST; credentials never enter URLs.
+    return api_post({**(params or {}), "__transport": "get"})
 
 
 def api_post(payload):
