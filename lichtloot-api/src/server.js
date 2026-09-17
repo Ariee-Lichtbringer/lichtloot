@@ -27987,7 +27987,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   const isGenericZgSource = sourceRaidType === "zg";
   targetRaidType = await resolveZgPointTarget(client, guildId, raid, targetRaidType);
   await requireConfiguredSpecialRaidType(guildId, targetRaidType);
-  if (isGenericZgSource && !["zg-prime", "zg-late", "zg-mittwoch"].includes(targetRaidType)) {
+  if (isGenericZgSource && !["zg", "zg-prime", "zg-late", "zg-mittwoch"].includes(targetRaidType)) {
     const error = new Error("Für einen allgemeinen ZG-Raid muss ZG Prime, ZG Late-Night oder ZG Mittwoch als Ziel gewählt werden.");
     error.statusCode = 400;
     throw error;

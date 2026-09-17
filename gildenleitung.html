@@ -9698,7 +9698,7 @@ function guildRaidP0PlusEnabled(raid){
 
 function isAllowedP0RaidForRaid(raid){
   if(!guildRaidP0PlusEnabled(raid))return false;
-  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)) || (CURRENT_GUILD_SLUG === "nachtloot" && getRaidKey(raid) === "zg");
+  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)) || (["lichtloot","nachtloot"].includes(CURRENT_GUILD_SLUG) && getRaidKey(raid) === "zg");
 }
 
 function isZgRaidForP0Transfer(raid){
