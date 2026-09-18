@@ -1,3 +1,4 @@
+import { assertP0Cutoff } from './p0-cutoff.js';
 import {installAccessSecurity, hashSecurityAnswer, verifySecurityAnswer, migrateSecurityAnswers, redactAccessDetails} from './auth-security.js';
 import { openPlatformGuildLeadership } from "./platform-guild-entry.js";
 import { createArmorRequests } from "./armor-requests.js";
@@ -13113,6 +13114,7 @@ async function savePrio({ guildId, query: params }) {
     const { p0Selected, p0PlusSelected, p0ItemName, p0ItemId } = await resolvePrioP0Selection(
       guildId, savedRaidForSignupCheck.raid_type, params, { client, layout: guildLayout }
     );
+    if (p0Selected) await assertP0Cutoff(client, guildId, savedRaidForSignupCheck.id, lootSourceRaidType(savedRaidForSignupCheck.raid_type));
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let recruitRestricted = false;
     if (eraRules.recruit.enabled && eraRules.recruit.raids.includes(releaseRaid)) {
@@ -13240,6 +13242,7 @@ async function savePrio({ guildId, query: params }) {
     const discordConfirmation = await queuePrioConfirmation(client, {
       guildId, character, prioId: prioResult.rows[0].id, confirmation
     });
+    if (p0Selected) await assertP0Cutoff(client, guildId, savedRaidForSignupCheck.id, lootSourceRaidType(savedRaidForSignupCheck.raid_type));
     await client.query("commit");
     const missingPrioReminderRefresh = await enqueueRaidMissingPrioReminderRefresh(
       guildId,
@@ -13419,6 +13422,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     const { p0Selected, p0PlusSelected, p0ItemName, p0ItemId } = await resolvePrioP0Selection(
       guildId, raidType, params, { client, layout: config.layout }
     );
+    if (p0Selected) await assertP0Cutoff(client, guildId, raid.id, lootSourceRaidType(raid.raid_type));
     const p1 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p1, p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID));
     const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
     const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
@@ -13453,6 +13457,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
           source: "raidlead_prio_saved"
         })
       : [];
+    if (p0Selected) await assertP0Cutoff(client, guildId, raid.id, lootSourceRaidType(raid.raid_type));
     await client.query("commit");
     const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, raid, "raidlead_prio_saved")
       .catch(error => ({ success: false, error: error.message || String(error) }));
@@ -13670,13 +13675,18 @@ async function savePoSignupPrioFromBot({ guildId, query: params }, scheduleOptio
     const linked = await query(`select 1 from po_post_entries where guild_id=$1
       and raid_id=any($2::text[]) and archived_at is null limit 1`, [guildId,[String(raid.id),String(raid.external_raid_id || "")]]);
     if (!linked.rows.length) throw Object.assign(new Error("Für diesen Raid ist kein P0-Anmelder verknüpft."), {statusCode:409});
-    if (scheduleOptions.validateOnly) return {raid, character:verifiedCharacter, item};
+    if (scheduleOptions.validateOnly) {
+      await assertP0Cutoff({query}, guildId, raid.id, lootSourceRaidType(raid.raid_type));
+      return {raid, character:verifiedCharacter, item};
+    }
   }
   const client = await pool.connect();
   let scheduleClientReleased = false;
 
   try {
     await client.query("begin");
+    await assertP0Cutoff(client, guildId, raid.id, lootSourceRaidType(raid.raid_type));
+
     if (scheduleOptions.jobId) {
       const job = await lockSchedule(client, scheduleOptions.jobId);
       if (!job) { await client.query("rollback"); return {success:true, skipped:true}; }
@@ -13749,6 +13759,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }, scheduleOptio
         where id=$1 and status='pending' and deadline_at>clock_timestamp() returning id`, [scheduleOptions.jobId]);
       if (!applied.rows.length) throw new Error("P0-Schluss während der Verarbeitung erreicht; Eintragung zurückgerollt.");
     }
+    await assertP0Cutoff(client, guildId, raid.id, lootSourceRaidType(raid.raid_type));
     await client.query("commit");
     if (scheduleOptions.jobId) { client.release(); scheduleClientReleased = true; }
     const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "po_bot_prio_saved");
