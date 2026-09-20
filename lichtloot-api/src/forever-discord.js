@@ -27,7 +27,7 @@ export function createForeverDiscord({query,pool,access,raids}){
   await query('insert into forever_discord_channels(guild_id,discord_guild_id,channel_id) values($1,$2,$3) on conflict(guild_id) do update set discord_guild_id=$2,channel_id=$3,updated_at=now()',[guild.id,snow(body.discordGuildId),snow(body.channelId)]);attempts.delete(key);return {success:true,guild:guild.name};
  }
  if(action==='poll'){
-  const rows=(await query("select p.*,g.slug,(r.starts_at<now() or r.status in ('completed','cancelled')) as archived from forever_discord_posts p join guilds g on g.id=p.guild_id join forever_raids r on r.guild_id=p.guild_id and r.id=p.raid_id where r.starts_at>now()-interval '30 days' and ($1::uuid is null or (p.guild_id,p.raid_id)>($1::uuid,$2::uuid)) order by p.guild_id,p.raid_id limit 100",[body.cursor?.guildId||null,body.cursor?.raidId||null])).rows;
+  const rows=(await query("select p.*,g.slug,(r.status in ('completed','cancelled','archived')) as archived from forever_discord_posts p join guilds g on g.id=p.guild_id join forever_raids r on r.guild_id=p.guild_id and r.id=p.raid_id where r.starts_at>now()-interval '30 days' and ($1::uuid is null or (p.guild_id,p.raid_id)>($1::uuid,$2::uuid)) order by p.guild_id,p.raid_id limit 100",[body.cursor?.guildId||null,body.cursor?.raidId||null])).rows;
   const posts=[];for(const p of rows){const s=await snapshot(p);if(s)posts.push(s);}return {success:true,posts,cursor:rows.length===100?{guildId:rows.at(-1).guild_id,raidId:rows.at(-1).raid_id}:null};
  }
  if(['claim','ack','failed'].includes(action)){
@@ -46,7 +46,7 @@ export function createForeverDiscord({query,pool,access,raids}){
  if(action==='unlink'){await query('delete from forever_discord_links where guild_id=$1 and discord_user_id=$2',[guild.id,user]);return {success:true};}
  const a=await actor(guild,user);
  if(action==='signup')return raids.run(guild,a,{action:'signup',raidId:body.raidId,characterId:body.characterId,role:body.role,status:body.status,note:body.note||''});
- if(action==='context'||action==='connect'){const r=(await query("select starts_at<now() or status in ('completed','cancelled') as archived from forever_raids where guild_id=$1 and id=$2",[guild.id,body.raidId])).rows[0];const result=await raids.run(guild,a,{action:'overview',archive:r?.archived,raidId:body.raidId});return {success:true,characters:result.characters,raid:result.raids.find(r=>r.id===body.raidId)||null};}
+ if(action==='context'||action==='connect'){const r=(await query("select status in ('completed','cancelled','archived') as archived from forever_raids where guild_id=$1 and id=$2",[guild.id,body.raidId])).rows[0];const result=await raids.run(guild,a,{action:'overview',archive:r?.archived,raidId:body.raidId});return {success:true,characters:result.characters,raid:result.raids.find(r=>r.id===body.raidId)||null};}
  throw fail('Unbekannte Discord-Aktion.');
  }};
 }

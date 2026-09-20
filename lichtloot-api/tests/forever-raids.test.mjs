@@ -49,4 +49,18 @@ assert.equal((await run(a,'overview')).raids.length,0);
 assert.equal((await run(a,'overview',{archive:true})).raids.length,1);
 assert.equal((await run(outsider,'overview',{archive:true},other)).raids.length,0);
 console.log('Forever: real PostgreSQL queries passed — guild isolation, ownership, capacity, role authorization, revisions, status and audit.');
+
+const repeatKey=randomUUID();const one=await run(lead,'saveRaid',{...params,title:'Einmal',requestKey:repeatKey});const two=await run(lead,'saveRaid',{...params,title:'Einmal',requestKey:repeatKey});assert.equal(one.id,two.id);
+await run(a,'signup',{raidId:one.id,characterId:ca,role:'dd',status:'signed'});
+await assert.rejects(run(a,'attendance',{raidId:one.id,characterId:ca,attendance:'present'}),/Nur die/);
+await run(lead,'attendance',{raidId:one.id,characterId:ca,attendance:'present'});
+await run(lead,'saveRaid',{...params,id:one.id,revision:1,status:'running',date:'2020-01-01'});
+assert.ok((await run(a,'overview')).raids.some(r=>r.id===one.id));
+await run(lead,'saveRaid',{...params,id:one.id,revision:2,status:'completed'});
+const before=(await run(a,'overview',{archive:true})).raids.find(r=>r.id===one.id).signups[0];
+await run(a,'saveCharacter',{id:ca,name:'Renamed',className:'mage',role:'dd',ruleset:'normal'});
+const after=(await run(a,'overview',{archive:true})).raids.find(r=>r.id===one.id).signups[0];assert.equal(before.name,after.name);assert.equal(after.attendance,'present');
+await assert.rejects(run(lead,'attendance',{raidId:one.id,characterId:ca,attendance:'noshow'}),/wieder öffnen/);
+
+const series=await run(lead,'saveRaid',{...params,title:'Serie',repeatWeeks:3,requestKey:randomUUID()});assert.equal(series.ids.length,3);
 await db.close();

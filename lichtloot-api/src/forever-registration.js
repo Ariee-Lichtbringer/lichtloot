@@ -1,3 +1,4 @@
+import {verifySecurityAnswer} from './auth-security.js';
 import {randomUUID} from 'node:crypto';
 import {foreverCharacterName,foreverSchema,classes,roles} from './forever-raids.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
@@ -10,6 +11,15 @@ export function registrationInput(body){
  return {name,pin,question,answer,className:body.className,role:body.role,ruleset:body.ruleset};
 }
 export function installForeverRegistration(app,deps){
+ app.post('/api/forever/recover',async(req,res,next)=>{
+  res.set('Cache-Control','no-store');try{deps.rateLimit(req,'forever-recover',5,60*60*1000);const b=req.body||{},g=await deps.requireGuild(deps.explicitGuild(b.guild));await deps.requireForeverGuild(g);
+   const name=foreverCharacterName(b.firstName,b.lastName),pin=String(b.newPin||'').trim().toUpperCase();if(!/^[A-Z0-9]{8,32}$/.test(pin))throw fail('Neuer Code: 8–32 Buchstaben und Ziffern.');
+   const matches=(await deps.query("select distinct p.id,p.security_question,p.security_answer from players p join forever_characters c on c.player_id=p.id and c.guild_id=p.guild_id where p.guild_id=$1 and lower(c.name)=lower($2) and p.approval_status='approved' and not p.is_blocked",[g.id,name])).rows;
+   const p=matches.length===1?matches[0]:null;if(!p||String(p.security_question||'').trim()!==String(b.question||'').trim()||!(await verifySecurityAnswer(p.security_answer,String(b.answer||''))))throw fail('Diese Angaben konnten nicht bestätigt werden. Bitte die Gildenleitung kontaktieren.',403);
+   try{await deps.query('update players set player_pin=$3,updated_at=now() where guild_id=$1 and id=$2',[g.id,p.id,pin]);}catch(e){if(e.code==='23505')throw fail('Dieser neue Code kann nicht verwendet werden.');throw e;}
+   res.json({success:true,message:'Login-Code geändert. Melde dich mit deinem neuen Code an.'});
+  }catch(e){next(e);}
+ });
  app.post('/api/forever/register',async(req,res,next)=>{
   res.set('Cache-Control','no-store');
   try{
