@@ -2934,7 +2934,9 @@ async function loadLootFromSheet(){
   const list=document.getElementById("lootList");
 
   try{
-    const result=await loadAq40LootWithFallback();
+    // Finish initializing the page script before starting parallel loaders.
+    await Promise.resolve();
+    const [result]=await Promise.all([loadAq40LootWithFallback(), loadP0PlusFromSheet(), loadGuildPoItems()]);
     aq40Loot=filterLootPageDisplayItems(result.items);
     if(!aq40Loot.length){
       throw new Error("Keine Naxx-Lootdaten gefunden.");
@@ -9102,10 +9104,6 @@ function p0V9Normalize(obj){
 
 function p0V9Store(entries){
   const cleaned = (entries || []).map(p0V9Normalize).filter(Boolean);
-  if(!cleaned.length){
-    console.warn("P0+ V9: Keine gültigen neuen Daten. Bestehende Anzeige bleibt erhalten.");
-    return window.p0plusEntries || [];
-  }
 
   const map = {};
   cleaned.forEach(entry => {
@@ -9124,18 +9122,18 @@ function p0V9Store(entries){
 }
 
 async function p0V9FetchJson(url,label){
-  const fullUrl = url +
-    "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
-    "&all=1" +
-    "&nocache=1" +
-    "&refresh=1" +
-    "&t=" + Date.now() + "_" + Math.random().toString(36).slice(2);
-
-  const response = await fetch(fullUrl,{cache:"no-store"});
-  if(!response.ok) throw new Error(label + " HTTP " + response.status);
-  const result = await response.json();
-  const raw = Array.isArray(result?.entries) ? result.entries : [];
-  return raw.map(p0V9Normalize).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry));
+  const fullUrl = url + "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) + "&all=1&t=" + Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try{
+    const response = await fetch(fullUrl,{cache:"no-store",signal:controller.signal});
+    if(!response.ok) throw new Error(label + " HTTP " + response.status);
+    const result = await response.json();
+    if(result?.success !== true || !Array.isArray(result.entries)) throw new Error(label + " lieferte keine gültigen P0+-Daten.");
+    return result.entries.map(p0V9Normalize).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry));
+  }finally{
+    clearTimeout(timeout);
+  }
 }
 
 function p0V9FetchJsonp(url,label){
@@ -9210,21 +9208,9 @@ async function loadP0PlusFromSheet(){
   if(p0V9LoadPromise) return p0V9LoadPromise;
 
   p0V9LoadPromise = (async () => {
-    let entries = [];
-
-    try{ entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API"); }catch(error){ console.warn("P0+ V9 Live-API fetch fehlgeschlagen:", error); }
-    if(!entries.length){
-      try{ entries = await p0V9FetchJsonp(P0PLUS_API_URL,"oldapi"); }catch(error){ console.warn("P0+ V9 Live-API JSONP fehlgeschlagen:", error); }
-    }
-    if(!entries.length){
-      try{ entries = await p0V9FetchJson(APPS_SCRIPT_URL,"Haupt-API"); }catch(error){ console.warn("P0+ V9 Haupt-API fetch fehlgeschlagen:", error); }
-    }
-    if(!entries.length){
-      try{ entries = await p0V9FetchJsonp(APPS_SCRIPT_URL,"mainapi"); }catch(error){ console.warn("P0+ V9 Haupt-API JSONP fehlgeschlagen:", error); }
-    }
-    if(!entries.length){
-      entries = await p0V9FetchCsv();
-    }
+    // A successful empty list is authoritative. Do not fall through to obsolete
+    // JSONP/Sheets requests or retry the same Railway endpoint under another name.
+    const entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API");
 
     const stored = p0V9Store(entries);
     p0V9LoadedAt = Date.now();
@@ -9262,8 +9248,10 @@ function getP0PlusEntriesForItem(itemName){
   }).sort((a,b) => Number(b.points || 0) - Number(a.points || 0));
 }
 
+var p0V9RefreshPromise;
 function refreshP0PlusEverywhere(){
-  return loadP0PlusFromSheet().then(entries => {
+  if(p0V9RefreshPromise) return p0V9RefreshPromise;
+  p0V9RefreshPromise = loadP0PlusFromSheet().then(entries => {
     if(typeof renderLootList === "function") renderLootList();
     if(typeof renderCurrentPrios === "function") renderCurrentPrios();
     const overlay = document.getElementById("p0plusOverlay");
@@ -9271,7 +9259,8 @@ function refreshP0PlusEverywhere(){
       renderP0PlusOverview(entries);
     }
     return entries;
-  });
+  }).finally(() => { p0V9RefreshPromise = null; });
+  return p0V9RefreshPromise;
 }
 
 /* Nach dem Überschreiben direkt einmal laden, aber ohne die Anzeige vorher leer zu machen. */
