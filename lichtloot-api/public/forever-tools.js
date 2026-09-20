@@ -8,7 +8,7 @@ addEventListener('resize',sizeFrame);
 function mark(name){document.querySelectorAll('.sidebar nav a').forEach(a=>{const selected=a.hash==='#'+name;a.classList.toggle('selected',selected);if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
 function open(name,params=location.search,write=false){
  if(!names[name]){host.hidden=true;document.body.classList.remove('forever-tool-mode');mark(name||'termine');return;}
- host.hidden=false;document.body.classList.add('forever-tool-mode');mark(name);document.getElementById('foreverToolTitle').textContent=names[name];frame.title=names[name]+' · GuildLoot Forever';
+ dispatchEvent(new Event('forever-tool-open'));host.hidden=false;document.body.classList.add('forever-tool-mode');mark(name);document.getElementById('foreverToolTitle').textContent=names[name];frame.title=names[name]+' · GuildLoot Forever';
  const url=new URL('forever.html',location.href);url.search=params;url.searchParams.set('embedded','1');const guild=new URLSearchParams(location.search).get('guild');if(guild)url.searchParams.set('guild',guild);url.hash=name;
  if(write){window.scrollTo({top:0,behavior:'instant'});const parent=new URL(location.href);parent.hash=name;history.pushState(null,'',parent);}
  if(current!==url.href){loading.hidden=false;current=url.href;frame.src=url.href;}
