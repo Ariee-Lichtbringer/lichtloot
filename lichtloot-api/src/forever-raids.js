@@ -166,7 +166,14 @@ export function createForeverRaids({ pool, query }) {
           await db.query(`update forever_raids set group_id=$3,title=$4,kind=$5,starts_at=$6::timestamp at time zone 'Europe/Berlin',size=$7,tanks=$8,heals=$9,description=$10,status=$11,revision=revision+1 where guild_id=$1 and id=$2`,values);
         } else await db.query(`insert into forever_raids(guild_id,id,group_id,title,kind,starts_at,size,tanks,heals,description,status) values($1,$2,$3,$4,$5,$6::timestamp at time zone 'Europe/Berlin',$7,$8,$9,$10,$11)`,values);
         await audit(db,guild,actor,id,body.id?'raid_updated':'raid_created',`${value.title} · ${value.date} ${value.time} · ${value.status}`);
-        return {success:true,id};
+        let discordQueued=false;
+        if(!body.id && !['cancelled','completed'].includes(value.status)) {
+          const queued=await db.query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id)
+            select guild_id,$2,discord_guild_id,channel_id from forever_discord_channels where guild_id=$1
+            on conflict(guild_id,raid_id) do nothing returning raid_id`,[guild.id,id]);
+          discordQueued=queued.rows.length>0;
+        }
+        return {success:true,id,discordQueued};
       });
     }
     if(action==='signup' || action==='manageSignup') {

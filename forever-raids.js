@@ -126,7 +126,7 @@ $('closeEditor').onclick=()=>{if(!saving)$('editor').close();};
 $('editor').addEventListener('cancel',e=>{if(saving)e.preventDefault();});
 $('editorForm').onsubmit=async e=>{
  e.preventDefault();if(saving)return;saving=true;const submit=e.currentTarget.querySelector('button[type=submit]');submit.disabled=true;$('editorError').textContent='';
- try{const values=Object.fromEntries(new FormData(e.currentTarget));const result=await editorSubmit(values);$('editor').close();notice(result.status==='bench'?'Der Termin ist voll. Deine Anmeldung steht auf der Ersatzbank.':'Gespeichert.');try{await load();}catch(error){notice('Gespeichert, aber die Ansicht konnte nicht aktualisiert werden. Bitte „Aktualisieren“ wählen.',true);}}
+ try{const values=Object.fromEntries(new FormData(e.currentTarget));const result=await editorSubmit(values);$('editor').close();if(result.raidSaved)location.hash='termine';notice(result.discordQueued?'Raid gespeichert. Der Discord-Anmelder wird automatisch veröffentlicht.':result.status==='bench'?'Der Termin ist voll. Deine Anmeldung steht auf der Ersatzbank.':'Gespeichert.');try{await load();}catch(error){notice('Gespeichert, aber die Ansicht konnte nicht aktualisiert werden. Bitte „Aktualisieren“ wählen.',true);}}
  catch(error){$('editorError').textContent=error.message;}finally{saving=false;submit.disabled=false;}
 };
 function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Charakter anlegen',[
@@ -135,7 +135,7 @@ function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Chara
 function groupEditor(g={}){editor(g.id?'Raidgruppe umbenennen':'Raidgruppe anlegen',[field('name','Name der Gruppe','text',g.name,null,true)],v=>api('saveGroup',{...v,id:g.id}));}
 function raidEditor(r={}){
  const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'])),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','cancelled','completed'])),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
- editor(r.id?'Termin verwalten':'Neuen Termin planen',fields,v=>api('saveRaid',{...v,id:r.id,revision:r.revision}));
+ editor(r.id?'Termin verwalten':'Neuen Termin planen',fields,async v=>({...await api('saveRaid',{...v,id:r.id,revision:r.revision}),raidSaved:true}));
  const form=$('editorForm');form.elements.size.min='1';
  if(!r.id)form.elements.kind.onchange=()=>{const defaults={hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8],dungeon:[5,1,1],other:[10,1,2]}[form.elements.kind.value];['size','tanks','heals'].forEach((key,i)=>form.elements[key].value=defaults[i]);};
 }

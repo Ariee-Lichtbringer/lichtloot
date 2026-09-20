@@ -36,4 +36,13 @@ const poll=await bot.run({action:'poll'});assert.equal(poll.posts[0].raid.signup
 await query('update players set is_blocked=true where id=$1',[players[0]]);await assert.rejects(bot.run({action:'context',...ctx}),e=>e.statusCode===401);
 await bot.run({action:'unlink',...second});await assert.rejects(bot.run({action:'context',...second}),e=>e.statusCode===401);
 let handler;installForeverDiscord({post(_,fn){handler=fn;}},{pool,query,access,raids,token:'SECRET'});let error;await handler({headers:{},body:{action:'poll'}},{set(){}},e=>error=e);assert.equal(error.statusCode,403);
+
+const automatic=await raids.run(guild,lead,{action:'saveRaid',title:'Automatisch',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal'});
+assert.equal(automatic.discordQueued,true);
+assert.equal((await query('select * from forever_discord_posts where raid_id=$1',[automatic.id])).rows[0].channel_id,'1521902200203247616');
+await raids.run(guild,lead,{action:'saveRaid',id:automatic.id,revision:1,title:'Geändert',date:'2030-09-21',time:'21:00',size:10,tanks:1,heals:2,kind:'hyjal'});
+assert.equal((await query('select * from forever_discord_posts where raid_id=$1',[automatic.id])).rows.length,1);
+const isolated=await raids.run(other,lead,{action:'saveRaid',title:'Ohne Kanal',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal'});
+assert.equal(isolated.discordQueued,false);
+assert.equal((await query('select * from forever_discord_posts where raid_id=$1',[isolated.id])).rows.length,0);
 await db.close();console.log('Forever Discord passed: token required, admin publication, idempotent post, leases, exact message/channel/guild binding, account linking, blocked accounts, character ownership, shared capacity, no secrets in poll.');

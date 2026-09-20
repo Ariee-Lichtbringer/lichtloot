@@ -20,7 +20,7 @@ Run `tests/forever-raids.test.mjs`, `tests/forever-registration.test.mjs` and `t
 
 ## Discord raid signup
 
-`/api/forever/bot` requires the existing bot queue secret in `X-Forever-Bot-Token`; this endpoint never uses Era guild/player tables. The PO bot's `forever_signup.py` adds `/forever_verbinden` (Discord “Manage Server” permission plus the Forever leadership code). Linking stores a dedicated guild/channel mapping. Raid leaders explicitly publish each raid from its website card. Later participant/raid changes update that same Discord message.
+`/api/forever/bot` requires the existing bot queue secret in `X-Forever-Bot-Token`; this endpoint never uses Era guild/player tables. The PO bot's `forever_signup.py` adds `/forever_verbinden` (Discord “Manage Server” permission plus the Forever leadership code). Linking stores a dedicated guild/channel mapping. New active raids are queued automatically in the same transaction as creation when a channel is configured. Raid leaders can also publish existing raids from their website cards. Later participant/raid changes update that same Discord message.
 
 `forever_discord_links` pairs a Discord user with an approved Forever player per guild. The login code is only used for verification and is not duplicated in this table. All interaction writes validate the exact guild, raid, Discord server, channel and message. Ownership, capacity, closed raids and blocked-player checks use the existing Forever signup service. Posts use publication leases, stored message IDs and footer recovery after an uncertain send result. A deleted post is only recreated after a raid leader explicitly republishes it. No role mentions or mass pings are sent.
 
