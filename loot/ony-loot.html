@@ -2287,6 +2287,8 @@ async function applyGuildBranding(){
     el.alt=lootName + " - " + guildName;
   });
   applyEraPriorityUi();
+  // Branding is ready: do not keep the page hidden while images finish loading.
+  document.documentElement.classList.remove("guild-page-booting");
 }
 if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
