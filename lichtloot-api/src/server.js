@@ -1,5 +1,6 @@
 import {foreverPool,foreverQuery,foreverAccess} from './forever-db.js';
-import { installForeverRaids } from './forever-raids.js';
+import {installForeverDiscord} from './forever-discord.js';
+import { createForeverRaids, installForeverRaids } from './forever-raids.js';
 import { installForeverRegistration } from './forever-registration.js';
 import { responseCompression } from './response-compression.js';
 import { assertP0Cutoff } from './p0-cutoff.js';
@@ -653,6 +654,7 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
+installForeverDiscord(app,{pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});
 installForeverRaids(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,authorize:foreverAccess.authorize});
 installForeverRegistration(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,requireForeverGuild:async()=>{},explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,hashSecurityAnswer});
 

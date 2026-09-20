@@ -1,3 +1,4 @@
+import {publishForeverDiscord,foreverDiscordSchema} from './forever-discord.js';
 import { randomUUID } from 'node:crypto';
 import {createForeverAdmin} from './forever-admin.js';
 
@@ -86,7 +87,7 @@ create table if not exists forever_audit (
 export function createForeverRaids({ pool, query }) {
   const admin=createForeverAdmin({pool,query});
   let schema;
-  const ensure = () => schema ||= query(foreverSchema).catch(error => { schema = null; throw error; });
+  const ensure = () => schema ||= query(foreverSchema+foreverDiscordSchema).catch(error => { schema = null; throw error; });
   const requireLead = actor => { if (!actor.canManage) throw fail('Nur die Gildenleitung und Raidleitung können Termine verwalten.', 403); };
   async function transaction(work) {
     const client = await pool.connect();
@@ -98,6 +99,7 @@ export function createForeverRaids({ pool, query }) {
   async function run(guild, actor, body) {
     await ensure();
     const action = body.action;
+    if(action==='discordPublish')return publishForeverDiscord(query,guild,actor,body);
     if(["adminOverview","adminPlayer","adminSettings"].includes(action))return admin.run(guild,actor,body);
     if (action === 'overview') {
       const groups = await query('select id,name from forever_groups where guild_id=$1 order by lower(name)', [guild.id]);
@@ -111,10 +113,13 @@ export function createForeverRaids({ pool, query }) {
           where s.guild_id=r.guild_id and s.raid_id=r.id),'[]'::json) as signups
         from forever_raids r left join forever_groups g on g.id=r.group_id and g.guild_id=r.guild_id
         where r.guild_id=$1 and ${body.archive === true ? "(r.starts_at < now() or r.status in ('completed','cancelled'))" : "r.starts_at >= now() and r.status not in ('completed','cancelled')"}
-        order by r.starts_at ${body.archive === true ? 'desc' : 'asc'}, r.id limit 100`, [guild.id, actor.playerId || null]);
+        and ($3::uuid is null or r.id=$3)
+        order by r.starts_at ${body.archive === true ? 'desc' : 'asc'}, r.id limit 100`, [guild.id, actor.playerId || null, body.raidId?uuid(body.raidId):null]);
       const settings=await query("select coalesce(layout_json->'forever','{}'::jsonb) as config from guild_settings where guild_id=$1",[guild.id]);
       const config=settings.rows[0]?.config||{};
-      return { success: true, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, raids: raids.rows };
+      const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
+      const discordPosts=actor.canManage?(await query('select raid_id,message_id,channel_id,discord_guild_id,last_error from forever_discord_posts where guild_id=$1',[guild.id])).rows:[];
+      return { success: true, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, raids: raids.rows };
     }
     if (action === 'saveCharacter') {
       if (!actor.playerId) throw fail('Für eigene Charaktere bitte mit dem SpielerLogin anmelden.', 403);

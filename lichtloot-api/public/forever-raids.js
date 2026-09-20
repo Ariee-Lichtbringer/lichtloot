@@ -101,6 +101,8 @@ function renderRaids(){
   if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL(location.href);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)),button('Kalender',()=>calendar(raid)),button('Link kopieren',()=>copyLink(raid)));
   if(data.actor.canManage)actions.append(button('Verwalten',()=>raidEditor(raid)));
+  if(data.actor.canManage){const post=data.discordPosts?.find(p=>p.raid_id===raid.id);actions.append(button(post?.message_id?'Discord-Anmelder aktualisieren':'Discord-Anmelder veröffentlichen',async()=>{try{const result=await api('discordPublish',{raidId:raid.id});notice(result.message);await load();}catch(e){notice(e.message,true);}}));if(post?.message_id){const a=node('a','Discord-Post öffnen');a.href='https://discord.com/channels/'+post.discord_guild_id+'/'+post.channel_id+'/'+post.message_id;a.target='_blank';a.rel='noopener';actions.append(a);}if(post?.last_error)body.append(node('p',post.last_error,'form-error'));}
+
   body.append(actions);card.append(body);list.append(card);
  }
  const wanted=new URLSearchParams(location.search).get('raid');
@@ -171,6 +173,7 @@ window.foreverPlanning={
  createRaid:kind=>{if(!data?.actor.canManage)return;const [size,tanks,heals]=({hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8]})[kind]||[20,2,4];raidEditor({kind,size,tanks,heals});},
  roster:id=>{const r=data?.raids.find(r=>r.id===id);if(r)showRoster(r);},
  refresh:()=>load(),
+ publishDiscord:raidId=>api('discordPublish',{raidId}),
  signup:async(raidId,values)=>{const result=await api('signup',{...values,raidId});try{await load();}catch{throw Error('Anmeldung gespeichert. Die Ansicht konnte nicht aktualisiert werden; bitte neu laden.');}return result;}
 };
 initialize();

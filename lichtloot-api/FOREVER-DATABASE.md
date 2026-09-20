@@ -17,3 +17,11 @@ The API database variable is a Railway reference to `${{Postgres-Forever.DATABAS
 ## Checks
 
 Run `tests/forever-raids.test.mjs`, `tests/forever-registration.test.mjs` and `tests/forever-admin.test.mjs` with `FOREVER_PGLITE` pointing to the PGlite module if it is not installed locally. These cover guild isolation, auth, approvals, blocking, admin-only operations, transaction rollback, revisions and foreign-key isolation.
+
+## Discord raid signup
+
+`/api/forever/bot` requires the existing bot queue secret in `X-Forever-Bot-Token`; this endpoint never uses Era guild/player tables. The PO bot's `forever_signup.py` adds `/forever_verbinden` (Discord “Manage Server” permission plus the Forever leadership code). Linking stores a dedicated guild/channel mapping. Raid leaders explicitly publish each raid from its website card. Later participant/raid changes update that same Discord message.
+
+`forever_discord_links` pairs a Discord user with an approved Forever player per guild. The login code is only used for verification and is not duplicated in this table. All interaction writes validate the exact guild, raid, Discord server, channel and message. Ownership, capacity, closed raids and blocked-player checks use the existing Forever signup service. Posts use publication leases, stored message IDs and footer recovery after an uncertain send result. A deleted post is only recreated after a raid leader explicitly republishes it. No role mentions or mass pings are sent.
+
+Discord UI uses private character/role/status selection and an optional note. Website changes are polled every 30 seconds. Point and priority features remain inactive. Run `tests/forever-discord.test.mjs` for auth/binding/ownership/capacity coverage and the bot repository's `tests/test_forever_signup.py` for embed limits, persistent views and duplicate-send recovery.

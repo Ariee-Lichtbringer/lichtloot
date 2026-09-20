@@ -20,7 +20,8 @@ export function createForeverAdmin({pool,query}){
    const counts=await query("select count(*) filter(where starts_at>=now() and status in ('open','closed'))::int as upcoming,count(*) filter(where starts_at<now() or status in ('completed','cancelled'))::int as archived from forever_raids where guild_id=$1",[guild.id]);
    const history=await query('select action,actor,detail,created_at from forever_audit where guild_id=$1 order by id desc limit 40',[guild.id]);
    const c=config.rows[0]?.config||{};
-   return {success:true,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0},history:history.rows};
+   const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
+   return {success:true,discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0},history:history.rows};
   }
   if(body.action==='adminPlayer'){
    if(!/^[0-9a-f-]{36}$/i.test(String(body.playerId)))throw fail('Ungültiger Spieler.');
