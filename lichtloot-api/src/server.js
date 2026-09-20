@@ -1,3 +1,4 @@
+import { responseCompression } from './response-compression.js';
 import { assertP0Cutoff } from './p0-cutoff.js';
 import {installAccessSecurity, hashSecurityAnswer, verifySecurityAnswer, migrateSecurityAnswers, redactAccessDetails} from './auth-security.js';
 import { openPlatformGuildLeadership } from "./platform-guild-entry.js";
@@ -80,6 +81,7 @@ const armorRequests=createArmorRequests({pool,query});
 const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
 const guildBank = createGuildBank({query,pool,getCharactersByPin,lookupItem:id=>getWowheadClassicItemTooltip(id)});
 const app = express();
+app.use(responseCompression);
 app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
