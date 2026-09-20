@@ -24,6 +24,11 @@ const integer = (value, min, max) => {
   if (!Number.isInteger(number) || number < min || number > max) throw fail(`Bitte eine ganze Zahl von ${min} bis ${max} eingeben.`);
   return number;
 };
+export function foreverCharacterName(firstName, lastName) {
+  const first = text(firstName, 29, 'Vorname'), last = text(lastName, 30, 'Nachname');
+  if (![first,last].every(part => /^[\p{L}\p{M}]+(?:[-'’][\p{L}\p{M}]+)*$/u.test(part))) throw fail('Vor- und Nachname dürfen Buchstaben, Bindestriche und Apostrophe enthalten.');
+  return first + ' ' + last;
+}
 export function raidInput(body) {
   const date = clean(body.date), time = clean(body.time);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw fail('Bitte ein gültiges Datum und eine Uhrzeit eingeben.');
@@ -108,7 +113,7 @@ export function createForeverRaids({ pool, query }) {
     }
     if (action === 'saveCharacter') {
       if (!actor.playerId) throw fail('Für eigene Charaktere bitte mit dem SpielerLogin anmelden.', 403);
-      const id = body.id ? uuid(body.id) : randomUUID(), name = text(body.name, 60, 'Charaktername');
+      const id = body.id ? uuid(body.id) : randomUUID(), name = body.firstName !== undefined || body.lastName !== undefined ? foreverCharacterName(body.firstName,body.lastName) : text(body.name, 60, 'Charaktername');
       const ruleset = choice(body.ruleset, ['normal','pvp','rp'], 'Regelwerk'), cls = choice(body.className, classes, 'Klasse'), role = choice(body.role, roles, 'Rolle');
       return transaction(async db => {
         // Serialize character edits per account, then lock any name being updated.

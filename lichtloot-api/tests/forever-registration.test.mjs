@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {registrationInput,installForeverRegistration} from '../src/forever-registration.js';
+import {foreverCharacterName} from '../src/forever-raids.js';
+const {PGlite}=await import(process.env.FOREVER_PGLITE||'@electric-sql/pglite');
+const db=new PGlite(),guild={id:randomUUID(),slug:'forever'};
+await db.exec(`create table guilds(id uuid primary key);create table players(id uuid primary key,guild_id uuid references guilds(id),player_pin text,role text,approval_status text,security_question text,security_answer text,unique(guild_id,player_pin));create table characters(player_id uuid,name text,server text,class_name text,is_main boolean);`);
+await db.query('insert into guilds values($1)',[guild.id]);
+const body={guild:'forever',firstName:'Ariee',lastName:'Mondlichtung',playerPin:'FRESH123456',className:'priest',role:'heal',ruleset:'normal',securityQuestion:'Meine Frage?',securityAnswer:'Antwort'};
+assert.equal(foreverCharacterName(' Ariee ',' Mondlichtung '),'Ariee Mondlichtung');
+assert.throws(()=>foreverCharacterName('Ariee',''));
+assert.throws(()=>registrationInput({...body,playerPin:'abc'}));
+assert.throws(()=>registrationInput({...body,lastName:'<script>'}));
+let handler;installForeverRegistration({post(path,fn){handler=fn;}},{query:sql=>db.exec(sql),pool:{connect:async()=>({query:(...args)=>db.query(...args),release(){}})},requireGuild:async slug=>({...guild,slug}),requireForeverGuild:async g=>{if(g.slug!=='forever')throw Error('Era rejected');},explicitGuild:v=>v,rateLimit(){},hashSecurityAnswer:async()=> 'hashed-answer'});
+async function register(data){let result,error;await handler({body:data},{set(){},json(v){result=v;}},e=>error=e);if(error)throw error;return result;}
+assert.equal((await register(body)).pending,true);
+const player=(await db.query('select * from players')).rows[0];assert.equal(player.approval_status,'pending');assert.equal(player.role,'member');assert.equal(player.security_answer,'hashed-answer');
+assert.equal((await db.query('select name from forever_characters')).rows[0].name,'Ariee Mondlichtung');
+await assert.rejects(register({...body,playerPin:'OTHER123456'}),/bereits vergeben/);
+assert.equal((await db.query('select * from players')).rows.length,1);
+await assert.rejects(register({...body,guild:'era'}),/Era rejected/);
+await db.close();console.log('Forever registration passed: full names, validation, pending status, hashed recovery, duplicate rollback, Era rejected.');

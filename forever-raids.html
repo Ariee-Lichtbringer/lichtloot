@@ -4,7 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Forever · Meine Gilde | GuildLoot</title>
 <meta name="description" content="Eure Forever-Raids an einem Ort: Termine, Charaktere, Rollen und Anmeldungen für jede Gilde.">
-<link rel="stylesheet" href="forever-raids.css?v=20260920-logo"><script defer src="forever-raids.js?v=20260920"></script>
+<link rel="stylesheet" href="forever-raids.css?v=20260920-logo"><script defer src="forever-raids.js?v=20260920-names"></script>
+<link rel="stylesheet" href="game-switcher.css?v=20260920"><script defer src="game-switcher.js?v=20260920"></script>
 </head>
 <body>
 <a class="skip" href="#main">Zum Inhalt</a>
@@ -14,15 +15,16 @@
  <nav aria-label="Hauptnavigation"><a href="#termine" class="selected">◷ <span>Raids &amp; Termine</span></a><a href="#charaktere">♙ <span>Meine Charaktere</span></a><a href="#gruppen">⚑ <span>Raidgruppen</span></a></nav>
  <div class="nav-label">VORBEREITEN &amp; ENTDECKEN</div>
  <nav aria-label="Forever Werkzeuge"><a href="forever.html#itemdatenbank">◇ <span>Itemdatenbank</span></a><a href="forever.html#talente">✧ <span>Talentplaner</span></a><a href="forever.html#berufe">⚒ <span>Berufe &amp; Rezepte</span></a><a href="forever.html#materialrechner">▤ <span>Materialplanung</span></a><a href="forever.html#favoriten">☆ <span>Meine Favoriten</span></a></nav>
- <div class="side-bottom"><span class="beta-dot"></span> Forever · Aufbauphase<p>Gemeinsam planen.<br>Bereit sein, wenn es losgeht.</p><a href="forever.html">← Zur Forever-Zentrale</a></div>
+ <div class="side-bottom"><span class="beta-dot"></span> Forever · Aufbauphase<p>Gemeinsam planen.<br>Bereit sein, wenn es losgeht.</p><a href="forever-start.html">← Mein Forever-Gildenbereich</a></div>
 </aside>
 <main id="main">
+<div data-game-switcher="forever"></div>
  <header class="topbar"><span>FOREVER <span class="slash">/</span> GILDENPLANUNG</span><div><span id="identity">Nicht angemeldet</span><button id="logout" hidden class="quiet">Abmelden</button></div></header>
  <section class="hero"><div class="eyebrow">EURE NÄCHSTE GEMEINSAME GESCHICHTE</div><h1>Ein Raid beginnt<br>mit <em>eurer Gruppe.</em></h1><p>Wer kommt mit? Welche Rolle fehlt noch?<br>Plant eure Forever-Abende an einem Ort.</p><div class="hero-tags"><span>Termine &amp; Anmeldung</span><span>Eigene Forever-Charaktere</span><span>Für jede Gilde</span></div></section>
  <div class="content">
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
   <section id="login" class="login panel">
-   <div><span class="eyebrow">WILLKOMMEN BEI GUILDLOOT</span><h2>Eure Gilde. Euer Plan.</h2><p>Wähle deine Gilde und melde dich mit deinem bestehenden SpielerLogin an. Deine Era-Charaktere und Punkte bleiben im Era-Bereich. Hier legst du eigene Forever-Charaktere an. Die Leitung kann auch den Gilden-Mastercode verwenden.</p><a href="gilde-anmelden.html">Neue Gilde bei GuildLoot anmelden ↗</a></div>
+   <div><span class="eyebrow">WILLKOMMEN BEI GUILDLOOT</span><h2>Eure Gilde. Euer Plan.</h2><p>Wähle deine Gilde und melde dich mit deinem Forever-SpielerLogin an. Deine Era-Charaktere und Punkte bleiben im Era-Bereich. Hier legst du eigene Forever-Charaktere an. Die Leitung kann auch den Gilden-Mastercode verwenden.</p><a href="gilde-anmelden.html">Neue Gilde bei GuildLoot anmelden ↗</a></div>
    <form id="loginForm"><label>Gilde<select name="guild" id="guildSelect" required><option value="">Gilden werden geladen …</option></select></label><label>Zugang<select name="mode"><option value="player">SpielerLogin</option><option value="lead">Gildenleitung · Mastercode</option></select></label><label>Login-Code<input name="code" type="password" autocomplete="current-password" required maxlength="120"></label><button class="primary" type="submit">Gildenplanung öffnen <span>→</span></button><p class="micro">Dein Zugang gilt nur für die ausgewählte Gilde.</p></form>
   </section>
   <div id="workspace" hidden>

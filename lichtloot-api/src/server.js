@@ -1,4 +1,5 @@
 import { installForeverRaids } from './forever-raids.js';
+import { installForeverRegistration } from './forever-registration.js';
 import { responseCompression } from './response-compression.js';
 import { assertP0Cutoff } from './p0-cutoff.js';
 import {installAccessSecurity, hashSecurityAnswer, verifySecurityAnswer, migrateSecurityAnswers, redactAccessDetails} from './auth-security.js';
@@ -651,9 +652,14 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
+async function requireForeverGuild(guild) {
+  const settings = await query("select layout_json->>'game' as game from guild_settings where guild_id=$1", [guild.id]);
+  if (settings.rows[0]?.game !== 'forever') throw Object.assign(new Error('Bitte eine separate Forever-Gilde auswählen. Era-SpielerLogins werden nicht übernommen.'), {statusCode:403});
+}
 installForeverRaids(app, {
   pool, query, requireGuild, explicitGuild: requireExplicitGuildSlug, rateLimit: enforceSecurityRateLimit,
   authorize: async (guild, body) => {
+    await requireForeverGuild(guild);
     if (clean(body.masterCode)) {
       await loadMasterCodeOverrides();
       requireMasterCodeForGuild(guild, body.masterCode);
@@ -665,6 +671,8 @@ installForeverRaids(app, {
     return {playerId:player.id, canManage:canPlayerRoleCreateRaid(player.role), label:display.rows[0]?.name || 'Gildenmitglied'};
   }
 });
+
+installForeverRegistration(app, {pool, query, requireGuild, requireForeverGuild, explicitGuild:requireExplicitGuildSlug, rateLimit:enforceSecurityRateLimit, hashSecurityAnswer});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
@@ -1505,7 +1513,7 @@ function mergeGuildLayoutDefaults(slug, layout) {
   };
 }
 
-async function listGuilds() {
+async function listGuilds(game = "era") {
   await ensureGuildLayoutSchema();
   await ensureGuildDiscordConfigSchema();
   let result = await query(
@@ -1517,7 +1525,8 @@ async function listGuilds() {
             coalesce(gs.layout_json, '{}'::jsonb) as layout_json
      from guilds g
      left join guild_settings gs on gs.guild_id = g.id
-     order by g.created_at asc, g.name asc`
+     where coalesce(gs.layout_json->>'game','era') = $1
+     order by g.created_at asc, g.name asc`, [game === "forever" ? "forever" : "era"]
   );
   const guilds = await Promise.all(result.rows.map(async row => {
       const readiness = await evaluateGuildReadiness(row.slug);
@@ -30718,7 +30727,7 @@ async function legacyAppsScript(req, res, next) {
     }
 
     if (action === "listGuilds") {
-      const guilds = await listGuilds();
+      const guilds = await listGuilds(req.query.game);
       return res.json(guilds);
     }
 

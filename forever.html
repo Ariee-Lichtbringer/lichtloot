@@ -534,13 +534,14 @@
 .dungeon-classic summary span{display:block;font-size:12px;font-weight:400;color:var(--muted);margin:5px 0 0 18px}
 .dungeon-classic .known-loot-section{margin-top:18px;padding-top:0;border:0}
 @media(max-width:700px){.dungeon-live-grid,.dungeon-announced-grid{grid-template-columns:1fr}.content .section-head{gap:8px}.dungeon-classic{padding:16px}.dungeon-announced-grid .dungeon-card{flex-wrap:wrap}}
-</style></head>
+</style><link rel="stylesheet" href="game-switcher.css?v=20260920"><script defer src="game-switcher.js?v=20260920"></script>
+</head>
   <body>
     <div class="shell">
       <aside class="side">
         <img
           class="side-logo"
-          src="images/wow-forever-logo.jpg"
+          src="images/wow-forever-logo-transparent.png"
           alt="World of Warcraft Forever"
         />
         <nav class="nav" aria-label="Forever Navigation">
@@ -572,6 +573,7 @@
         </nav>
       </aside>
       <main class="main">
+<div data-game-switcher="forever"></div>
         <section class="hero" id="start">
           <div class="hero-copy">
             <div class="eyebrow">GuildLoot · Forever-Zentrale</div>

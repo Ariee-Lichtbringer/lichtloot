@@ -45,7 +45,7 @@ $('groupFilter').onchange=renderRaids;
 function option(value,title){const n=node('option',title);n.value=value;return n;}
 async function initialize(){
  try {
-  const response=await fetch(base+'/api/apps-script?action=listGuilds',{cache:'no-store'}), result=await response.json();
+  const response=await fetch(base+'/api/apps-script?action=listGuilds&game=forever',{cache:'no-store'}), result=await response.json();
   if(!response.ok || !Array.isArray(result.guilds))throw Error('Gilden konnten nicht geladen werden.');
   $('guildSelect').replaceChildren(option('','Gilde auswählen'),...result.guilds.map(g=>option(g.slug,g.name||g.slug)));
   const requested=new URLSearchParams(location.search).get('guild')||stored('guildloot:forever:selectedGuild');
@@ -63,7 +63,7 @@ $('loginForm').onsubmit=async event=>{
  catch(error){session=null;notice(error.message,true);}finally{submit.disabled=false;}
 };
 function render(){
- for(const link of document.querySelectorAll('a[href^="forever.html"]')){const url=new URL(link.getAttribute('href'),location.href);url.searchParams.set('guild',session.guild);link.href=url.pathname+url.search+url.hash;}
+ for(const link of document.querySelectorAll('a[href^="forever.html"], a[href^="forever-start.html"]')){const url=new URL(link.getAttribute('href'),location.href);url.searchParams.set('guild',session.guild);link.href=url.pathname+url.search+url.hash;}
  const selected=$('groupFilter').value;
  $('groupFilter').replaceChildren(option('','Alle Gruppen'),...data.groups.map(g=>option(g.id,g.name)));
  if(data.groups.some(g=>g.id===selected))$('groupFilter').value=selected;
@@ -127,7 +127,7 @@ $('editorForm').onsubmit=async e=>{
  catch(error){$('editorError').textContent=error.message;}finally{saving=false;submit.disabled=false;}
 };
 function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Charakter anlegen',[
- field('name','Charaktername (gegebenenfalls mit Nachnamen)','text',c.name),field('ruleset','Regelwerk','select',c.ruleset||'normal',choices(['normal','pvp','rp'])),field('className','Klasse','select',c.class_name||'warrior',choices(classKeys)),field('role','Bevorzugte Rolle','select',c.role||'dd',choices(roleKeys))
+ field('firstName','Vorname','text',c.name?.split(' ')[0]),field('lastName','Nachname','text',c.name?.split(' ').slice(1).join(' ')),field('ruleset','Regelwerk','select',c.ruleset||'normal',choices(['normal','pvp','rp'])),field('className','Klasse','select',c.class_name||'warrior',choices(classKeys)),field('role','Bevorzugte Rolle','select',c.role||'dd',choices(roleKeys))
  ],v=>api('saveCharacter',{...v,id:c.id}));}
 function groupEditor(g={}){editor(g.id?'Raidgruppe umbenennen':'Raidgruppe anlegen',[field('name','Name der Gruppe','text',g.name,null,true)],v=>api('saveGroup',{...v,id:g.id}));}
 function raidEditor(r={}){

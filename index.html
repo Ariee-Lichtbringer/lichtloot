@@ -1541,6 +1541,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 @media(max-width:650px){.portal-nav .portal-addon-download{flex:1;padding:7px 9px;gap:8px}.portal-addon-download .portal-addon-icon{width:30px;height:30px}.portal-addon-download strong{font-size:12px}.portal-addon-download small{font-size:11px}.portal-nav a[data-guild-support]{padding:0 4px;font-size:12px}}
 </style>
 <link rel="stylesheet" href="guildloot-game-entry.css?v=20260920-clarity">
+<link rel="stylesheet" href="game-switcher.css?v=20260920"><script defer src="game-switcher.js?v=20260920"></script>
 </head>
 <body>
 <div class="overlay">
@@ -1556,11 +1557,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <span class="portal-profile-arrow">⌄</span>
     </button>
   </div>
-  <section class="guildloot-game-entry" aria-label="Spielversion auswählen">
-    <header class="game-entry-heading"><h2>Wo möchtest du spielen?</h2><p>Classic Era und Forever haben eigene Charaktere und Raidplanungen. Deinen SpielerLogin kannst du in beiden Bereichen verwenden.</p></header>
-    <article><span class="game-entry-label">CLASSIC ERA</span><h2>Classic Era</h2><p>Raidanmeldung, Priolisten und Gildenverwaltung für Classic Era.</p><a href="start.html" data-game-entry>Era-Raids öffnen <span aria-hidden="true">→</span></a></article>
-    <article class="game-entry-forever"><img src="images/wow-forever-logo.jpg" alt="World of Warcraft Forever"><div><span class="game-entry-label">WOW FOREVER</span><h2>WoW Forever</h2><p>Gildenplanung, eigene Charaktere und Anmeldung für eure Forever-Abende.</p><a href="forever-raids.html" data-game-entry>Forever-Raids öffnen <span aria-hidden="true">→</span></a><a class="game-entry-secondary" href="forever.html" data-game-entry>Forever entdecken · Items, Talente &amp; Berufe ↗</a></div></article>
-  </section>
+  <div data-game-switcher="era"></div>
   <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für GuildLoot beantragen.</div>
 
   <section id="guildGate" class="guild-gate hidden">
