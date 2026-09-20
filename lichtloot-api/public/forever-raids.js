@@ -87,7 +87,7 @@ function renderRaids(){
  const raids=data.raids.filter(r=>!group||r.group_id===group);
  if(!raids.length){const empty=node('div',undefined,'empty');empty.append(node('h3','Platz für euren nächsten Abend.'),node('p',data.actor.canManage?'Erstelle einen Raid, einen Dungeonabend oder euren ersten Forever-Treff.':'Hier erscheinen die Termine eurer Leitung. Lege schon jetzt deinen Forever-Charakter an.'));if(data.actor.canManage)empty.append(button('Ersten Termin erstellen',()=>raidEditor(),'primary'));list.append(empty);}
  for(const raid of raids){
-  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;
+  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;card.append(window.foreverRaidArt(raid));
   const raidLabel=node('div',labels[raid.kind]||'Gildenabend','raid-heading');card.append(raidLabel);
   const top=node('div',undefined,'raid-top'),tile=node('div',undefined,'date-tile'),d=new Date(raid.starts_at);
   tile.append(node('strong',new Intl.DateTimeFormat('de-DE',{day:'2-digit',timeZone:'Europe/Berlin'}).format(d)),node('small',new Intl.DateTimeFormat('de-DE',{month:'short',timeZone:'Europe/Berlin'}).format(d)));
