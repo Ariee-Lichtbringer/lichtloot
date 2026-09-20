@@ -75,7 +75,7 @@ function render(){
  renderRaids();
  $('characterList').replaceChildren();
  if(!data.characters.length)$('characterList').append(node('p',data.actor.canSignup?'Noch kein Forever-Charakter angelegt. Starte mit deinem ersten Charakter.':'Mit dem SpielerLogin kannst du eigene Charaktere anlegen und dich anmelden.','subtle'));
- for(const c of data.characters){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',c.name),node('small',`${labels[c.class_name]} · ${labels[c.role]} · ${labels[c.ruleset]}`));row.append(info,button('Bearbeiten',()=>characterEditor(c)));$('characterList').append(row);}
+ for(const c of data.characters){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',c.name),node('small',`${labels[c.class_name]} · ${labels[c.role]} · ${labels[c.ruleset]}`));window.foreverClassIdentity(row,info,c.class_name);row.append(button('Bearbeiten',()=>characterEditor(c)));$('characterList').append(row);}
  $('groupList').replaceChildren();
  if(!data.groups.length)$('groupList').append(node('p',data.actor.canManage?'Legt eine Stammgruppe an – etwa „Freitagsraid“. Termine sind auch ohne feste Gruppe möglich.':'Eure Leitung hat noch keine feste Gruppe angelegt.','subtle'));
  for(const g of data.groups){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',g.name),node('small',`${data.raids.filter(r=>r.group_id===g.id).length} Termine in dieser Ansicht`));row.append(info);if(data.actor.canManage)row.append(button('Umbenennen',()=>groupEditor(g)));$('groupList').append(row);}
@@ -151,7 +151,7 @@ function showRoster(r){
  if(!r.signups.length)host.append(node('p','Noch keine Anmeldungen.','subtle'));
  for(const status of ['signed','bench','late','tentative','absent']){
   const list=r.signups.filter(s=>s.status===status);if(!list.length)continue;host.append(node('h3',`${labels[status]} (${list.length})`));
-  for(const s of list){const row=node('div',undefined,'roster-row'),info=node('div');info.append(node('strong',s.name+(s.mine?' · Du':'')),node('small',`${labels[s.className]} · ${labels[s.role]} · ${labels[s.ruleset]}`));if(s.note)info.append(node('p',s.note));row.append(info);if(data.actor.canManage&&!['cancelled','completed'].includes(r.status))row.append(button('Bearbeiten',()=>signupEditor(r,s,true)));host.append(row);}
+  for(const s of list){const row=node('div',undefined,'roster-row'),info=node('div');info.append(node('strong',s.name+(s.mine?' · Du':'')),node('small',`${labels[s.className]} · ${labels[s.role]} · ${labels[s.ruleset]}`));if(s.note)info.append(node('p',s.note));window.foreverClassIdentity(row,info,s.className);if(data.actor.canManage&&!['cancelled','completed'].includes(r.status))row.append(button('Bearbeiten',()=>signupEditor(r,s,true)));host.append(row);}
  }
  if(data.actor.canManage){const h=node('div',undefined,'history');const show=button('Änderungsverlauf laden',async()=>{show.disabled=true;try{const result=await api('history',{raidId:r.id}),list=node('ul');for(const row of result.history)list.append(node('li',`${new Date(row.created_at).toLocaleString('de-DE',{timeZone:'Europe/Berlin'})} · ${row.actor}: ${row.detail}`));h.replaceChildren(list);}catch(error){show.disabled=false;h.append(node('p',error.message,'form-error'));}});h.append(show);host.append(h);}
  $('roster').showModal();

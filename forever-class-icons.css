@@ -1,0 +1,5 @@
+.forever-class-row{border:1px solid color-mix(in srgb,var(--class-color) 42%,transparent)!important;border-radius:13px;box-shadow:inset 3px 0 var(--class-color);background:linear-gradient(135deg,rgba(14,27,48,.92),rgba(6,14,28,.88));padding:10px 14px!important;min-height:68px}
+.forever-class-identity{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.forever-class-icon{display:block;width:42px;height:42px;flex:0 0 42px;object-fit:cover;border-radius:9px;border:1px solid color-mix(in srgb,var(--class-color) 55%,#fff 15%);box-shadow:0 6px 14px #0006}
+.forever-class-copy{min-width:0}.forever-class-copy strong{display:block;color:var(--class-color);font-size:17px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}.forever-class-copy small{display:block;margin-top:5px;color:#dbeafe;font-size:12px;font-weight:650}
+#rosterContent .forever-class-row{margin:10px 0}#characterList .forever-class-row{margin:10px 0}
