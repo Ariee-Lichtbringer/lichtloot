@@ -1,0 +1,29 @@
+(() => {
+const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
+const fields=(form,entries)=>{for(const [name,title,type,options] of entries){const l=el('label',title),i=document.createElement(type==='select'?'select':type==='textarea'?'textarea':'input');i.name=name;if(!['select','textarea'].includes(type))i.type=type;i.required=true;if(options)for(const [v,t] of options)i.add(new Option(t,v));l.append(i);form.append(l);}};
+window.renderForeverOperations=async(host,section,api,actor)=>{
+ const titles={punkte:'P0+ Punktejournal',punktetransfer:'Punkte buchen',punktesicherung:'Punkte sichern',bank:'Gildenbank · Bestand',bankantraege:'Gildenbankanträge',postfach:'Postfach'};host.replaceChildren(el('h2',titles[section]||section),el('p','Wird geladen …'));let d;try{d=await api('operationsOverview');}catch(e){host.replaceChildren(el('h2',titles[section]),el('p',e.message,'form-error'));return;}
+ host.replaceChildren(el('h2',titles[section]));
+ const message=el('p','','muted');message.setAttribute('role','status');host.append(message);
+ function form(title,entries,action,extra={},label='Speichern'){const f=el('form','','panel');f.append(el('h3',title));fields(f,entries);const b=el('button',label,'primary');b.type='submit';f.append(b);let requestKey=crypto.randomUUID();f.onsubmit=async e=>{e.preventDefault();b.disabled=true;try{await api(action,{...Object.fromEntries(new FormData(f)),...extra,requestKey});await window.renderForeverOperations(host,section,api,actor);}catch(error){message.textContent=error.message;b.disabled=false;}};host.append(f);return f;}
+ function action(parent,label,name,extra){const b=el('button',label);b.onclick=async()=>{b.disabled=true;try{await api(name,extra);await window.renderForeverOperations(host,section,api,actor);}catch(e){message.textContent=e.message;b.disabled=false;}};parent.append(b);}
+ function exportData(name,rows){const b=el('button',name);b.onclick=()=>{const blob=new Blob([JSON.stringify({format:'guildloot-forever-export',version:1,createdAt:new Date().toISOString(),data:rows},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='forever-'+section+'-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};host.append(b);}
+ if(['punkte','punktetransfer','punktesicherung'].includes(section)){
+  host.append(el('p','Punkte werden manuell und mit Begründung gebucht. Anmeldungen lösen keine Punktevergabe aus.'));
+  const list=el('div','','panel');for(const c of d.balances)list.append(el('p',c.name+' · '+c.points+' Punkte'));if(!d.balances.length)list.append(el('p','Noch keine Charaktere.'));host.append(list);
+  if(actor.canAdmin&&d.balances.length)form('Punkte buchen',[['characterId','Charakter','select',d.balances.map(c=>[c.id,c.name])],['amount','Punkte (+ / −)','number'],['reason','Begründung','textarea']],'pointAdjust');
+  if(actor.canAdmin){exportData('Punktejournal als JSON exportieren',d.journal);const journal=el('div','','panel');for(const entry of d.journal){const row=el('article','','history-row');row.append(el('strong',entry.name+' · '+entry.amount),el('p',entry.reason),el('small',new Date(entry.created_at).toLocaleString('de-DE')+' · '+entry.created_by));if(!entry.reversal_of&&!d.journal.some(e=>e.reversal_of===entry.id)){const b=el('button','Stornieren');b.onclick=()=>{const reason=prompt('Begründung für die Gegenbuchung');if(reason?.trim()){b.disabled=true;api('pointReverse',{id:entry.id,reason}).then(()=>window.renderForeverOperations(host,section,api,actor)).catch(e=>{message.textContent=e.message;b.disabled=false;});}};row.append(b);}journal.append(row);}host.append(journal);}
+ }
+ if(['bank','bankantraege'].includes(section)){
+  const list=el('div','','panel');for(const item of d.items)list.append(el('p',item.name+' · '+item.quantity+' vorhanden'));if(!d.items.length)list.append(el('p','Noch kein Bestand erfasst.'));host.append(list);
+  if(actor.canAdmin)form('Bestand buchen',[['name','Gegenstand (exakter Name)','text'],['amount','Menge (+ Eingang / − Entnahme)','number'],['reason','Begründung','textarea']],'bankAdjust');
+  if(actor.canSignup&&d.items.length)form('Material beantragen',[['itemId','Gegenstand','select',d.items.map(i=>[i.id,i.name])],['quantity','Gewünschte Menge','number'],['reason','Verwendungszweck','textarea']],'bankRequest',{},'Antrag senden');
+  const requests=el('div','','panel');requests.append(el('h3','Anträge'));for(const r of d.requests){const n=el('article','','history-row');n.append(el('strong',r.name+' · '+r.quantity),el('p',(r.player_name||'Spieler')+' · '+r.reason),el('small',({pending:'Offen',approved:'Freigegeben und ausgebucht',rejected:'Abgelehnt'}[r.status])));if(actor.canAdmin&&r.status==='pending'){action(n,'Freigeben & ausbuchen','bankDecision',{id:r.id,status:'approved'});action(n,'Ablehnen','bankDecision',{id:r.id,status:'rejected'});}requests.append(n);}if(!d.requests.length)requests.append(el('p','Keine Anträge.'));host.append(requests);
+ }
+ if(section==='postfach'){
+  if(actor.canSignup)form('Nachricht an die Gildenleitung',[['subject','Betreff','text'],['message','Nachricht','textarea']],'mailCreate',{},'Nachricht senden');
+  for(const m of d.mail){const n=el('article','','panel');n.append(el('h3',m.subject),el('small',m.player_name||'Spieler'),el('p',m.message),el('small',m.status==='closed'?'Abgeschlossen':'Offen'));if(m.reply)n.append(el('h4','Antwort der Gildenleitung'),el('p',m.reply));host.append(n);if(actor.canAdmin){const f=form('Antwort',[['reply','Antwort','textarea'],['status','Bearbeitungsstatus','select',[['open','Offen'],['closed','Abgeschlossen']]]],'mailReply',{id:m.id},'Antwort speichern');f.elements.reply.value=m.reply;}}
+  if(!d.mail.length)host.append(el('p','Keine Nachrichten vorhanden.'));
+ }
+};
+})();

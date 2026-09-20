@@ -2,9 +2,10 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const base = ['localhost','127.0.0.1'].includes(location.hostname) ? location.origin : 'https://lichtloot-production.up.railway.app';
-const labels = {tank:'Tank',heal:'Heiler',dd:'Schaden',signed:'Zugesagt',bench:'Ersatzbank',late:'Komme später',tentative:'Vielleicht',absent:'Abgesagt',open:'Anmeldung offen',closed:'Anmeldung geschlossen',cancelled:'Termin abgesagt',completed:'Abgeschlossen',normal:'Normal',pvp:'PvP',rp:'Rollenspiel',warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide',hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeon',other:'Gildenabend / Sonstiges'};
-const roleKeys=['tank','heal','dd'], classKeys=['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'];
+const labels = {tank:'Tank',heal:'Heiler',dd:'Schaden (offen)',melee:'Nahkampf',ranged:'Fernkampf',signed:'Zugesagt',bench:'Ersatzbank',late:'Komme später',tentative:'Vielleicht',absent:'Abgesagt',open:'Anmeldung offen',closed:'Anmeldung geschlossen',cancelled:'Termin abgesagt',running:'Raid läuft',archived:'Archiviert',completed:'Abgeschlossen',unrecorded:'Nicht erfasst',present:'Anwesend',noshow:'Nicht erschienen',excused:'Entschuldigt',normal:'Normal',pvp:'PvP',rp:'Rollenspiel',warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide',hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeon',other:'Gildenabend / Sonstiges'};
+const roleKeys=['tank','heal','dd','melee','ranged'], classKeys=['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'];
 const dateFormat = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',timeZone:'Europe/Berlin'});
+let raidPage=0;
 let session=null, data=null, generation=0, selectedGuild='', editorSubmit, saving=false, loadedView='upcoming';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(title,action,cls='quiet')=>{const n=node('button',title,cls);n.type='button';n.onclick=action;return n;};
@@ -27,7 +28,7 @@ async function load() {
  const version=++generation;
  $('refresh').disabled=true;
  try {
-  const result=await api('overview',{archive:$('viewFilter').value==='archive'});
+  const result=await api('overview',{archive:$('viewFilter').value==='archive',page:raidPage,groupId:$('groupFilter').value||null});
   if(version!==generation)return;
   data=result;loadedView=$('viewFilter').value;$('login').hidden=true;$('workspace').hidden=false;
   $('identity').textContent=result.actor.label+' · '+result.guild.name;$('logout').hidden=false;
@@ -40,8 +41,9 @@ async function load() {
 function logout(){generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');dispatchEvent(new CustomEvent('forever-session',{detail:null}));}
 $('logout').onclick=logout;
 $('refresh').onclick=()=>{notice('');load().catch(e=>notice(e.message,true));};
-$('viewFilter').onchange=()=>{load().catch(e=>{$('viewFilter').value=loadedView;notice(e.message,true);});};
-$('groupFilter').onchange=renderRaids;
+$('viewFilter').onchange=()=>{raidPage=0;load().catch(e=>{$('viewFilter').value=loadedView;notice(e.message,true);});};
+$('groupFilter').onchange=()=>{raidPage=0;load().catch(e=>notice(e.message,true));};
+const pages=node('div',undefined,'raid-actions');$('raidList').after(pages);
 function option(value,title){const n=node('option',title);n.value=value;return n;}
 async function initialize(){
  try {
@@ -70,7 +72,7 @@ function render(){
  $('statRaids').textContent=data.raids.length;
  const mine=data.raids.filter(r=>r.signups.some(s=>s.mine&&s.status==='signed'));
  $('statMine').textContent=mine.length;$('statGroups').textContent=data.groups.length;
- const next=mine.filter(r=>new Date(r.starts_at)>new Date()&&!['cancelled','completed'].includes(r.status)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0];
+ const next=mine.filter(r=>new Date(r.starts_at)>new Date()&&!['cancelled','completed','archived'].includes(r.status)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0];
  $('statNext').textContent=next?dateFormat.format(new Date(next.starts_at))+' · '+next.time:'–';$('statNextTitle').textContent=next?.title||'Noch keine Zusage';
  renderRaids();
  $('characterList').replaceChildren();
@@ -93,7 +95,7 @@ function renderRaids(){
   const tags=node('div',undefined,'card-tags');tags.append(node('span',labels[raid.status],'tag'));info.append(tags);top.append(tile,info);card.append(top);
   const body=node('div',undefined,'raid-body');if(raid.description)body.append(node('p',raid.description,'description'));
   const signed=raid.signups.filter(s=>s.status==='signed'),targets=[raid.tanks,raid.heals,raid.size-raid.tanks-raid.heals];
-  const counts=node('div',undefined,'role-counts');roleKeys.forEach((role,i)=>{const n=signed.filter(s=>s.role===role).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.prepend(node('span',{tank:'🛡️',heal:'✨',dd:'⚔️'}[role],'role-icon'));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});body.append(counts);
+  const counts=node('div',undefined,'role-counts');['tank','heal','dd'].forEach((role,i)=>{const n=signed.filter(s=>s.role===role||(role==='dd'&&['melee','ranged'].includes(s.role))).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.prepend(node('span',{tank:'🛡️',heal:'✨',dd:'⚔️'}[role],'role-icon'));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});body.append(counts);
   const bar=node('div',undefined,'fill-line'),fill=node('i');fill.style.width=Math.min(100,signed.length/raid.size*100)+'%';bar.append(fill);body.append(bar);
   const capacity=node('div',undefined,'capacity');capacity.append(node('span',`${signed.length} / ${raid.size} Plätze belegt`),node('span',`${raid.signups.filter(s=>s.status==='bench').length} auf Ersatzbank`));body.append(capacity);
   const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
@@ -102,11 +104,12 @@ function renderRaids(){
   if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL(location.href);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)));
   const more=node('details',undefined,'raid-more'),summary=node('summary','Weitere Aktionen'),extra=node('div',undefined,'raid-extra');more.append(summary,extra);extra.append(button('Zum Kalender hinzufügen',()=>calendar(raid)),button('Terminlink kopieren',()=>copyLink(raid)));
-  if(data.actor.canManage)extra.append(button('Termin bearbeiten',()=>raidEditor(raid)));
+  if(data.actor.canManage)extra.append(button('Termin bearbeiten',()=>raidEditor(raid)),button('Raid kopieren',()=>raidEditor({...raid,id:null,revision:null,title:raid.title+' · Kopie',status:'open'})));
   if(data.actor.canManage){const post=data.discordPosts?.find(p=>p.raid_id===raid.id);extra.append(button(post?.message_id?'Discord-Anmelder aktualisieren':'Discord-Anmelder veröffentlichen',async()=>{try{const result=await api('discordPublish',{raidId:raid.id});notice(result.message);await load();}catch(e){notice(e.message,true);}}));if(post?.message_id){const a=node('a','Discord-Post öffnen');a.href='https://discord.com/channels/'+post.discord_guild_id+'/'+post.channel_id+'/'+post.message_id;a.target='_blank';a.rel='noopener';extra.append(a);}if(post?.last_error)body.append(node('p',post.last_error,'form-error'));}
 
   body.append(actions,more);card.append(body);list.append(card);
  }
+ pages.replaceChildren();if(raidPage>0)pages.append(button('← Vorherige Termine',()=>{raidPage--;load().catch(e=>notice(e.message,true));}));if(data.hasMore)pages.append(button('Weitere Termine →',()=>{raidPage++;load().catch(e=>notice(e.message,true));}));
  const wanted=new URLSearchParams(location.search).get('raid');
  if(wanted){const card=$('raid-'+wanted);if(card)card.style.borderColor='#b7a4ff';}
 }
@@ -136,8 +139,10 @@ function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Chara
  ],v=>api('saveCharacter',{...v,id:c.id}));}
 function groupEditor(g={}){editor(g.id?'Raidgruppe umbenennen':'Raidgruppe anlegen',[field('name','Name der Gruppe','text',g.name,null,true)],v=>api('saveGroup',{...v,id:g.id}));}
 function raidEditor(r={}){
- const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'])),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','cancelled','completed'])),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
- editor(r.id?'Termin verwalten':'Neuen Termin planen',fields,async v=>({...await api('saveRaid',{...v,id:r.id,revision:r.revision}),raidSaved:true}));
+ const requestKey=crypto.randomUUID();
+ const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'])),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','running','completed','cancelled','archived'])),field('rolePolicy','Rollenplätze','select',r.strict_roles?'strict':'soft',[['soft','Sollwerte · freie Rollenwahl'],['strict','Feste Rollenplätze · danach Ersatzbank']]),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
+ if(!r.id)fields.push(field('repeatWeeks','Wöchentliche Termine insgesamt','number',1));
+ editor(r.id?'Termin verwalten':'Neuen Termin planen',fields,async v=>({...await api('saveRaid',{...v,id:r.id,revision:r.revision,requestKey}),raidSaved:true}));
  const form=$('editorForm');form.elements.size.min='1';
  if(!r.id)form.elements.kind.onchange=()=>{const defaults={hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8],dungeon:[5,1,1],other:[10,1,2]}[form.elements.kind.value];['size','tanks','heals'].forEach((key,i)=>form.elements[key].value=defaults[i]);};
 }
@@ -156,8 +161,9 @@ function showRoster(r){
  if(!r.signups.length)host.append(node('p','Noch keine Anmeldungen.','subtle'));
  for(const status of ['signed','bench','late','tentative','absent']){
   const list=r.signups.filter(s=>s.status===status);if(!list.length)continue;host.append(node('h3',`${labels[status]} (${list.length})`));
-  for(const s of list){const row=node('div',undefined,'roster-row'),info=node('div');info.append(node('strong',s.name+(s.mine?' · Du':'')),node('small',`${labels[s.className]} · ${labels[s.role]} · ${labels[s.ruleset]}`));if(s.note)info.append(node('p',s.note));window.foreverClassIdentity(row,info,s.className);if(data.actor.canManage&&!['cancelled','completed'].includes(r.status))row.append(button('Bearbeiten',()=>signupEditor(r,s,true)));host.append(row);}
+  for(const s of list){const row=node('div',undefined,'roster-row'),info=node('div');info.append(node('strong',s.name+(s.mine?' · Du':'')),node('small',`${labels[s.className]} · ${labels[s.role]} · ${labels[s.ruleset]}`));if(s.note)info.append(node('p',s.note));window.foreverClassIdentity(row,info,s.className);if(data.actor.canManage&&!['cancelled','completed','archived'].includes(r.status))row.append(button('Bearbeiten',()=>signupEditor(r,s,true)));if(data.actor.canManage){info.append(node('small','Anwesenheit: '+(labels[s.attendance]||'Nicht erfasst')));if(!['completed','cancelled','archived'].includes(r.status)){const select=document.createElement('select');select.setAttribute('aria-label','Anwesenheit '+s.name);select.append(...['unrecorded','present','noshow','excused'].map(v=>option(v,labels[v])));select.value=s.attendance||'unrecorded';select.onchange=async()=>{select.disabled=true;try{await api('attendance',{raidId:r.id,characterId:s.characterId,attendance:select.value});await load();showRoster(data.raids.find(x=>x.id===r.id));}catch(e){notice(e.message,true);select.disabled=false;}};row.append(select);if(s.status==='signed'){const party=document.createElement('select');party.setAttribute('aria-label','Gruppe '+s.name);party.append(option('','Nicht aufgestellt'),...Array.from({length:Math.ceil(r.size/5)},(_,i)=>option(String(i+1),'Gruppe '+(i+1))));party.value=s.party||'';party.onchange=async()=>{party.disabled=true;try{await api('formation',{raidId:r.id,characterId:s.characterId,party:party.value});await load();showRoster(data.raids.find(x=>x.id===r.id));}catch(e){notice(e.message,true);party.disabled=false;}};row.append(party);}}}host.append(row);}
  }
+ if(data.actor.canManage){host.append(button('Aufstellung als CSV exportieren',()=>{const escape=v=>{let text=String(v??'');if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};const rows=[['Charakter','Klasse','Rolle','Anmeldung','Anwesenheit','Gruppe'],...r.signups.map(s=>[s.name,labels[s.className],labels[s.role],labels[s.status],labels[s.attendance]||'Nicht erfasst',s.party||''])];const url=URL.createObjectURL(new Blob(['\ufeff'+rows.map(row=>row.map(escape).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='forever-aufstellung-'+r.id+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}));}
  if(data.actor.canManage){const h=node('div',undefined,'history');const show=button('Änderungsverlauf laden',async()=>{show.disabled=true;try{const result=await api('history',{raidId:r.id}),list=node('ul');for(const row of result.history)list.append(node('li',`${new Date(row.created_at).toLocaleString('de-DE',{timeZone:'Europe/Berlin'})} · ${row.actor}: ${row.detail}`));h.replaceChildren(list);}catch(error){show.disabled=false;h.append(node('p',error.message,'form-error'));}});h.append(show);host.append(h);}
  $('roster').showModal();
 }
@@ -176,6 +182,8 @@ window.foreverPlanning={
  roster:id=>{const r=data?.raids.find(r=>r.id===id);if(r)showRoster(r);},
  refresh:()=>load(),
  publishDiscord:raidId=>api('discordPublish',{raidId}),
+ operations:api,
+ actor:()=>data?.actor,
  signup:async(raidId,values)=>{const result=await api('signup',{...values,raidId});try{await load();}catch{throw Error('Anmeldung gespeichert. Die Ansicht konnte nicht aktualisiert werden; bitte neu laden.');}return result;}
 };
 initialize();
