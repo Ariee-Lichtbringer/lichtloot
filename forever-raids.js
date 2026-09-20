@@ -85,25 +85,27 @@ function renderRaids(){
  const raids=data.raids.filter(r=>!group||r.group_id===group);
  if(!raids.length){const empty=node('div',undefined,'empty');empty.append(node('h3','Platz für euren nächsten Abend.'),node('p',data.actor.canManage?'Erstelle einen Raid, einen Dungeonabend oder euren ersten Forever-Treff.':'Hier erscheinen die Termine eurer Leitung. Lege schon jetzt deinen Forever-Charakter an.'));if(data.actor.canManage)empty.append(button('Ersten Termin erstellen',()=>raidEditor(),'primary'));list.append(empty);}
  for(const raid of raids){
-  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;
+  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;
+  const raidLabel=node('div',labels[raid.kind]||'Gildenabend','raid-heading');card.append(raidLabel);
   const top=node('div',undefined,'raid-top'),tile=node('div',undefined,'date-tile'),d=new Date(raid.starts_at);
   tile.append(node('strong',new Intl.DateTimeFormat('de-DE',{day:'2-digit',timeZone:'Europe/Berlin'}).format(d)),node('small',new Intl.DateTimeFormat('de-DE',{month:'short',timeZone:'Europe/Berlin'}).format(d)));
   const info=node('div',undefined,'raid-info');info.append(node('h3',raid.title),node('p',`${new Intl.DateTimeFormat('de-DE',{weekday:'long',timeZone:'Europe/Berlin'}).format(d)} · ${raid.time} Uhr · ${raid.group_name||'Gildenweiter Termin'}`,'raid-meta'));
-  const tags=node('div',undefined,'card-tags');tags.append(node('span',labels[raid.kind],'tag'),node('span',labels[raid.status],'tag'));info.append(tags);top.append(tile,info);card.append(top);
+  const tags=node('div',undefined,'card-tags');tags.append(node('span',labels[raid.status],'tag'));info.append(tags);top.append(tile,info);card.append(top);
   const body=node('div',undefined,'raid-body');if(raid.description)body.append(node('p',raid.description,'description'));
   const signed=raid.signups.filter(s=>s.status==='signed'),targets=[raid.tanks,raid.heals,raid.size-raid.tanks-raid.heals];
-  const counts=node('div',undefined,'role-counts');roleKeys.forEach((role,i)=>{const n=signed.filter(s=>s.role===role).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});body.append(counts);
+  const counts=node('div',undefined,'role-counts');roleKeys.forEach((role,i)=>{const n=signed.filter(s=>s.role===role).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.prepend(node('span',{tank:'🛡️',heal:'✨',dd:'⚔️'}[role],'role-icon'));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});body.append(counts);
   const bar=node('div',undefined,'fill-line'),fill=node('i');fill.style.width=Math.min(100,signed.length/raid.size*100)+'%';bar.append(fill);body.append(bar);
   const capacity=node('div',undefined,'capacity');capacity.append(node('span',`${signed.length} / ${raid.size} Plätze belegt`),node('span',`${raid.signups.filter(s=>s.status==='bench').length} auf Ersatzbank`));body.append(capacity);
   const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
   const actions=node('div',undefined,'raid-actions');
   if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>data.characters.length?signupEditor(raid,mine):characterEditor(),'primary'));
   if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL(location.href);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);}));
-  actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)),button('Kalender',()=>calendar(raid)),button('Link kopieren',()=>copyLink(raid)));
-  if(data.actor.canManage)actions.append(button('Verwalten',()=>raidEditor(raid)));
-  if(data.actor.canManage){const post=data.discordPosts?.find(p=>p.raid_id===raid.id);actions.append(button(post?.message_id?'Discord-Anmelder aktualisieren':'Discord-Anmelder veröffentlichen',async()=>{try{const result=await api('discordPublish',{raidId:raid.id});notice(result.message);await load();}catch(e){notice(e.message,true);}}));if(post?.message_id){const a=node('a','Discord-Post öffnen');a.href='https://discord.com/channels/'+post.discord_guild_id+'/'+post.channel_id+'/'+post.message_id;a.target='_blank';a.rel='noopener';actions.append(a);}if(post?.last_error)body.append(node('p',post.last_error,'form-error'));}
+  actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)));
+  const more=node('details',undefined,'raid-more'),summary=node('summary','Weitere Aktionen'),extra=node('div',undefined,'raid-extra');more.append(summary,extra);extra.append(button('Zum Kalender hinzufügen',()=>calendar(raid)),button('Terminlink kopieren',()=>copyLink(raid)));
+  if(data.actor.canManage)extra.append(button('Termin bearbeiten',()=>raidEditor(raid)));
+  if(data.actor.canManage){const post=data.discordPosts?.find(p=>p.raid_id===raid.id);extra.append(button(post?.message_id?'Discord-Anmelder aktualisieren':'Discord-Anmelder veröffentlichen',async()=>{try{const result=await api('discordPublish',{raidId:raid.id});notice(result.message);await load();}catch(e){notice(e.message,true);}}));if(post?.message_id){const a=node('a','Discord-Post öffnen');a.href='https://discord.com/channels/'+post.discord_guild_id+'/'+post.channel_id+'/'+post.message_id;a.target='_blank';a.rel='noopener';extra.append(a);}if(post?.last_error)body.append(node('p',post.last_error,'form-error'));}
 
-  body.append(actions);card.append(body);list.append(card);
+  body.append(actions,more);card.append(body);list.append(card);
  }
  const wanted=new URLSearchParams(location.search).get('raid');
  if(wanted){const card=$('raid-'+wanted);if(card)card.style.borderColor='#b7a4ff';}
