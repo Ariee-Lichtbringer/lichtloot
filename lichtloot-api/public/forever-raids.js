@@ -37,7 +37,7 @@ async function load() {
   render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings}}));
  }finally{if(version===generation)$('refresh').disabled=false;}
 }
-function logout(){dispatchEvent(new CustomEvent('forever-session',{detail:null}));generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');}
+function logout(){generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');dispatchEvent(new CustomEvent('forever-session',{detail:null}));}
 $('logout').onclick=logout;
 $('refresh').onclick=()=>{notice('');load().catch(e=>notice(e.message,true));};
 $('viewFilter').onchange=()=>{load().catch(e=>{$('viewFilter').value=loadedView;notice(e.message,true);});};
@@ -98,6 +98,7 @@ function renderRaids(){
   const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
   const actions=node('div',undefined,'raid-actions');
   if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>data.characters.length?signupEditor(raid,mine):characterEditor(),'primary'));
+  if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL(location.href);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)),button('Kalender',()=>calendar(raid)),button('Link kopieren',()=>copyLink(raid)));
   if(data.actor.canManage)actions.append(button('Verwalten',()=>raidEditor(raid)));
   body.append(actions);card.append(body);list.append(card);
@@ -164,5 +165,13 @@ function calendar(r){
  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GuildLoot//Forever//DE','BEGIN:VEVENT',`UID:${r.id}@guildloot-forever`,`DTSTAMP:${stamp(Date.now())}`,`DTSTART:${stamp(r.starts_at)}`,`SUMMARY:${escape(r.title)}`,`DESCRIPTION:${escape(r.description+'\n'+raidLink(r))}`,`STATUS:${r.status==='cancelled'?'CANCELLED':'CONFIRMED'}`,'END:VEVENT','END:VCALENDAR'];
  const url=URL.createObjectURL(new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'})),a=node('a');a.href=url;a.download='forever-termin.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+window.foreverPlanning={
+ get data(){return data;},
+ createCharacter:()=>characterEditor(),
+ createRaid:kind=>{if(!data?.actor.canManage)return;const [size,tanks,heals]=({hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8]})[kind]||[20,2,4];raidEditor({kind,size,tanks,heals});},
+ roster:id=>{const r=data?.raids.find(r=>r.id===id);if(r)showRoster(r);},
+ refresh:()=>load(),
+ signup:async(raidId,values)=>{const result=await api('signup',{...values,raidId});try{await load();}catch{throw Error('Anmeldung gespeichert. Die Ansicht konnte nicht aktualisiert werden; bitte neu laden.');}return result;}
+};
 initialize();
 })();
