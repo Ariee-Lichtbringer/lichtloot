@@ -1,4 +1,4 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 export const operationsSchema=readFileSync(new URL('./forever-loot.sql',import.meta.url),'utf8')+`
 alter table forever_point_entries add column if not exists reversal_of uuid references forever_point_entries(id);
@@ -12,11 +12,23 @@ const fail=(m,s=400)=>Object.assign(new Error(m),{statusCode:s});
 const uuid=v=>{if(!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(String(v)))throw fail('Ungültige Auswahl.');return v;};
 const text=(v,max=2000)=>{const s=String(v||'').trim();if(!s||s.length>max)throw fail('Bitte Text mit höchstens '+max+' Zeichen eingeben.');return s;};
 const whole=(v)=>{const n=Number(v);if(!Number.isInteger(n)||!n||Math.abs(n)>1000000)throw fail('Bitte eine ganze Zahl zwischen -1000000 und 1000000 eingeben (ohne 0).');return n;};
-export const operationActions=['operationsOverview','pointAdjust','pointReverse','bankAdjust','bankRequest','bankDecision','mailCreate','mailReply'];
+export const operationActions=['operationsOverview','pointAdjust','pointReverse','bankAdjust','bankRequest','bankDecision','mailCreate','mailReply','pointsBackup','pointsRestore'];
 export function createForeverOperations({pool,query}){
  async function tx(fn){const db=await pool.connect();try{await db.query('begin');const result=await fn(db);await db.query('commit');return result;}catch(e){await db.query('rollback');throw e;}finally{db.release();}}
  const audit=(db,g,a,action,detail)=>db.query('insert into forever_audit(guild_id,actor,action,detail) values($1,$2,$3,$4)',[g.id,a.label,action,detail]);
  return {async run(g,a,b){
+  if(b.action==='pointsBackup'){if(!a.canAdmin)throw fail('Nur die Gildenleitung darf Sicherungen erstellen.',403);return {success:true,backup:{format:'guildloot-forever-points',version:1,guild:g.slug,createdAt:new Date().toISOString(),entries:(await query('select * from forever_point_entries where guild_id=$1 order by created_at,id',[g.id])).rows}};}
+  if(b.action==='pointsRestore'){
+   if(!a.canAdmin)throw fail('Nur die Gildenleitung darf Sicherungen importieren.',403);const backup=b.backup;if(backup?.format!=='guildloot-forever-points'||backup.version!==1||backup.guild!==g.slug||!Array.isArray(backup.entries)||backup.entries.length>10000)throw fail('Ungültige Sicherung oder falsche Gilde.');
+   const ids=new Set();for(const row of backup.entries){uuid(row.id);uuid(row.character_id);if(row.raid_id)uuid(row.raid_id);if(row.reversal_of)uuid(row.reversal_of);if(ids.has(row.id)||!Number.isFinite(Number(row.amount))||Math.abs(Number(row.amount))>1000000)throw fail('Ungültige oder doppelte Buchung.');if(!Number.isInteger(Number(row.amount))||!Number.isFinite(Date.parse(row.created_at)))throw fail('Ungültiger Betrag oder Buchungszeitpunkt.');ids.add(row.id);text(row.reason);text(row.created_by,200);text(row.request_key,200);}
+   const digest=createHash('sha256').update(JSON.stringify(backup)).digest('hex');
+   return tx(async db=>{await db.query('select id from guilds where id=$1 for update',[g.id]);const existing=new Set((await db.query('select id from forever_point_entries where guild_id=$1',[g.id])).rows.map(r=>r.id));const missing=backup.entries.filter(r=>!existing.has(r.id));
+    for(const row of missing){if(!(await db.query('select id from forever_characters where guild_id=$1 and id=$2',[g.id,row.character_id])).rows.length)throw fail('Ein Charakter der Sicherung fehlt in dieser Gilde.');if(row.raid_id&&!(await db.query('select id from forever_raids where guild_id=$1 and id=$2',[g.id,row.raid_id])).rows.length)throw fail('Ein Raid der Sicherung fehlt in dieser Gilde.');if(row.reversal_of&&!ids.has(row.reversal_of)&&!existing.has(row.reversal_of))throw fail('Eine Gegenbuchung hat keine Ursprungsbuchung.');}
+    if(!b.apply)return {success:true,preview:{newEntries:missing.length,existing:backup.entries.length-missing.length,netPoints:missing.reduce((n,r)=>n+Number(r.amount),0)},confirmation:digest};
+    if(b.confirmation!==digest)throw fail('Bitte zuerst die Vorschau für diese Sicherung prüfen.',409);
+    for(const row of [...missing.filter(r=>!r.reversal_of),...missing.filter(r=>r.reversal_of)])await db.query('insert into forever_point_entries(id,guild_id,character_id,raid_id,amount,reason,created_by,request_key,reversal_of,created_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[row.id,g.id,row.character_id,row.raid_id||null,row.amount,row.reason,row.created_by,row.request_key,row.reversal_of||null,row.created_at]);await audit(db,g,a,'points_restore',missing.length+' Buchungen wiederhergestellt');return {success:true,restored:missing.length};
+   });
+  }
   if(b.action==='operationsOverview'){
    const balances=await query(`select c.id,c.name,c.class_name,coalesce(sum(p.amount),0)::text as points from forever_characters c left join forever_point_entries p on p.guild_id=c.guild_id and p.character_id=c.id where c.guild_id=$1 group by c.id order by c.name`,[g.id]);
    const journal=a.canAdmin?(await query('select p.*,c.name from forever_point_entries p join forever_characters c on c.guild_id=p.guild_id and c.id=p.character_id where p.guild_id=$1 order by p.created_at desc limit 200',[g.id])).rows:[];

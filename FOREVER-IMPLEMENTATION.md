@@ -15,15 +15,19 @@
 - Private member/leadership mailbox.
 - Security-answer recovery, admin reset and reopening rejected registrations.
 
+- Scoped raid leadership and lootmaster permissions, without guild-wide administrative privileges.
+- Saved templates, per-group Discord channel overrides and per-raid HTTPS images.
+- Full point backup and guild-checked import with preview, confirmation, deduplication and preserved booking times.
+
 ## Still pending / requires subsequent work
 - Automated attendance point rules (awaiting user choice; manual journal is active).
-- Raid-specific leadership and lootmaster permissions (currently guild-level permissions).
-- Dedicated saved template library; copies and weekly series are available.
+
+
 - Automatic bench promotion and notifications/reminders; existing posts continue syncing.
-- Per-group Discord channels and configurable recipients/images.
+- Configurable notification recipients and reminders.
 - Full log/Addon integration (source/format not supplied); current CSV is neutral, not a claimed Addon contract.
 - Bank Addon import, reconciliation and item identity beyond name.
-- Restore/import preview for point backups, full audit pagination.
+- Full audit pagination.
 - Full guild onboarding and shared Forever multi-guild player identity design.
 - Player performance/log analyses and traffic reports need event/data sources.
 

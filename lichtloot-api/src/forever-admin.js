@@ -16,7 +16,7 @@ export function createForeverAdmin({pool,query}){
     coalesce((select json_agg(json_build_object('id',c.id,'name',c.name,'className',c.class_name,'role',c.role) order by c.name) from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id),'[]'::json) as characters
     from players p where p.guild_id=$1 order by case when p.approval_status='pending' then 0 else 1 end,p.created_at desc`,[guild.id]);
    const config=await query("select coalesce(layout_json->'forever','{}'::jsonb) as config from guild_settings where guild_id=$1",[guild.id]);
-   const groups=await query('select g.id,g.name,(select count(*)::int from forever_raids r where r.guild_id=g.guild_id and r.group_id=g.id) as raid_count from forever_groups g where g.guild_id=$1 order by g.name',[guild.id]);
+   const groups=await query('select g.id,g.name,g.discord_channel_id,(select count(*)::int from forever_raids r where r.guild_id=g.guild_id and r.group_id=g.id) as raid_count from forever_groups g where g.guild_id=$1 order by g.name',[guild.id]);
    const counts=await query("select count(*) filter(where status in ('open','closed','running'))::int as upcoming,count(*) filter(where status in ('completed','cancelled','archived'))::int as archived from forever_raids where guild_id=$1",[guild.id]);
    const history=await query('select action,actor,detail,created_at from forever_audit where guild_id=$1 order by id desc limit 40',[guild.id]);
    const c=config.rows[0]?.config||{};

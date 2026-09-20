@@ -91,13 +91,18 @@ alter table forever_signups drop constraint if exists forever_signups_role_check
 alter table forever_signups add constraint forever_signups_role_check check(role in ('tank','heal','dd','melee','ranged'));
 alter table forever_raids drop constraint if exists forever_raids_status_check;
 alter table forever_raids add constraint forever_raids_status_check check(status in ('open','closed','running','cancelled','completed','archived'));
+alter table forever_groups add column if not exists discord_channel_id text;
+alter table forever_raids add column if not exists image_url text;
 alter table forever_raids add column if not exists archived_from text;
+alter table forever_raids add column if not exists raidlead_id uuid references players(id);
+alter table forever_raids add column if not exists lootmaster_id uuid references players(id);
 alter table forever_raids add column if not exists strict_roles boolean not null default false;
 alter table forever_raids add column if not exists request_key uuid;
 create unique index if not exists forever_raids_request on forever_raids(guild_id,request_key) where request_key is not null;
 alter table forever_signups add column if not exists attendance text not null default 'unrecorded' check(attendance in ('unrecorded','present','noshow','excused'));
 alter table forever_signups add column if not exists snapshot jsonb;
 alter table forever_signups add column if not exists party integer check(party between 1 and 8);
+create table if not exists forever_raid_templates(guild_id uuid not null references guilds(id),name text not null,config jsonb not null,primary key(guild_id,name));
 `;
 
 export function createForeverRaids({ pool, query }) {
@@ -115,16 +120,21 @@ export function createForeverRaids({ pool, query }) {
   async function run(guild, actor, body) {
     await ensure();
     const action = body.action;
+    actor={...actor,guildCanManage:!!actor.canManage};
+    const scopeId=action==='saveRaid'?body.id:body.raidId;
+    if(actor.playerId&&scopeId&&['saveRaid','formation','attendance','manageSignup','history','discordPublish','lootAward','lootVoid','lootOverview'].includes(action)){const scope=(await query('select raidlead_id,lootmaster_id from forever_raids where guild_id=$1 and id=$2',[guild.id,uuid(scopeId)])).rows[0];if(scope)actor={...actor,canManage:actor.canManage||scope.raidlead_id===actor.playerId,canLoot:actor.canAdmin||scope.lootmaster_id===actor.playerId};}
+
     if(priorityActions.includes(action))return priorities.run(guild,actor,body);
     if(operationActions.includes(action))return operations.run(guild,actor,body);
     if(action==='discordPublish')return publishForeverDiscord(query,guild,actor,body);
     if(["adminOverview","adminPlayer","adminSettings"].includes(action))return admin.run(guild,actor,body);
+    if(action==='saveTemplate'){requireLead(actor);const name=text(body.name,60,'Vorlagenname'),config={...raidInput(body.config||{}),strict_roles:body.config?.rolePolicy==='strict'};if(config.groupId&&!(await query('select id from forever_groups where guild_id=$1 and id=$2',[guild.id,config.groupId])).rows.length)throw fail('Fremde Raidgruppe.',403);return transaction(async db=>{await db.query('insert into forever_raid_templates(guild_id,name,config) values($1,$2,$3) on conflict(guild_id,name) do update set config=excluded.config',[guild.id,name,JSON.stringify(config)]);await audit(db,guild,actor,null,'template',name);return {success:true};});}
     if (action === 'overview') {
       const page=integer(body.page||0,0,100000);
-      const groups = await query('select id,name from forever_groups where guild_id=$1 order by lower(name)', [guild.id]);
+      const groups = await query('select id,name,discord_channel_id from forever_groups where guild_id=$1 order by lower(name)', [guild.id]);
       const characters = actor.playerId ? await query('select id,name,ruleset,class_name,role from forever_characters where guild_id=$1 and player_id=$2 order by lower(name)', [guild.id, actor.playerId]) : { rows: [] };
       // Upcoming events and a bounded archive are returned with signup data in one snapshot.
-      const raids = await query(`select r.*, to_char(r.starts_at at time zone 'Europe/Berlin','YYYY-MM-DD') as date,
+      const raids = await query(`select r.*,coalesce(r.raidlead_id=$2::uuid,false) as delegated_lead,coalesce(r.lootmaster_id=$2::uuid,false) as delegated_loot, to_char(r.starts_at at time zone 'Europe/Berlin','YYYY-MM-DD') as date,
         to_char(r.starts_at at time zone 'Europe/Berlin','HH24:MI') as time, g.name as group_name,
         coalesce((select json_agg(json_build_object('characterId',c.id,'name',coalesce(s.snapshot->>'name',c.name),'className',coalesce(s.snapshot->>'className',c.class_name),
           'ruleset',c.ruleset,'attendance',s.attendance,'party',s.party,'role',s.role,'status',s.status,'note',s.note,'mine',s.player_id=$2::uuid)
@@ -138,7 +148,9 @@ export function createForeverRaids({ pool, query }) {
       const config=settings.rows[0]?.config||{};
       const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
       const discordPosts=actor.canManage?(await query('select raid_id,message_id,channel_id,discord_guild_id,last_error from forever_discord_posts where guild_id=$1',[guild.id])).rows:[];
-      return { success: true, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
+      const members=actor.guildCanManage?(await query("select p.id,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from players p where p.guild_id=$1 and p.approval_status='approved' and not p.is_blocked",[guild.id])).rows:[];
+      const templates=actor.guildCanManage?(await query('select name,config from forever_raid_templates where guild_id=$1 order by name',[guild.id])).rows:[];
+      return { success: true,templates,members, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
     }
     if (action === 'saveCharacter') {
       if (!actor.playerId) throw fail('Für eigene Charaktere bitte mit dem SpielerLogin anmelden.', 403);
@@ -167,6 +179,7 @@ export function createForeverRaids({ pool, query }) {
           const result=await db.query('update forever_groups set name=$3 where guild_id=$1 and id=$2 returning id',[guild.id,id,name]);
           if(!result.rows.length) throw fail('Gruppe nicht gefunden.',404);
         } else await db.query('insert into forever_groups(id,guild_id,name) values($1,$2,$3)',[id,guild.id,name]);
+        if(body.discordChannelId!==undefined){const channel=String(body.discordChannelId||'').trim();if(channel&&!/^\d{17,20}$/.test(channel))throw fail('Bitte eine gültige Discord-Kanal-ID eingeben.');await db.query('update forever_groups set discord_channel_id=$3 where guild_id=$1 and id=$2',[guild.id,id,channel||null]);}
         await audit(db,guild,actor,null,'group',name); return {success:true,id};
       });
     }
@@ -185,6 +198,8 @@ export function createForeverRaids({ pool, query }) {
           if(count>value.size) throw fail('Die Gruppe hat mehr Zusagen als die neue Größe. Bitte zuerst die Ersatzbank anpassen.',409);
           await db.query(`update forever_raids set group_id=$3,title=$4,kind=$5,starts_at=$6::timestamp at time zone 'Europe/Berlin',size=$7,tanks=$8,heals=$9,description=$10,status=$11,revision=revision+1 where guild_id=$1 and id=$2`,values);
         } else await db.query(`insert into forever_raids(guild_id,id,group_id,title,kind,starts_at,size,tanks,heals,description,status) values($1,$2,$3,$4,$5,$6::timestamp at time zone 'Europe/Berlin',$7,$8,$9,$10,$11)`,values);
+        if(body.imageUrl!==undefined){const image=String(body.imageUrl||'').trim();if(image){let u;try{u=new URL(image);}catch{throw fail('Ungültiger Bildlink.');}if(u.protocol!=='https:'||u.username||u.password||image.length>1000)throw fail('Bitte einen HTTPS-Bildlink ohne Zugangsdaten eingeben.');}await db.query('update forever_raids set image_url=$3 where guild_id=$1 and id=$2',[guild.id,id,image||null]);}
+        for(const [key,column] of [['raidleadId','raidlead_id'],['lootmasterId','lootmaster_id']])if(body[key]!==undefined){if(!actor.guildCanManage)throw fail('Nur die Gildenleitung oder Offiziere dürfen Raidrollen zuweisen.',403);const player=body[key]?uuid(body[key]):null;if(player&&!(await db.query("select id from players where guild_id=$1 and id=$2 and approval_status='approved' and not is_blocked",[guild.id,player])).rows.length)throw fail('Dieser Spielerzugang ist nicht freigegeben.',404);await db.query(`update forever_raids set ${column}=$3 where guild_id=$1 and id=$2`,[guild.id,id,player]);}
         if(body.rolePolicy!==undefined){choice(body.rolePolicy,['soft','strict'],'Rollenplätze');await db.query('update forever_raids set strict_roles=$3 where guild_id=$1 and id=$2',[guild.id,id,body.rolePolicy==='strict']);}
         if(!body.id && body.requestKey)await db.query('update forever_raids set request_key=$3 where guild_id=$1 and id=$2',[guild.id,id,uuid(body.requestKey)]);
         if(['completed','archived'].includes(value.status))await db.query(`update forever_signups s set snapshot=jsonb_build_object('name',c.name,'className',c.class_name) from forever_characters c where s.guild_id=$1 and s.raid_id=$2 and c.guild_id=s.guild_id and c.id=s.character_id and s.snapshot is null`,[guild.id,id]);
@@ -192,8 +207,8 @@ export function createForeverRaids({ pool, query }) {
         let discordQueued=false;
         if(!body.id && !['cancelled','completed','archived'].includes(value.status)) {
           const queued=await db.query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id)
-            select guild_id,$2,discord_guild_id,channel_id from forever_discord_channels where guild_id=$1
-            on conflict(guild_id,raid_id) do nothing returning raid_id`,[guild.id,id]);
+            select guild_id,$2,discord_guild_id,coalesce((select discord_channel_id from forever_groups where guild_id=$1 and id=$3),channel_id) from forever_discord_channels where guild_id=$1
+            on conflict(guild_id,raid_id) do nothing returning raid_id`,[guild.id,id,value.groupId]);
           discordQueued=queued.rows.length>0;
         }
         const ids=[id],repeatWeeks=body.id?1:integer(body.repeatWeeks||1,1,12);
@@ -201,8 +216,8 @@ export function createForeverRaids({ pool, query }) {
           const nextId=randomUUID(),day=new Date(value.date+'T12:00:00Z');day.setUTCDate(day.getUTCDate()+7*week);
           const nextValues=[guild.id,nextId,value.groupId,value.title,value.kind,day.toISOString().slice(0,10)+' '+value.time,value.size,value.tanks,value.heals,value.description,value.status];
           await db.query(`insert into forever_raids(guild_id,id,group_id,title,kind,starts_at,size,tanks,heals,description,status) values($1,$2,$3,$4,$5,$6::timestamp at time zone 'Europe/Berlin',$7,$8,$9,$10,$11)`,nextValues);
-          if(discordQueued)await db.query('insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) select guild_id,$2,discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id,nextId]);
-          await db.query('update forever_raids set strict_roles=$3 where guild_id=$1 and id=$2',[guild.id,nextId,body.rolePolicy==='strict']);
+          if(discordQueued)await db.query('insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) select guild_id,$2,discord_guild_id,coalesce((select discord_channel_id from forever_groups where guild_id=$1 and id=$3),channel_id) from forever_discord_channels where guild_id=$1',[guild.id,nextId,value.groupId]);
+          await db.query('update forever_raids set strict_roles=source.strict_roles,raidlead_id=source.raidlead_id,lootmaster_id=source.lootmaster_id,image_url=source.image_url from forever_raids source where forever_raids.guild_id=$1 and forever_raids.id=$2 and source.guild_id=$1 and source.id=$3',[guild.id,nextId,id]);
           await audit(db,guild,actor,nextId,'raid_created',value.title+' · Serientermin');ids.push(nextId);
         }
         return {success:true,id,ids,discordQueued};

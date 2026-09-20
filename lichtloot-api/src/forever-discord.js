@@ -8,9 +8,10 @@ create table if not exists forever_discord_posts(guild_id uuid not null,raid_id 
 export async function publishForeverDiscord(query,guild,actor,body){
  if(!actor.canManage)throw fail('Nur die Raidleitung darf Discord-Anmelder veröffentlichen.',403);
  await query(foreverDiscordSchema);
- const raid=(await query('select id from forever_raids where guild_id=$1 and id=$2',[guild.id,body.raidId])).rows[0];if(!raid)throw fail('Raid nicht gefunden.',404);
+ const raid=(await query('select id,group_id from forever_raids where guild_id=$1 and id=$2',[guild.id,body.raidId])).rows[0];if(!raid)throw fail('Raid nicht gefunden.',404);
  const config=(await query('select * from forever_discord_channels where guild_id=$1',[guild.id])).rows[0];if(!config)throw fail('Verbinde zuerst den Discord-Kanal mit /forever_verbinden.',409);
- await query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) values($1,$2,$3,$4) on conflict(guild_id,raid_id) do update set message_id=case when forever_discord_posts.last_error like 'Discord-Nachricht fehlt%' then null else forever_discord_posts.message_id end,content_hash='',last_error='',updated_at=now()`,[guild.id,raid.id,config.discord_guild_id,config.channel_id]);
+ const group=raid.group_id?(await query('select discord_channel_id from forever_groups where guild_id=$1 and id=$2',[guild.id,raid.group_id])).rows[0]:null;
+ await query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) values($1,$2,$3,$4) on conflict(guild_id,raid_id) do update set message_id=case when forever_discord_posts.last_error like 'Discord-Nachricht fehlt%' then null else forever_discord_posts.message_id end,content_hash='',last_error='',updated_at=now()`,[guild.id,raid.id,config.discord_guild_id,group?.discord_channel_id||config.channel_id]);
  return {success:true,message:'Der Forever-Anmelder wird im verbundenen Discord-Kanal veröffentlicht bzw. aktualisiert.'};
 }
 export function createForeverDiscord({query,pool,access,raids}){

@@ -9,6 +9,7 @@ const g={id:randomUUID(),slug:'guild-a',name:'Gilde A'}, other={id:randomUUID(),
 for(const guild of [g,other])await db.query('insert into guilds(id) values($1)',[guild.id]);
 const a={playerId:randomUUID(),label:'Anna',canManage:false},b={playerId:randomUUID(),label:'Ben',canManage:false}, outsider={playerId:randomUUID(),label:'Other',canManage:false},lead={playerId:null,label:'Gildenleitung',canManage:true};
 for(const [actor,guild] of [[a,g],[b,g],[outsider,other]])await db.query('insert into players values($1,$2)',[actor.playerId,guild.id]);
+await db.exec("alter table players add column approval_status text default 'approved';alter table players add column is_blocked boolean default false;");
 const query=(sql,params=[])=>params.length?db.query(sql,params):sql.includes('create table')?db.exec(sql):db.query(sql);
 const service=createForeverRaids({query,pool:{connect:async()=>({query:(...args)=>db.query(...args),release(){}})}});
 const run=(actor,action,body={},guild=g)=>service.run(guild,actor,{...body,action});
@@ -63,4 +64,6 @@ const after=(await run(a,'overview',{archive:true})).raids.find(r=>r.id===one.id
 await assert.rejects(run(lead,'attendance',{raidId:one.id,characterId:ca,attendance:'noshow'}),/wieder öffnen/);
 
 const series=await run(lead,'saveRaid',{...params,title:'Serie',repeatWeeks:3,requestKey:randomUUID()});assert.equal(series.ids.length,3);
+
+await run(lead,'saveTemplate',{name:'Standard',config:params});assert.equal((await run(lead,'overview')).templates.length,1);
 await db.close();

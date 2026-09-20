@@ -44,4 +44,9 @@ await call(lead,'p0Approval',{raidId:raid,characterId:char,approved:true});await
 await call(lead,'formation',{raidId:raid,characterId:char,party:1});assert.equal((await call(member,'overview')).raids.find(r=>r.id===raid).signups[0].party,1);
 await assert.rejects(call(member,'formation',{raidId:raid,characterId:char,party:2}),e=>e.statusCode===403);
 const loot=(await call(lead,'lootOverview',{kind:'hyjal',raidId:raid})).awards[0];await call(lead,'lootVoid',{raidId:raid,characterId:char,id:loot.id,reason:'Korrektur'});assert.equal((await call(lead,'lootOverview',{kind:'hyjal',raidId:raid})).awards[0].void_reason,'Korrektur');
+
+const backup=(await call(lead,'pointsBackup')).backup;const preview=await call(lead,'pointsRestore',{backup});assert.equal(preview.preview.newEntries,0);await assert.rejects(call(lead,'pointsRestore',{backup,apply:true,confirmation:'wrong'}),e=>e.statusCode===409);assert.equal((await call(lead,'pointsRestore',{backup,apply:true,confirmation:preview.confirmation})).restored,0);
+const delegated=(await call(lead,'saveRaid',{title:'Delegiert',kind:'hyjal',date:'2099-01-02',time:'20:00',size:20,tanks:2,heals:4,raidleadId:player,lootmasterId:player})).id;
+await call(member,'saveRaid',{id:delegated,revision:1,title:'Delegiert geändert',kind:'hyjal',date:'2099-01-02',time:'21:00',size:20,tanks:2,heals:4});
+await assert.rejects(call(member,'saveRaid',{id:raid,revision:1,title:'Fremder Raid',kind:'hyjal',date:'2099-01-02',time:'21:00',size:20,tanks:2,heals:4}),e=>e.statusCode===403);
 await db.close();console.log('Operations passed: authorization, guild isolation, idempotent points, reversals, inventory capacity, one-time approval, private mailbox.');
