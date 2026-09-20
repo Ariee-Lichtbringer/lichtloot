@@ -48,3 +48,7 @@ Publish the frontend assets and updated Forever hub to the website and deploy th
 Lichtbringer's test guild uses `lichtbringer-forever`, linked to Era `lichtloot` for navigation only. Initially one player, Ariee Mondlichtung, and a distinct guild master credential were created. Secrets are stored outside the repository.
 
 Official logo sources: https://worldofwarcraft.blizzard.com/en-gb/classic and https://worldofwarcraft.blizzard.com/en-us/forever .
+
+## Integrated preparation tools
+
+`forever-tools.js` routes the five preparation sections inside the raid planning shell. The existing tool document runs in a same-origin frame with its own modern theme (`forever-embedded.css`), preserving the item/talent/recipe implementations and browser-local favorites. Internal links remain inside the frame; the parent URL and selected sidebar entry follow section changes. Direct legacy links for these five sections enter the new shell. Public source links remain external. Both root and API public assets include all data/modules required by the tools. Browser checks cover all five sections, item search/detail/favorites, recipe drilldown/back, talent allocation and mobile sizing.
