@@ -1,3 +1,4 @@
+import {foreverPool,foreverQuery,foreverAccess} from './forever-db.js';
 import { installForeverRaids } from './forever-raids.js';
 import { installForeverRegistration } from './forever-registration.js';
 import { responseCompression } from './response-compression.js';
@@ -652,27 +653,8 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
-async function requireForeverGuild(guild) {
-  const settings = await query("select layout_json->>'game' as game from guild_settings where guild_id=$1", [guild.id]);
-  if (settings.rows[0]?.game !== 'forever') throw Object.assign(new Error('Bitte eine separate Forever-Gilde auswählen. Era-SpielerLogins werden nicht übernommen.'), {statusCode:403});
-}
-installForeverRaids(app, {
-  pool, query, requireGuild, explicitGuild: requireExplicitGuildSlug, rateLimit: enforceSecurityRateLimit,
-  authorize: async (guild, body) => {
-    await requireForeverGuild(guild);
-    if (clean(body.masterCode)) {
-      await loadMasterCodeOverrides();
-      requireMasterCodeForGuild(guild, body.masterCode);
-      return {canManage:true, playerId:null, label:'Gildenleitung'};
-    }
-    const player = await findPlayerByPin(guild.id, normalizePin(body.playerPin));
-    if (!player) throw Object.assign(new Error('Bitte mit einem freigegebenen SpielerLogin dieser Gilde anmelden.'), {statusCode:403});
-    const display = await query("select name from characters where player_id=$1 order by is_main desc,created_at asc limit 1", [player.id]);
-    return {playerId:player.id, canManage:canPlayerRoleCreateRaid(player.role), label:display.rows[0]?.name || 'Gildenmitglied'};
-  }
-});
-
-installForeverRegistration(app, {pool, query, requireGuild, requireForeverGuild, explicitGuild:requireExplicitGuildSlug, rateLimit:enforceSecurityRateLimit, hashSecurityAnswer});
+installForeverRaids(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,authorize:foreverAccess.authorize});
+installForeverRegistration(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,requireForeverGuild:async()=>{},explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,hashSecurityAnswer});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
@@ -1514,6 +1496,7 @@ function mergeGuildLayoutDefaults(slug, layout) {
 }
 
 async function listGuilds(game = "era") {
+  if(game === "forever") return foreverAccess.listGuilds();
   await ensureGuildLayoutSchema();
   await ensureGuildDiscordConfigSchema();
   let result = await query(

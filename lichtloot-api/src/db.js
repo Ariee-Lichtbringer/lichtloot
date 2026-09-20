@@ -91,7 +91,7 @@ export async function getGuildBySlug(slug) {
 
 export async function requireGuild(slug) {
   const guild = await getGuildBySlug(slug);
-  if (!guild) {
+  if (!guild || (await query("select 1 from guild_settings where guild_id=$1 and layout_json->>'game'='forever'", [guild.id])).rows.length) {
     const error = new Error("Guild not found");
     error.statusCode = 404;
     throw error;

@@ -34,7 +34,7 @@ async function load() {
   $('guildName').textContent=result.guild.name;
   $('newRaid').hidden=$('newGroup').hidden=!result.actor.canManage;
   $('newCharacter').hidden=!result.actor.canSignup;
-  render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup}}));
+  render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings}}));
  }finally{if(version===generation)$('refresh').disabled=false;}
 }
 function logout(){dispatchEvent(new CustomEvent('forever-session',{detail:null}));generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');}
