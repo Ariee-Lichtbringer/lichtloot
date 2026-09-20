@@ -1540,6 +1540,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
 @media(max-width:1000px){.header .portal-nav{display:flex;grid-column:1/-1;grid-row:2;height:auto;padding-bottom:12px;gap:10px}.header .portal-profile{grid-column:2;grid-row:1}.header{row-gap:0}.portal-nav .portal-addon-download{min-width:0}.portal-nav a[data-guild-support]{padding:0 12px}}
 @media(max-width:650px){.portal-nav .portal-addon-download{flex:1;padding:7px 9px;gap:8px}.portal-addon-download .portal-addon-icon{width:30px;height:30px}.portal-addon-download strong{font-size:12px}.portal-addon-download small{font-size:11px}.portal-nav a[data-guild-support]{padding:0 4px;font-size:12px}}
 </style>
+<link rel="stylesheet" href="guildloot-game-entry.css?v=20260920">
 </head>
 <body>
 <div class="overlay">
@@ -1555,7 +1556,10 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <span class="portal-profile-arrow">⌄</span>
     </button>
   </div>
-  <a class="forever-public-entry" href="forever.html"><img src="images/wow-forever-logo.jpg" alt="World of Warcraft Forever"><span><strong>WoW Forever entdecken</strong><small>Talente, Berufe, Raids und Itemdatenbank · ohne SpielerLogin</small></span><b aria-hidden="true">↗</b></a>
+  <section class="guildloot-game-entry" aria-label="Spielversion auswählen">
+    <article><span class="game-entry-label">CLASSIC ERA</span><h2>Eure Gilde. Eure Raids.</h2><p>Raidanmeldung, Priolisten und Gildenverwaltung für Classic Era.</p><a href="start.html" data-game-entry>Classic Era öffnen <span aria-hidden="true">→</span></a></article>
+    <article class="game-entry-forever"><img src="images/wow-forever-logo.jpg" alt="World of Warcraft Forever"><div><span class="game-entry-label">WOW FOREVER</span><h2>Gemeinsam neu aufbrechen.</h2><p>Gildenplanung, eigene Charaktere und Anmeldung für eure Forever-Abende.</p><a href="forever-raids.html" data-game-entry>Gilde &amp; Raidanmeldung <span aria-hidden="true">→</span></a><a class="game-entry-secondary" href="forever.html" data-game-entry>Forever entdecken · Items, Talente &amp; Berufe ↗</a></div></article>
+  </section>
   <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für GuildLoot beantragen.</div>
 
   <section id="guildGate" class="guild-gate hidden">
@@ -5201,5 +5205,8 @@ document.addEventListener('DOMContentLoaded',async function(){
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260909-archive-professions" defer></script>
+<script>
+(() => {const guild=new URLSearchParams(location.search).get('guild');if(guild)document.querySelectorAll('[data-game-entry]').forEach(link=>{const url=new URL(link.href);url.searchParams.set('guild',guild);link.href=url.pathname+url.search;});})();
+</script>
 </body>
 </html>

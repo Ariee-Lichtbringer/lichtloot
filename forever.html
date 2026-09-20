@@ -560,7 +560,7 @@
             <a href="#talente"><i aria-hidden="true">◆</i>Talentbäume</a>
             <a href="#berufe"><i aria-hidden="true">⚒</i>Berufe</a>
           </div>
-          <div class="nav-group" role="group" aria-labelledby="nav-plan"><small id="nav-plan" data-plan-de="Meine Planung" data-plan-en="My plans">Meine Planung</small><a href="#favoriten"><span aria-hidden="true">☆</span><span data-plan-de="Favoriten" data-plan-en="Favorites">Favoriten</span></a><a href="#materialrechner"><span aria-hidden="true">▤</span><span data-plan-de="Materialrechner" data-plan-en="Material calculator">Materialrechner</span></a></div>
+          <div class="nav-group" role="group" aria-labelledby="nav-plan"><small id="nav-plan" data-plan-de="Meine Planung" data-plan-en="My plans">Meine Planung</small><a href="forever-raids.html"><span aria-hidden="true">◷</span><span data-plan-de="Gilde &amp; Raidanmeldung" data-plan-en="Guild &amp; raid signups">Gilde &amp; Raidanmeldung</span></a><a href="#favoriten"><span aria-hidden="true">☆</span><span data-plan-de="Favoriten" data-plan-en="Favorites">Favoriten</span></a><a href="#materialrechner"><span aria-hidden="true">▤</span><span data-plan-de="Materialrechner" data-plan-en="Material calculator">Materialrechner</span></a></div>
           <div class="nav-group" role="group" aria-labelledby="nav-loot">
             <small id="nav-loot">Ausrüstung &amp; Loot</small>
             <a href="#itemdatenbank"><i aria-hidden="true">▤</i>Itemdatenbank</a>
@@ -580,6 +580,7 @@
               Aktuelle Bilder, bestätigte Inhalte und die Vorbereitung unserer
               künftigen Loot- und Raidplanung – übersichtlich an einem Ort.
             </p>
+            <p><a class="loot-link" href="forever-raids.html" data-plan-de="Gildenplanung &amp; Raidanmeldung öffnen →" data-plan-en="Open guild planning &amp; raid signups →">Gildenplanung &amp; Raidanmeldung öffnen →</a></p>
             <div class="pills">
               <span class="pill">Beta · 17.09.2026</span
               ><span class="pill">Release · 04.11.2026</span
@@ -1030,5 +1031,9 @@
       );
       showPanel(location.hash.slice(1) || "start", false);
     </script>
-  </body>
+  <script>
+const foreverEntryGuild = new URLSearchParams(location.search).get('guild');
+if(foreverEntryGuild) document.querySelectorAll('a[href="forever-raids.html"]').forEach(link => {link.href='forever-raids.html?'+new URLSearchParams({guild:foreverEntryGuild});});
+</script>
+</body>
 </html>

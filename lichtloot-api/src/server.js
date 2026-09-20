@@ -1,3 +1,4 @@
+import { installForeverRaids } from './forever-raids.js';
 import { responseCompression } from './response-compression.js';
 import { assertP0Cutoff } from './p0-cutoff.js';
 import {installAccessSecurity, hashSecurityAnswer, verifySecurityAnswer, migrateSecurityAnswers, redactAccessDetails} from './auth-security.js';
@@ -650,6 +651,20 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
+installForeverRaids(app, {
+  pool, query, requireGuild, explicitGuild: requireExplicitGuildSlug, rateLimit: enforceSecurityRateLimit,
+  authorize: async (guild, body) => {
+    if (clean(body.masterCode)) {
+      await loadMasterCodeOverrides();
+      requireMasterCodeForGuild(guild, body.masterCode);
+      return {canManage:true, playerId:null, label:'Gildenleitung'};
+    }
+    const player = await findPlayerByPin(guild.id, normalizePin(body.playerPin));
+    if (!player) throw Object.assign(new Error('Bitte mit einem freigegebenen SpielerLogin dieser Gilde anmelden.'), {statusCode:403});
+    const display = await query("select name from characters where player_id=$1 order by is_main desc,created_at asc limit 1", [player.id]);
+    return {playerId:player.id, canManage:canPlayerRoleCreateRaid(player.role), label:display.rows[0]?.name || 'Gildenmitglied'};
+  }
+});
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
