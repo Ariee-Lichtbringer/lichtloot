@@ -9953,7 +9953,7 @@ function renderDashboardRaidCard(raid){
     <div class="rc-main-actions">${button(p0Only?'P0-Anmelder öffnen':signupOnly?'Anmelder bearbeiten':'Raid öffnen',`${openAction}(${arg})`)}${!signupOnly?button('Plündermeister →',`openRaidleadPanelDirect(${arg})`,'rc-primary'):''}</div></div>
     ${pointsEnabled?`<div class="rc-points"><div><strong>P0+-Aktionen</strong></div><div class="rc-points-actions">${!cancelled&&!manual?button('Übertragen',`${isZgRaidForP0Transfer(raid)?'openP0PlusTransferDialog':'transferP0PlusFromGuild'}(${arg})`)+button('Manuell erledigt',`dashboardCardAction(${arg},'manual')`):manual?button('Aufgabe wieder öffnen',`dashboardCardAction(${arg},'reopen')`):''}</div></div>`:''}
     <details class="rc-details"><summary>Raidinformationen</summary><div><span>Gilde · <strong>${escapeHtml(displayGuildNameForRaid(raid.guild||raid.gilde))}</strong></span><span>Erstellt von · <strong>${escapeHtml(getRaidCreatorName(raid))}</strong></span>${!signupOnly?`<span>Prio-PIN · <strong>${escapeHtml(raid.playerPin||'—')}</strong></span>`:''}<span>Raid-ID · ${escapeHtml(id)}</span><span>${cancelled?'Teilnahme entfällt':'Anmeldungen sind keine bestätigte Teilnahme.'}</span></div></details>
-    <footer class="rc-admin">${button(cancelled?'Absage zurücknehmen':'Raid abgesagt',cancelled?`dashboardCardAction(${arg},'reopen')`:`markLeadershipRaidCancelled(${arg})`,'rc-danger')}${button('Archivieren',`deleteRaidFromDashboard(${arg})`,'',needsP0PlusTransferBeforeArchive(raid)?`disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}"`:'')}</footer>
+    <footer class="rc-admin">${button(cancelled?'Absage zurücknehmen':'Raid abgesagt',cancelled?`dashboardCardAction(${arg},'reopen')`:`markLeadershipRaidCancelled(${arg})`,'rc-danger')}${button('Archivieren',`deleteRaidFromDashboard(${arg})`,'',needsP0PlusTransferBeforeArchive(raid)?`disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}"`:'')}${button('Löschen',`hardDeleteRaidFromPage(${arg})`,'rc-danger','title="Raid endgültig löschen (mit Sicherheitsabfrage)"')}</footer>
   </article>`;
 }
 
@@ -11859,6 +11859,7 @@ function renderRaidHelperEventCard(raid, mode){
         ${prioEnabled ? `<button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}',${mode === 'past' || isArchived})">Prios</button>` : ""}
         ${mode === "past" || isArchived ? `<button class="small-btn primary" type="button" onclick="openRaidArchive('${escapeAttr(raidId)}')">Raidloot</button>` : ""}
         ${!isArchived ? `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raidId)}')">Archivieren</button>` : ""}
+        <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raidId)}')" title="Raid endgültig löschen (mit Sicherheitsabfrage)">Löschen</button>
         <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
         <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
       </div>
