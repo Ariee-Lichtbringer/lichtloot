@@ -41,7 +41,7 @@
   }
   function confirmedNew(x){return sourceData?.confirmedNewItems?.some(entry=>entry.id===x.id&&entry.source&&entry.verifiedAt);}
   function possibleForever(x){return sourceData?.possibleForeverItems?.some(entry=>entry.id===x.id);}
-  function markNew(host,x){if(x.communitySource){host.append(node('span','item-new-badge',language==='en'?'Community source · 23 Sep 2026':'Community-Quelle · 23.09.2026'));return;}if(x.betaImport){host.append(node('span','item-new-badge',language==='en'?'Beta database · 18 Sep 2026':'Beta-Datenbank · 18.09.2026'));}if(!confirmedNew(x)&&!possibleForever(x))return;host.classList.add('item-forever-new');host.append(node('span','item-new-badge',possibleForever(x)?(language==='en'?'Unconfirmed in Forever, but possible':'In Forever nicht bestätigt, aber möglich'):(language==='en'?'New in Forever':'Neu in Forever')));}
+  function markNew(host,x){if(x.communitySource){host.append(node('span','item-new-badge',language==='en'?'Community source · 23 Sep 2026':'Community-Quelle · 23.09.2026'));return;}if(x.betaImport){host.append(node('span','item-new-badge',language==='en'?'Beta database · 23 Sep 2026':'Beta-Datenbank · 23.09.2026'));}if(!confirmedNew(x)&&!possibleForever(x))return;host.classList.add('item-forever-new');host.append(node('span','item-new-badge',possibleForever(x)?(language==='en'?'Unconfirmed in Forever, but possible':'In Forever nicht bestätigt, aber möglich'):(language==='en'?'New in Forever':'Neu in Forever')));}
   function fillDetails(host,html,x){
     host.replaceChildren();host.classList.add('item-full-details');host.append(detailMarkup(html));
     host.append(node('p','item-hover-id','ItemID: '+x.id));markNew(host,x);
@@ -152,14 +152,14 @@
     const summary=Array.from(body.children);const full=node('div','item-full-details');body.prepend(full);const selectedId=x.id;d.dataset.itemId=String(selectedId);loadDetails(full,x,()=>d.open&&d.dataset.itemId===String(selectedId),()=>{for(const child of summary)child.remove();});
     if(x.sourcemore?.length){body.append(node('h4','','In der Datenbank aufgeführte Quellen'));const ul=node('ul');for(const source of x.sourcemore){if(source.n)ul.append(node('li','',source.n));}body.append(ul);}
     if(x.communitySource){const source=node('a','loot-link',language==='en'?'Item source: Hyjal.cc ↗':'Itemquelle: Hyjal.cc ↗');source.href=x.communitySource.url;source.target='_blank';source.rel='noopener';body.append(source);const boss=sourceData?.bossAssignments?.[x.id];if(boss){const a=node('a','loot-link',(language==='en'?'Boss loot: ':'Bossloot: ')+boss.boss+' ↗');a.href=boss.source;a.target='_blank';a.rel='noopener';body.append(a);}}
-    body.append(node('p','item-disclaimer',x.communitySource?(language==='en'?'Community-documented beta data, checked 23 September 2026; not independently verified in game.':'Von der Community dokumentierte Beta-Daten, geprüft am 23. September 2026; nicht selbst im Spiel verifiziert.'):'Forever-Datenbankeintrag bei Wowhead. Verfügbarkeit, Werte und Fundorte können sich bis zur Beta ändern. Übernommene Classic-Einträge sind keine Bestätigung für Beute in neuen Forever-Raids.'));
+    body.append(node('p','item-disclaimer',x.communitySource?(language==='en'?'Community-documented beta data, checked 23 September 2026; not independently verified in game.':'Von der Community dokumentierte Beta-Daten, geprüft am 23. September 2026; nicht selbst im Spiel verifiziert.'):'Forever-Datenbankeintrag bei Wowhead. Verfügbarkeit, Werte und Fundorte können sich während der Beta ändern. Übernommene Classic-Einträge sind keine Bestätigung für Beute in neuen Forever-Raids.'));
     const a=node('a','loot-link','Vollständige Effekte und Quelle bei Wowhead ↗');a.href=link(x);a.target='_blank';a.rel='noopener noreferrer';body.append(a);
     const u=new URL(location.href);u.searchParams.set('item',x.id);u.hash='itemdatenbank';history.replaceState(null,'',u);
     window.ForeverPlanning?.itemOpen({item:x,host:body,profession:recipeData?.professions.find(p=>p.ids.includes(x.id)),details:itemDetails,statNames});
     if(!d.open)d.showModal();
   }
   let recipesPending;
-  function loadRecipes(){return recipesPending||(recipesPending=fetch('forever-recipes.json?v=20260923-community').then(r=>{if(!r.ok)throw Error('Recipes unavailable');return r.json();}).catch(e=>{recipesPending=null;throw e;}));}
+  function loadRecipes(){return recipesPending||(recipesPending=fetch('forever-recipes.json?v=20260923-beta1').then(r=>{if(!r.ok)throw Error('Recipes unavailable');return r.json();}).catch(e=>{recipesPending=null;throw e;}));}
   function selectProfession(profession){
     $('itemFilters').reset();activeProfession=profession;recipeIds=new Set(profession.ids);activeSet=null;setView('recipes');if($('recipeProfession'))$('recipeProfession').value=profession.id;
     $('itemSetTitle').textContent=(language==='en'?profession.nameEn:profession.nameDe)+(language==='en'?' · Recipes':' · Rezepte');
@@ -176,7 +176,7 @@
   }
   renderRecipeLinks();
   let sourcesPending;
-  function loadSources(){return sourcesPending||(sourcesPending=fetch('forever-loot-sources.json?v=20260923-community').then(r=>{if(!r.ok)throw Error('Loot sources unavailable');return r.json();}).catch(e=>{sourcesPending=null;throw e;}));}
+  function loadSources(){return sourcesPending||(sourcesPending=fetch('forever-loot-sources.json?v=20260923-beta1').then(r=>{if(!r.ok)throw Error('Loot sources unavailable');return r.json();}).catch(e=>{sourcesPending=null;throw e;}));}
   function zoneName(z){return language==='en'?z.nameEn:z.nameDe;}
   function selectZone(zone){
     activeZone=zone;activeSet=null;setView('zone');$('itemSetTitle').textContent=zoneName(zone);$('itemSetBack').textContent=language==='en'?'← Back to loot lists':'← Zurück zu den Lootlisten';
@@ -198,9 +198,9 @@
     if(data)return;if(pending)return pending;
     pending=(async()=>{try{
       $('itemLoading').textContent='Itemdatenbank wird geladen …';
-      const r=await fetch('forever-items-data.json?v=20260923-community');if(!r.ok)throw Error('HTTP '+r.status);const incoming=await r.json();if(incoming.items.length!==incoming.count)throw Error('Unvollständige Daten');
-      if(language==='en'){const er=await fetch('forever-items-en.json?v=20260923-community');if(!er.ok)throw Error('English item data unavailable');const english=await er.json();if(Object.keys(english).length!==incoming.count)throw Error('Incomplete English data');for(const x of incoming.items)Object.assign(x,english[x.id]);}
-      const sr=await fetch('forever-sets-data.json?v=20260914');if(!sr.ok)throw Error('Set data unavailable');setData=await sr.json();
+      const r=await fetch('forever-items-data.json?v=20260923-beta1');if(!r.ok)throw Error('HTTP '+r.status);const incoming=await r.json();if(incoming.items.length!==incoming.count)throw Error('Unvollständige Daten');
+      if(language==='en'){const er=await fetch('forever-items-en.json?v=20260923-beta1');if(!er.ok)throw Error('English item data unavailable');const english=await er.json();if(Object.keys(english).length!==incoming.count)throw Error('Incomplete English data');for(const x of incoming.items)Object.assign(x,english[x.id]);}
+      const sr=await fetch('forever-sets-data.json?v=20260923-beta1');if(!sr.ok)throw Error('Set data unavailable');setData=await sr.json();
       sourceData=await loadSources();recipeData=await loadRecipes();data=incoming;for(const x of data.items)x.search=norm(x.name+' '+x.id+' '+(x.sourcemore||[]).map(s=>s.n||'').join(' '));
       for(const [id,label] of Object.entries(categories)){if(data.items.some(x=>x.classs===Number(id))){const o=node('option','',label);o.value=id;$('itemCategory').append(o);}}
       const mountsOption=node('option','',language==='en'?'Mounts':'Reittiere');mountsOption.value='mounts';$('itemCategory').append(mountsOption);

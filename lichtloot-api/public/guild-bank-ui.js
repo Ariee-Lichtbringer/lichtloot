@@ -19,7 +19,7 @@
  .gb-qty{display:flex;gap:8px;align-items:center;margin:12px 0}.gb-qty input{width:70px;background:#111f34;border:1px solid #42617b;border-radius:7px;padding:8px;color:#fff;font:inherit;font-size:15px}
  .gb-det button.primary{width:100%;background:#137c75;border:1px solid #2fd6c6;border-radius:8px;color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.gb-det button:disabled{opacity:.6;cursor:default}
  .gb-status{margin-top:8px;color:#73e4ce}.gb-status.bad{color:#f87171}.gb-foot{margin-top:10px;color:#a3b6cc;font-size:12px}
- .gb-mine{margin-top:14px;border-top:1px solid #243448;padding-top:10px}.gb-mine h5{margin:0 0 8px;font-size:13px}.gb-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;margin-right:6px}.gb-badge.pending{background:#4a3a12;color:#fbbf24}.gb-badge.approved{background:#123f2a;color:#4ade80}.gb-badge.rejected{background:#4a1d1d;color:#f87171}
+ .gb-mine{margin-top:14px;border-top:1px solid #243448;padding-top:10px}.gb-mine h5{margin:0 0 8px;font-size:13px}.gb-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;margin-right:6px}.gb-badge.waiting,.gb-badge.pending{background:#4a3a12;color:#fbbf24}.gb-badge.approved{background:#123f2a;color:#4ade80}.gb-badge.rejected{background:#4a1d1d;color:#f87171}
  .gb-tip{position:fixed;z-index:100100;pointer-events:none;width:min(320px,calc(100vw - 32px));background:#08090bf5;border:1px solid #85858b;color:#eee;padding:12px;border-radius:5px;box-shadow:0 12px 35px #000b;font-size:13px;line-height:1.4}.gb-tip b{display:block;font-size:16px;margin-bottom:6px}.gb-tip .g{color:#1eff00}.gb-tip .w{color:#8fa2b8;margin-top:8px}
  `;document.head.append(style);
  let tip=null;const hideTip=()=>{tip?.remove();tip=null;};
@@ -82,7 +82,7 @@
    function renderMine(){
     mineBox.replaceChildren(el('h5','Meine Gildenbankanträge'));
     if(!mine.length){mineBox.append(el('div','Noch keine Anträge gestellt.','gb-lab'));return;}
-    for(const entry of mine.slice(0,8)){const row=el('div');const badge=el('span',entry.status==='approved'?'freigegeben':entry.status==='rejected'?'abgelehnt':'offen','gb-badge '+entry.status);row.append(badge,document.createTextNode(`${(entry.materials||[]).map(m=>`${m.quantity} × ${m.name}`).join(', ')||entry.itemName} · ${entry.createdAt?new Date(entry.createdAt).toLocaleDateString('de-DE'):''}`));if(entry.reviewNote)row.append(el('div','Notiz: '+entry.reviewNote,'gb-lab'));mineBox.append(row);}
+    for(const entry of mine.slice(0,8)){const row=el('div');const badge=el('span',entry.status==='waiting'?'Warteschlange – derzeit nicht vorrätig':entry.status==='approved'?'freigegeben':entry.status==='rejected'?'abgelehnt':'offen','gb-badge '+entry.status);row.append(badge,document.createTextNode(`${(entry.materials||[]).map(m=>`${m.quantity} × ${m.name}`).join(', ')||entry.itemName} · ${entry.createdAt?new Date(entry.createdAt).toLocaleDateString('de-DE'):''}`));if(entry.reviewNote)row.append(el('div','Notiz: '+entry.reviewNote,'gb-lab'));mineBox.append(row);}
    }
    function renderDetail(item){
     det.replaceChildren();
@@ -91,7 +91,7 @@
     det.append(img,h,el('div',`${item.category||'Verschiedenes'} · ${qualityLabel[item.quality]||'Gewöhnlich'} · #${item.itemId}`,'gb-lab'));const clear=el('div');clear.style.cssText='clear:both;margin-top:10px';det.append(clear);
     const row=(label,value,cls)=>{const r=el('div','','gb-row');r.append(el('span',label,'gb-lab'));const v=el(cls?'b':'span',value);if(cls)v.style.color=cls;r.append(v);det.append(r);};
     row('Verfügbar',`${item.quantity} Stück`,item.quantity>0?'#73e4ce':'#f87171');for(const s of item.stacks||[])row(s.name,String(s.quantity));
-    const open=mine.filter(m=>m.status==='pending'&&(m.materials||[]).some(x=>Number(x.itemId)===item.itemId)).reduce((n,m)=>n+(m.materials||[]).filter(x=>Number(x.itemId)===item.itemId).reduce((a,x)=>a+Number(x.quantity||0),0),0);
+    const open=mine.filter(m=>['pending','waiting'].includes(m.status)&&(m.materials||[]).some(x=>Number(x.itemId)===item.itemId)).reduce((n,m)=>n+(m.materials||[]).filter(x=>Number(x.itemId)===item.itemId).reduce((a,x)=>a+Number(x.quantity||0),0),0);
     if(open)row('Deine offenen Anträge',`${open} Stück`);
     const qty=el('div','','gb-qty');const amount=el('input');amount.type='number';amount.min='1';amount.max=String(Math.max(1,item.quantity));amount.value='1';amount.setAttribute('aria-label','Menge: '+item.name);qty.append(el('span','Menge','gb-lab'),amount,el('span',`von ${item.quantity}`,'gb-lab'));det.append(qty);
     const button=el('button','Beantragen','primary');button.type='button';button.disabled=item.quantity<1;det.append(button,status);
@@ -115,13 +115,13 @@
  openAdmin(root,opts){
   const items=(opts.items||[]).map(i=>({...i,quantity:Number(i.quantity)||0}));const characters=opts.characters||[];const requests=opts.requests||[];
   const hidden=new Set((opts.hiddenItems||[]).map(Number));
-  const pendingFor=id=>requests.filter(r=>r.status==='pending'&&(r.materials||[]).some(m=>Number(m.itemId)===id));
+  const pendingFor=id=>requests.filter(r=>['pending','waiting'].includes(r.status)&&(r.materials||[]).some(m=>Number(m.itemId)===id));
   const qtyFor=(list,id)=>list.reduce((n,r)=>n+(r.materials||[]).filter(m=>Number(m.itemId)===id).reduce((a,m)=>a+Number(m.quantity||0),0),0);
   const reservedFor=item=>{const scan=Math.max(0,...(item.stacks||[]).map(s=>Number(s.observedAt)||0));return qtyFor(requests.filter(r=>r.status==='approved'&&(!r.reviewedAt||Math.floor(new Date(r.reviewedAt).getTime()/1000)>=scan)),item.itemId);};
   const state={search:'',category:'',character:'',onlyRequests:false,selected:null,showHidden:true};
   const now=Math.floor(Date.now()/1000);const age=ts=>!ts?'kein Stand':(now-ts<86400?'heute':`${Math.floor((now-ts)/86400)} Tage`);
   root.classList.add('gb');root.replaceChildren();
-  const pending=requests.filter(r=>r.status==='pending').length;
+  const pending=requests.filter(r=>['pending','waiting'].includes(r.status)).length;
   const sub=el('p',`${characters.length} Bankcharaktere · ${items.length} Gegenstände · ${pending} offene Anträge`,'gb-sub');root.append(sub);
   const top=el('div','','gb-top');const search=el('input');search.type='search';search.placeholder='Gegenstand, Spieler oder Itemlink';search.setAttribute('aria-label','Gildenbank durchsuchen');
   const charSel=el('select');charSel.setAttribute('aria-label','Bankcharakter');charSel.append(new Option('Bankcharakter: Alle',''));for(const c of characters)charSel.append(new Option(c.name,c.name));
@@ -181,7 +181,7 @@
     const acts=el('div');acts.style.cssText='display:flex;gap:6px;margin-top:6px';
     const ok=el('button','Freigeben');ok.type='button';ok.className='small-btn good';ok.onclick=()=>opts.onReview?.(r.id,'approved');
     const no=el('button','Ablehnen');no.type='button';no.className='small-btn danger';no.onclick=()=>opts.onReview?.(r.id,'rejected');
-    acts.append(ok,no);box.append(acts);det.append(box);
+    if(r.status!=='waiting'){const wait=el('button','Warteschlange · nicht vorrätig');wait.type='button';wait.className='small-btn ghost';wait.onclick=()=>opts.onReview?.(r.id,'waiting');acts.append(wait);}else box.append(el('small','Warteschlange – derzeit nicht vorrätig'));acts.append(ok,no);box.append(acts);det.append(box);
    }
    const toggle=el('label');toggle.style.cssText='display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer';const cb=el('input');cb.type='checkbox';cb.checked=hidden.has(item.itemId);cb.onchange=()=>{if(cb.checked)hidden.add(item.itemId);else hidden.delete(item.itemId);opts.onToggleHidden?.(item.itemId,cb.checked);renderCat();renderGrid();};toggle.append(cb,el('span','Für Spieler nicht beantragbar'));det.append(toggle);
    det.append(el('div','Freigegebene Mengen zählen als reserviert, bis der nächste Bankexport den echten Stand bringt.','gb-foot'));

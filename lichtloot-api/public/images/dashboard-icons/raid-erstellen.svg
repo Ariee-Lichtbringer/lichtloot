@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Raid erstellen">
+  <defs>
+    <linearGradient id="bg" x1="15" y1="12" x2="113" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172033"/>
+      <stop offset="1" stop-color="#070b16"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="24" y1="18" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe179"/>
+      <stop offset=".52" stop-color="#ffc107"/>
+      <stop offset="1" stop-color="#9e6b00"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="108" height="108" rx="16" fill="url(#bg)" stroke="#b88917" stroke-width="4"/>
+  <path d="M37 34h54v58H37z" fill="#0e1524" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M37 49h54M50 26v18M78 26v18" stroke="#ffe179" stroke-width="7" stroke-linecap="round"/>
+  <path d="M64 59v23M52 71h24" stroke="#35d06f" stroke-width="8" stroke-linecap="round"/>
+</svg>

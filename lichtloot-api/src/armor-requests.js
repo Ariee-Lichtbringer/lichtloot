@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 const catalog=JSON.parse(readFileSync(new URL('./armor-catalog.json',import.meta.url),'utf8'));
 const masks={krieger:1,warrior:1,paladin:2,jäger:4,hunter:4,schurke:8,rogue:8,priester:16,priest:16,schamane:64,shaman:64,magier:128,mage:128,hexenmeister:256,warlock:256,druide:1024,druid:1024};
 export const ARMOR_TIERS=['T3','T2,5','AQ20','Skarabäen & Götzen'];
-export const ARMOR_REQUEST_STATUSES=['pending','approved','rejected'];
+export const ARMOR_REQUEST_STATUSES=['pending','waiting','approved','rejected'];
 const clean=value=>String(value??'').trim();
 const isUuid=value=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean(value));
 function fail(message,statusCode=400){throw Object.assign(new Error(message),{statusCode});}
@@ -72,7 +72,7 @@ export function createArmorRequests({pool,query}){
     try{
      await client.query('begin');
      await client.query('select pg_advisory_xact_lock(hashtext($1))',[`armor:${guild.id}:${character.player_id}`]);
-     const existing=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and materials=$4::jsonb and status='pending' and created_at>now()-interval '10 minutes' order by created_at desc limit 1`,[guild.id,character.id,item.itemId,JSON.stringify(materials)]);
+     const existing=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and materials=$4::jsonb and status in ('pending','waiting') and created_at>now()-interval '10 minutes' order by created_at desc limit 1`,[guild.id,character.id,item.itemId,JSON.stringify(materials)]);
      if(existing.rows.length){await client.query('commit');return {success:true,armorRequestId:existing.rows[0].id,status:'saved',duplicate:true};}
      const count=await client.query(`select count(*)::int as n from armor_requests where guild_id=$1 and character_id=$2 and created_at>now()-interval '1 minute'`,[guild.id,character.id]);
      if(count.rows[0].n>=5)fail('Bitte kurz warten, bevor du weitere Anträge sendest.',429);
@@ -108,7 +108,7 @@ export function createArmorRequests({pool,query}){
   async manage(guild,action,params){
    await ensureSchema();
    if(action==='guildGetArmorRequests'){
-    const rows=await query(`select * from armor_requests where guild_id=$1 order by (status='pending') desc,created_at desc limit 300`,[guild.id]);
+    const rows=await query(`select * from armor_requests where guild_id=$1 order by (status in ('pending','waiting')) desc,created_at desc limit 300`,[guild.id]);
     return {success:true,entries:rows.rows.map(mapArmorRequestRow)};
    }
    const requestId=clean(params.requestId);

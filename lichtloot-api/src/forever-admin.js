@@ -12,6 +12,20 @@ export function createForeverAdmin({pool,query}){
  const audit=(db,guild,actor,action,detail)=>db.query('insert into forever_audit(guild_id,action,actor,detail) values($1,$2,$3,$4)',[guild.id,action,actor.label,detail]);
  return {async run(guild,actor,body){
   if(!(actor.canAdmin||(body.action==='adminOverview'&&actor.canManage)))throw fail('Nur die Forever-Gildenleitung darf Spielerzugänge und Gildeneinstellungen verwalten.',403);
+
+  if(['adminDiscordCheck','adminDiscordTest'].includes(body.action))return tx(async db=>{
+   await db.query('select id from guilds where id=$1 for update',[guild.id]);
+   const c=(await db.query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0];if(!c)throw fail('Zuerst /forever_verbinden im gewünschten Discord-Kanal ausführen.',409);
+   const latest=(await db.query("select id from forever_discord_checks where guild_id=$1 and created_at>now()-interval '30 seconds' limit 1",[guild.id])).rows[0];if(latest)throw fail('Bitte 30 Sekunden warten und den Prüfstatus aktualisieren.',429);
+   await db.query('insert into forever_discord_checks(id,guild_id,discord_guild_id,channel_id,kind) values(gen_random_uuid(),$1,$2,$3,$4)',[guild.id,c.discord_guild_id,c.channel_id,body.action==='adminDiscordTest'?'test':'check']);return {success:true};
+  });
+  if(body.action==='adminAnnouncement'){
+   const title=String(body.title||'').trim(),message=String(body.message||'').trim();if(title.length>100||message.length>4000||(!title!==!message))throw fail('Betreff und Nachricht ausfüllen (maximal 100 / 4000 Zeichen).');
+   return tx(async db=>{await db.query('select guild_id from guild_settings where guild_id=$1 for update',[guild.id]);const announcement={title,message,updatedAt:new Date().toISOString()};await db.query("update guild_settings set layout_json=jsonb_set(layout_json,'{forever}',coalesce(layout_json->'forever','{}'::jsonb)||jsonb_build_object('announcement',$2::jsonb)),updated_at=now() where guild_id=$1",[guild.id,JSON.stringify(announcement)]);await audit(db,guild,actor,'announcement',title?'Gildenmitteilung veröffentlicht: '+title:'Gildenmitteilung entfernt');return {success:true};});
+  }
+  if(body.action==='adminPlayerAnalysis'){
+   const rows=await query("select c.id,c.name,c.class_name,count(s.raid_id)::int as registrations,count(*) filter(where s.attendance='present')::int as present,count(*) filter(where s.attendance='noshow')::int as noshow,count(*) filter(where s.attendance='excused')::int as excused from forever_characters c left join forever_signups s on s.guild_id=c.guild_id and s.character_id=c.id where c.guild_id=$1 group by c.id,c.name,c.class_name order by lower(c.name)",[guild.id]);return {success:true,players:rows.rows};
+  }
   if(body.action==='adminLayout')return saveForeverLayout(pool,guild,actor,body);
   if(body.action==='adminOverview'){
    const players=await query(`select p.id,p.role,p.approval_status,coalesce(p.is_blocked,false) as is_blocked,p.created_at,
@@ -23,7 +37,7 @@ export function createForeverAdmin({pool,query}){
    const history=await query('select action,actor,detail,created_at from forever_audit where guild_id=$1 order by id desc limit 40',[guild.id]);
    const c=config.rows[0]?.config||{};
    const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
-   return {success:true,layout:await readForeverLayout(query,guild.id),actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0},history:history.rows};
+   return {success:true,layout:await readForeverLayout(query,guild.id),actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0,announcement:c.announcement||null},discordCheck:(await query('select id,kind,status,result,created_at,updated_at from forever_discord_checks where guild_id=$1 order by created_at desc limit 1',[guild.id])).rows[0]||null,history:history.rows};
   }
   if(body.action==='adminPlayer'){
    if(!/^[0-9a-f-]{36}$/i.test(String(body.playerId)))throw fail('Ungültiger Spieler.');

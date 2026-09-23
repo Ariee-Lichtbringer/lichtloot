@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Raidregeln">
+  <defs>
+    <linearGradient id="bg" x1="18" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172033"/>
+      <stop offset="1" stop-color="#070b16"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="25" y1="20" x2="102" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe179"/>
+      <stop offset=".52" stop-color="#ffc107"/>
+      <stop offset="1" stop-color="#9e6b00"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="108" height="108" rx="16" fill="url(#bg)" stroke="#b88917" stroke-width="4"/>
+  <path d="M39 26h43l13 13v63H33V26h6Z" fill="#0e1524" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M81 27v14h14" fill="none" stroke="#ffe179" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M47 55h34M47 70h34M47 85h22" stroke="#e8eefb" stroke-width="7" stroke-linecap="round"/>
+  <path d="m43 53 6 6 11-15" fill="none" stroke="#35d06f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

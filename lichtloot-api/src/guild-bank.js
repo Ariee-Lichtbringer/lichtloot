@@ -198,7 +198,7 @@ export function createGuildBank({pool,query,getCharactersByPin,lookupItem}){
     const client=await pool.connect();
     try{
      await client.query('begin');
-     const dup=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and status='pending' and created_at>now()-interval '10 minutes' limit 1`,[guild.id,character.id,String(itemId)]);
+     const dup=await client.query(`select id from armor_requests where guild_id=$1 and character_id=$2 and item_id=$3 and status in ('pending','waiting') and created_at>now()-interval '10 minutes' limit 1`,[guild.id,character.id,String(itemId)]);
      if(dup.rows.length){await client.query('commit');return {success:true,armorRequestId:dup.rows[0].id,status:'saved',duplicate:true};}
      const count=await client.query(`select count(*)::int as n from armor_requests where guild_id=$1 and character_id=$2 and created_at>now()-interval '1 minute'`,[guild.id,character.id]);
      if(count.rows[0].n>=5)fail('Bitte kurz warten, bevor du weitere Anträge sendest.',429);

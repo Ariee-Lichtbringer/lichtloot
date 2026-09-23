@@ -147,7 +147,7 @@ function safeHtml(value){
   }[char]));
 }
 function discordInviteUrl(clientId,permissions,discordGuildId){
-  const params=new URLSearchParams({client_id:clientId,permissions,scope:"bot applications.commands"});
+  const params=new URLSearchParams({client_id:clientId,permissions,scope:"bot applications.commands",integration_type:"0"});
   const guildId=String(discordGuildId||"").replace(/\D/g,"");
   if(guildId){params.set("guild_id",guildId);params.set("disable_guild_select","true");}
   return "https://discord.com/oauth2/authorize?"+params.toString();
@@ -167,7 +167,7 @@ function renderResultLinks(result){
     resultLinks.innerHTML = `<strong>${safeHtml(guildName)} · WoW Forever</strong><span>Die Gilde ist im Forever-Bereich eingerichtet.</span>
       ${guildPin ? `<span>Leitungscode: ${safeHtml(guildPin)}</span><span>Bitte den Leitungscode sicher aufbewahren.</span>` : ''}
       <a class="linkbtn" href="${safeHtml(startUrl)}">Forever-Startseite öffnen</a><a class="linkbtn" href="${safeHtml(leadershipUrl)}">Forever-Gildenleitung öffnen</a>
-      <span>Optional: Den Anmelder-Bot in Discord mit /forever_verbinden und eurem Leitungscode verbinden.</span>`;
+      <div class="readiness"><strong>Discord einrichten</strong><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1527793332346945537","2147568640",discordGuildId))}">1. PO Bot einladen</a><span>2. Im gewünschten Kanal /forever_verbinden ausführen und den Leitungscode im privaten Bot-Fenster eingeben.</span><a class="linkbtn" href="${safeHtml(leadershipUrl)}#discord">3. Verbindung prüfen und Testnachricht senden</a></div>`;
     return;
   }
   resultLinks.innerHTML = `
@@ -175,7 +175,7 @@ function renderResultLinks(result){
     ${slug ? `<span>Bereich: ${safeHtml(slug)}</span>` : ""}
     ${guildPin ? `<span>GildenPIN: ${safeHtml(guildPin)}</span>` : ""}
     ${renderReadiness(result.readiness)}
-    ${ready?`<a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a><a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>`:`<div class="readiness"><strong>Discord-Bots verbinden</strong><span>Beide Bots einladen, anschließend etwas warten und die Channel laden.</span><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1510677346787659777","388160",discordGuildId))}">Lichtbuff-Bot einladen</a><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1527793332346945537","2147560448",discordGuildId))}">P0-Anmelder-Bot einladen</a></div><div id="discordChannelSetup" class="readiness"><strong>Discord-Channels</strong><span>Channel werden geladen …</span></div>`}
+    ${ready?`<a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a><a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>`:`<div class="readiness"><strong>Discord-Bots verbinden</strong><span>Beide Bots einladen, anschließend etwas warten und die Channel laden.</span><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1510677346787659777","388160",discordGuildId))}">Lichtbuff-Bot einladen</a><a class="linkbtn" target="_blank" rel="noopener" href="${safeHtml(discordInviteUrl("1527793332346945537","2147568640",discordGuildId))}">P0-Anmelder-Bot einladen</a></div><div id="discordChannelSetup" class="readiness"><strong>Discord-Channels</strong><span>Channel werden geladen …</span></div>`}
     <button type="button" id="refreshReadiness">Bereitschaft erneut prüfen</button>
   `;
   document.getElementById("refreshReadiness")?.addEventListener("click", loadSetup);

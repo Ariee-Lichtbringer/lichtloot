@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {createArmorRequests} from '../src/armor-requests.js';
+const {PGlite}=await import(process.env.FOREVER_PGLITE||'@electric-sql/pglite');
+const db=new PGlite();await db.exec(`create table guilds(id uuid primary key);create table players(id uuid primary key,guild_id uuid,player_pin text,is_blocked boolean);create table characters(id uuid primary key,player_id uuid,name text,server text,class_name text);`);
+const query=(s,p=[])=>p.length?db.query(s,p):db.exec(s).then(r=>r.at(-1));const api=createArmorRequests({query,pool:{connect:async()=>({query,release(){}})}});
+const guild={id:randomUUID()},other={id:randomUUID()},player=randomUUID(),character=randomUUID();
+await query('insert into guilds values($1),($2)',[guild.id,other.id]);await query("insert into players values($1,$2,'TEST',false)",[player,guild.id]);await query("insert into characters values($1,$2,'Spieler','Realm','priest')",[character,player]);
+await api.manage(guild,'guildGetArmorRequests',{});
+const requestId=(await query("insert into armor_requests(guild_id,player_id,character_id,character_name,item_id,item_name) values($1,$2,$3,'Spieler','123','Material') returning id",[guild.id,player,character])).rows[0].id;
+assert.equal((await api.manage(guild,'guildReviewArmorRequest',{requestId,decision:'waiting'})).entry.status,'waiting');
+assert.equal((await api.handle(guild,{action:'getMyArmorRequests',pin:'TEST',character:'Spieler',server:'Realm'})).entries[0].status,'waiting');
+assert.equal((await api.manage(other,'guildGetArmorRequests',{})).entries.length,0);
+await assert.rejects(api.manage(other,'guildReviewArmorRequest',{requestId,decision:'waiting'}),e=>e.statusCode===404);
+assert.equal((await api.manage(guild,'guildReviewArmorRequest',{requestId,decision:'approved'})).entry.status,'approved');
+await assert.rejects(api.manage(guild,'guildReviewArmorRequest',{requestId,decision:'bogus'}));
+await db.close();console.log('Era waiting status: visible to applicant, guild isolation, later approval, invalid status rejected.');

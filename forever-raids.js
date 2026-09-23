@@ -33,6 +33,7 @@ async function load() {
   data=result;loadedView=$('viewFilter').value;$('login').hidden=true;$('workspace').hidden=false;
   $('identity').textContent=result.actor.label+' · '+result.guild.name;$('logout').hidden=false;
   $('guildName').textContent=result.guild.name;
+  let announcement=$('guildAnnouncement');if(!announcement){announcement=node('section',undefined,'panel');announcement.id='guildAnnouncement';$('guildName').parentElement.after(announcement);}announcement.replaceChildren();const a=result.settings.announcement;announcement.hidden=!a?.message;if(a?.message)announcement.append(node('h3',a.title),node('p',a.message));
   $('newRaid').hidden=$('newGroup').hidden=!result.actor.canManage;
   $('newCharacter').hidden=!result.actor.canSignup;
   window.ForeverLayout?.apply(result.layout);render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings,layout:result.layout}}));
@@ -101,7 +102,7 @@ function renderRaids(){
   const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
   const actions=node('div',undefined,'raid-actions');
   if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>data.characters.length?signupEditor(raid,mine):characterEditor(),'primary'));
-  if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL(location.href);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);}));
+  if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL('forever-'+raid.kind+'.html',location.href);u.searchParams.set('guild',data.guild.slug);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';location.href=u.href;}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)));
   const more=node('details',undefined,'raid-more'),summary=node('summary','Weitere Aktionen'),extra=node('div',undefined,'raid-extra');more.append(summary,extra);extra.append(button('Zum Kalender hinzufügen',()=>calendar(raid)),button('Terminlink kopieren',()=>copyLink(raid)));
   if((data.actor.canManage||raid.delegated_lead))extra.append(button('Termin bearbeiten',()=>raidEditor(raid)));if(data.actor.canManage)extra.append(button('Raid kopieren',()=>raidEditor({...raid,id:null,revision:null,title:raid.title+' · Kopie',status:'open'})));

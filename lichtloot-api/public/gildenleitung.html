@@ -5588,7 +5588,7 @@ body.worldbuff-only .master-only{display:none!important}
 <link rel="stylesheet" href="profession-guides.css?v=20260909-icons">
 <script defer src="profession-guides.js?v=20260909-icons"></script>
 <script defer src="item-search-ui.js?v=20260907-aq40-1"></script>
-<script defer src="guild-bank-ui.js?v=20260912-3"></script>
+<script defer src="guild-bank-ui.js?v=20260923-beta2"></script>
 <script defer src="player-search-ui.js?v=20260907-compare-1"></script>
 <script defer src="start-search.js?v=20260907-professions-1"></script>
 </head>
@@ -8592,7 +8592,7 @@ function updateArmorRequestCount(count){
   badge.style.display=count>0?"":"none";
 }
 function armorRequestStatusLabel(status){
-  return status==="approved"?"freigegeben":status==="rejected"?"abgelehnt":"offen";
+  return status==="waiting"?"Warteschlange – derzeit nicht vorrätig":status==="approved"?"freigegeben":status==="rejected"?"abgelehnt":"offen";
 }
 async function loadArmorRequestsPanel(){
   const box=document.getElementById("armorRequestsPanelContent");
@@ -8611,7 +8611,7 @@ async function loadArmorRequestsPanel(){
     if(settings.success&&settings.settings)guildBankSettings=settings.settings;
     guildBankInventory=inventory.success?inventory:null;
     armorRequestEntries=Array.isArray(result.entries)?result.entries:[];
-    const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;
+    const pending=armorRequestEntries.filter(entry=>["pending","waiting"].includes(entry.status)).length;
     leadershipTaskState.bank=pending;
     updateArmorRequestCount(pending);
     renderLeadershipTasks();
@@ -8627,17 +8627,17 @@ function setArmorRequestFilter(filter){
 function renderArmorRequestsPanel(){
   const box=document.getElementById("armorRequestsPanelContent");
   if(!box)return;
-  const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;
-  const shown=armorRequestFilter==="all"?armorRequestEntries:armorRequestEntries.filter(entry=>entry.status===armorRequestFilter);
-  const filters=[["pending","Offen"],["approved","Freigegeben"],["rejected","Abgelehnt"],["all","Alle"]];
+  const pending=armorRequestEntries.filter(entry=>["pending","waiting"].includes(entry.status)).length;
+  const shown=armorRequestFilter==="all"?armorRequestEntries:armorRequestEntries.filter(entry=>armorRequestFilter==="pending"?["pending","waiting"].includes(entry.status):entry.status===armorRequestFilter);
+  const filters=[["pending","Offen"],["waiting","Warteschlange"],["approved","Freigegeben"],["rejected","Abgelehnt"],["all","Alle"]];
   const rows=shown.map(entry=>{
     const materials=(entry.materials||[]).map(material=>`<li>${escapeHtml(String(material.quantity))} × ${escapeHtml(material.name||"")}</li>`).join("");
     const token=entry.token?`<div class="muted">Token: ${escapeHtml(entry.token.name||"")}</div>`:"";
     const note=entry.reviewNote?`<div class="muted">Notiz: ${escapeHtml(entry.reviewNote)}</div>`:"";
     const reviewed=entry.reviewedAt?`<div class="muted">${escapeHtml(armorRequestStatusLabel(entry.status))} am ${escapeHtml(new Date(entry.reviewedAt).toLocaleString("de-DE"))}</div>`:"";
     const id=escapeAttr(String(entry.id));
-    const actions=entry.status==="pending"
-      ?`<button class="small-btn good" type="button" onclick="reviewArmorRequest('${id}','approved')">Freigeben</button><button class="small-btn danger" type="button" onclick="reviewArmorRequest('${id}','rejected')">Ablehnen</button>`
+    const actions=["pending","waiting"].includes(entry.status)
+      ?`${entry.status!=="waiting"?`<button class="small-btn ghost" type="button" onclick="reviewArmorRequest('${id}','waiting')">Warteschlange · nicht vorrätig</button>`:""}<button class="small-btn good" type="button" onclick="reviewArmorRequest('${id}','approved')">Freigeben</button><button class="small-btn danger" type="button" onclick="reviewArmorRequest('${id}','rejected')">Ablehnen</button>`
       :`<button class="small-btn ghost" type="button" onclick="reviewArmorRequest('${id}','pending')">Wieder öffnen</button>`;
     return `<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(armorRequestStatusLabel(entry.status))}</span>${reviewed}</td><td>${renderAdminGearLink(entry.characterName||"-",entry.server)}<br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td><strong>${escapeHtml(entry.itemName||"")}</strong><div class="muted">${escapeHtml(entry.tier||"")}</div>${token}</td><td><ul style="margin:0;padding-left:18px">${materials}</ul>${note}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${actions}<button class="small-btn danger" type="button" onclick="deleteArmorRequest('${id}')">Löschen</button></div></td></tr>`;
   }).join("");
@@ -8670,7 +8670,7 @@ async function reviewArmorRequest(requestId,decision){
     const result=await railwayApi({action:"guildReviewArmorRequest",masterCode,requestId,decision,note});
     if(!result.success)throw new Error(result.error||"Antrag konnte nicht aktualisiert werden.");
     const dm=result.notice?(result.notice.discord?" Der Spieler erhält eine Discord-DM.":" Kein verknüpftes Discord-Konto, der Spieler sieht den Status nur auf der Seite."):"";
-    setStatus((decision==="approved"?"Gildenbankantrag freigegeben.":decision==="rejected"?"Gildenbankantrag abgelehnt.":"Gildenbankantrag wieder geöffnet.")+dm,"good");
+    setStatus((decision==="waiting"?"Anfrage angekommen: Warteschlange – derzeit nicht vorrätig.":decision==="approved"?"Gildenbankantrag freigegeben.":decision==="rejected"?"Gildenbankantrag abgelehnt.":"Gildenbankantrag wieder geöffnet.")+dm,"good");
     await loadArmorRequestsPanel();
   }catch(error){
     setStatus(error.message||"Antrag konnte nicht aktualisiert werden.","bad");
@@ -8695,7 +8695,7 @@ async function loadGuildBankSettingsPanel(){
     if(!settings.success)throw new Error(settings.error||"Einstellungen konnten nicht geladen werden.");
     guildBankSettings=settings.settings||{characters:[],hiddenItems:[],note:""};
     guildBankInventory=inventory.success?inventory:null;
-    if(requests.success&&Array.isArray(requests.entries)){armorRequestEntries=requests.entries;const pending=armorRequestEntries.filter(entry=>entry.status==="pending").length;leadershipTaskState.bank=pending;updateArmorRequestCount(pending);}
+    if(requests.success&&Array.isArray(requests.entries)){armorRequestEntries=requests.entries;const pending=armorRequestEntries.filter(entry=>["pending","waiting"].includes(entry.status)).length;leadershipTaskState.bank=pending;updateArmorRequestCount(pending);}
     renderGuildBankSettingsPanel();
   }catch(error){if(box)box.innerHTML=`<div class="status bad">${escapeHtml(error.message||"Gildenbank konnte nicht geladen werden.")}</div>`;}
 }

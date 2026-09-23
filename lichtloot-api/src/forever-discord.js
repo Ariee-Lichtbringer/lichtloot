@@ -2,6 +2,9 @@ import {randomUUID,timingSafeEqual} from 'node:crypto';
 const fail=(m,s=400)=>Object.assign(new Error(m),{statusCode:s});
 const snow=v=>{const s=String(v||'');if(!/^\d{17,20}$/.test(s))throw fail('Ungültige Discord-ID.');return s;};
 export const foreverDiscordSchema=`
+create table if not exists forever_discord_checks(id uuid primary key,guild_id uuid not null references guilds(id),discord_guild_id text not null,channel_id text not null,kind text not null check(kind in ('check','test')),status text not null default 'pending',result jsonb not null default '{}'::jsonb,lease_token uuid,lease_until timestamptz,created_at timestamptz not null default now(),updated_at timestamptz not null default now());
+create index if not exists forever_discord_checks_guild on forever_discord_checks(guild_id,created_at desc);
+
 create table if not exists forever_discord_channels(guild_id uuid primary key references guilds(id),discord_guild_id text not null,channel_id text not null,updated_at timestamptz not null default now());
 create table if not exists forever_discord_links(guild_id uuid not null references guilds(id),discord_user_id text not null,player_id uuid not null references players(id),created_at timestamptz not null default now(),primary key(guild_id,discord_user_id),unique(guild_id,player_id));
 create table if not exists forever_discord_posts(guild_id uuid not null,raid_id uuid not null,discord_guild_id text not null,channel_id text not null,message_id text,lease_token uuid,lease_until timestamptz,content_hash text not null default '',last_error text not null default '',updated_at timestamptz not null default now(),primary key(guild_id,raid_id),foreign key(guild_id,raid_id) references forever_raids(guild_id,id));`;
@@ -22,6 +25,14 @@ export function createForeverDiscord({query,pool,access,raids}){
  async function actor(guild,user){const p=(await query("select p.id,p.role,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from forever_discord_links l join players p on p.id=l.player_id and p.guild_id=l.guild_id where l.guild_id=$1 and l.discord_user_id=$2 and p.approval_status='approved' and not p.is_blocked",[guild.id,snow(user)])).rows[0];if(!p)throw fail('Bitte deinen Forever-SpielerLogin verbinden.',401);return {playerId:p.id,canManage:false,canAdmin:false,label:p.name||'Discord-Spieler'};}
  return {async run(body){
  await ensure();const action=body.action;
+ if(action==='diagnosticsPoll'){
+  const token=randomUUID();const rows=await query("update forever_discord_checks set lease_token=$1,lease_until=now()+interval '90 seconds',status='running' where id in (select id from forever_discord_checks where (status='pending' or (status='running' and lease_until<now())) and created_at>now()-interval '10 minutes' order by created_at limit 10 for update skip locked) returning id,guild_id,discord_guild_id,channel_id,kind,lease_token",[token]);return {success:true,jobs:rows.rows};
+ }
+ if(action==='diagnosticsAck'){
+  const r=body.result||{},result={bot:!!r.bot,server:!!r.server,channel:!!r.channel,permissions:!!r.permissions,testSent:!!r.testSent,error:String(r.error||'').slice(0,300),messageId:r.messageId?snow(r.messageId):null};
+  const changed=await query("update forever_discord_checks set status='done',result=$3::jsonb,lease_token=null,lease_until=null,updated_at=now() where id=$1 and lease_token=$2 and lease_until>now() returning id",[body.id,body.leaseToken,JSON.stringify(result)]);if(!changed.rows.length)throw fail('Prüfauftrag abgelaufen.',409);return {success:true};
+ }
+
  if(action==='configure'){
   const key='config:'+String(body.guild)+':'+snow(body.discordGuildId),now=Date.now(),previous=attempts.get(key);const attempt=previous&&previous.until>now?previous:{n:0,until:now+15*60e3};if(++attempt.n>5)throw fail('Zu viele Verbindungsversuche. Bitte in 15 Minuten erneut versuchen.',429);attempts.set(key,attempt);
   const guild=await access.requireGuild(body.guild),a=await access.authorize(guild,{masterCode:body.masterCode});if(!a.canAdmin)throw fail('Leitungscode erforderlich.',403);

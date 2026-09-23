@@ -7,13 +7,21 @@ function valid(c,r){if(total(c,r)>51)return false;return c.trees.every(t=>t.tale
 function change(c,r,x,delta){const next={...r,[x.id]:(r[x.id]||0)+delta};return valid(c,next)?next:r;}
 const encode=(c,r)=>c.trees.map(t=>ordered(t).map(x=>r[x.id]||0).join('').replace(/0+$/,'')).join('-').replace(/-+$/,'');
 function decode(c,code){if(!/^[0-5]*(?:-[0-5]*){0,2}$/.test(code))throw Error('Ungültiger Build-Code.');const parts=code.split('-'),r={};c.trees.forEach((t,i)=>{const chars=parts[i]||'',ts=ordered(t);if(chars.length>ts.length)throw Error('Der Build passt nicht zu dieser Klasse.');ts.forEach((x,j)=>r[x.id]=Number(chars[j]||0));});if(!valid(c,r))throw Error('Der Build verletzt die Punkte- oder Talentvoraussetzungen.');return r;}
-root.ForeverTalentEngine={valid,change,encode,decode,total,count};
+function migrate(previous,current,code){
+ const old=decode(previous,code),next={};
+ for(const tree of previous.trees)for(const talent of tree.talents){const rank=old[talent.id]||0;if(!rank)continue;
+ const matches=current.trees.flatMap(t=>t.talents).filter(t=>t.ranks[0]?.spellId===talent.ranks[0]?.spellId||t.name===talent.name);
+ if(matches.length!==1||rank>matches[0].maxRank)throw Error('Dieser Vorschau-Build enthält entfernte oder geänderte Talente. Bitte neu planen; der gespeicherte Originalcode bleibt erhalten.');next[matches[0].id]=rank;}
+ if(!valid(current,next))throw Error('Die Voraussetzungen dieses alten Builds haben sich geändert. Bitte neu planen; der Originalcode bleibt erhalten.');return encode(current,next);
+}
+root.ForeverTalentEngine={valid,change,encode,decode,total,count,migrate};
 if(typeof document==='undefined')return;
-const el=id=>document.getElementById(id),names={warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide'},flags={new:'★ Neu',changed:'◆ Geändert',unchanged:'✓ Classic bestätigt',classic:'? Noch nicht bestätigt'};
+const el=id=>document.getElementById(id),names={warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide'},flags={new:'★ Neu',changed:'◆ Geändert',unchanged:'Unverändert zur Classic-Datenbank',classic:'? Noch nicht bestätigt'};
+let legacyData;
 let data,cls,ranks={},selected=null,loading=false;const sessions={};
 function node(tag,text,attrs={}){const n=document.createElement(tag);if(text)n.textContent=text;for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);return n;}
 function message(s){el('talentMessage').textContent=s;}
-function url(){const u=new URL(location.href);u.hash='talente';u.searchParams.set('talentClass',cls.slug);u.searchParams.set('build',encode(cls,ranks));return u.href;}
+function url(){const u=new URL(location.href);u.hash='talente';u.searchParams.set('talentClass',cls.slug);u.searchParams.set('build',encode(cls,ranks));u.searchParams.set('talentVersion',data.build);return u.href;}
 function sync(){sessions[cls.slug]={...ranks};history.replaceState(null,'',url());}
 let tip=null,tipAnchor=null,tipTimer=null,tipOpen=false;
 function closeTip(){clearTimeout(tipTimer);tipOpen=false;if(tip)tip.hidden=true;document.querySelectorAll('.talent-node[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));}
@@ -43,13 +51,21 @@ function render(){el('talentPoints').textContent=`${51-total(cls,ranks)} Punkte 
 function choose(slug,code){closeTip();cls=data.classes.find(c=>c.slug===slug)||data.classes[0];selected=null;ranks=code===undefined?(sessions[cls.slug]||{}):decode(cls,code);sync();render();}
 function readSaved(){try{return JSON.parse(localStorage.getItem('guildloot_forever_builds')||'[]');}catch{return [];}}
 function savedOptions(){const select=el('talentSaved');select.replaceChildren(node('option','Gespeicherten Build wählen',{value:''}));readSaved().forEach((b,i)=>select.append(node('option',`${b.name} · ${names[b.cls]}`,{value:String(i)})));}
-async function start(){if(data||loading||!el('talentTrees'))return;loading=true;try{const res=await fetch((root.ForeverI18n?.lang==='en'?'forever-talents-data.json':'forever-talents-data-de.json')+'?v=20260914-de');if(!res.ok)throw Error('Talentdaten konnten nicht geladen werden.');data=await res.json();for(const c of data.classes){const b=node('button','',{type:'button',class:'talent-class-card','data-class':c.slug,'aria-pressed':'false'});b.style.setProperty('--class-color',c.color);b.append(node('img','',{src:`https://wow.zamimg.com/images/wow/icons/large/${encodeURIComponent(c.icon)}.jpg`,alt:''}),node('span',names[c.slug]||c.name));b.onclick=()=>choose(c.slug);el('talentClasses').append(b);}
+async function compatibleCode(slug,code,version){
+ if(!code||version===data.build)return code;
+ if(version&&version!=='20260914')throw Error('Unbekannte Build-Version. Bitte den Originalcode sichern und neu planen.');
+ legacyData ||= await (await fetch('forever-talents-preview-20260914.json')).json();
+ // Use English records for stable name fallback; spell IDs are preferred.
+ const current=await (await fetch('forever-talents-data.json?v=20260923-beta1')).json();
+ return migrate(legacyData.classes.find(c=>c.slug===slug),current.classes.find(c=>c.slug===slug),code);
+}
+async function start(){if(data||loading||!el('talentTrees'))return;loading=true;try{const res=await fetch((root.ForeverI18n?.lang==='en'?'forever-talents-data.json':'forever-talents-data-de.json')+'?v=20260923-beta1');if(!res.ok)throw Error('Talentdaten konnten nicht geladen werden.');data=await res.json();for(const c of data.classes){const b=node('button','',{type:'button',class:'talent-class-card','data-class':c.slug,'aria-pressed':'false'});b.style.setProperty('--class-color',c.color);b.append(node('img','',{src:`https://wow.zamimg.com/images/wow/icons/large/${encodeURIComponent(c.icon)}.jpg`,alt:''}),node('span',names[c.slug]||c.name));b.onclick=()=>choose(c.slug);el('talentClasses').append(b);}
  el('talentClassic').onchange=inspect;el('talentReset').onclick=()=>{ranks={};sync();render();message('Alle Punkte zurückgesetzt.');};
  el('talentCopy').onclick=async()=>{try{await navigator.clipboard.writeText(url());message('Build-Link kopiert.');}catch{el('talentShare').focus();el('talentShare').select();message('Bitte den markierten Link kopieren.');}};
- el('talentImportButton').onclick=()=>{try{let input=el('talentImport').value.trim(),slug=cls.slug,code=input;if(input.includes('://')){const u=new URL(input);slug=u.searchParams.get('talentClass')||u.pathname.split('/').filter(Boolean)[0];code=u.searchParams.get('build')??u.searchParams.get('t')??'';}const c=data.classes.find(c=>c.slug===slug);if(!c)throw Error('Klasse nicht erkannt.');decode(c,code);choose(slug,code);message('Build importiert.');}catch(e){message(e.message);}};
- el('talentSave').onclick=()=>{const name=el('talentName').value.trim();if(!name){message('Bitte einen Namen für den Build eingeben.');return;}try{const all=readSaved();all.push({name:name.slice(0,80),cls:cls.slug,code:encode(cls,ranks)});localStorage.setItem('guildloot_forever_builds',JSON.stringify(all.slice(-30)));savedOptions();message('Build in diesem Browser gespeichert.');}catch{message('Speichern im Browser ist nicht verfügbar. Bitte den Build-Link sichern.');}};
- el('talentSaved').onchange=e=>{if(e.target.value==='')return;try{const b=readSaved()[Number(e.target.value)];choose(b.cls,b.code);el('talentName').value=b.name;message('Gespeicherten Build geladen.');}catch(error){message(error.message);}};
- const q=new URLSearchParams(location.search);const slug=q.get('talentClass')||'shaman',code=q.get('build')??'05003305201-050032131005112251';try{choose(slug,code);}catch(e){choose(slug,'');message(e.message);}savedOptions();el('talentLoading').hidden=true;
+ el('talentImportButton').onclick=async()=>{try{let input=el('talentImport').value.trim(),slug=cls.slug,code=input,version=data.build;if(input.includes('://')){const u=new URL(input);slug=u.searchParams.get('talentClass')||u.pathname.split('/').filter(Boolean)[0];code=u.searchParams.get('build')??u.searchParams.get('t')??'';version=u.hostname==='wowforevertalents.com'?data.build:u.searchParams.get('talentVersion');}const c=data.classes.find(c=>c.slug===slug);if(!c)throw Error('Klasse nicht erkannt.');code=await compatibleCode(slug,code,version);decode(c,code);choose(slug,code);message('Build importiert.');}catch(e){message(e.message);}};
+ el('talentSave').onclick=()=>{const name=el('talentName').value.trim();if(!name){message('Bitte einen Namen für den Build eingeben.');return;}try{const all=readSaved();all.push({name:name.slice(0,80),cls:cls.slug,code:encode(cls,ranks),version:data.build});localStorage.setItem('guildloot_forever_builds',JSON.stringify(all.slice(-30)));savedOptions();message('Build in diesem Browser gespeichert.');}catch{message('Speichern im Browser ist nicht verfügbar. Bitte den Build-Link sichern.');}};
+ el('talentSaved').onchange=async e=>{if(e.target.value==='')return;try{const b=readSaved()[Number(e.target.value)];choose(b.cls,await compatibleCode(b.cls,b.code,b.version));el('talentName').value=b.name;message('Gespeicherten Build geladen.');}catch(error){message(error.message);}};
+ const q=new URLSearchParams(location.search);const slug=q.get('talentClass')||'shaman',code=q.get('build')??'';try{choose(slug,await compatibleCode(slug,code,q.get('talentVersion')));}catch(e){choose(slug,'');message(e.message);}savedOptions();el('talentLoading').hidden=true;
  }catch(e){message(e.message+' Bitte die Seite neu laden.');data=null;}finally{loading=false;}}
 root.startForeverTalents=start;if(location.hash==='#talente')start();addEventListener('forever-panel',e=>{if(e.detail==='talente')start();});
 })(typeof window==='undefined'?globalThis:window);
