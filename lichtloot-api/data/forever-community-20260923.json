@@ -1,0 +1,855 @@
+{
+  "checkedAt": "2026-09-23",
+  "items": [
+    {
+      "id": 270227,
+      "name": "Ephemeral Choker",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 0,
+      "slot": 2,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 4,
+        "spi": 2
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270227/ephemeral-choker",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Faldrim Anvilmar"
+        }
+      ]
+    },
+    {
+      "id": 271096,
+      "name": "Aetherwisp Bracers",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 1,
+      "slot": 9,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 3,
+        "armor": 15,
+        "splpwr": 3
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271096/aetherwisp-bracers",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Faldrim Anvilmar"
+        }
+      ]
+    },
+    {
+      "id": 271097,
+      "name": "Spiritwraith Drape",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 1,
+      "slot": 16,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "agi": 4,
+        "spi": 3,
+        "armor": 17
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271097/spiritwraith-drape",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Faldrim Anvilmar"
+        }
+      ]
+    },
+    {
+      "id": 270230,
+      "name": "Kindlegem Girdle",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 6,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 4,
+        "str": 4,
+        "armor": 100
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270230/kindlegem-girdle",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Magmatus"
+        }
+      ]
+    },
+    {
+      "id": 270231,
+      "name": "Flamefist Grips",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 2,
+      "slot": 10,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "str": 2,
+        "agi": 4,
+        "spi": 4,
+        "armor": 51
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270231/flamefist-grips",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Magmatus"
+        }
+      ]
+    },
+    {
+      "id": 271095,
+      "name": "Fang of Magmatus",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 15,
+      "slot": 21,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "int": 4,
+        "splpwr": 18,
+        "dmgmin1": 9,
+        "dmgmax1": 18,
+        "speed": 1.7
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271095/fang-of-magmatus",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Magmatus"
+        }
+      ]
+    },
+    {
+      "id": 270228,
+      "name": "Golemheart Stave",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 10,
+      "slot": 17,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 3,
+        "int": 6,
+        "spi": 5
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270228/golemheart-stave",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Plunder"
+        }
+      ]
+    },
+    {
+      "id": 271098,
+      "name": "Golemguard Chest",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 5,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 6,
+        "str": 4,
+        "spi": 4,
+        "armor": 178
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271098/golemguard-chest",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Plunder"
+        }
+      ]
+    },
+    {
+      "id": 270256,
+      "name": "Durgen's Crescent Axe",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 0,
+      "slot": 21,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "str": 2,
+        "agi": 1,
+        "spi": 1,
+        "dmgmin1": 20,
+        "dmgmax1": 39,
+        "speed": 2.4
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270256/durgens-crescent-axe",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Durgen Dirgehammer"
+        }
+      ]
+    },
+    {
+      "id": 270260,
+      "name": "Direhammer Leggings",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 2,
+      "slot": 7,
+      "level": 18,
+      "reqlevel": 13,
+      "stats": {
+        "sta": 7,
+        "agi": 4,
+        "armor": 72
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/270260/direhammer-leggings",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Hall of Thanes · Durgen Dirgehammer"
+        }
+      ]
+    },
+    {
+      "id": 271204,
+      "name": "Meathook Slicer",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 15,
+      "slot": 13,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "sta": 3,
+        "agi": 4,
+        "dmgmin1": 17,
+        "dmgmax1": 32,
+        "speed": 1.8
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271204/meathook-slicer",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Baron"
+        }
+      ]
+    },
+    {
+      "id": 271205,
+      "name": "Abomination Bones",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 5,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "sta": 2,
+        "str": 9,
+        "agi": 4,
+        "armor": 184
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271205/abomination-bones",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Baron"
+        }
+      ]
+    },
+    {
+      "id": 271206,
+      "name": "Leftover Abomination Skin",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 1,
+      "slot": 5,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "spi": 7,
+        "armor": 37,
+        "splpwr": 8
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271206/leftover-abomination-skin",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Baron"
+        }
+      ]
+    },
+    {
+      "id": 271201,
+      "name": "Atrophic Girdle",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 6,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "sta": 5,
+        "str": 5,
+        "armor": 104
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271201/atrophic-girdle",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Witherfang"
+        }
+      ]
+    },
+    {
+      "id": 271202,
+      "name": "Witherbite Bracers",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 2,
+      "slot": 9,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "agi": 4,
+        "int": 3,
+        "spi": 3,
+        "armor": 37
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271202/witherbite-bracers",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Witherfang"
+        }
+      ]
+    },
+    {
+      "id": 271203,
+      "name": "Segmented Spider Leg",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 10,
+      "slot": 17,
+      "level": 20,
+      "reqlevel": 15,
+      "stats": {
+        "str": 5,
+        "agi": 9,
+        "dmgmin1": 50,
+        "dmgmax1": 76,
+        "speed": 3.6
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271203/segmented-spider-leg",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Witherfang"
+        }
+      ]
+    },
+    {
+      "id": 271207,
+      "name": "Wispcloth Leggings",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 1,
+      "slot": 7,
+      "level": 22,
+      "reqlevel": 17,
+      "stats": {
+        "sta": 5,
+        "int": 8,
+        "spi": 5,
+        "armor": 35
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271207/wispcloth-leggings",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Abandoned"
+        }
+      ]
+    },
+    {
+      "id": 271208,
+      "name": "Grip of Fear",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 10,
+      "level": 22,
+      "reqlevel": 17,
+      "stats": {
+        "sta": 5,
+        "str": 5,
+        "agi": 4,
+        "armor": 119
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271208/grip-of-fear",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Abandoned"
+        }
+      ]
+    },
+    {
+      "id": 271216,
+      "name": "Scepter of the Abandoned",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 4,
+      "slot": 21,
+      "level": 22,
+      "reqlevel": 17,
+      "stats": {
+        "str": 5,
+        "splpwr": 24,
+        "dmgmin1": 17,
+        "dmgmax1": 33,
+        "speed": 2.6
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271216/scepter-of-the-abandoned",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · The Abandoned"
+        }
+      ]
+    },
+    {
+      "id": 271209,
+      "name": "Bonerust Leggings",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 3,
+      "slot": 7,
+      "level": 21,
+      "reqlevel": 16,
+      "stats": {
+        "str": 7,
+        "agi": 6,
+        "spi": 3,
+        "armor": 164
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271209/bonerust-leggings",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Bjork"
+        }
+      ]
+    },
+    {
+      "id": 271217,
+      "name": "Corpse Chopper",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 0,
+      "slot": 17,
+      "level": 21,
+      "reqlevel": 16,
+      "stats": {
+        "str": 11,
+        "dmgmin1": 52,
+        "dmgmax1": 79,
+        "speed": 3.6
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271217/corpse-chopper",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Bjork"
+        }
+      ]
+    },
+    {
+      "id": 271213,
+      "name": "Mirror of Rath'mael",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 6,
+      "slot": 14,
+      "level": 24,
+      "reqlevel": 19,
+      "stats": {
+        "sta": 4,
+        "str": 4,
+        "int": 3,
+        "armor": 547
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271213/mirror-of-rathmael",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Rath'mael"
+        }
+      ]
+    },
+    {
+      "id": 271214,
+      "name": "Frostbane Treads",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 1,
+      "slot": 8,
+      "level": 24,
+      "reqlevel": 19,
+      "stats": {
+        "sta": 7,
+        "int": 4,
+        "spi": 4,
+        "armor": 29
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271214/frostbane-treads",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Rath'mael"
+        }
+      ]
+    },
+    {
+      "id": 271215,
+      "name": "Coldspire Staff",
+      "quality": 3,
+      "classs": 2,
+      "subclass": 10,
+      "slot": 17,
+      "level": 24,
+      "reqlevel": 19,
+      "stats": {
+        "spi": 13,
+        "splpwr": 26,
+        "dmgmin1": 43,
+        "dmgmax1": 66,
+        "speed": 3.6
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271215/coldspire-staff",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Rath'mael"
+        }
+      ]
+    },
+    {
+      "id": 271212,
+      "name": "Bloodied Chestwraps",
+      "quality": 3,
+      "classs": 4,
+      "subclass": 2,
+      "slot": 5,
+      "level": 22,
+      "reqlevel": 17,
+      "stats": {
+        "sta": 4,
+        "agi": 9,
+        "int": 4,
+        "armor": 89
+      },
+      "icon": "inv_misc_questionmark",
+      "communitySource": {
+        "url": "https://hyjal.cc/item/271212/bloodied-chestwraps",
+        "checkedAt": "2026-09-23",
+        "status": "community-documented"
+      },
+      "sourcemore": [
+        {
+          "n": "Ruins of Lordaeron · Viktor the Vile"
+        }
+      ]
+    }
+  ],
+  "dungeons": [
+    {
+      "slug": "hall-of-thanes",
+      "name": "Hall of Thanes",
+      "bosses": [
+        {
+          "name": "Faldrim Anvilmar",
+          "items": [
+            270227,
+            271096,
+            271097
+          ]
+        },
+        {
+          "name": "Magmatus",
+          "items": [
+            270230,
+            270231,
+            271095
+          ]
+        },
+        {
+          "name": "Plunder",
+          "items": [
+            270228,
+            271098
+          ]
+        },
+        {
+          "name": "Durgen Dirgehammer",
+          "items": [
+            270256,
+            270260
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ruins-of-lordaeron",
+      "name": "Ruins of Lordaeron",
+      "bosses": [
+        {
+          "name": "The Baron",
+          "items": [
+            271204,
+            271205,
+            271206
+          ]
+        },
+        {
+          "name": "Witherfang",
+          "items": [
+            271201,
+            271202,
+            271203
+          ]
+        },
+        {
+          "name": "The Abandoned",
+          "items": [
+            271207,
+            271208,
+            271216
+          ]
+        },
+        {
+          "name": "Bjork",
+          "items": [
+            271209,
+            271217
+          ]
+        },
+        {
+          "name": "Rath'mael",
+          "items": [
+            271213,
+            271214,
+            271215
+          ]
+        },
+        {
+          "name": "Viktor the Vile",
+          "items": [
+            271212
+          ]
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "spellId": 1257013,
+      "outputItemId": 253664,
+      "profession": "tailoring",
+      "requiredSkill": 5,
+      "thresholds": [
+        5,
+        30,
+        47,
+        65
+      ],
+      "ingredients": [
+        {
+          "id": 2996,
+          "count": 6,
+          "name": "Bolt of Linen Cloth"
+        },
+        {
+          "id": 2320,
+          "count": 6,
+          "name": "Coarse Thread"
+        }
+      ],
+      "source": "https://hyjal.cc/recipe/1257013/linen-reagent-bag",
+      "checkedAt": "2026-09-23",
+      "status": "community-documented"
+    },
+    {
+      "spellId": 1230564,
+      "outputItemId": 279956,
+      "profession": "alchemy",
+      "requiredSkill": null,
+      "thresholds": [
+        null,
+        20,
+        22,
+        25
+      ],
+      "ingredients": [
+        {
+          "id": 2447,
+          "count": 1,
+          "name": "Peacebloom"
+        },
+        {
+          "id": 3371,
+          "count": 1,
+          "name": "Empty Vial"
+        }
+      ],
+      "source": "https://hyjal.cc/recipe/1230564/mana-well",
+      "checkedAt": "2026-09-23",
+      "status": "community-documented"
+    },
+    {
+      "spellId": 1251741,
+      "outputItemId": 250944,
+      "profession": "alchemy",
+      "requiredSkill": 30,
+      "thresholds": [
+        30,
+        35,
+        37,
+        40
+      ],
+      "ingredients": [
+        {
+          "id": 785,
+          "count": 2,
+          "name": "Mageroyal"
+        },
+        {
+          "id": 2453,
+          "count": 1,
+          "name": "Bruiseweed"
+        },
+        {
+          "id": 3371,
+          "count": 1,
+          "name": "Empty Vial"
+        }
+      ],
+      "source": "https://hyjal.cc/recipe/1251741/minor-menders-potion",
+      "checkedAt": "2026-09-23",
+      "status": "community-documented"
+    }
+  ]
+}
