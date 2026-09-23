@@ -46,8 +46,8 @@
     .form-head p{margin:7px 0 0}.required-note{color:#93c5fd;font-size:13px;font-weight:850}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     label{display:grid;gap:7px;color:var(--gold);font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.02em}
-    input,textarea{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
-    input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+    input,select,textarea{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
     textarea{min-height:110px;resize:vertical}
     .full{grid-column:1/-1}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
@@ -59,7 +59,8 @@
     .field-help{color:#7f8da4;font-size:11px;font-weight:750;text-transform:none;letter-spacing:0}
     @media(max-width:900px){.hero{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}.screens{grid-template-columns:1fr}.steps{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:620px){.grid,.features,.steps{grid-template-columns:1fr}.brand{align-items:flex-start}.form-head{align-items:flex-start;flex-direction:column}.hero-copy,.hero-example,.panel{padding:20px}}
-  </style>
+  [hidden]{display:none!important}select{width:100%;padding:12px;border:1px solid #293955;border-radius:9px;background:#07111f;color:#edf3ff;font:inherit}
+</style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
 </head>
 <body>
@@ -131,6 +132,7 @@
   <form class="panel" id="guildApplicationForm" aria-labelledby="formTitle">
     <div class="form-head"><div><h2 id="formTitle">Freischaltung beantragen</h2><p>Wir prüfen die Anfrage und richten danach euren eigenen Gildenbereich ein.</p></div><span class="required-note">Gildenname, Ansprechpartner und E-Mail-Adresse sind erforderlich.</span></div>
     <div class="grid">
+      <label>Spielversion<select name="game" required><option value="era">WoW Classic Era</option><option value="forever">WoW Forever</option></select><small>Wählt den passenden GuildLoot-Bereich für eure Gilde.</small></label>
       <label>Gildenname
         <input name="guildName" autocomplete="organization" required placeholder="z.B. Lichtbringer">
       </label>
@@ -138,6 +140,7 @@
         <input name="lootName" placeholder="z. B. GuildLoot">
         <span class="field-help">Der sichtbare Name eures Lootbereichs, z.B. PanemLoot.</span>
       </label>
+<label>Lootsystem<select name="lootSystem"><option value="prio">Prio · Prioritäten / P0+</option><option value="dkp">DKP · Punkte, Loot-Kosten und optionale Gebote</option></select></label>
       <label>Server
         <input name="server" placeholder="z.B. Everlook">
       </label>
@@ -175,6 +178,17 @@ const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const statusBox = document.getElementById("status");
 function setStatus(text, type){ statusBox.textContent = text; statusBox.className = "status " + (type || ""); }
 const guildApplicationForm = document.getElementById("guildApplicationForm");
+const requestedGame = new URLSearchParams(location.search).get('game');
+if(['era','forever'].includes(requestedGame)) guildApplicationForm.elements.game.value = requestedGame;
+function updateGameChoice(){
+  const forever = guildApplicationForm.elements.game.value === 'forever';
+  const loot = guildApplicationForm.elements.lootSystem;
+  loot.disabled = forever;
+  loot.closest('label').hidden = forever;
+  guildApplicationForm.elements.server.placeholder = forever ? 'WoW Forever' : 'z.B. Everlook';
+}
+guildApplicationForm.elements.game.addEventListener('change', updateGameChoice);
+updateGameChoice();
 guildApplicationForm.addEventListener("submit", async event => {
   event.preventDefault();
   const form = event.currentTarget || guildApplicationForm;
@@ -188,7 +202,7 @@ guildApplicationForm.addEventListener("submit", async event => {
     });
     const result = await response.json();
     if(!result.success) throw new Error(result.error || "Anfrage konnte nicht gespeichert werden.");
-    if(form && typeof form.reset === "function") form.reset();
+    if(form && typeof form.reset === "function") { form.reset(); if(requestedGame) form.elements.game.value = requestedGame === "forever" ? "forever" : "era"; updateGameChoice(); }
     setStatus("Anfrage ist gespeichert. Du bekommst den Freischaltlink, sobald sie im Admin-Bereich freigegeben wurde.", "good");
   }catch(error){
     setStatus(error.message || "Anfrage konnte nicht gespeichert werden.", "bad");

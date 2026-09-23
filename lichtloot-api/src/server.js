@@ -1,3 +1,4 @@
+import {guildGame,provisionForeverGuild,foreverSetupReadiness} from './guild-game-setup.js';
 import {foreverPool,foreverQuery,foreverAccess} from './forever-db.js';
 import {installForeverDiscord} from './forever-discord.js';
 import { createForeverRaids, installForeverRaids } from './forever-raids.js';
@@ -2123,6 +2124,8 @@ async function ensureGuildApplicationSchema() {
   );
   await query(
     `alter table guild_applications
+       add column if not exists game text not null default 'era' check (game in ('era','forever')),
+       add column if not exists setup_game text check (setup_game in ('era','forever')),
        add column if not exists loot_system text not null default 'prio',
        add column if not exists setup_completed_at timestamptz,
        add column if not exists guild_slug text,
@@ -2158,6 +2161,7 @@ function normalizeGuildApplicationRow(row, params = {}) {
   return {
     id: row.id,
     guildName: row.guild_name || "",
+    game: row.game || "era",
     lootName: row.loot_name || "",
     lootSystem: row.loot_system || "prio",
     server: row.server || "",
@@ -2196,6 +2200,7 @@ async function submitGuildApplication({ query: params, body = {} }) {
   const guildName = clean(values.guildName || values.guild_name);
   const lootName = clean(values.lootName || values.loot_name);
   const server = clean(values.server);
+  const game = guildGame(values.game ?? "era");
   const selectedLootSystem = lootSystem(values.lootSystem || "prio");
   const contactName = clean(values.contactName || values.contact_name);
   const contactDiscord = clean(values.contactDiscord || values.contact_discord);
@@ -2217,10 +2222,10 @@ async function submitGuildApplication({ query: params, body = {} }) {
 
   const result = await query(
     `insert into guild_applications
-       (guild_name, loot_name, server, contact_name, contact_discord, contact_email, discord_guild_id, desired_guild_pin, notes, loot_system)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       (guild_name, loot_name, server, contact_name, contact_discord, contact_email, discord_guild_id, desired_guild_pin, notes, loot_system, game)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      returning *`,
-    [guildName, lootName, server, contactName, contactDiscord, contactEmail, discordGuildId, desiredGuildPin, notes, selectedLootSystem]
+    [guildName, lootName, server, contactName, contactDiscord, contactEmail, discordGuildId, desiredGuildPin, notes, selectedLootSystem, game]
   );
 
   return {
@@ -2267,7 +2272,7 @@ async function approveGuildApplication({ query: params, body = {} }) {
          approved_at = now(),
          rejected_at = null,
          updated_at = now()
-     where id = $1
+     where id = $1 and status in ('pending','approved')
      returning *`,
     [id, token, clean(values.approvedBy) || "Gildenleitung"]
   );
@@ -2787,9 +2792,11 @@ async function getGuildSetup({ query: params }) {
     application.desiredGuildPin = "";
   }
   const readiness = application.guildSlug
-    ? await evaluateGuildReadiness(application.guildSlug)
+    ? (application.game === 'forever' ? await foreverSetupReadiness(foreverQuery, application.guildSlug) : await evaluateGuildReadiness(application.guildSlug))
     : null;
-  return { success: true, application, readiness };
+  return { success: true, application, readiness,
+    startUrl: application.guildSlug ? makeGuildPageUrl(application.game === 'forever' ? 'forever-start.html' : 'start.html', application.guildSlug, params) : '',
+    leadershipUrl: application.guildSlug ? makeGuildPageUrl(application.game === 'forever' ? 'forever-leitung.html' : 'gildenleitung.html', application.guildSlug, params) : '' };
 }
 
 async function requireCompletedGuildSetupToken(token) {
@@ -2807,6 +2814,7 @@ async function requireCompletedGuildSetupToken(token) {
     error.statusCode = 403;
     throw error;
   }
+  if(result.rows[0].game === 'forever') throw Object.assign(new Error('Forever-Discord wird über /forever_verbinden eingerichtet.'), {statusCode:400});
   return result.rows[0];
 }
 
@@ -2840,7 +2848,21 @@ async function saveGuildSetupChannels({ query: params = {}, body = {} }) {
   return {success:true,readiness:await evaluateGuildReadiness(guild.slug)};
 }
 
-async function completeGuildSetup({ query: params, body = {} }) {
+async function completeGuildSetup(request) {
+  const token = clean(request.body?.token || request.query?.token);
+  if(!token) throw Object.assign(new Error('Freischaltlink fehlt.'), {statusCode:400});
+  // Serialize double submits, including retries after a Forever database commit.
+  const lock = await pool.connect();
+  try {
+    await lock.query('select pg_advisory_lock(hashtext($1))', ['guild-setup:'+token]);
+    return await completeGuildSetupLocked(request);
+  } finally {
+    await lock.query('select pg_advisory_unlock(hashtext($1))', ['guild-setup:'+token]);
+    lock.release();
+  }
+}
+
+async function completeGuildSetupLocked({ query: params, body = {} }) {
   await ensureGuildApplicationSchema();
   await ensureGuildDiscordConfigSchema();
   const values = { ...params, ...body };
@@ -2867,6 +2889,8 @@ async function completeGuildSetup({ query: params, body = {} }) {
     throw error;
   }
 
+  const game = guildGame(values.game ?? application.game ?? 'era');
+  if(application.setup_game && application.setup_game !== game) throw Object.assign(new Error('Die Einrichtung wurde bereits für eine andere Spielversion begonnen.'), {statusCode:409});
   const selectedLootSystem = lootSystem(values.lootSystem || application.loot_system || "prio");
   const guildName = clean(values.guildName) || application.guild_name;
   const lootName = clean(values.lootName) || application.loot_name || guildName;
@@ -2887,6 +2911,22 @@ async function completeGuildSetup({ query: params, body = {} }) {
   const primaryColor = clean(values.primaryColor) || "#facc15";
   const accentColor = clean(values.accentColor) || "#1d4ed8";
 
+  const slug = buildLootSlug(guildName, lootName);
+  if(!guildName || !slug) throw Object.assign(new Error('Bitte Gildenname und Lootsystem-Name angeben.'), {statusCode:400});
+  if(game === 'forever' && !foreverPool) throw Object.assign(new Error('Die Forever-Datenbank ist derzeit nicht verfügbar.'), {statusCode:503});
+  // Persist the selected destination before crossing the database boundary.
+  await query("update guild_applications set game=$2,setup_game=$2,updated_at=now() where id=$1", [application.id,game]);
+  if(game === 'forever') {
+    const guild = await provisionForeverGuild(foreverPool, {applicationId:application.id,name:guildName,lootName,slug,
+      server:server || 'Forever',code:guildPin,discordGuildId,logoUrl,backgroundUrl,primaryColor,accentColor});
+    const savedApplication = await query(`update guild_applications set status='completed',setup_completed_at=now(),
+      guild_slug=$2,guild_pin=$3,guild_name=$4,server=$5,logo_url=$6,background_url=$7,discord_guild_id=$8,
+      primary_color=$9,accent_color=$10,loot_name=$11,loot_system='prio',database_status='ready',updated_at=now() where id=$1 returning *`,
+      [application.id,guild.slug,guild.guild_pin,guild.name,guild.server,guild.logo_url,guild.background_url,guild.discord_guild_id,guild.primary_color,guild.accent_color,guild.layout_json.lootName]);
+    return {success:true,application:normalizeGuildApplicationRow(savedApplication.rows[0],values),guild:{name:guild.name,slug:guild.slug},
+      guildSlug:guild.slug,guildPin:guild.guild_pin,readiness:await foreverSetupReadiness(foreverQuery,guild.slug),
+      startUrl:makeGuildPageUrl('forever-start.html',guild.slug,values),leadershipUrl:makeGuildPageUrl('forever-leitung.html',guild.slug,values)};
+  }
   const created = await createGuild({ query: { guildName, lootName, server, guildPin } });
   const setupLayout = defaultGuildLayoutForSlug(created.guild.slug);
   setupLayout.lootSystem = selectedLootSystem;

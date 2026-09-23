@@ -26,10 +26,10 @@
       <nav class="steps" aria-label="Einrichtungsschritte"><h2>Einrichtung</h2><button class="step-button active" type="button" data-step="0"><span class="step-number">1</span><span>Grunddaten</span></button><button class="step-button" type="button" data-step="1"><span class="step-number">2</span><span>Raids & Prios</span></button><button class="step-button" type="button" data-step="2"><span class="step-number">3</span><span>Discord</span></button><button class="step-button" type="button" data-step="3"><span class="step-number">4</span><span>Design & Abschluss</span></button></nav>
       <section class="stage">
         <div id="status" class="status">Freischaltlink wird geprüft ...</div>
-        <section class="step-section" data-step-section="0"><p class="eyebrow">Schritt 1 von 4</p><h2>Das Wichtigste zuerst</h2><p class="intro">Name, Server und ein sicherer Zugang für eure Gildenleitung.</p><div class="grid"><label>Gildenname<input name="guildName" required></label><label>Lootsystem-Name<input name="lootName" required></label><label>Lootsystem<select name="lootSystem"><option value="prio">Prio · Prioritäten / P0+</option><option value="dkp">DKP · Punkte, Loot-Kosten und optionale Gebote</option></select></label><label>Server<input name="server"></label><label>Leitungscode <small>Mindestens 6 Zeichen</small><input name="guildPin" type="password" minlength="6" maxlength="32" required autocomplete="new-password" placeholder="Sicheren Code festlegen"></label></div></section>
-        <section class="step-section" data-step-section="1" hidden><p class="eyebrow">Schritt 2 von 4</p><h2>Wie verteilt ihr Loot?</h2><p class="intro">Wähle ein Grundprofil und die Raids. Die Feinregeln sind bereits sinnvoll vorbelegt.</p><div class="grid"><label class="full">Era-Grundprofil<select name="setupProfile"><option value="standard">Classic Standard – P1, P2 und P3</option><option value="casual">Casual – P1 und P2</option><option value="progress">Progress – mit Rekruten und Attendance</option></select></label></div><div class="section-block"><h3 class="section-title">Unterstützte Raids</h3><div class="choices"><label class="choice"><input type="checkbox" name="raid_mc" checked><span>Molten Core</span></label><label class="choice"><input type="checkbox" name="raid_bwl" checked><span>Blackwing Lair</span></label><label class="choice"><input type="checkbox" name="raid_ony" checked><span>Onyxia</span></label><label class="choice"><input type="checkbox" name="raid_zg" checked><span>Zul'Gurub</span></label><label class="choice"><input type="checkbox" name="raid_aq20" checked><span>Ahn'Qiraj 20</span></label><label class="choice"><input type="checkbox" name="raid_aq40" checked><span>Ahn'Qiraj 40</span></label><label class="choice"><input type="checkbox" name="raid_naxx" checked><span>Naxxramas</span></label></div></div><details><summary>Prioritäten, Rekruten und Punkte fein einstellen</summary><div class="details-body"><h3 class="section-title">Prioritätsstufen</h3><div class="grid"><label><span><input type="checkbox" name="priority_p1_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p1_label" value="P1" maxlength="20"></label><label><span><input type="checkbox" name="priority_p2_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p2_label" value="P2" maxlength="20"></label><label><span><input type="checkbox" name="priority_p3_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p3_label" value="P3" maxlength="20"></label></div><h3 class="section-title section-block">Rekruten und Freigaben</h3><div class="choices"><label class="choice"><input type="checkbox" name="recruitEnabled"><span>Rekrutenregeln aktivieren</span></label><label class="choice"><input type="checkbox" name="recruitCountBench" checked><span>Bench als Teilnahme zählen</span></label><label class="choice"><input type="checkbox" name="poReleaseApplications"><span>Freigabeanträge aktivieren</span></label></div><p class="helper">Betroffene Rekruten-Raids</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_raid_bwl" checked><span>BWL</span></label><label class="choice"><input type="checkbox" name="recruit_raid_aq40" checked><span>AQ40</span></label><label class="choice"><input type="checkbox" name="recruit_raid_naxx" checked><span>Naxx</span></label></div><p class="helper">Für Rekruten erlaubte Prios</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_priority_p1"><span>P1</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p2" checked><span>P2</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p3" checked><span>P3</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p0plus"><span>P0+</span></label></div><div class="grid section-block"><label>Mindestteilnahmen<input name="recruitMinAttendance" type="number" min="0" max="50" value="3"></label><label>Attendance-Zeitraum<input name="attendanceWindow" type="number" min="1" max="50" value="16"></label><label>Warnschwelle<input name="lowAttendanceWarning" type="number" min="0" max="50" value="6"></label><label>Punkte je Raidübertragung<input name="raidTransferPoints" type="number" min="0" max="100" step="0.5" value="1"></label><label>Bench-Punkte<input name="benchPoints" type="number" min="0" max="100" step="0.5" value="0.5"></label></div></div></details></section>
-        <section class="step-section" data-step-section="2" hidden><p class="eyebrow">Schritt 3 von 4</p><h2>Discord verbinden</h2><p class="intro">Die Discord-Server-ID verbindet später Bots und Channels mit der richtigen Gilde.</p><div class="grid"><label class="full">Discord-Server-ID <small>Discord: Entwicklermodus aktivieren → Rechtsklick auf den Server → Server-ID kopieren</small><input name="discordGuildId" inputmode="numeric" pattern="[0-9]{15,22}" placeholder="Zum Beispiel 123456789012345678"></label><label class="full">Warcraft-Logs-Gilden-ID <small>Optional – kann später ergänzt werden</small><input name="warcraftLogsGuildId" inputmode="numeric" pattern="[0-9]*" placeholder="Zahl aus der Warcraft-Logs-Gildenadresse"></label></div></section>
-        <section class="step-section" data-step-section="3" hidden><p class="eyebrow">Schritt 4 von 4</p><h2>Design und Abschluss</h2><p class="intro">Wähle eure Farben. Logo und Hintergrund können auch später ergänzt werden.</p><div class="grid"><label>Hauptfarbe<input name="primaryColor" type="color" value="#facc15"></label><label>Akzentfarbe<input name="accentColor" type="color" value="#1d4ed8"></label></div><details><summary>Eigene Bilder verwenden</summary><div class="details-body grid"><label class="full">Logo-URL<input name="logoUrl" placeholder="https://..."></label><label class="full">Hintergrund-URL<input name="backgroundUrl" placeholder="https://..."></label></div></details></section>
+        <section class="step-section" data-step-section="0"><p class="eyebrow">Schritt 1 von 4</p><h2>Das Wichtigste zuerst</h2><p class="intro">Name, Server und ein sicherer Zugang für eure Gildenleitung.</p><div class="grid"><label>Spielversion<select name="game" required><option value="era">WoW Classic Era</option><option value="forever">WoW Forever</option></select><small>Wählt den passenden GuildLoot-Bereich für eure Gilde.</small></label><label>Gildenname<input name="guildName" required></label><label>Lootsystem-Name<input name="lootName" required></label><label>Lootsystem<select name="lootSystem"><option value="prio">Prio · Prioritäten / P0+</option><option value="dkp">DKP · Punkte, Loot-Kosten und optionale Gebote</option></select></label><label>Server<input name="server"></label><label>Leitungscode <small>Mindestens 6 Zeichen</small><input name="guildPin" type="password" minlength="6" maxlength="32" required autocomplete="new-password" placeholder="Sicheren Code festlegen"></label></div></section>
+        <section class="step-section" data-step-section="1" hidden><div id="foreverSetupInfo" hidden><p class="eyebrow">Schritt 2 von 4</p><h2>Euer Forever-Bereich</h2><p class="intro">Eure Gilde erhält einen eigenen Forever-Bereich für Spielerzugänge, Charaktere, Gruppen und Raids. Die Gildenleitung verwaltet ihn mit dem Leitungscode aus Schritt 1.</p><p>Raids und Gruppen legt ihr anschließend im Forever-Bereich an.</p></div><div id="eraSetupOptions"><p class="eyebrow">Schritt 2 von 4</p><h2>Wie verteilt ihr Loot?</h2><p class="intro">Wähle ein Grundprofil und die Raids. Die Feinregeln sind bereits sinnvoll vorbelegt.</p><div class="grid"><label class="full">Era-Grundprofil<select name="setupProfile"><option value="standard">Classic Standard – P1, P2 und P3</option><option value="casual">Casual – P1 und P2</option><option value="progress">Progress – mit Rekruten und Attendance</option></select></label></div><div class="section-block"><h3 class="section-title">Unterstützte Raids</h3><div class="choices"><label class="choice"><input type="checkbox" name="raid_mc" checked><span>Molten Core</span></label><label class="choice"><input type="checkbox" name="raid_bwl" checked><span>Blackwing Lair</span></label><label class="choice"><input type="checkbox" name="raid_ony" checked><span>Onyxia</span></label><label class="choice"><input type="checkbox" name="raid_zg" checked><span>Zul'Gurub</span></label><label class="choice"><input type="checkbox" name="raid_aq20" checked><span>Ahn'Qiraj 20</span></label><label class="choice"><input type="checkbox" name="raid_aq40" checked><span>Ahn'Qiraj 40</span></label><label class="choice"><input type="checkbox" name="raid_naxx" checked><span>Naxxramas</span></label></div></div><details><summary>Prioritäten, Rekruten und Punkte fein einstellen</summary><div class="details-body"><h3 class="section-title">Prioritätsstufen</h3><div class="grid"><label><span><input type="checkbox" name="priority_p1_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p1_label" value="P1" maxlength="20"></label><label><span><input type="checkbox" name="priority_p2_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p2_label" value="P2" maxlength="20"></label><label><span><input type="checkbox" name="priority_p3_enabled" checked style="width:auto;min-height:auto"> Stufe aktiv</span><input name="priority_p3_label" value="P3" maxlength="20"></label></div><h3 class="section-title section-block">Rekruten und Freigaben</h3><div class="choices"><label class="choice"><input type="checkbox" name="recruitEnabled"><span>Rekrutenregeln aktivieren</span></label><label class="choice"><input type="checkbox" name="recruitCountBench" checked><span>Bench als Teilnahme zählen</span></label><label class="choice"><input type="checkbox" name="poReleaseApplications"><span>Freigabeanträge aktivieren</span></label></div><p class="helper">Betroffene Rekruten-Raids</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_raid_bwl" checked><span>BWL</span></label><label class="choice"><input type="checkbox" name="recruit_raid_aq40" checked><span>AQ40</span></label><label class="choice"><input type="checkbox" name="recruit_raid_naxx" checked><span>Naxx</span></label></div><p class="helper">Für Rekruten erlaubte Prios</p><div class="choices"><label class="choice"><input type="checkbox" name="recruit_priority_p1"><span>P1</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p2" checked><span>P2</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p3" checked><span>P3</span></label><label class="choice"><input type="checkbox" name="recruit_priority_p0plus"><span>P0+</span></label></div><div class="grid section-block"><label>Mindestteilnahmen<input name="recruitMinAttendance" type="number" min="0" max="50" value="3"></label><label>Attendance-Zeitraum<input name="attendanceWindow" type="number" min="1" max="50" value="16"></label><label>Warnschwelle<input name="lowAttendanceWarning" type="number" min="0" max="50" value="6"></label><label>Punkte je Raidübertragung<input name="raidTransferPoints" type="number" min="0" max="100" step="0.5" value="1"></label><label>Bench-Punkte<input name="benchPoints" type="number" min="0" max="100" step="0.5" value="0.5"></label></div></div></details></div></section>
+        <section class="step-section" data-step-section="2" hidden><p class="eyebrow">Schritt 3 von 4</p><h2>Discord verbinden</h2><p id="foreverDiscordHelp" hidden>Optional: Den Forever-Anmelder verbindet ihr nach der Einrichtung auf eurem Discord-Server mit /forever_verbinden und eurem Leitungscode.</p><p class="intro">Die Discord-Server-ID verbindet später Bots und Channels mit der richtigen Gilde.</p><div class="grid"><label class="full">Discord-Server-ID <small>Discord: Entwicklermodus aktivieren → Rechtsklick auf den Server → Server-ID kopieren</small><input name="discordGuildId" inputmode="numeric" pattern="[0-9]{15,22}" placeholder="Zum Beispiel 123456789012345678"></label><label class="full">Warcraft-Logs-Gilden-ID <small>Optional – kann später ergänzt werden</small><input name="warcraftLogsGuildId" inputmode="numeric" pattern="[0-9]*" placeholder="Zahl aus der Warcraft-Logs-Gildenadresse"></label></div></section>
+        <section class="step-section" data-step-section="3" hidden><p class="eyebrow">Schritt 4 von 4</p><h2>Design und Abschluss</h2><p id="selectedGameSummary"></p><p class="intro">Wähle eure Farben. Logo und Hintergrund können auch später ergänzt werden.</p><div class="grid"><label>Hauptfarbe<input name="primaryColor" type="color" value="#facc15"></label><label>Akzentfarbe<input name="accentColor" type="color" value="#1d4ed8"></label></div><details><summary>Eigene Bilder verwenden</summary><div class="details-body grid"><label class="full">Logo-URL<input name="logoUrl" placeholder="https://..."></label><label class="full">Hintergrund-URL<input name="backgroundUrl" placeholder="https://..."></label></div></details></section>
         <div class="actions"><button id="backStep" type="button">Zurück</button><div class="action-group"><a class="linkbtn" href="gilde-anmelden.html">Zur Anmeldung</a><button id="nextStep" class="primary" type="button">Weiter zu Raids & Prios</button><button id="submitSetup" class="primary" type="submit" hidden>Gilde jetzt einrichten</button></div></div>
       </section>
       <aside class="side-preview"><h2>Live-Vorschau</h2><div class="preview-card"><div id="previewHero" class="preview-hero"><span id="previewLogoText">Gildenlogo</span><img id="previewLogo" class="preview-logo" alt="" hidden loading="lazy" decoding="async"></div><div class="preview-body"><strong id="previewGuildName">Neue Gilde</strong><span id="previewLootName">Lootsystem · Server</span><div class="progress"><i id="setupProgress"></i></div></div></div><p class="side-help">✓ Alle Einstellungen können später auf der Gildenleitungsseite geändert werden.</p></aside>
@@ -49,6 +49,23 @@ const backStep = document.getElementById("backStep");
 const nextStep = document.getElementById("nextStep");
 const submitSetup = document.getElementById("submitSetup");
 let currentStep = 0;
+function updateSetupGame(){
+  const forever = form.elements.game.value === 'forever';
+  document.getElementById('eraSetupOptions').hidden = forever;
+  document.getElementById('foreverSetupInfo').hidden = !forever;
+  document.querySelectorAll('#eraSetupOptions input,#eraSetupOptions select').forEach(input => input.disabled = forever);
+  for(const name of ['lootSystem','warcraftLogsGuildId']){
+    const input = form.elements[name]; input.disabled = forever; input.closest('label').hidden = forever;
+  }
+  form.elements.fullEraSetup.disabled = forever;
+  stepButtons[1].querySelector('span:last-child').textContent = forever ? 'Forever-Bereich' : 'Raids & Prios';
+  form.elements.server.placeholder = forever ? 'WoW Forever' : 'z.B. Everlook';
+  document.getElementById('selectedGameSummary').textContent = 'Spielversion: ' + (forever ? 'WoW Forever' : 'WoW Classic Era');
+  document.getElementById('foreverDiscordHelp').hidden = !forever;
+  showStep(currentStep);
+  updateLivePreview();
+}
+form.elements.game.addEventListener('change',updateSetupGame);
 function setStatus(text, type){ statusBox.textContent = text; statusBox.className = "status " + (type || ""); }
 function setValue(name, value){ const input = form.elements[name]; if(input && value) input.value = value; }
 function validateStep(index){
@@ -66,7 +83,7 @@ function showStep(index){
   backStep.hidden = currentStep === 0;
   nextStep.hidden = currentStep === stepSections.length - 1;
   submitSetup.hidden = currentStep !== stepSections.length - 1;
-  nextStep.textContent = ["Weiter zu Raids & Prios", "Weiter zu Discord", "Weiter zu Design"][currentStep] || "Weiter";
+  nextStep.textContent = [form.elements.game.value === "forever" ? "Weiter zum Forever-Bereich" : "Weiter zu Raids & Prios", "Weiter zu Discord", "Weiter zu Design"][currentStep] || "Weiter";
   document.getElementById("setupProgress").style.width = `${((currentStep + 1) / stepSections.length) * 100}%`;
 }
 function updateLivePreview(){
@@ -139,12 +156,20 @@ function renderResultLinks(result){
   const guild = result.guild || {};
   const app = result.application || {};
   const slug = normalizeGuildSlug(result.guildSlug || guild.slug || app.guildSlug) || slugFromUrl(result.startUrl) || slugFromUrl(result.leadershipUrl);
-  const startUrl = result.startUrl || buildGuildUrl("start.html", slug);
-  const leadershipUrl = result.leadershipUrl || buildGuildUrl("gildenleitung.html", slug);
+  const forever = app.game === "forever";
+  const startUrl = result.startUrl || buildGuildUrl(forever ? "forever-start.html" : "start.html", slug);
+  const leadershipUrl = result.leadershipUrl || buildGuildUrl(forever ? "forever-leitung.html" : "gildenleitung.html", slug);
   const guildName = guild.name || app.guildName || form.elements.guildName?.value || "Neue Gilde";
-  const guildPin = result.guildPin || guild.guildPin || app.guildPin || app.desiredGuildPin || form.elements.guildPin?.value || "";
+  const guildPin = result.guildPin || guild.guildPin || app.guildPin || app.desiredGuildPin || (app.status !== "completed" ? form.elements.guildPin?.value : "") || "";
   const ready=Boolean(result.readiness?.ready);
   const discordGuildId=app.discordGuildId||form.elements.discordGuildId?.value||"";
+  if(forever){
+    resultLinks.innerHTML = `<strong>${safeHtml(guildName)} · WoW Forever</strong><span>Die Gilde ist im Forever-Bereich eingerichtet.</span>
+      ${guildPin ? `<span>Leitungscode: ${safeHtml(guildPin)}</span><span>Bitte den Leitungscode sicher aufbewahren.</span>` : ''}
+      <a class="linkbtn" href="${safeHtml(startUrl)}">Forever-Startseite öffnen</a><a class="linkbtn" href="${safeHtml(leadershipUrl)}">Forever-Gildenleitung öffnen</a>
+      <span>Optional: Den Anmelder-Bot in Discord mit /forever_verbinden und eurem Leitungscode verbinden.</span>`;
+    return;
+  }
   resultLinks.innerHTML = `
     <strong>${safeHtml(guildName)}</strong>
     ${slug ? `<span>Bereich: ${safeHtml(slug)}</span>` : ""}
@@ -193,6 +218,7 @@ async function loadSetup(){
     const result = await response.json();
     if(!result.success) throw new Error(result.error || "Freischaltlink konnte nicht geladen werden.");
     const app = result.application || {};
+    setValue("game", app.game || "era");
     setValue("guildName", app.guildName);
     setValue("lootName", app.lootName || app.guildName);
     setValue("server", app.server);
@@ -203,7 +229,7 @@ async function loadSetup(){
     setValue("backgroundUrl", app.backgroundUrl);
     setValue("primaryColor", app.primaryColor);
     setValue("accentColor", app.accentColor);
-    updateLivePreview();
+    updateSetupGame();
     setStatus(app.status === "completed" ? "Diese Gilde wurde bereits eingerichtet." : "Freischaltlink gültig. Einrichtung kann abgeschlossen werden.", "good");
     if(app.status === "completed"){
       form.querySelector(".setup-shell").hidden=true;
@@ -216,7 +242,10 @@ async function loadSetup(){
 }
 form.addEventListener("submit", async event => {
   event.preventDefault();
+  if(submitSetup.disabled) return;
+  if(!stepSections.every((_,index)=>validateStep(index))) return;
   const payload = Object.fromEntries(new FormData(form).entries());
+  submitSetup.disabled = true;
   setStatus("Gilde wird eingerichtet ...", "");
   try{
     const response = await fetch(API_URL, {
@@ -227,9 +256,11 @@ form.addEventListener("submit", async event => {
     const result = await response.json();
     if(!result.success) throw new Error(result.error || "Gilde konnte nicht eingerichtet werden.");
     setStatus("Gilde ist eingerichtet.", "good");
+    form.querySelector(".setup-shell").hidden=true;
     resultLinks.hidden = false;
     renderResultLinks(result);
   }catch(error){
+    submitSetup.disabled = false;
     setStatus(error.message || "Gilde konnte nicht eingerichtet werden.", "bad");
   }
 });
@@ -245,7 +276,7 @@ form.elements.setupProfile?.addEventListener("change",event=>{
   ["p1","p2","p3","p0plus"].forEach(key=>{form.elements[`recruit_priority_${key}`].checked=progress&&["p2","p3"].includes(key);});
 });
 showStep(0);
-updateLivePreview();
+updateSetupGame();
 loadSetup();
 </script>
 
