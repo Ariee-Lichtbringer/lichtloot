@@ -11,7 +11,7 @@
   }catch{return '';}
  }
  async function open(slug,button){
-  const guild=(overview.guilds||[]).find(g=>g.slug===slug);
+  const guild=(overview.guilds||[]).find(g=>g.slug===slug&&(g.game||'era')===(button.dataset.game||'era'));
   if(!guild||!code()){setStatus('Bitte zuerst als Plattform-Admin anmelden.','bad');return;}
   // Open synchronously to preserve the browser's user-gesture popup allowance.
   const child=window.open('about:blank','_blank');
@@ -21,8 +21,12 @@
   const note=child.document.createElement('p');note.textContent='Gildenleitung von '+guild.name+' wird geöffnet …';child.document.body.append(note);
   button.disabled=true;
   try{
-   const result=await api('platformOpenGuildLeadership',{slug});
+   const result=await api('platformOpenGuildLeadership',{slug,game:guild.game||'era'});
    if(child.closed)throw Error('Der neue Tab wurde geschlossen.');
+   if(result.game==='forever'&&result.requiresPin&&result.guild?.slug===slug){
+    const url=new URL('forever-leitung.html',window.location.href);url.search='';url.hash='';url.searchParams.set('guild',slug);child.location.replace(url.href);
+    setStatus('Forever-Gildenleitung von '+guild.name+' geöffnet. Bitte dort den Leitungscode eingeben.','good');return;
+   }
    if(result.guild?.slug!==slug||typeof result.leadershipCode!=='string'||!result.leadershipCode)throw Error('Gilden-Zugang konnte nicht geladen werden.');
    child.sessionStorage.setItem(prefix+slug,JSON.stringify({slug,code:result.leadershipCode,expiresAt:Date.now()+120000}));
    const url=new URL('gildenleitung.html',window.location.href);url.search='';url.hash='';url.searchParams.set('guild',slug);

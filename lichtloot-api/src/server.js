@@ -1,3 +1,4 @@
+import {listPlatformForeverGuilds,resetPlatformForeverCode} from './platform-forever-guilds.js';
 import {guildGame,provisionForeverGuild,foreverSetupReadiness} from './guild-game-setup.js';
 import {foreverPool,foreverQuery,foreverAccess} from './forever-db.js';
 import {installForeverDiscord} from './forever-discord.js';
@@ -2445,6 +2446,7 @@ async function getPlatformAdminOverview({ query: params = {} }) {
             coalesce(sum(a.view_count) filter(where a.day>=timezone('Europe/Berlin',now())::date-29),0)::int as views_30,
             count(distinct a.visitor_hash) filter(where a.day>=timezone('Europe/Berlin',now())::date-29)::int as visitors_30
      from guilds g left join page_analytics_daily a on a.guild_slug=lower(g.slug)
+     where not exists(select 1 from guild_settings s where s.guild_id=g.id and s.layout_json->>'game'='forever')
      group by g.id order by g.created_at asc,g.name asc`
   );
   const dailyResult=await query(
@@ -2476,7 +2478,9 @@ async function getPlatformAdminOverview({ query: params = {} }) {
      from advertising_campaigns c left join advertising_events_daily e on e.campaign_id=c.id
      group by c.id order by c.starts_on desc,c.created_at desc`
   );
-  const guilds=await Promise.all(guildResult.rows.map(async row=>({...row,readiness:await evaluateGuildReadiness(row.slug)})));
+  const eraGuilds=await Promise.all(guildResult.rows.map(async row=>({...row,game:'era',readiness:await evaluateGuildReadiness(row.slug)})));
+  const foreverGuilds=await listPlatformForeverGuilds(foreverQuery);
+  const guilds=[...eraGuilds,...foreverGuilds];
   return {success:true,guilds,daily:dailyResult.rows,pages:pagesResult.rows,campaigns:campaignsResult.rows,retentionDays:365};
 }
 
@@ -2722,6 +2726,7 @@ async function platformResetGuildCode({ query: params = {}, body = {} }) {
   const values={...params,...body},slug=clean(values.slug).toLowerCase(),newCode=normalizePin(values.newCode);
   if(!slug||clean(values.confirmation).toLowerCase()!==slug){const error=new Error("Der bestätigte Gilden-Slug stimmt nicht überein.");error.statusCode=400;throw error;}
   if(newCode.length<10){const error=new Error("Der neue Leitungscode muss mindestens 10 Zeichen haben.");error.statusCode=400;throw error;}
+  if(guildGame(values.game ?? 'era') === 'forever') return resetPlatformForeverCode(foreverPool,slug,newCode);
   const guild=await requireGuild(resolveGuildSlug(slug));
   const duplicate=await query(
     `select 1
@@ -2739,6 +2744,7 @@ async function platformResetGuildCode({ query: params = {}, body = {} }) {
 
 async function platformDeleteGuild({ query: params = {}, body = {} }) {
   requirePlatformMasterCode(params.masterCode||body.masterCode);
+  if(guildGame(body.game ?? params.game ?? 'era') === 'forever') throw Object.assign(new Error('Forever-Gilden können hier noch nicht gelöscht werden.'),{statusCode:400});
   const values={...params,...body},slug=clean(values.slug).toLowerCase();
   if(!slug||clean(values.confirmation).toLowerCase()!==slug||clean(values.phrase)!=="GILDE ENDGÜLTIG LÖSCHEN"){const error=new Error("Löschbestätigung ist nicht vollständig.");error.statusCode=400;throw error;}
   if(slug===clean(defaultGuildSlug).toLowerCase()||slug==="lichtloot"){const error=new Error("Die produktive LichtLoot-Kerngilde ist gegen Löschen geschützt.");error.statusCode=403;throw error;}
@@ -32056,7 +32062,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       enforceSecurityRateLimit(req, "platform-admin-sensitive", 60, 15 * 60 * 1000);
       res.set('Cache-Control','no-store');
       return res.json(await openPlatformGuildLeadership(req.body, {
-        authorize: requirePlatformMasterCode, query,
+        authorize: requirePlatformMasterCode, query, foreverGuild: foreverAccess.requireGuild,
         codeFor: guildId => masterCodeOverrides.get(String(guildId)),
         platformCode: masterCode, defaultGuildSlug
       }));
