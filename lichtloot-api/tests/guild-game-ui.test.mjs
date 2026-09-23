@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import {normalizeForeverLayout} from '../src/forever-layout.js';
+let layout=normalizeForeverLayout();
 import {readFile} from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
@@ -14,8 +16,10 @@ await page.route('**/api/apps-script**',async route=>{const request=route.reques
  if(action==='submitGuildApplication')submitted=b;
  if(action==='completeGuildSetup'){submitted=b;completed=true;data={success:true,application:{game:b.game,status:'completed',guildName:b.guildName,guildSlug:'sandbox'},guildSlug:'sandbox',guildPin:b.guildPin,readiness:{ready:true,game:'forever'},startUrl:base+'/forever-start.html?guild=sandbox',leadershipUrl:base+'/forever-leitung.html?guild=sandbox'};}
  await route.fulfill({json:data});});
+await page.route('**/api/forever/layout?**',route=>route.fulfill({json:{success:true,layout}}));
 await page.route('**/api/forever',async route=>{const b=route.request().postDataJSON();requests.push(b);if(b.masterCode!=='TESTCODE'){await route.fulfill({status:403,json:{success:false,error:'Ungültiger Forever-Leitungscode.'}});return;}
- const data=b.action==='adminOverview'?{success:true,actor:{canAdmin:true,canManage:true},guild:{name:'Elternabend',slug:'sandbox'},players:[],groups:[],counts:{upcoming:0,archived:0},settings:{rules:'',discordUrl:'',revision:0},history:[],discord:null}:b.action==='operationsOverview'?{success:true,balances:[],journal:[],items:[],requests:[],mail:[]}:{success:true,actor:{canAdmin:true,canManage:true},guild:{name:'Elternabend',slug:'sandbox'},raids:[],groups:[],characters:[],discordPosts:[]};await route.fulfill({json:data});});
+ if(b.action==='adminLayout'){layout=normalizeForeverLayout(b.layout);layout.revision++;await route.fulfill({json:{success:true,layout}});return;}
+ const data=b.action==='adminOverview'?{success:true,layout,actor:{canAdmin:true,canManage:true},guild:{name:'Elternabend',slug:'sandbox'},players:[],groups:[],counts:{upcoming:0,archived:0},settings:{rules:'',discordUrl:'',revision:0},history:[],discord:null}:b.action==='operationsOverview'?{success:true,balances:[],journal:[],items:[],requests:[],mail:[]}:{success:true,layout,actor:{canAdmin:true,canManage:true},guild:{name:'Elternabend',slug:'sandbox'},raids:[],groups:[],characters:[],discordPosts:[]};await route.fulfill({json:data});});
 try{
  await page.goto(base+'/gilde-anmelden.html?game=forever');assert.equal(await page.locator('[name=game]').inputValue(),'forever');assert.equal(await page.locator('[name=lootSystem]').isVisible(),false);
  await page.fill('[name=guildName]','Elternabend');await page.fill('[name=contactName]','Test');await page.fill('[name=contactEmail]','test@example.invalid');await page.click('#guildApplicationForm button[type=submit]');await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('gespeichert'));assert.equal(submitted.game,'forever');
@@ -25,6 +29,14 @@ try{
  await page.fill('#loginForm [name=code]','WRONG');await page.click('#loginForm button[type=submit]');await page.waitForSelector('#loginError:not([hidden])');assert.equal(await page.locator('#workspace').isVisible(),false);
  await page.fill('#loginForm [name=code]','TESTCODE');await page.click('#loginForm button[type=submit]');await page.waitForSelector('#workspace:not([hidden])');assert.equal(await page.locator('#login').evaluate(n=>n.open),false);
  const nav=await page.locator('aside nav').textContent();for(const label of ['Raids & Anmeldungen','Loot & Punkte','Gildenbank','Mitglieder','Analysen','Einstellungen','Wochenrhythmen','Postfach','Sicherung'])assert.ok(nav.includes(label),label);assert.ok(!nav.toLowerCase().includes('worldbuff'));assert.ok(!nav.toLowerCase().includes('hordenbuff'));
+ await page.click('.game-forever-toggle');await page.waitForSelector('#game-forever-guilds a[href*="guild=sandbox"]');assert.equal(await page.locator('#game-forever-guilds a').first().textContent(),'ElternabendZur Raidübersicht →');await page.keyboard.press('Escape');assert.equal(await page.locator('#game-forever-guilds').isVisible(),false);
+ await page.evaluate(()=>location.hash='layout');await page.waitForSelector('[data-layout-path="logoUrl"]');
+ await page.fill('[data-layout-path="logoUrl"]','images/guild-defaults/default-logo.webp');await page.locator('[data-layout-path="primaryColor"]').fill('#aabbcc');await page.getByRole('button',{name:'Layout speichern',exact:true}).click();await page.waitForFunction(()=>document.documentElement.style.getPropertyValue('--gold')==='#aabbcc');assert.equal(layout.logoUrl,'images/guild-defaults/default-logo.webp');assert.equal(layout.revision,1);
+ await page.getByRole('button',{name:'Standardwerte laden',exact:true}).click();await page.getByRole('button',{name:'Änderungen verwerfen',exact:true}).click();assert.equal(await page.locator('[data-layout-path="logoUrl"]').inputValue(),'images/guild-defaults/default-logo.webp');
+ await page.evaluate(()=>document.getElementById('createSignup').click());await page.waitForSelector('#signupEditor[open]');assert.equal(await page.locator('.raid-wizard-steps button').count(),5);
+ await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.getElementById('signupEditor').scrollWidth<=innerWidth),true);await page.setViewportSize({width:1600,height:1000});await page.fill('#signupCreateForm [name=title]','Hyjal Test');await page.fill('#signupCreateForm [name=date]','2099-01-02');
+ for(let i=0;i<4;i++)await page.getByRole('button',{name:'Weiter',exact:true}).click();assert.ok((await page.locator('#wizardRaidSummary').textContent()).includes('Hyjal Test'));await page.screenshot({path:'/tmp/forever-raid-wizard-verified.png'});await page.click('#signupCreateForm button[type=submit]');await page.waitForFunction(()=>!document.getElementById('signupEditor').open);assert.ok(requests.some(r=>r.action==='saveRaid'&&r.guild==='sandbox'&&r.title==='Hyjal Test'));
+ await page.evaluate(()=>location.hash='layout');await page.waitForSelector('[data-layout-path="logoUrl"]');
  await page.screenshot({path:process.env.UI_SCREENSHOT||'/tmp/forever-leadership-verified.png',fullPage:true});
  await page.evaluate(()=>location.hash='punkte');await page.waitForFunction(()=>document.querySelector('#punkte').textContent.includes('Noch keine Charaktere.'));
  await page.click('#logout');assert.equal(await page.locator('#login').evaluate(n=>n.open),true);assert.equal(await page.locator('#workspace').isVisible(),false);

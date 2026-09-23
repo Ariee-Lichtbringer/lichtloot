@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import {normalizeForeverLayout,readForeverLayout,saveForeverLayout} from '../src/forever-layout.js';
+import {createForeverRaids,foreverSchema} from '../src/forever-raids.js';
+const {PGlite}=await import(process.env.FOREVER_PGLITE||'@electric-sql/pglite');
+const forever=new PGlite(),era=new PGlite();const core=await readFile(new URL('../src/forever-core.sql',import.meta.url),'utf8');await forever.exec(core);await era.exec(core);await forever.exec(foreverSchema);
+const query=(s,p=[])=>p.length?forever.query(s,p):forever.exec(s).then(r=>r.at(-1)),pool={connect:async()=>({query,release(){}})},guild={id:randomUUID(),slug:'forever',name:'Forever'},other={id:randomUUID(),slug:'other',name:'Other'},actor={canAdmin:true,canManage:true,label:'Leitung'};
+for(const db of [era,forever])for(const g of [guild,other]){await db.query('insert into guilds(id,slug,name) values($1,$2,$3)',[g.id,g.slug,g.name]);await db.query('insert into guild_settings(guild_id,layout_json) values($1,$2)',[g.id,JSON.stringify({game:db===forever?'forever':'era',applicationId:'keep',forever:{rules:'Preserve rules',revision:7}})]);}
+const beforeEra=await era.query('select * from guild_settings order by guild_id'),beforeOther=await readForeverLayout(query,other.id);
+const draft=normalizeForeverLayout({logoUrl:'images/guildloot-logo-concept.webp',backgroundUrl:'https://example.com/background.jpg',primaryColor:'#aabbcc',raidImages:{hyjal:'https://example.com/hyjal.jpg'},supportedRaids:['hyjal'],priorityLevels:[{priority:1,label:'Wunsch',enabled:true},{priority:2,enabled:false},{priority:3,enabled:false}],lootPageSectionsByRaid:{hyjal:{prioRequiresSignup:false}},guildManagementSections:{admin:false,bank:false},startPageSections:{raidCardDays:'7'}});
+await assert.rejects(saveForeverLayout(pool,guild,{canAdmin:false},{layout:draft}),e=>e.statusCode===403);
+for(const invalid of [{logoUrl:'javascript:alert(1)'},{backgroundUrl:'data:text/html,x'},{primaryColor:'red'},{supportedRaids:['naxx']},{supportedRaids:[]},{priorityLevels:[1,2,3].map(priority=>({priority,enabled:false}))}])assert.throws(()=>normalizeForeverLayout(invalid));
+const saved=await saveForeverLayout(pool,guild,actor,{layout:draft});assert.equal(saved.layout.revision,1);
+assert.deepEqual(await readForeverLayout(query,guild.id),saved.layout);
+await assert.rejects(saveForeverLayout(pool,guild,actor,{layout:draft}),e=>e.statusCode===409);
+assert.deepEqual(await readForeverLayout(query,other.id),beforeOther);assert.deepEqual(await era.query('select * from guild_settings order by guild_id'),beforeEra);
+const stored=(await query('select layout_json from guild_settings where guild_id=$1',[guild.id])).rows[0].layout_json;assert.equal(stored.game,'forever');assert.equal(stored.applicationId,'keep');assert.equal(stored.forever.rules,'Preserve rules');assert.equal(stored.forever.revision,7);
+const api=createForeverRaids({pool,query});await assert.rejects(api.run(guild,actor,{action:'saveRaid',title:'Disabled',kind:'barrow',date:'2099-01-01',time:'20:00',size:10,tanks:2,heals:2}),/deaktiviert/);
+const raid=(await api.run(guild,actor,{action:'saveRaid',title:'Enabled',kind:'hyjal',date:'2099-01-01',time:'20:00',size:20,tanks:2,heals:4})).id;
+const player=randomUUID(),character=randomUUID();await query("insert into players(id,guild_id,player_pin,approval_status) values($1,$2,'TEST12345','approved')",[player,guild.id]);await query("insert into forever_characters(id,guild_id,player_id,name,ruleset,class_name,role) values($1,$2,$3,'Test Player','normal','priest','heal')",[character,guild.id,player]);
+await api.run(guild,actor,{action:'lootItemSave',kind:'hyjal',itemId:123,name:'Item'});
+const member={playerId:player,label:'Member',canAdmin:false,canManage:false};await api.run(guild,member,{action:'prioritySave',raidId:raid,characterId:character,priorities:[{priority:1,itemId:123}]});
+await assert.rejects(api.run(guild,member,{action:'prioritySave',raidId:raid,characterId:character,priorities:[{priority:2,itemId:123}]}),/deaktiviert/);
+await saveForeverLayout(pool,guild,actor,{layout:{...saved.layout,lootPageSectionsByRaid:{hyjal:{prioRequiresSignup:true}}}});
+await assert.rejects(api.run(guild,member,{action:'prioritySave',raidId:raid,characterId:character,priorities:[{priority:1,itemId:123}]}),/zuerst/);
+await forever.close();await era.close();console.log('Layout verified: separate Forever storage, Era unchanged, other guild unchanged, revision conflicts, permissions, image validation, existing settings preserved, raid choices and server-enforced priority/signup rules.');

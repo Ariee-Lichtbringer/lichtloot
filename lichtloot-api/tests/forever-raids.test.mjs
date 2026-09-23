@@ -4,9 +4,9 @@ import {randomUUID} from 'node:crypto';
 import {createForeverRaids,raidInput} from '../src/forever-raids.js';
 const {PGlite}=await import(process.env.FOREVER_PGLITE || '@electric-sql/pglite');
 const db=new PGlite();
-await db.exec('create table guilds(id uuid primary key);create table players(id uuid primary key,guild_id uuid not null);create table guild_settings(guild_id uuid,layout_json jsonb);');
+await db.exec('create table guilds(id uuid primary key,logo_url text,background_url text);create table players(id uuid primary key,guild_id uuid not null);create table guild_settings(guild_id uuid,layout_json jsonb,primary_color text,accent_color text);');
 const g={id:randomUUID(),slug:'guild-a',name:'Gilde A'}, other={id:randomUUID(),slug:'guild-b',name:'Gilde B'};
-for(const guild of [g,other])await db.query('insert into guilds(id) values($1)',[guild.id]);
+for(const guild of [g,other]){await db.query('insert into guilds(id) values($1)',[guild.id]);await db.query('insert into guild_settings(guild_id) values($1)',[guild.id]);}
 const a={playerId:randomUUID(),label:'Anna',canManage:false},b={playerId:randomUUID(),label:'Ben',canManage:false}, outsider={playerId:randomUUID(),label:'Other',canManage:false},lead={playerId:null,label:'Gildenleitung',canManage:true};
 for(const [actor,guild] of [[a,g],[b,g],[outsider,other]])await db.query('insert into players values($1,$2)',[actor.playerId,guild.id]);
 await db.exec("alter table players add column approval_status text default 'approved';alter table players add column is_blocked boolean default false;");

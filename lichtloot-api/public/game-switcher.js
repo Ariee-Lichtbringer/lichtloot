@@ -22,7 +22,7 @@
     nav.className = 'game-switcher'; nav.setAttribute('aria-label', 'Spielbereich wechseln');
     nav.innerHTML = `<span class="game-switcher-label">Spielbereich</span><div class="game-switcher-options">
       <div class="game-era-picker"><button type="button" class="game-switcher-link game-era-toggle" aria-expanded="false" aria-controls="game-era-guilds" ${active==='era'?'aria-current="true"':''}><img src="images/wow-classic-logo.png" alt="" width="84" height="66"><span><strong>Classic Era</strong><small>Meine Lootgilden ▾</small></span></button><div id="game-era-guilds" class="game-era-menu" aria-label="Deine Era-Lootgilden" hidden></div></div>
-      <a class="game-switcher-link" data-game-target="forever-start.html" href="forever-start.html" ${active==='forever'?'aria-current="true"':''}><img src="images/wow-forever-logo-transparent.png" alt="" width="84" height="66"><span><strong>WoW Forever</strong><small>${active==='forever'?'Aktiver Bereich':'Gilde & Raids'}</small></span></a>
+      <div class="game-era-picker game-forever-picker"><button type="button" class="game-switcher-link game-era-toggle game-forever-toggle" aria-expanded="false" aria-controls="game-forever-guilds" ${active==='forever'?'aria-current="true"':''}><img src="images/wow-forever-logo-transparent.png" alt="" width="84" height="66"><span><strong>WoW Forever</strong><small>Meine Lootgilden ▾</small></span></button><div id="game-forever-guilds" class="game-era-menu" aria-label="Deine Forever-Lootgilden" hidden></div></div>
       </div><a class="game-switcher-tools" data-game-target="forever.html" href="forever.html">Forever entdecken ↗<br>Items, Talente & Berufe</a>`;
     nav.querySelectorAll('[data-game-target]').forEach(link => {
       link.href = target(link.dataset.gameTarget);
@@ -55,6 +55,24 @@
     toggle.addEventListener('keydown',async event=>{if(event.key==='ArrowDown'){event.preventDefault();await open();if(!menu.hidden)menu.querySelector('a')?.focus();}});
     document.addEventListener('click',event=>{if(!nav.querySelector('.game-era-picker').contains(event.target))close();});
     nav.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){event.preventDefault();close();toggle.focus();}});
+    const ft=nav.querySelector('.game-forever-toggle'),fm=nav.querySelector('#game-forever-guilds');
+    function closeForever(){fm.hidden=true;ft.setAttribute('aria-expanded','false');}
+    async function openForever(){
+      close();fm.hidden=false;ft.setAttribute('aria-expanded','true');fm.textContent='Deine Lootgilden werden geladen …';
+      try{
+        const response=await fetch(base+'/api/apps-script?action=listGuilds&game=forever');const result=await response.json();if(!response.ok||!Array.isArray(result.guilds))throw Error();
+        const mine=result.guilds.filter(g=>{try{return (active==='forever'&&guild()===g.slug)||!!(sessionStorage.getItem('guildloot:forever:'+g.slug+':session')||localStorage.getItem('guildloot:forever:'+g.slug+':session'));}catch{return false;}});
+        fm.replaceChildren();const heading=document.createElement('div');heading.className='game-era-menu-title';heading.textContent='Deine Forever-Lootgilden';fm.append(heading);
+        for(const g of mine)fm.append(entry(g.name||g.slug,'forever-raids.html?'+new URLSearchParams({guild:g.slug}),'Zur Raidübersicht →',g.logoUrl||'images/guild-defaults/default-logo.webp'));
+        if(!mine.length){const empty=document.createElement('p');empty.textContent='Hier erscheinen deine Forever-Lootgilden, sobald du dich dort angemeldet hast.';fm.append(empty);}
+        fm.append(entry(mine.length?'Weitere Lootgilde anmelden':'Zum Forever-SpielerLogin','forever-start.html','SpielerLogin & Gildenauswahl'));
+      }catch{fm.replaceChildren(entry('Forever-Bereich öffnen','forever-start.html','Gilden konnten gerade nicht geladen werden.'));}
+    }
+    ft.addEventListener('click',()=>fm.hidden?openForever():closeForever());
+    toggle.addEventListener('click',closeForever);
+    ft.addEventListener('keydown',async e=>{if(e.key==='ArrowDown'){e.preventDefault();await openForever();if(!fm.hidden)fm.querySelector('a')?.focus();}});
+    document.addEventListener('click',e=>{if(!nav.querySelector('.game-forever-picker').contains(e.target))closeForever();});
+    nav.addEventListener('keydown',e=>{if(e.key==='Escape'&&!fm.hidden){e.preventDefault();closeForever();ft.focus();}});
     host.replaceWith(nav);
   });
 })();

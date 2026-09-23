@@ -35,7 +35,7 @@ async function load() {
   $('guildName').textContent=result.guild.name;
   $('newRaid').hidden=$('newGroup').hidden=!result.actor.canManage;
   $('newCharacter').hidden=!result.actor.canSignup;
-  render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings}}));
+  window.ForeverLayout?.apply(result.layout);render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings,layout:result.layout}}));
  }finally{if(version===generation)$('refresh').disabled=false;}
 }
 function logout(){generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');dispatchEvent(new CustomEvent('forever-session',{detail:null}));}
@@ -84,7 +84,7 @@ function render(){
 }
 function renderRaids(){
  const list=$('raidList');list.replaceChildren();const group=$('groupFilter').value;
- const raids=data.raids.filter(r=>!group||r.group_id===group);
+ const raids=data.raids.filter(r=>(!group||r.group_id===group)&&($('viewFilter').value==='archive'||!window.ForeverLayout||window.ForeverLayout.withinWindow(r)));
  if(!raids.length){const empty=node('div',undefined,'empty');empty.append(node('h3','Platz für euren nächsten Abend.'),node('p',data.actor.canManage?'Erstelle einen Raid, einen Dungeonabend oder euren ersten Forever-Treff.':'Hier erscheinen die Termine eurer Leitung. Lege schon jetzt deinen Forever-Charakter an.'));if(data.actor.canManage)empty.append(button('Ersten Termin erstellen',()=>raidEditor(),'primary'));list.append(empty);}
  for(const raid of raids){
   const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;card.append(window.foreverRaidArt(raid));
@@ -140,7 +140,7 @@ function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Chara
 function groupEditor(g={}){editor(g.id?'Raidgruppe umbenennen':'Raidgruppe anlegen',[field('name','Name der Gruppe','text',g.name,null,true),field('discordChannelId','Eigener Discord-Kanal (ID, optional)','text',g.discord_channel_id||'',null,true)],v=>api('saveGroup',{...v,id:g.id}));}
 function raidEditor(r={}){
  const requestKey=crypto.randomUUID();
- const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'])),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','running','completed','cancelled','archived'])),field('rolePolicy','Rollenplätze','select',r.strict_roles?'strict':'soft',[['soft','Sollwerte · freie Rollenwahl'],['strict','Feste Rollenplätze · danach Ersatzbank']]),field('imageUrl','Discord-Raidbild (HTTPS, optional)','url',r.image_url||'',null,true),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
+ const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'].filter(k=>k===r.kind||!data.layout?.supportedRaids||data.layout.supportedRaids.includes(k)))),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','running','completed','cancelled','archived'])),field('rolePolicy','Rollenplätze','select',r.strict_roles?'strict':'soft',[['soft','Sollwerte · freie Rollenwahl'],['strict','Feste Rollenplätze · danach Ersatzbank']]),field('imageUrl','Discord-Raidbild (HTTPS, optional)','url',r.image_url||'',null,true),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
  if(!r.id&&data.templates?.length)fields.unshift(field('template','Vorlage verwenden','select','',[['','Ohne Vorlage'],...data.templates.map(t=>[t.name,t.name])]));
  if(data.actor.canManage){const members=[['','Gildenleitung / nicht zugewiesen'],...(data.members||[]).map(p=>[p.id,p.name||'Spieler'])];fields.push(field('raidleadId','Raidleitung','select',r.raidlead_id||'',members),field('lootmasterId','Plündermeister','select',r.lootmaster_id||'',members));}
  if(!r.id)fields.push(field('repeatWeeks','Wöchentliche Termine insgesamt','number',1));

@@ -11,7 +11,7 @@ function syncGuild(){const g=$('guildSelect').value;$('createAccount').href=url(
 async function login(candidate){
  const response=await fetch(base+'/api/forever',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'overview',guild:candidate.guild,...(candidate.mode==='lead'?{masterCode:candidate.code}:{playerPin:candidate.code})})});
  const data=await response.json();if(!response.ok||!data.success)throw Error(data.error||'Anmeldung nicht möglich. Bitte erneut versuchen.');
- session=candidate;store(key(session.guild),JSON.stringify(session));store('guildloot:forever:selectedGuild',session.guild);
+ window.ForeverLayout?.apply(data.layout);session=candidate;store(key(session.guild),JSON.stringify(session));store('guildloot:forever:selectedGuild',session.guild);
  history.replaceState(null,'',url('forever-start.html',session.guild));
  $('entry').hidden=true;$('account').hidden=false;$('welcomeTitle').textContent='Willkommen '+data.actor.label;$('guildName').textContent=data.guild.name;
  $('account').querySelector('.success').textContent='✓ '+(candidate.mode==='lead'?'Gildenleitung':'SpielerLogin')+' aktiv · Forever';

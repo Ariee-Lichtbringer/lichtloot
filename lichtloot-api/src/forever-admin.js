@@ -1,3 +1,4 @@
+import {readForeverLayout,saveForeverLayout} from './forever-layout.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
 const roles=['member','raidoffiziere','gildenoffiziere','gildenleitung'];
 export function foreverSettingsInput(body){
@@ -11,6 +12,7 @@ export function createForeverAdmin({pool,query}){
  const audit=(db,guild,actor,action,detail)=>db.query('insert into forever_audit(guild_id,action,actor,detail) values($1,$2,$3,$4)',[guild.id,action,actor.label,detail]);
  return {async run(guild,actor,body){
   if(!(actor.canAdmin||(body.action==='adminOverview'&&actor.canManage)))throw fail('Nur die Forever-Gildenleitung darf Spielerzugänge und Gildeneinstellungen verwalten.',403);
+  if(body.action==='adminLayout')return saveForeverLayout(pool,guild,actor,body);
   if(body.action==='adminOverview'){
    const players=await query(`select p.id,p.role,p.approval_status,coalesce(p.is_blocked,false) as is_blocked,p.created_at,
     coalesce((select json_agg(json_build_object('id',c.id,'name',c.name,'className',c.class_name,'role',c.role) order by c.name) from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id),'[]'::json) as characters
@@ -21,7 +23,7 @@ export function createForeverAdmin({pool,query}){
    const history=await query('select action,actor,detail,created_at from forever_audit where guild_id=$1 order by id desc limit 40',[guild.id]);
    const c=config.rows[0]?.config||{};
    const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
-   return {success:true,actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0},history:history.rows};
+   return {success:true,layout:await readForeverLayout(query,guild.id),actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0},history:history.rows};
   }
   if(body.action==='adminPlayer'){
    if(!/^[0-9a-f-]{36}$/i.test(String(body.playerId)))throw fail('Ungültiger Spieler.');

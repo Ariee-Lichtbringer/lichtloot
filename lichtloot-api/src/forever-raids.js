@@ -1,3 +1,4 @@
+import {readForeverLayout} from './forever-layout.js';
 import {prioritySchema,priorityActions,createForeverPriorities} from './forever-priorities.js';
 import {operationsSchema,operationActions,createForeverOperations} from './forever-operations.js';
 import {publishForeverDiscord,foreverDiscordSchema} from './forever-discord.js';
@@ -127,7 +128,7 @@ export function createForeverRaids({ pool, query }) {
     if(priorityActions.includes(action))return priorities.run(guild,actor,body);
     if(operationActions.includes(action))return operations.run(guild,actor,body);
     if(action==='discordPublish')return publishForeverDiscord(query,guild,actor,body);
-    if(["adminOverview","adminPlayer","adminSettings"].includes(action))return admin.run(guild,actor,body);
+    if(["adminOverview","adminPlayer","adminSettings","adminLayout"].includes(action))return admin.run(guild,actor,body);
     if(action==='saveTemplate'){requireLead(actor);const name=text(body.name,60,'Vorlagenname'),config={...raidInput(body.config||{}),strict_roles:body.config?.rolePolicy==='strict'};if(config.groupId&&!(await query('select id from forever_groups where guild_id=$1 and id=$2',[guild.id,config.groupId])).rows.length)throw fail('Fremde Raidgruppe.',403);return transaction(async db=>{await db.query('insert into forever_raid_templates(guild_id,name,config) values($1,$2,$3) on conflict(guild_id,name) do update set config=excluded.config',[guild.id,name,JSON.stringify(config)]);await audit(db,guild,actor,null,'template',name);return {success:true};});}
     if (action === 'overview') {
       const page=integer(body.page||0,0,100000);
@@ -150,7 +151,7 @@ export function createForeverRaids({ pool, query }) {
       const discordPosts=actor.canManage?(await query('select raid_id,message_id,channel_id,discord_guild_id,last_error from forever_discord_posts where guild_id=$1',[guild.id])).rows:[];
       const members=actor.guildCanManage?(await query("select p.id,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from players p where p.guild_id=$1 and p.approval_status='approved' and not p.is_blocked",[guild.id])).rows:[];
       const templates=actor.guildCanManage?(await query('select name,config from forever_raid_templates where guild_id=$1 order by name',[guild.id])).rows:[];
-      return { success: true,templates,members, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
+      return { success: true,layout:await readForeverLayout(query,guild.id),templates,members, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||''}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
     }
     if (action === 'saveCharacter') {
       if (!actor.playerId) throw fail('Für eigene Charaktere bitte mit dem SpielerLogin anmelden.', 403);
@@ -186,6 +187,7 @@ export function createForeverRaids({ pool, query }) {
     if (action === 'saveRaid') {
       requireLead(actor);
       const value=raidInput(body), id=body.id?uuid(body.id):randomUUID();
+      if(!body.id&&!(await readForeverLayout(query,guild.id)).supportedRaids.includes(value.kind))throw fail('Dieser Raidtyp ist für eure Gilde deaktiviert.');
       return transaction(async db => {
         if(value.groupId && !(await db.query('select id from forever_groups where guild_id=$1 and id=$2',[guild.id,value.groupId])).rows.length) throw fail('Diese Gruppe gehört nicht zu eurer Gilde.',404);
         if(!body.id && body.requestKey){await db.query('select id from guilds where id=$1 for update',[guild.id]);const existing=(await db.query('select id from forever_raids where guild_id=$1 and request_key=$2',[guild.id,uuid(body.requestKey)])).rows[0];if(existing)return {success:true,id:existing.id,replayed:true};}

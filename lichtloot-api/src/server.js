@@ -1,3 +1,4 @@
+import {readForeverLayout} from './forever-layout.js';
 import {listPlatformForeverGuilds,resetPlatformForeverCode} from './platform-forever-guilds.js';
 import {guildGame,provisionForeverGuild,foreverSetupReadiness} from './guild-game-setup.js';
 import {foreverPool,foreverQuery,foreverAccess} from './forever-db.js';
@@ -659,6 +660,11 @@ installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authori
 installForeverDiscord(app,{pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});
 installForeverRaids(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,authorize:foreverAccess.authorize});
 installForeverRegistration(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,requireForeverGuild:async()=>{},explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,hashSecurityAnswer});
+app.get('/api/forever/layout',async(req,res,next)=>{
+  res.set('Cache-Control','no-store');
+  try {const guild=await foreverAccess.requireGuild(requireExplicitGuildSlug(req.query.guild));res.json({success:true,guild:{slug:guild.slug,name:guild.name},layout:await readForeverLayout(foreverQuery,guild.id)});}catch(error){next(error);}
+});
+
 
 // Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
 // Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
