@@ -20111,6 +20111,8 @@ async function savePoPostEntryCorrection(index){
     setStatus("PO-Eintrag wird korrigiert ...", "");
     const result = await railwayWrite({
       action:"guildUpdatePoPostEntry",
+      entrySource:entry.entrySource || "",
+      storage:entry.storage || "",
       masterCode,
       id:entry.id || "",
       postKey:entry.postKey || "",

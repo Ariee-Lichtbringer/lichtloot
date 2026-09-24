@@ -1,3 +1,4 @@
+import {createP0SignupCorrection} from './p0-signup-correction.js';
 import {readForeverLayout} from './forever-layout.js';
 import {listPlatformForeverGuilds,resetPlatformForeverCode} from './platform-forever-guilds.js';
 import {guildGame,provisionForeverGuild,foreverSetupReadiness} from './guild-game-setup.js';
@@ -11545,6 +11546,19 @@ async function deletePoSignupPrioForEntry(guildId, entry, params = {}) {
 
 async function updatePoPostEntry({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  if(params.entrySource === "p0_database") {
+    await ensureRaidSchema();
+    await ensureP0PlusAuditSchema();
+    return createP0SignupCorrection({pool,query,p0Query,authorize:requireMasterOrQueueToken,
+      raidTypes:raidTypeSearchValues,requireItem:requireGuildPoItem,requiresRelease:guildPoItemRequiresRelease,
+      refresh:enqueueP0PostRefreshForRaid,
+      resolveEvent:async(guildId,signup,separate)=>{
+        if(!separate)return (await query('select * from raids where guild_id=$1 and id=$2',[guildId,signup.raid_id])).rows[0];
+        const event=(await p0Query('select * from p0_only_events where guild_id=$1 and id=$2',[guildId,signup.event_id])).rows[0];
+        return event ? resolveLinkedRegularRaidForP0Event(guildId,normalizeP0OnlyEventRow(event),{persist:true}) : null;
+      }
+    })({guildId,query:params});
+  }
   await ensurePoPostEntriesSchema();
   const id = clean(params.id || params.entryId);
   const postKey = clean(params.postKey || params.poPostKey || "");
