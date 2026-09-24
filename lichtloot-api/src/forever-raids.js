@@ -96,6 +96,7 @@ alter table forever_raids add constraint forever_raids_status_check check(status
 alter table forever_groups add column if not exists discord_channel_id text;
 alter table forever_raids add column if not exists image_url text;
 alter table forever_raids add column if not exists archived_from text;
+alter table forever_raids add column if not exists deleted_at timestamptz;
 alter table forever_raids add column if not exists raidlead_id uuid references players(id);
 alter table forever_raids add column if not exists lootmaster_id uuid references players(id);
 alter table forever_raids add column if not exists strict_roles boolean not null default false;
@@ -124,8 +125,13 @@ export function createForeverRaids({ pool, query }) {
     const action = body.action;
     actor={...actor,guildCanManage:!!actor.canManage};
     const scopeId=action==='saveRaid'?body.id:body.raidId;
+    if(scopeId&&(await query('select id from forever_raids where guild_id=$1 and id=$2 and deleted_at is not null',[guild.id,uuid(scopeId)])).rows.length)throw fail('Dieser Raid wurde gelöscht.',404);
     if(actor.playerId&&scopeId&&['saveRaid','formation','attendance','manageSignup','history','discordPublish','lootAward','lootVoid','lootOverview'].includes(action)){const scope=(await query('select raidlead_id,lootmaster_id from forever_raids where guild_id=$1 and id=$2',[guild.id,uuid(scopeId)])).rows[0];if(scope)actor={...actor,canManage:actor.canManage||scope.raidlead_id===actor.playerId,canLoot:actor.canAdmin||scope.lootmaster_id===actor.playerId};}
 
+    if(action==='deleteRaid'){
+      requireLead(actor);const id=uuid(body.raidId);
+      return transaction(async db=>{const result=await db.query("update forever_raids set deleted_at=now(),archived_from=status,status='archived',revision=revision+1 where guild_id=$1 and id=$2 and deleted_at is null and revision=$3 returning id",[guild.id,id,integer(body.revision,1,2147483647)]);if(!result.rows.length)throw fail('Raid nicht gefunden oder inzwischen geändert. Bitte aktualisieren.',409);await audit(db,guild,actor,id,'raid_delete','Raid aus der Übersicht entfernt; zugehörige Daten bleiben erhalten.');return {success:true};});
+    }
     if(['addonLootImport','addonLootList'].includes(action))return runAddonLoot({pool,query},guild,actor,body);
     if(priorityActions.includes(action))return priorities.run(guild,actor,body);
     if(operationActions.includes(action))return operations.run(guild,actor,body);
@@ -144,7 +150,7 @@ export function createForeverRaids({ pool, query }) {
           order by s.created_at,c.name) from forever_signups s join forever_characters c on c.id=s.character_id and c.guild_id=s.guild_id
           where s.guild_id=r.guild_id and s.raid_id=r.id),'[]'::json) as signups
         from forever_raids r left join forever_groups g on g.id=r.group_id and g.guild_id=r.guild_id
-        where r.guild_id=$1 and ${body.archive === true ? "r.status in ('completed','cancelled','archived')" : "r.status not in ('completed','cancelled','archived')"}
+        where r.guild_id=$1 and r.deleted_at is null and ${body.archive === true ? "r.status in ('completed','cancelled','archived')" : "r.status not in ('completed','cancelled','archived')"}
         and ($3::uuid is null or r.id=$3)
         and ($5::uuid is null or r.group_id=$5) order by r.starts_at ${body.archive === true ? 'desc' : 'asc'}, r.id limit 101 offset $4`, [guild.id, actor.playerId || null, body.raidId?uuid(body.raidId):null,page*100,body.groupId?uuid(body.groupId):null]);
       const settings=await query("select coalesce(layout_json->'forever','{}'::jsonb) as config from guild_settings where guild_id=$1",[guild.id]);

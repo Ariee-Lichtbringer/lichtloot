@@ -66,4 +66,12 @@ await assert.rejects(run(lead,'attendance',{raidId:one.id,characterId:ca,attenda
 const series=await run(lead,'saveRaid',{...params,title:'Serie',repeatWeeks:3,requestKey:randomUUID()});assert.equal(series.ids.length,3);
 
 await run(lead,'saveTemplate',{name:'Standard',config:params});assert.equal((await run(lead,'overview')).templates.length,1);
+await assert.rejects(run(a,'deleteRaid',{raidId:series.ids[0],revision:1}),e=>e.statusCode===403);
+await assert.rejects(run(lead,'deleteRaid',{raidId:series.ids[0],revision:1},other),e=>e.statusCode===409);
+await assert.rejects(run(lead,'deleteRaid',{raidId:series.ids[0],revision:99}),e=>e.statusCode===409);
+await run(lead,'deleteRaid',{raidId:series.ids[0],revision:1});
+assert.ok((await db.query('select deleted_at from forever_raids where id=$1',[series.ids[0]])).rows[0].deleted_at);
+assert.ok(!(await run(lead,'overview')).raids.some(r=>r.id===series.ids[0]));
+assert.ok(!(await run(lead,'overview',{archive:true})).raids.some(r=>r.id===series.ids[0]));
+await assert.rejects(run(lead,'saveRaid',{...params,id:series.ids[0],revision:2}),e=>e.statusCode===404);
 await db.close();
