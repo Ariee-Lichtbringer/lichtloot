@@ -2,12 +2,14 @@ import {verifySecurityAnswer} from './auth-security.js';
 import {randomUUID} from 'node:crypto';
 import {foreverCharacterName,foreverSchema,classes,roles} from './forever-raids.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
+export const securityQuestions = ["Wie hieß dein erstes Haustier?", "In welcher Stadt wurdest du geboren?", "Wie hieß dein erster Klassenlehrer?", "Was ist dein Lieblingsessen?"];
 export function registrationInput(body){
  const name=foreverCharacterName(body.firstName,body.lastName),pin=String(body.playerPin||'').trim().toUpperCase();
  if(!/^[A-Z0-9]{8,32}$/.test(pin))throw fail('Wähle einen eigenen Login-Code mit 8–32 Buchstaben und Ziffern.');
  if(!classes.includes(body.className)||!roles.includes(body.role)||!['normal','pvp','rp'].includes(body.ruleset))throw fail('Bitte Klasse, Rolle und Regelwerk auswählen.');
  const question=String(body.securityQuestion||'').trim(),answer=String(body.securityAnswer||'').trim();
- if(question.length<5||question.length>200||answer.length<3||answer.length>200)throw fail('Bitte Sicherheitsfrage und Antwort ausfüllen.');
+ if(!securityQuestions.includes(question))throw fail('Bitte wähle eine der vorgegebenen Sicherheitsfragen.');
+ if(answer.length<3||answer.length>200)throw fail('Bitte Sicherheitsfrage und Antwort ausfüllen.');
  return {name,pin,question,answer,className:body.className,role:body.role,ruleset:body.ruleset};
 }
 export function installForeverRegistration(app,deps){

@@ -6,7 +6,7 @@ const {PGlite}=await import(process.env.FOREVER_PGLITE||'@electric-sql/pglite');
 const db=new PGlite(),guild={id:randomUUID(),slug:'forever'};
 await db.exec(`create table guilds(id uuid primary key);create table players(id uuid primary key,guild_id uuid references guilds(id),player_pin text,role text,approval_status text,security_question text,security_answer text,unique(guild_id,player_pin));create table characters(player_id uuid,name text,server text,class_name text,is_main boolean);`);
 await db.query('insert into guilds values($1)',[guild.id]);
-const body={guild:'forever',firstName:'Ariee',lastName:'Mondlichtung',playerPin:'FRESH123456',className:'priest',role:'heal',ruleset:'normal',securityQuestion:'Meine Frage?',securityAnswer:'Antwort'};
+const body={guild:'forever',firstName:'Ariee',lastName:'Mondlichtung',playerPin:'FRESH123456',className:'priest',role:'heal',ruleset:'normal',securityQuestion:'Wie hieß dein erstes Haustier?',securityAnswer:'Antwort'};
 assert.equal(foreverCharacterName(' Ariee ',' Mondlichtung '),'Ariee Mondlichtung');
 assert.throws(()=>foreverCharacterName('Ariee',''));
 assert.throws(()=>registrationInput({...body,playerPin:'abc'}));
@@ -20,3 +20,6 @@ await assert.rejects(register({...body,playerPin:'OTHER123456'}),/bereits vergeb
 assert.equal((await db.query('select * from players')).rows.length,1);
 await assert.rejects(register({...body,guild:'era'}),/Era rejected/);
 await db.close();console.log('Forever registration passed: full names, validation, pending status, hashed recovery, duplicate rollback, Era rejected.');
+
+for(const securityQuestion of ["Wie hieß dein erstes Haustier?", "In welcher Stadt wurdest du geboren?", "Wie hieß dein erster Klassenlehrer?", "Was ist dein Lieblingsessen?"]) assert.equal(registrationInput({...body,securityQuestion}).question,securityQuestion);
+assert.throws(()=>registrationInput({...body,securityQuestion:"Eigene beliebige Frage?"}),/vorgegebenen/);
