@@ -21,7 +21,7 @@ Datenbank stehen. Eine Raidplanung oder Raid-ID ist nicht erforderlich.
    Unter Windows alternativ `py upload.py ...`. Gildenkürzel ist der `guild`-Wert
    eurer Forever-Seitenadresse. PIN eines **freigegebenen Forever-SpielerLogins**
    wird verdeckt abgefragt. Sie bleibt im Speicher des Begleitprogramms und wird
-   nur über HTTPS an `https://lichtloot.de/api/forever` übermittelt.
+   nur über HTTPS an `https://lichtloot-production.up.railway.app/api/forever` übermittelt.
    Keine PIN und keine Datenbank-Zugangsdaten gehören in das Add-on.
 6. Das Begleitprogramm überträgt geänderte Dateien alle 30 Sekunden automatisch.
    Ohne `--watch` wird einmal hochgeladen. Fehler werden angezeigt und im Watch-Modus

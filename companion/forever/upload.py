@@ -46,7 +46,7 @@ def upload(path, guild, pin):
     for start in range(0, len(events), 250):
         body = dict(action='addonLootImport', guild=guild,
                     playerPin=pin, events=events[start:start+250])
-        req = urllib.request.Request('https://lichtloot.de/api/forever',
+        req = urllib.request.Request('https://lichtloot-production.up.railway.app/api/forever',
             data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'}, method='POST')
         try:
             with opener.open(req, timeout=45) as response:

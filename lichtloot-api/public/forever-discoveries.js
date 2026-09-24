@@ -24,7 +24,7 @@
   search.oninput=render;
   button.onclick=async()=>{
     button.disabled=true;results.textContent='Itemfunde werden geladen …';
-    try{const response=await fetch('/api/forever/discoveries',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error();const data=await response.json();if(!data.success)throw Error();items=data.items;search.hidden=false;render();}
+    try{const response=await fetch((['localhost','127.0.0.1'].includes(location.hostname)?location.origin:'https://lichtloot-production.up.railway.app')+'/api/forever/discoveries',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error();const data=await response.json();if(!data.success)throw Error();items=data.items;search.hidden=false;render();}
     catch{results.textContent='Itemfunde konnten nicht geladen werden. Bitte später erneut versuchen.';}
     finally{button.disabled=false;}
   };

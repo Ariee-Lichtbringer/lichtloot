@@ -37,6 +37,6 @@ class ReaderTests(unittest.TestCase):
         with patch.object(module,'read_events',return_value=events),patch.object(module.urllib.request,'build_opener',return_value=opener):
             self.assertEqual(module.upload(Path('unused'),'guild','secret'),(251,2))
         self.assertEqual(len(opener.requests),2)
-        self.assertEqual(opener.requests[0].full_url,'https://lichtloot.de/api/forever')
+        self.assertEqual(opener.requests[0].full_url,'https://lichtloot-production.up.railway.app/api/forever')
         self.assertEqual(len(json.loads(opener.requests[1].data)['events']),1)
 if __name__=='__main__':unittest.main()
