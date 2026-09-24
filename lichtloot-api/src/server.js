@@ -1,3 +1,4 @@
+import {createInvitations,installInvitations} from './forever-invitations.js';
 import {installEraImport} from './forever-era-import.js';
 import {createP0SignupCorrection} from './p0-signup-correction.js';
 import {readForeverLayout} from './forever-layout.js';
@@ -659,7 +660,9 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
-installForeverDiscord(app,{pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});
+const foreverInvitations=createInvitations({query:foreverQuery,eraQuery:query,pool:foreverPool,access:foreverAccess});
+installInvitations(app,foreverInvitations,enforceSecurityRateLimit);
+installForeverDiscord(app,{invites:foreverInvitations,pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});
 installForeverRaids(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,authorize:foreverAccess.authorize});
 installEraImport(app,{eraQuery:query,query:foreverQuery,pool:foreverPool,requireGuild:foreverAccess.requireGuild,rateLimit:enforceSecurityRateLimit});
 installForeverRegistration(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,requireForeverGuild:async()=>{},explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,hashSecurityAnswer});

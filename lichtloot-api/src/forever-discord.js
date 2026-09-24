@@ -18,7 +18,7 @@ export async function publishForeverDiscord(query,guild,actor,body){
  await query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) values($1,$2,$3,$4) on conflict(guild_id,raid_id) do update set message_id=case when forever_discord_posts.last_error like 'Discord-Nachricht fehlt%' then null else forever_discord_posts.message_id end,content_hash='',last_error='',updated_at=now()`,[guild.id,raid.id,config.discord_guild_id,raid.discord_channel_id||group?.discord_channel_id||config.channel_id]);
  return {success:true,message:'Der Forever-Anmelder wird im verbundenen Discord-Kanal veröffentlicht bzw. aktualisiert.'};
 }
-export function createForeverDiscord({query,pool,access,raids}){
+export function createForeverDiscord({query,pool,access,raids,invites}){
  let ready;const ensure=()=>ready||=query(foreverDiscordSchema).catch(e=>{ready=null;throw e;});
  const attempts=new Map();
  async function snapshot(post){const guild=await access.requireGuild(post.slug);const result=await raids.run(guild,{label:'Discord',canManage:false},{action:'overview',archive:post.archived,raidId:post.raid_id});const raid=result.raids.find(r=>r.id===post.raid_id);if(!raid)return null;return {guild:{slug:guild.slug,name:guild.name},raid,channelId:post.channel_id,discordGuildId:post.discord_guild_id,messageId:post.message_id,hash:post.content_hash,lastError:post.last_error};}
@@ -26,6 +26,7 @@ export function createForeverDiscord({query,pool,access,raids}){
  async function actor(guild,user){const p=(await query("select p.id,p.role,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from forever_discord_links l join players p on p.id=l.player_id and p.guild_id=l.guild_id where l.guild_id=$1 and l.discord_user_id=$2 and p.approval_status='approved' and not p.is_blocked",[guild.id,snow(user)])).rows[0];if(!p)throw fail('Bitte deinen Forever-SpielerLogin verbinden.',401);return {playerId:p.id,canManage:false,canAdmin:false,label:p.name||'Discord-Spieler'};}
  return {async run(body){
  await ensure();const action=body.action;
+ if(invites && ['invitationPoll','invitationAck'].includes(action))return invites.bot(body);
  if(action==='channelTargets')return {success:true,targets:(await query('select guild_id,discord_guild_id from forever_discord_channels')).rows};
  if(action==='channelSync'){
   const server=snow(body.discordGuildId),channels=body.channels;
