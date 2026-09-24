@@ -4433,6 +4433,7 @@ async function ensureDiscordChannelSchema() {
        unique (guild_id, user_id)
      )`
   );
+  await query(`alter table discord_bot_members add column if not exists role_ids jsonb not null default '[]'::jsonb`);
   await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
 }
 
@@ -8880,12 +8881,12 @@ async function saveDiscordBotMembers({ guildId, query: params }) {
     if (!userId || !username || member.bot === true) continue;
     seen.push(userId);
     await query(
-      `insert into discord_bot_members (guild_id,discord_guild_id,user_id,username,display_name,global_name,avatar_url,bot,updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,now())
+      `insert into discord_bot_members (guild_id,discord_guild_id,user_id,username,display_name,global_name,avatar_url,bot,role_ids,updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9::jsonb,'[]'::jsonb),now())
        on conflict (guild_id,user_id) do update
        set discord_guild_id=excluded.discord_guild_id,username=excluded.username,display_name=excluded.display_name,
-           global_name=excluded.global_name,avatar_url=excluded.avatar_url,bot=excluded.bot,updated_at=now()`,
-      [guildId,clean(member.discordGuildId || member.guildId),userId,username,clean(member.displayName),clean(member.globalName),clean(member.avatarUrl),Boolean(member.bot)]
+           global_name=excluded.global_name,avatar_url=excluded.avatar_url,bot=excluded.bot,role_ids=coalesce($9::jsonb,discord_bot_members.role_ids),updated_at=now()`,
+      [guildId,clean(member.discordGuildId || member.guildId),userId,username,clean(member.displayName),clean(member.globalName),clean(member.avatarUrl),Boolean(member.bot),Array.isArray(member.roleIds)?JSON.stringify([...new Set(member.roleIds.filter(id=>typeof id==="string" && /^\d{17,20}$/.test(id)))]):null]
     );
   }
   if (seen.length) await query(`delete from discord_bot_members where guild_id=$1 and not (user_id=any($2::text[]))`, [guildId,seen]);
