@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="forever-tools.css?v=20260920"><script defer src="forever-tools.js?v=20260920-prios"></script>
 <link rel="stylesheet" href="forever-prios.css?v=20260923-beta2"><script defer src="forever-prios.js?v=20260923-beta2"></script>
 <link rel="stylesheet" href="forever-structure.css?v=20260923-beta2"><script defer src="forever-structure.js?v=20260923-beta2"></script>
-<link rel="stylesheet" href="forever-raid-art.css?v=20260920-art1"></head>
+<link rel="stylesheet" href="forever-raid-art.css?v=20260920-art1"><link rel="stylesheet" href="forever-addon-download.css?v=20260924"></head>
 <body>
 <a class="skip" href="#main">Zum Inhalt</a>
 <aside class="sidebar">
@@ -18,7 +18,7 @@
 </aside>
 <main id="main">
 <div data-game-switcher="forever"></div>
- <header class="topbar"><span>FOREVER <span class="slash">/</span> GILDENPLANUNG</span><div><span id="identity">Nicht angemeldet</span><button id="logout" hidden class="quiet">Abmelden</button></div></header>
+ <header class="topbar"><span>FOREVER <span class="slash">/</span> GILDENPLANUNG</span><div><a href="forever-addon.html">Addon Download &amp; Installation</a> <span id="identity">Nicht angemeldet</span><button id="logout" hidden class="quiet">Abmelden</button></div></header>
  <section class="hero"><div class="eyebrow">EURE NÄCHSTE GEMEINSAME GESCHICHTE</div><h1>Ein Raid beginnt<br>mit <em>eurer Gruppe.</em></h1><p>Wer kommt mit? Welche Rolle fehlt noch?<br>Plant eure Forever-Abende an einem Ort.</p><div class="hero-tags"><span>Termine &amp; Anmeldung</span><span>Eigene Forever-Charaktere</span><span>Für jede Gilde</span></div></section>
  <div class="content">
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
@@ -32,8 +32,9 @@
    <section id="termine"><div class="section-title"><div><span class="eyebrow">ZUSAMMEN UNTERWEGS</span><h2>Raids &amp; Termine</h2></div><div class="filters"><label class="sr-only" for="groupFilter">Gruppe filtern</label><select id="groupFilter"><option value="">Alle Gruppen</option></select><label class="sr-only" for="viewFilter">Zeitraum</label><select id="viewFilter"><option value="upcoming">Kommende Termine</option><option value="archive">Vergangene &amp; abgeschlossene</option></select></div></div><p class="subtle">Alle Uhrzeiten in Europe/Berlin. Du kannst dich pro Termin mit einem Charakter anmelden.</p><div id="raidList" class="raid-grid"></div></section>
    <div class="lower-grid"><section id="charaktere" class="panel"><div class="section-title"><h2>Meine Charaktere</h2><button id="newCharacter" class="quiet">＋ Charakter</button></div><p class="subtle">Lege deine Forever-Charaktere für schnelle Anmeldungen an.</p><div id="characterList"></div></section><section id="gruppen" class="panel"><div class="section-title"><h2>Eure Raidgruppen</h2><button id="newGroup" class="quiet" hidden>＋ Gruppe</button></div><p class="subtle">Eigene Namen für eure Stammgruppen und regelmäßigen Abende.</p><div id="groupList"></div></section></div>
   </div>
+  <aside class="gfl-download"><img src="images/addon-guide/guildloot-icon.webp" alt="" width="48" height="48"><div><strong>GuildLoot Forever Add-on <small>0.1.0 Beta</small></strong><span>Neue Itemfunde sammeln und gemeinsam die Forever-Datenbank ergänzen.</span></div><a href="forever-addon.html">Addon Download &amp; Installation →</a></aside>
   <section class="tools"><div class="section-title"><h2>Für euren nächsten Schritt</h2><span class="tag">Schon nutzbar</span></div><div class="tool-grid"><a href="forever.html#talente"><span>✧</span><h3>Build planen</h3><p>Talente ausprobieren und deinen Build merken.</p><b>Zum Talentplaner →</b></a><a href="forever.html#itemdatenbank"><span>◇</span><h3>Ausrüstung entdecken</h3><p>Bekannte Daten durchsuchen und Items vormerken.</p><b>Zur Itemdatenbank →</b></a><a href="forever.html#materialrechner"><span>⚒</span><h3>Handwerk vorbereiten</h3><p>Rezepte finden und Materialbedarf zusammenstellen.</p><b>Zur Materialplanung →</b></a></div></section>
-  <aside class="roadmap"><span class="tag muted">Als Nächstes</span><div><h3>Lootplanung &amp; Vorbereitung</h3><p>Raidanmelder, Prioritäten für hinterlegte Lootgegenstände und manuelle Lootvergabe sind verfügbar. Der Addon-Abgleich folgt, sobald eine passende Forever-Datenquelle vorliegt.</p></div></aside>
+  <aside class="roadmap"><span class="tag muted">Als Nächstes</span><div><h3>Lootplanung &amp; Vorbereitung</h3><p>Raidanmelder, Prioritäten für hinterlegte Lootgegenstände und manuelle Lootvergabe sind verfügbar. Neue Itemfunde kannst du mit dem GuildLoot Forever Add-on als Beta erfassen und übertragen.</p></div></aside>
   <footer>GuildLoot · Gemeinsam besser vorbereitet.<a href="forever.html">Forever-Zentrale ↗</a></footer>
  </div>
 </main>

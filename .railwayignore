@@ -19,3 +19,5 @@ apps-script/
 /*.png
 /*.jpg
 /*.jpeg
+
+!lichtloot-api/public/downloads/GuildLootForever-*.zip

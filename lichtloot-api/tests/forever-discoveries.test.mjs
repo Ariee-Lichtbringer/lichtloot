@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {addonLootSchema,runAddonLoot,validateLootEvents,discoveredItems} from '../src/forever-addon-loot.js';
+const {PGlite}=await import(process.env.FOREVER_PGLITE||'@electric-sql/pglite');
+const db=new PGlite();
+await db.exec('create table guilds(id uuid primary key);create table forever_audit(guild_id uuid,action text,actor text,detail text);'+addonLootSchema);
+const guild={id:randomUUID()},other={id:randomUUID()};
+for(const g of [guild,other])await db.query('insert into guilds values($1)',[g.id]);
+const query=(...args)=>db.query(...args),deps={query,pool:{connect:async()=>({query,release(){}})}};
+const event={version:1,game:'forever',itemId:240123,quantity:2,itemName:'Neuer Fund',itemLink:'|Hitem:240123::::::::|h[Neuer Fund]|h',sourceGuid:'Creature-0-1-2-3-400-ABC',sourceName:'Testgegner',zoneName:'Neue Instanz',instanceId:100,clientBuild:'1.60.1.69977',observedAt:Math.floor(Date.now()/1000),metadata:{quality:4,itemLevel:80,locale:'deDE'}};
+const run=(events,g=guild)=>runAddonLoot(deps,g,{label:'Tester',canManage:false},{action:'addonLootImport',events});
+assert.equal((await run([event])).changed,1);
+assert.equal((await run([event])).changed,0);
+assert.equal((await run([{...event,quantity:1}])).changed,0);
+assert.equal((await run([{...event,quantity:3,metadata:{requiredLevel:60}}])).changed,1);
+let rows=(await discoveredItems(query)).items;assert.equal(rows.length,1);assert.equal(rows[0].metadata.itemLevel,80);assert.equal(rows[0].metadata.requiredLevel,60);assert.equal(rows[0].guild_id,undefined);
+assert.equal((await run([event],other)).changed,1); // independent reports, public list unique by ID
+assert.equal((await discoveredItems(query)).items.length,1);
+assert.equal((await run([{...event,clientBuild:'1.60.1.70000'}])).changed,1);
+for(const bad of [{...event,game:'era'},{...event,itemId:42},{...event,quantity:-1},{...event,metadata:{quality:'bad'}},{...event,sourceGuid:'Player-123'},{...event,instanceId:-2}])assert.throws(()=>validateLootEvents([bad]));
+const before=(await query('select count(*) from forever_item_discoveries')).rows[0].count;
+await assert.rejects(run([event,{...event,itemId:0}]));
+assert.equal((await query('select count(*) from forever_item_discoveries')).rows[0].count,before);
+const {foreverQuery}=await import('../src/forever-db.js');
+if(!process.env.FOREVER_DATABASE_URL)assert.throws(()=>foreverQuery('select 1'),/Forever-Datenbank/);
+await db.close();console.log('Forever discoveries: deduplication, enrichment, isolation, validation and public data tests passed');

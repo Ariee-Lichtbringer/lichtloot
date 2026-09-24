@@ -1,3 +1,4 @@
+import {addonLootSchema,runAddonLoot,discoveredItems} from './forever-addon-loot.js';
 import {readForeverLayout} from './forever-layout.js';
 import {prioritySchema,priorityActions,createForeverPriorities} from './forever-priorities.js';
 import {operationsSchema,operationActions,createForeverOperations} from './forever-operations.js';
@@ -109,7 +110,7 @@ create table if not exists forever_raid_templates(guild_id uuid not null referen
 export function createForeverRaids({ pool, query }) {
   const admin=createForeverAdmin({pool,query}),operations=createForeverOperations({pool,query}),priorities=createForeverPriorities({pool,query});
   let schema;
-  const ensure = () => schema ||= query(foreverSchema+foreverDiscordSchema+operationsSchema+prioritySchema).catch(error => { schema = null; throw error; });
+  const ensure = () => schema ||= query(foreverSchema+foreverDiscordSchema+operationsSchema+prioritySchema+addonLootSchema).catch(error => { schema = null; throw error; });
   const requireLead = actor => { if (!actor.canManage) throw fail('Nur die Gildenleitung und Raidleitung können Termine verwalten.', 403); };
   async function transaction(work) {
     const client = await pool.connect();
@@ -125,6 +126,7 @@ export function createForeverRaids({ pool, query }) {
     const scopeId=action==='saveRaid'?body.id:body.raidId;
     if(actor.playerId&&scopeId&&['saveRaid','formation','attendance','manageSignup','history','discordPublish','lootAward','lootVoid','lootOverview'].includes(action)){const scope=(await query('select raidlead_id,lootmaster_id from forever_raids where guild_id=$1 and id=$2',[guild.id,uuid(scopeId)])).rows[0];if(scope)actor={...actor,canManage:actor.canManage||scope.raidlead_id===actor.playerId,canLoot:actor.canAdmin||scope.lootmaster_id===actor.playerId};}
 
+    if(['addonLootImport','addonLootList'].includes(action))return runAddonLoot({pool,query},guild,actor,body);
     if(priorityActions.includes(action))return priorities.run(guild,actor,body);
     if(operationActions.includes(action))return operations.run(guild,actor,body);
     if(action==='discordPublish')return publishForeverDiscord(query,guild,actor,body);
@@ -272,6 +274,14 @@ export function createForeverRaids({ pool, query }) {
 
 export function installForeverRaids(app, dependencies) {
   const service=createForeverRaids(dependencies);
+  app.get('/api/forever/discoveries',async(req,res,next)=>{
+    try{
+      dependencies.rateLimit(req,'forever-discoveries',120,15*60*1000);
+      await dependencies.query(addonLootSchema);
+      res.set('Cache-Control','no-store');
+      res.json(await discoveredItems(dependencies.query));
+    }catch(error){next(error);}
+  });
   app.post('/api/forever',async(req,res,next)=>{
     res.set('Cache-Control','no-store');
     try {

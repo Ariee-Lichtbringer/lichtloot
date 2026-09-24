@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: GuildLoot Forever
+## Notes: Erfasst beobachtete Instanzbeute für die getrennte Forever-Datenbank.
+## Author: GuildLoot
+## Version: 0.1.0-beta
+## SavedVariables: GuildLootForeverDB
+Core.lua
