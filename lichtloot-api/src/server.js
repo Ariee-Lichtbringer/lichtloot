@@ -1,3 +1,4 @@
+import {installEraImport} from './forever-era-import.js';
 import {createP0SignupCorrection} from './p0-signup-correction.js';
 import {readForeverLayout} from './forever-layout.js';
 import {listPlatformForeverGuilds,resetPlatformForeverCode} from './platform-forever-guilds.js';
@@ -660,6 +661,7 @@ installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrio
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
 installForeverDiscord(app,{pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});
 installForeverRaids(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,authorize:foreverAccess.authorize});
+installEraImport(app,{eraQuery:query,query:foreverQuery,pool:foreverPool,requireGuild:foreverAccess.requireGuild,rateLimit:enforceSecurityRateLimit});
 installForeverRegistration(app, {pool:foreverPool,query:foreverQuery,requireGuild:foreverAccess.requireGuild,requireForeverGuild:async()=>{},explicitGuild:requireExplicitGuildSlug,rateLimit:enforceSecurityRateLimit,hashSecurityAnswer});
 app.get('/api/forever/layout',async(req,res,next)=>{
   res.set('Cache-Control','no-store');
