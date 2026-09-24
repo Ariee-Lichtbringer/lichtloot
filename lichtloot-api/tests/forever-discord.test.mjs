@@ -45,4 +45,11 @@ assert.equal((await query('select * from forever_discord_posts where raid_id=$1'
 const isolated=await raids.run(other,lead,{action:'saveRaid',title:'Ohne Kanal',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal'});
 assert.equal(isolated.discordQueued,false);
 assert.equal((await query('select * from forever_discord_posts where raid_id=$1',[isolated.id])).rows.length,0);
+await bot.run({action:'channelSync',guildId:guild.id,discordGuildId:'222222222222222222',channels:[]}).catch(e=>assert.equal(e.statusCode,403));
+const dc=(await query('select discord_guild_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0].discord_guild_id;
+await bot.run({action:'channelSync',guildId:guild.id,discordGuildId:dc,channels:[{id:'1552674848592109729',name:'gruendung',category:'Events',position:1}]});
+assert.equal((await raids.run(guild,lead,{action:'discordChannelOptions'})).channels[0].name,'gruendung');
+const selected=await raids.run(guild,lead,{action:'saveRaid',title:'Kanalwahl',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal',discordChannelId:'1552674848592109729',repeatWeeks:2});
+for(const id of selected.ids)assert.equal((await query('select channel_id from forever_discord_posts where raid_id=$1',[id])).rows[0].channel_id,'1552674848592109729');
+await assert.rejects(raids.run(other,lead,{action:'saveRaid',title:'Fremd',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal',discordChannelId:'1552674848592109729'}),/verfügbaren Discord/);
 await db.close();console.log('Forever Discord passed: token required, admin publication, idempotent post, leases, exact message/channel/guild binding, account linking, blocked accounts, character ownership, shared capacity, no secrets in poll.');

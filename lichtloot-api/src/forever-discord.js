@@ -6,15 +6,16 @@ create table if not exists forever_discord_checks(id uuid primary key,guild_id u
 create index if not exists forever_discord_checks_guild on forever_discord_checks(guild_id,created_at desc);
 
 create table if not exists forever_discord_channels(guild_id uuid primary key references guilds(id),discord_guild_id text not null,channel_id text not null,updated_at timestamptz not null default now());
+create table if not exists forever_discord_channel_options(guild_id uuid primary key references guilds(id),discord_guild_id text not null,channels jsonb not null default '[]'::jsonb,updated_at timestamptz not null default now());
 create table if not exists forever_discord_links(guild_id uuid not null references guilds(id),discord_user_id text not null,player_id uuid not null references players(id),created_at timestamptz not null default now(),primary key(guild_id,discord_user_id),unique(guild_id,player_id));
 create table if not exists forever_discord_posts(guild_id uuid not null,raid_id uuid not null,discord_guild_id text not null,channel_id text not null,message_id text,lease_token uuid,lease_until timestamptz,content_hash text not null default '',last_error text not null default '',updated_at timestamptz not null default now(),primary key(guild_id,raid_id),foreign key(guild_id,raid_id) references forever_raids(guild_id,id));`;
 export async function publishForeverDiscord(query,guild,actor,body){
  if(!actor.canManage)throw fail('Nur die Raidleitung darf Discord-Anmelder veröffentlichen.',403);
  await query(foreverDiscordSchema);
- const raid=(await query('select id,group_id from forever_raids where guild_id=$1 and id=$2',[guild.id,body.raidId])).rows[0];if(!raid)throw fail('Raid nicht gefunden.',404);
+ const raid=(await query('select id,group_id,discord_channel_id from forever_raids where guild_id=$1 and id=$2',[guild.id,body.raidId])).rows[0];if(!raid)throw fail('Raid nicht gefunden.',404);
  const config=(await query('select * from forever_discord_channels where guild_id=$1',[guild.id])).rows[0];if(!config)throw fail('Verbinde zuerst den Discord-Kanal mit /forever_verbinden.',409);
  const group=raid.group_id?(await query('select discord_channel_id from forever_groups where guild_id=$1 and id=$2',[guild.id,raid.group_id])).rows[0]:null;
- await query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) values($1,$2,$3,$4) on conflict(guild_id,raid_id) do update set message_id=case when forever_discord_posts.last_error like 'Discord-Nachricht fehlt%' then null else forever_discord_posts.message_id end,content_hash='',last_error='',updated_at=now()`,[guild.id,raid.id,config.discord_guild_id,group?.discord_channel_id||config.channel_id]);
+ await query(`insert into forever_discord_posts(guild_id,raid_id,discord_guild_id,channel_id) values($1,$2,$3,$4) on conflict(guild_id,raid_id) do update set message_id=case when forever_discord_posts.last_error like 'Discord-Nachricht fehlt%' then null else forever_discord_posts.message_id end,content_hash='',last_error='',updated_at=now()`,[guild.id,raid.id,config.discord_guild_id,raid.discord_channel_id||group?.discord_channel_id||config.channel_id]);
  return {success:true,message:'Der Forever-Anmelder wird im verbundenen Discord-Kanal veröffentlicht bzw. aktualisiert.'};
 }
 export function createForeverDiscord({query,pool,access,raids}){
@@ -25,6 +26,14 @@ export function createForeverDiscord({query,pool,access,raids}){
  async function actor(guild,user){const p=(await query("select p.id,p.role,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from forever_discord_links l join players p on p.id=l.player_id and p.guild_id=l.guild_id where l.guild_id=$1 and l.discord_user_id=$2 and p.approval_status='approved' and not p.is_blocked",[guild.id,snow(user)])).rows[0];if(!p)throw fail('Bitte deinen Forever-SpielerLogin verbinden.',401);return {playerId:p.id,canManage:false,canAdmin:false,label:p.name||'Discord-Spieler'};}
  return {async run(body){
  await ensure();const action=body.action;
+ if(action==='channelTargets')return {success:true,targets:(await query('select guild_id,discord_guild_id from forever_discord_channels')).rows};
+ if(action==='channelSync'){
+  const server=snow(body.discordGuildId),channels=body.channels;
+  if(!Array.isArray(channels)||channels.length>500)throw fail('Ungültige Kanalliste.');
+  const config=(await query('select discord_guild_id from forever_discord_channels where guild_id=$1',[body.guildId])).rows[0];if(!config||config.discord_guild_id!==server)throw fail('Fremder Discord-Server.',403);
+  const clean=channels.map(c=>({id:snow(c.id),name:String(c.name||'').slice(0,100),category:String(c.category||'').slice(0,100),position:Number.isInteger(c.position)?c.position:0}));
+  await query('insert into forever_discord_channel_options(guild_id,discord_guild_id,channels) values($1,$2,$3::jsonb) on conflict(guild_id) do update set discord_guild_id=$2,channels=$3::jsonb,updated_at=now()',[body.guildId,server,JSON.stringify(clean)]);return {success:true};
+ }
  if(action==='diagnosticsPoll'){
   const token=randomUUID();const rows=await query("update forever_discord_checks set lease_token=$1,lease_until=now()+interval '90 seconds',status='running' where id in (select id from forever_discord_checks where (status='pending' or (status='running' and lease_until<now())) and created_at>now()-interval '10 minutes' order by created_at limit 10 for update skip locked) returning id,guild_id,discord_guild_id,channel_id,kind,lease_token",[token]);return {success:true,jobs:rows.rows};
  }
@@ -39,7 +48,7 @@ export function createForeverDiscord({query,pool,access,raids}){
   await query('insert into forever_discord_channels(guild_id,discord_guild_id,channel_id) values($1,$2,$3) on conflict(guild_id) do update set discord_guild_id=$2,channel_id=$3,updated_at=now()',[guild.id,snow(body.discordGuildId),snow(body.channelId)]);attempts.delete(key);return {success:true,guild:guild.name};
  }
  if(action==='poll'){
-  const rows=(await query("select p.*,g.slug,(r.status in ('completed','cancelled','archived')) as archived from forever_discord_posts p join guilds g on g.id=p.guild_id join forever_raids r on r.guild_id=p.guild_id and r.id=p.raid_id where r.starts_at>now()-interval '30 days' and ($1::uuid is null or (p.guild_id,p.raid_id)>($1::uuid,$2::uuid)) order by p.guild_id,p.raid_id limit 100",[body.cursor?.guildId||null,body.cursor?.raidId||null])).rows;
+  const rows=(await query("select p.*,g.slug,(r.status in ('completed','cancelled','archived')) as archived from forever_discord_posts p join guilds g on g.id=p.guild_id join forever_raids r on r.guild_id=p.guild_id and r.id=p.raid_id where r.deleted_at is null and r.starts_at>now()-interval '30 days' and ($1::uuid is null or (p.guild_id,p.raid_id)>($1::uuid,$2::uuid)) order by p.guild_id,p.raid_id limit 100",[body.cursor?.guildId||null,body.cursor?.raidId||null])).rows;
   const posts=[];for(const p of rows){const s=await snapshot(p);if(s)posts.push(s);}return {success:true,posts,cursor:rows.length===100?{guildId:rows.at(-1).guild_id,raidId:rows.at(-1).raid_id}:null};
  }
  if(['claim','ack','failed'].includes(action)){
