@@ -99,8 +99,14 @@ export function createAddonRaidImport({pool,authorize,resolveTarget,writeAudit})
    const digest=createHash('sha256').update(JSON.stringify(payload)).digest('hex');
    const previous=(await client.query('select digest from guildloot_era_logs where guild_id=$1 and raid_id=$2 and session_id=$3',[guild.id,raid.id,payload.sessionId])).rows[0];
    if(previous){if(previous.digest!==digest)throw fail('Diese Sitzung wurde schon mit anderen Daten importiert.',409);await client.query('commit');return {success:true,duplicate:true,pointsChanged:false};}
-   if(raid.p0plus_transferred_at||['abgesagt','cancelled','canceled'].includes(raid.status))throw fail('Dieser Raid ist bereits abgeschlossen oder abgesagt. Keine Markierungen geändert.',409);
-   if((await client.query("select 1 from p0plus_point_audit where guild_id=$1 and raid_id=$2 and action='raid_transfer' limit 1",[guild.id,raid.id])).rows.length)throw fail('Die Punkte dieses Raids wurden bereits übertragen.',409);
+   if(raid.deleted_at||['abgesagt','cancelled','canceled','gelöscht','geloescht','deleted'].includes(norm(raid.status)))throw fail('Dieser Raid ist gelöscht oder abgesagt. Kein Protokoll importiert.',409);
+   const archiveOnly=Boolean(raid.p0plus_transferred_at)||(await client.query("select 1 from p0plus_point_audit where guild_id=$1 and raid_id=$2 and action='raid_transfer' limit 1",[guild.id,raid.id])).rows.length>0;
+   // A late log is historical evidence, never a second points review or transfer.
+   if(archiveOnly){
+    await client.query('insert into guildloot_era_logs(guild_id,raid_id,session_id,digest,payload) values($1,$2,$3,$4,$5::jsonb)',[guild.id,raid.id,payload.sessionId,digest,JSON.stringify(payload)]);
+    await client.query('commit');
+    return {success:true,archiveOnly:true,marked:0,pointsChanged:false,warning:payload.captureWarning||payload.syncWarning||payload.unresolvedLoot};
+   }
    const rows=(await client.query(`select pr.id,pr.character_id,pr.comment,pr.p1_item_id,pr.p2_item_id,pr.p3_item_id,
      c.name player,c.server,i.item_id game_id,i.name item from prios pr join characters c on c.id=pr.character_id
      join players p on p.id=c.player_id and p.guild_id=$1 left join items i on i.id=pr.p1_item_id where pr.raid_id=$2 for update of pr`,[guild.id,raid.id])).rows;

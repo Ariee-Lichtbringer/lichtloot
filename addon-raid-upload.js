@@ -14,9 +14,9 @@ function mount(host,options){
    const response=await fetch(options.api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guildAddonRaidImport',guild:options.guild,raidId:options.raidId,text,masterCode:password.value}),signal:AbortSignal.timeout(45000)});
    const result=await response.json();if(!response.ok||!result.success)throw Error(result.error||'Import fehlgeschlagen.');
    password.value='';
-   const summary=result.duplicate?'Dieser Export wurde bereits übernommen.':result.marked+' P0-Items gold markiert · '+result.participants+' Teilnehmer im Addon belegt · '+result.unknown+' weitere Spieler werden mit Warcraft Logs geprüft.';
+   const summary=result.archiveOnly?'Raidprotokoll im Archiv gespeichert. Die bereits übertragenen P0+-Punkte und Markierungen bleiben unverändert.':result.duplicate?'Dieser Export wurde bereits übernommen.':result.marked+' P0-Items gold markiert · '+result.participants+' Teilnehmer im Addon belegt · '+result.unknown+' weitere Spieler werden mit Warcraft Logs geprüft.';
    await options.onApplied();
-   const target=document.querySelector('#addonRaidUpload [data-status]');if(target)target.textContent=summary+' Punkte wurden noch nicht geändert. Jetzt „P0+ übertragen“ öffnen.'+(result.warning?' Das Addon meldet eine unvollständige Aufzeichnung.':'');
+   const target=document.querySelector('#addonRaidUpload [data-status]');if(target)target.textContent=summary+(result.archiveOnly||result.duplicate?'':' Punkte wurden noch nicht geändert. Jetzt „P0+ übertragen“ öffnen.')+(result.warning?' Das Addon meldet eine unvollständige Aufzeichnung.':'');
   }catch(e){status.textContent=e.message;}finally{button.disabled=false;}
  };
 }

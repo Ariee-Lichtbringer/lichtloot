@@ -69,4 +69,18 @@ await assert.rejects(authorizeAddonRaidUpload(auth,{id:guild},{raidId:'RAID',lea
 await authorizeAddonRaidUpload({pool,authorizeMaster:()=>{}},{id:guild},{raidId:'RAID',leadPin:'master'});
 console.log('Upload: canonical database alias, supplementary evidence and guild/raid-scoped PIN checks passed.');
 
+// Late uploads must enrich the archive without reopening completed points bookkeeping.
+const beforeLate={prios:(await db.query('select * from prios order by id')).rows,points:(await db.query('select * from p0plus_points order by id')).rows,audits:(await db.query('select * from p0plus_point_audit order by id')).rows};
+const late={...payload,sessionId:'late',receipts:[{...payload.receipts[0],id:'late:receipt:1'}]};
+assert.equal((await apply(late)).archiveOnly,true);
+assert.equal((await apply(late)).duplicate,true);
+assert.equal((await db.query("select count(*)::int n from guildloot_era_logs where session_id='late'")).rows[0].n,1);
+assert.deepEqual({prios:(await db.query('select * from prios order by id')).rows,points:(await db.query('select * from p0plus_points order by id')).rows,audits:(await db.query('select * from p0plus_point_audit order by id')).rows},beforeLate);
+await assert.rejects(apply({...late,recorder:'Changed'}),/anderen Daten/);
+await db.query('update raids set p0plus_transferred_at=null where id=$1',[raid]);
+const auditOnly={...late,sessionId:'audit-late',receipts:[{...payload.receipts[0],id:'audit-late:receipt:1'}]};
+assert.equal((await apply(auditOnly)).archiveOnly,true,'Audit records alone protect already transferred points');
+await db.query("update raids set status='abgesagt' where id=$1",[raid]);
+await assert.rejects(apply({...payload,sessionId:'cancelled',receipts:[]}),/abgesagt/);
+console.log('Late archive import: timestamp/audit completion, duplicates, conflicting exports, cancelled raids and unchanged point/priority/audit rows passed.');
 await db.close();
