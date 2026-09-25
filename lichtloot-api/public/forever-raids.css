@@ -28,3 +28,5 @@
  #roster .dialog-head h2{min-width:0;overflow-wrap:break-word}
  #roster .dialog-head button{flex:none}
 }
+
+#meinGuildLoot .account-characters{display:grid;gap:10px;margin:18px 0}#meinGuildLoot .account-shortcuts{display:flex;flex-wrap:wrap;gap:10px}#meinGuildLoot .account-shortcuts a{display:inline-flex;align-items:center;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:8px}#meinGuildLoot .forever-class-copy{flex:1}#meinGuildLoot .account-guild{color:var(--muted)}
