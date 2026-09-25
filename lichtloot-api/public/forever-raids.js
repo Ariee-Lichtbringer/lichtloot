@@ -6,7 +6,7 @@ const labels = {tank:'Tank',heal:'Heiler',dd:'Schaden (offen)',melee:'Nahkampf',
 const roleKeys=['tank','heal','dd','melee','ranged'], classKeys=['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'];
 const dateFormat = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',timeZone:'Europe/Berlin'});
 let raidPage=0;
-let session=null, data=null, generation=0, selectedGuild='', editorSubmit, saving=false, loadedView='upcoming';
+let session=null, data=null, generation=0, selectedGuild='', editorSubmit, saving=false, loadedView='upcoming', pendingSignup=null;
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(title,action,cls='quiet')=>{const n=node('button',title,cls);n.type='button';n.onclick=action;return n;};
 function notice(message,error=false){$('notice').textContent=message;$('notice').classList.toggle('error',error);$('notice').hidden=!message;}
@@ -36,10 +36,10 @@ async function load() {
   let announcement=$('guildAnnouncement');if(!announcement){announcement=node('section',undefined,'panel');announcement.id='guildAnnouncement';$('guildName').parentElement.after(announcement);}announcement.replaceChildren();const a=result.settings.announcement;announcement.hidden=!a?.message;if(a?.message)announcement.append(node('h3',a.title),node('p',a.message));
   $('newRaid').hidden=$('newGroup').hidden=!result.actor.canManage;
   $('newCharacter').hidden=!result.actor.canSignup;
-  window.ForeverLayout?.apply(result.layout);render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings,layout:result.layout}}));
+  window.ForeverLayout?.apply(result.layout);document.body.classList.add('forever-signed-in');render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings,layout:result.layout}}));
  }finally{if(version===generation)$('refresh').disabled=false;}
 }
-function logout(){generation++;if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');dispatchEvent(new CustomEvent('forever-session',{detail:null}));}
+function logout(){generation++;pendingSignup=null;document.body.classList.remove('forever-signed-in');if(session)store(credentialKey(session.guild),null);session=null;data=null;$('workspace').hidden=true;$('raidList').replaceChildren();$('login').hidden=false;$('logout').hidden=true;$('identity').textContent='Nicht angemeldet';$('loginForm').elements.code.value='';$('editor').close();$('roster').close();notice('');dispatchEvent(new CustomEvent('forever-session',{detail:null}));}
 $('logout').onclick=logout;
 $('refresh').onclick=()=>{notice('');load().catch(e=>notice(e.message,true));};
 $('viewFilter').onchange=()=>{raidPage=0;load().catch(e=>{$('viewFilter').value=loadedView;notice(e.message,true);});};
@@ -75,13 +75,46 @@ function render(){
  $('statMine').textContent=mine.length;$('statGroups').textContent=data.groups.length;
  const next=mine.filter(r=>new Date(r.starts_at)>new Date()&&!['cancelled','completed','archived'].includes(r.status)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0];
  $('statNext').textContent=next?dateFormat.format(new Date(next.starts_at))+' · '+next.time:'–';$('statNextTitle').textContent=next?.title||'Noch keine Zusage';
- renderRaids();
+ renderDashboard();renderRaids();
  $('characterList').replaceChildren();
  if(!data.characters.length)$('characterList').append(node('p',data.actor.canSignup?'Noch kein Forever-Charakter angelegt. Starte mit deinem ersten Charakter.':'Mit dem SpielerLogin kannst du eigene Charaktere anlegen und dich anmelden.','subtle'));
  for(const c of data.characters){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',c.name),node('small',`${labels[c.class_name]} · ${labels[c.role]} · ${labels[c.ruleset]}`));window.foreverClassIdentity(row,info,c.class_name);row.append(button('Bearbeiten',()=>characterEditor(c)));$('characterList').append(row);}
  $('groupList').replaceChildren();
  if(!data.groups.length)$('groupList').append(node('p',data.actor.canManage?'Legt eine Stammgruppe an – etwa „Freitagsraid“. Termine sind auch ohne feste Gruppe möglich.':'Eure Leitung hat noch keine feste Gruppe angelegt.','subtle'));
  for(const g of data.groups){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',g.name),node('small',`${data.raids.filter(r=>r.group_id===g.id).length} Termine in dieser Ansicht`));row.append(info);if(data.actor.canManage)row.append(button('Umbenennen',()=>groupEditor(g)));$('groupList').append(row);}
+}
+function beginSignup(raid,mine){
+ if(data.characters.length)signupEditor(raid,mine);
+ else{pendingSignup=raid.id;characterEditor();$('editorTitle').textContent='Zuerst deinen Forever-Charakter anlegen';}
+}
+function openPrios(raid){
+ const u=new URL(location.href);u.searchParams.set('guild',session.guild);
+ if(raid){u.searchParams.set('raid',raid.id);u.searchParams.set('loot',raid.kind);}
+ else{u.searchParams.delete('raid');u.searchParams.delete('loot');}
+ u.hash='prioseiten';history.pushState(null,'',u);dispatchEvent(new Event('hashchange'));window.scrollTo(0,0);
+}
+function renderDashboard(){
+ const host=$('foreverDashboard');if(!host)return;host.replaceChildren();
+ // Use only the loaded page and never present archived or filtered results as a guild-wide next raid.
+ host.hidden=loadedView!=='upcoming'||raidPage>0||!!$('groupFilter').value;
+ if(host.hidden)return;
+ const raids=data.raids.filter(r=>new Date(r.starts_at)>new Date()&&['open','closed'].includes(r.status)&&(!window.ForeverLayout||window.ForeverLayout.withinWindow(r))).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+ const raid=raids.find(r=>r.signups.some(s=>s.mine&&['signed','bench','late','tentative'].includes(s.status)))||raids[0];
+ const next=node('article',undefined,'panel dashboard-next');next.append(node('span',raid?.signups.some(s=>s.mine&&s.status!=='absent')?'MEIN NÄCHSTER RAID':'NÄCHSTER RAID','eyebrow'));
+ if(raid){
+  next.append(window.foreverRaidArt(raid),node('h2',raid.title),node('p',dateFormat.format(new Date(raid.starts_at))+' · '+raid.time+' Uhr · '+(raid.group_name||'Gildenweiter Termin')));
+  const mine=raid.signups.find(s=>s.mine);next.append(node('p',mine?labels[mine.status]+' · '+mine.name:labels[raid.status],'my-status'));
+  const actions=node('div',undefined,'raid-actions');
+  if(raid.status==='open'&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Zum Raid anmelden',()=>beginSignup(raid,mine),'primary'));
+  if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Meine Prios',()=>openPrios(raid)));
+  actions.append(button('Teilnehmer ansehen',()=>showRoster(raid)));next.append(actions);
+ }else{next.append(node('h2','Noch kein kommender Raid'),node('p',data.actor.canManage?'Plane euren nächsten gemeinsamen Abend.':'Hier erscheint euer nächster Raid, sobald die Leitung einen Termin anlegt.'));if(data.actor.canManage)next.append(button('Raid erstellen',()=>raidEditor(),'primary'));}
+ const account=node('article',undefined,'panel dashboard-account');account.append(node('span','MEIN GUILDLOOT','eyebrow'),node('h2',data.actor.label),node('p',data.characters.length+' Forever-Charakter'+(data.characters.length===1?'':'e')));
+ const actions=node('div',undefined,'dashboard-shortcuts');
+ if(data.actor.canSignup)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>characterEditor(),data.characters.length?'quiet':'primary'));
+ for(const [label,hash] of [['Meine Charaktere','charaktere'],['Meine Prios','prioseiten'],['P0+ Liste','punkte'],['Postfach','postfach']]){const a=node('a',label,'quiet');a.href='#'+hash;actions.append(a);}
+ if(data.actor.canManage)actions.append(button('Raid erstellen',()=>raidEditor()));
+ account.append(actions);host.append(next,account);
 }
 function renderRaids(){
  const list=$('raidList');list.replaceChildren();const group=$('groupFilter').value;
@@ -101,7 +134,7 @@ function renderRaids(){
   const capacity=node('div',undefined,'capacity');capacity.append(node('span',`${signed.length} / ${raid.size} Plätze belegt`),node('span',`${raid.signups.filter(s=>s.status==='bench').length} auf Ersatzbank`));body.append(capacity);
   const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
   const actions=node('div',undefined,'raid-actions');
-  if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>data.characters.length?signupEditor(raid,mine):characterEditor(),'primary'));
+  if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>beginSignup(raid,mine),'primary'));
   if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL('forever-'+raid.kind+'.html',location.href);u.searchParams.set('guild',data.guild.slug);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';location.href=u.href;}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)));
   if(data.actor.canManage)actions.append(button('Raid löschen',async()=>{if(!confirm('Raid „'+raid.title+'“ löschen? Er verschwindet aus der Übersicht. Vorhandene Anmeldungen, Loot- und Punktedaten bleiben gespeichert.'))return;try{await api('deleteRaid',{raidId:raid.id,revision:raid.revision});await load();notice('Raid gelöscht.');}catch(e){notice(e.message,true);}},'quiet danger'));
@@ -129,11 +162,11 @@ const choices=keys=>keys.map(k=>[k,labels[k]]);
 function editor(title,fields,submit){
  $('editorTitle').textContent=title;$('editorFields').replaceChildren(...fields);$('editorError').textContent='';editorSubmit=submit;$('editorForm').querySelector('button[type=submit]').disabled=false;$('roster').close();$('editor').showModal();
 }
-$('closeEditor').onclick=()=>{if(!saving)$('editor').close();};
-$('editor').addEventListener('cancel',e=>{if(saving)e.preventDefault();});
+$('closeEditor').onclick=()=>{if(!saving){pendingSignup=null;$('editor').close();}};
+$('editor').addEventListener('cancel',e=>{if(saving)e.preventDefault();else pendingSignup=null;});
 $('editorForm').onsubmit=async e=>{
  e.preventDefault();if(saving)return;saving=true;const submit=e.currentTarget.querySelector('button[type=submit]');submit.disabled=true;$('editorError').textContent='';
- try{const values=Object.fromEntries(new FormData(e.currentTarget));const result=await editorSubmit(values);$('editor').close();if(result.raidSaved)location.hash='termine';notice(result.discordQueued?'Raid gespeichert. Der Discord-Anmelder wird automatisch veröffentlicht.':result.status==='bench'?'Der Termin ist voll. Deine Anmeldung steht auf der Ersatzbank.':'Gespeichert.');try{await load();}catch(error){notice('Gespeichert, aber die Ansicht konnte nicht aktualisiert werden. Bitte „Aktualisieren“ wählen.',true);}}
+ try{const values=Object.fromEntries(new FormData(e.currentTarget));const result=await editorSubmit(values);$('editor').close();if(result.raidSaved)location.hash='termine';notice(result.discordQueued?'Raid gespeichert. Der Discord-Anmelder wird automatisch veröffentlicht.':result.status==='bench'?'Der Termin ist voll. Deine Anmeldung steht auf der Ersatzbank.':'Gespeichert.');try{await load();if(pendingSignup){const id=pendingSignup;pendingSignup=null;const raid=data.raids.find(r=>r.id===id);if(raid&&raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)signupEditor(raid,raid.signups.find(s=>s.mine));}}catch(error){pendingSignup=null;notice('Gespeichert, aber die Ansicht konnte nicht aktualisiert werden. Bitte „Aktualisieren“ wählen.',true);}}
  catch(error){$('editorError').textContent=error.message;}finally{saving=false;submit.disabled=false;}
 };
 function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Charakter anlegen',[

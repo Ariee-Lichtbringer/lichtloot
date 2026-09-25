@@ -4,12 +4,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="forever-class-icons.css?v=20260920"><script defer src="forever-class-icons.js?v=20260920"></script><title>Forever · Meine Gilde | GuildLoot</title>
 <meta name="description" content="Eure Forever-Raids an einem Ort: Termine, Charaktere, Rollen und Anmeldungen für jede Gilde.">
-<link rel="stylesheet" href="forever-raids.css?v=20260920-artnav1"><script defer src="forever-raids.js?v=20260924-delete"></script>
+<link rel="stylesheet" href="forever-raids.css?v=20260920-artnav1"><script defer src="forever-raids.js?v=20260925-flow"></script>
 <link rel="stylesheet" href="game-switcher.css?v=20260920-guilds"><script defer src="game-switcher.js?v=20260923-forever-guilds"></script>
 <link rel="stylesheet" href="forever-tools.css?v=20260920"><script defer src="forever-tools.js?v=20260920-prios"></script>
 <link rel="stylesheet" href="forever-prios.css?v=20260923-beta2"><script defer src="forever-prios.js?v=20260923-beta2"></script>
 <link rel="stylesheet" href="forever-structure.css?v=20260923-beta2"><script defer src="forever-structure.js?v=20260923-beta2"></script>
-<link rel="stylesheet" href="forever-raid-art.css?v=20260920-art1"><link rel="stylesheet" href="forever-addon-download.css?v=20260924"></head>
+<link rel="stylesheet" href="forever-raid-art.css?v=20260920-art1"><link rel="stylesheet" href="forever-addon-download.css?v=20260924"><link rel="stylesheet" href="forever-dashboard.css?v=20260925-flow"></head>
 <body>
 <a class="skip" href="#main">Zum Inhalt</a>
 <aside class="sidebar">
@@ -19,7 +19,7 @@
 <main id="main">
 <div data-game-switcher="forever"></div>
  <header class="topbar"><span>FOREVER <span class="slash">/</span> GILDENPLANUNG</span><div><a href="forever-addon.html">Addon Download &amp; Installation</a> <span id="identity">Nicht angemeldet</span><button id="logout" hidden class="quiet">Abmelden</button></div></header>
- <section class="hero"><div class="eyebrow">EURE NÄCHSTE GEMEINSAME GESCHICHTE</div><h1>Ein Raid beginnt<br>mit <em>eurer Gruppe.</em></h1><p>Wer kommt mit? Welche Rolle fehlt noch?<br>Plant eure Forever-Abende an einem Ort.</p><div class="hero-tags"><span>Termine &amp; Anmeldung</span><span>Eigene Forever-Charaktere</span><span>Für jede Gilde</span></div></section>
+ <section class="hero"><div class="eyebrow">EURE NÄCHSTE GEMEINSAME GESCHICHTE</div><h1>Deine Gilde.<br><em>Dein nächster Raid.</em></h1><p>Charakter auswählen, zum Raid anmelden und Prios vorbereiten.</p><div class="hero-tags"><span>Termine &amp; Anmeldung</span><span>Eigene Forever-Charaktere</span><span>Für jede Gilde</span></div></section>
  <div class="content">
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
   <section id="login" class="login panel">
@@ -28,6 +28,7 @@
   </section>
   <div id="workspace" hidden>
    <section class="guild-heading"><div><span class="eyebrow">EURE FOREVER-PLANUNG</span><h2 id="guildName"></h2></div><div class="actions"><button id="refresh" class="quiet">↻ Aktualisieren</button><button id="newRaid" class="primary" hidden>＋ Termin erstellen</button></div></section>
+   <section id="foreverDashboard" class="forever-dashboard" aria-label="Meine Raidübersicht"></section>
    <div class="stats"><article><span>Nächste Termine</span><strong id="statRaids">–</strong><small>in dieser Ansicht</small></article><article><span>Meine Zusagen</span><strong id="statMine">–</strong><small>fest eingeplant</small></article><article><span>Raidgruppen</span><strong id="statGroups">–</strong><small>gemeinsam organisiert</small></article><article class="stat-highlight"><span>Mein nächster Termin</span><strong id="statNext">–</strong><small id="statNextTitle">Noch keine Zusage</small></article></div>
    <section id="termine"><div class="section-title"><div><span class="eyebrow">ZUSAMMEN UNTERWEGS</span><h2>Raids &amp; Termine</h2></div><div class="filters"><label class="sr-only" for="groupFilter">Gruppe filtern</label><select id="groupFilter"><option value="">Alle Gruppen</option></select><label class="sr-only" for="viewFilter">Zeitraum</label><select id="viewFilter"><option value="upcoming">Kommende Termine</option><option value="archive">Vergangene &amp; abgeschlossene</option></select></div></div><p class="subtle">Alle Uhrzeiten in Europe/Berlin. Du kannst dich pro Termin mit einem Charakter anmelden.</p><div id="raidList" class="raid-grid"></div></section>
    <div class="lower-grid"><section id="charaktere" class="panel"><div class="section-title"><h2>Meine Charaktere</h2><button id="newCharacter" class="quiet">＋ Charakter</button></div><p class="subtle">Lege deine Forever-Charaktere für schnelle Anmeldungen an.</p><div id="characterList"></div></section><section id="gruppen" class="panel"><div class="section-title"><h2>Eure Raidgruppen</h2><button id="newGroup" class="quiet" hidden>＋ Gruppe</button></div><p class="subtle">Eigene Namen für eure Stammgruppen und regelmäßigen Abende.</p><div id="groupList"></div></section></div>

@@ -20,6 +20,7 @@ async function login(candidate){
  for(const c of data.characters){const row=document.createElement('div');row.className='character';const title=document.createElement('strong'),meta=document.createElement('small');title.textContent=c.name;meta.textContent=(classes[c.class_name]||c.class_name)+' · '+(roles[c.role]||c.role);const info=document.createElement('div');info.append(title,meta);window.foreverClassIdentity(row,info,c.class_name);$('characters').append(row);}
  if(!data.characters.length){const p=document.createElement('p');p.className='muted';p.textContent=data.actor.canSignup?'Noch kein Forever-Charakter angelegt. Erstelle deinen ersten Charakter, um dich für Raids anzumelden.':'Mit dem SpielerLogin kannst du eigene Charaktere anlegen und dich anmelden.';$('characters').append(p);}
  $('leadershipLink').hidden=!data.actor.canManage;$('leadershipLink').href=url('forever-leitung.html',session.guild);
+ for(const [id,hash] of [['priosLink','prioseiten'],['pointsLink','punkte'],['mailLink','postfach']])$(id).href=url('forever-raids.html#'+hash,session.guild);
  $('raidsLink').href=url('forever-raids.html',session.guild);$('charactersLink').href=url('forever-raids.html#charaktere',session.guild);$('charactersLink').hidden=!data.actor.canSignup;
  $('charactersLink').textContent=data.characters.length?'Charaktere verwalten':'Ersten Forever-Charakter anlegen';notice('');
 }
