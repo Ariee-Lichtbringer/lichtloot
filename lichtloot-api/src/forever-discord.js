@@ -1,3 +1,4 @@
+import {betaEnabled,isBetaDungeon} from './forever-beta-access.js';
 import {randomUUID,timingSafeEqual} from 'node:crypto';
 const fail=(m,s=400)=>Object.assign(new Error(m),{statusCode:s});
 const snow=v=>{const s=String(v||'');if(!/^\d{17,20}$/.test(s))throw fail('Ungültige Discord-ID.');return s;};
@@ -21,7 +22,7 @@ export async function publishForeverDiscord(query,guild,actor,body){
 export function createForeverDiscord({query,pool,access,raids,invites}){
  let ready;const ensure=()=>ready||=query(foreverDiscordSchema).catch(e=>{ready=null;throw e;});
  const attempts=new Map();
- async function snapshot(post){const guild=await access.requireGuild(post.slug);const result=await raids.run(guild,{label:'Discord',canManage:false},{action:'overview',archive:post.archived,raidId:post.raid_id});const raid=result.raids.find(r=>r.id===post.raid_id);if(!raid)return null;return {guild:{slug:guild.slug,name:guild.name},raid,channelId:post.channel_id,discordGuildId:post.discord_guild_id,messageId:post.message_id,hash:post.content_hash,lastError:post.last_error};}
+ async function snapshot(post){const guild=await access.requireGuild(post.slug);const result=await raids.run(guild,{label:'Discord',canManage:false},{action:'overview',archive:post.archived,raidId:post.raid_id});const raid=result.raids.find(r=>r.id===post.raid_id);if(!raid)return null;return {guild:{slug:guild.slug,name:guild.name},raid,betaEnabled:betaEnabled(guild)&&isBetaDungeon(raid.kind),channelId:post.channel_id,discordGuildId:post.discord_guild_id,messageId:post.message_id,hash:post.content_hash,lastError:post.last_error};}
  async function published(body){const guild=await access.requireGuild(body.guild);const p=(await query('select * from forever_discord_posts where guild_id=$1 and raid_id=$2',[guild.id,body.raidId])).rows[0];if(!p||p.message_id!==snow(body.messageId)||p.channel_id!==snow(body.channelId)||p.discord_guild_id!==snow(body.discordGuildId))throw fail('Dieser Discord-Post gehört nicht zu diesem Raid.',403);return {guild,post:p};}
  async function actor(guild,user){const p=(await query("select p.id,p.role,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from forever_discord_links l join players p on p.id=l.player_id and p.guild_id=l.guild_id where l.guild_id=$1 and l.discord_user_id=$2 and p.approval_status='approved' and not p.is_blocked",[guild.id,snow(user)])).rows[0];if(!p)throw fail('Bitte deinen Forever-SpielerLogin verbinden.',401);return {playerId:p.id,canManage:false,canAdmin:false,label:p.name||'Discord-Spieler'};}
  return {async run(body){
@@ -60,6 +61,14 @@ export function createForeverDiscord({query,pool,access,raids,invites}){
   return {success:true};
  }
  const {guild}=await published(body),user=snow(body.discordUserId);
+ if(['betaContext','betaSignup'].includes(action)){
+  const k='beta:'+guild.id+':'+user,now=Date.now();for(const [key,v] of attempts)if(v.until<now)attempts.delete(key);const t=attempts.get(k)||{n:0,until:now+15*60e3};if(++t.n>30)throw fail('Zu viele Beta-Versuche. Bitte später erneut versuchen.',429);attempts.set(k,t);
+  const a=await access.authorize(guild,{betaPin:body.betaPin??'',characterName:body.characterName,className:body.className});
+  if(action==='betaSignup')return raids.run(guild,a,{action:'signup',raidId:body.raidId,characterId:a.betaCharacterId,role:body.role,status:body.status,note:body.note||''});
+  const result=await raids.run(guild,a,{action:'overview',raidId:body.raidId});const raid=result.raids.find(r=>r.id===body.raidId);
+  if(!raid||!isBetaDungeon(raid.kind))throw fail('Beta-Anmeldung ist für diesen Termin nicht verfügbar.',403);
+  return {success:true,characters:result.characters,raid};
+ }
  if(action==='connect'){
   const k=guild.id+':'+user,now=Date.now();for(const [key,v] of attempts)if(v.until<now)attempts.delete(key);const t=attempts.get(k)||{n:0,until:now+15*60e3};if(++t.n>5)throw fail('Zu viele Versuche. Bitte in 15 Minuten erneut versuchen.',429);attempts.set(k,t);
   const a=await access.authorize(guild,{playerPin:body.playerPin});if(!a.playerId)throw fail('SpielerLogin erforderlich.',403);

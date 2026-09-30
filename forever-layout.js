@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const base=['localhost','127.0.0.1'].includes(location.hostname)?location.origin:'https://lichtloot-production.up.railway.app';
-const raids={hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeons',other:'Gildenabend'};
+const raids={ragefire:'Ragefireabgrund',deadmines:'Todesminen',wailing:'Höhlen des Wehklagens',shadowfang:'Burg Schattenfang',blackfathom:'Tiefschwarze Grotte',stockades:'Verlies',razorfen:'Kral der Klingenhauer',gnomeregan:'Gnomeregan',hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeons',other:'Gildenabend'};
 const sections={raidSignup:'Raidanmelder',poReleases:'P0-Freigaben',p0Plus:'P0+ Punkte',miniRaids:'Mini-Raidkacheln',gearPlanner:'Ausrüstungsvergleich'};
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let current=null,loadVersion=0;

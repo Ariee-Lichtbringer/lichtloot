@@ -1,5 +1,6 @@
+import {betaDungeons} from './forever-beta-access.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
-export const foreverLayoutRaids=['hyjal','barrow','onyxia','dungeon','other'];
+export const foreverLayoutRaids=['hyjal','barrow','onyxia','dungeon','other',...Object.keys(betaDungeons)];
 const sectionKeys=['raidSignup','poReleases','p0Plus','miniRaids','gearPlanner'];
 const managementKeys=['dashboard','raidorga','loot','bank','members','analyses','raidSheet','loganalysen','lootMaster','p0Items','backup','mailbox','admin'];
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
@@ -14,7 +15,7 @@ export function normalizeForeverLayout(input={}) {
  if(!levels.some(l=>l.enabled))throw fail('Bitte mindestens eine Prioritätsstufe aktivieren.');
  const days=String(start.raidCardDays||'all');if(!['7','14','30','60','all'].includes(days))throw fail('Ungültiger Zeitraum für Raidkacheln.');
  return {revision:Number.isInteger(v.revision)?v.revision:0,logoUrl:imageUrl(v.logoUrl),backgroundUrl:imageUrl(v.backgroundUrl),primaryColor:color(v.primaryColor,'#facc15'),accentColor:color(v.accentColor,'#60a5fa'),
-  raidImages:Object.fromEntries(foreverLayoutRaids.map(k=>[k,imageUrl(object(v.raidImages)[k])])),supportedRaids:[...new Set(supported)],priorityLevels:levels,
+  raidImages:Object.fromEntries(foreverLayoutRaids.map(k=>[k,imageUrl(object(v.raidImages)[k])])),supportedRaids:[...new Set([...supported,...(supported.includes('dungeon')?Object.keys(betaDungeons):[])])],priorityLevels:levels,
   lootPageSections:toggles(v.lootPageSections,sectionKeys),
   lootPageSectionsByRaid:Object.fromEntries(foreverLayoutRaids.map(k=>[k,toggles(object(v.lootPageSectionsByRaid)[k],[...sectionKeys,'prioRequiresSignup'])])),
   lootPagePoReleaseScope:v.lootPagePoReleaseScope==='raid'?'raid':'all',
