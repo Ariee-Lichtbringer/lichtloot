@@ -113,54 +113,53 @@ function openPrios(raid){
 }
 function renderDashboard(){
  const host=$('foreverDashboard');if(!host)return;host.replaceChildren();
- // Use only the loaded page and never present archived or filtered results as a guild-wide next raid.
  host.hidden=loadedView!=='upcoming'||raidPage>0||!!$('groupFilter').value;
  if(host.hidden)return;
  const raids=data.raids.filter(r=>new Date(r.starts_at)>new Date()&&['open','closed'].includes(r.status)&&(!window.ForeverLayout||window.ForeverLayout.withinWindow(r))).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
- const raid=raids.find(r=>r.signups.some(s=>s.mine&&['signed','bench','late','tentative'].includes(s.status)))||raids[0];
- const next=node('article',undefined,'panel dashboard-next');next.append(node('span',raid?.signups.some(s=>s.mine&&s.status!=='absent')?'MEIN NÄCHSTER RAID':'NÄCHSTER RAID','eyebrow'));
+ const raid=raids[0],next=node('article',undefined,'panel dashboard-next');next.append(node('h2','NÄCHSTER RAID','next-heading'));
  if(raid){
-  next.append(window.foreverRaidArt(raid),node('h2',raid.title),node('p',dateFormat.format(new Date(raid.starts_at))+' · '+raid.time+' Uhr · '+(raid.group_name||'Gildenweiter Termin')));
-  const mine=raid.signups.find(s=>s.mine);next.append(node('p',mine?labels[mine.status]+' · '+mine.name:labels[raid.status],'my-status'));
-  const actions=node('div',undefined,'raid-actions');
-  if(raid.status==='open'&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Zum Raid anmelden',()=>beginSignup(raid,mine),'primary'));
-  if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Meine Prios',()=>openPrios(raid)));
-  actions.append(button('Teilnehmer ansehen',()=>showRoster(raid)));next.append(actions);
- }else{next.append(node('h2','Noch kein kommender Raid'),node('p',data.actor.canManage?'Plane euren nächsten gemeinsamen Abend.':'Hier erscheint euer nächster Raid, sobald die Leitung einen Termin anlegt.'));if(data.actor.canManage)next.append(button('Raid erstellen',()=>raidEditor(),'primary'));}
- const account=node('article',undefined,'panel dashboard-account');account.append(node('span','MEIN GUILDLOOT','eyebrow'),node('h2',data.actor.label),node('p',data.characters.length+' Forever-Charakter'+(data.characters.length===1?'':'e')));
+  const image=node('div',undefined,'next-image');image.append(window.foreverRaidArt(raid));
+  const info=node('div',undefined,'next-info');info.append(node('h3',raid.title),node('p',new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeZone:'Europe/Berlin'}).format(new Date(raid.starts_at))),node('p',raid.time+' Uhr'),node('p',raid.group_name||data.guild.name));
+  const status=node('div',undefined,'next-status'),mine=raid.signups.find(s=>s.mine);status.append(node('strong',labels[raid.status]),node('p',mine?labels[mine.status]+' · '+mine.name:raid.signups.filter(s=>s.status==='signed').length+' / '+raid.size+' Plätze belegt'));
+  if(raid.status==='open'&&data.actor.canSignup)status.append(button(mine?'Anmeldung ändern':'Zum Raid anmelden →',()=>beginSignup(raid,mine),'primary'));
+  if(['hyjal','barrow','onyxia'].includes(raid.kind))status.append(button('Zur Prio →',()=>openPrios(raid),'quiet'));
+  status.append(button('Teilnehmer ansehen',()=>showRoster(raid),'quiet'));next.append(image,info,status);
+ }else{next.append(node('p',data.actor.canManage?'Plane euren nächsten gemeinsamen Abend.':'Aktuell ist kein kommender Raid geplant.'));if(data.actor.canManage)next.append(button('Raid erstellen',()=>raidEditor(),'primary'));}
+ const account=node('article',undefined,'panel dashboard-account');account.append(node('h2','MEIN GUILDLOOT'),node('strong',data.actor.label),node('p',data.characters.length+' Forever-Charakter'+(data.characters.length===1?'':'e')));
  const actions=node('div',undefined,'dashboard-shortcuts');
- if(data.actor.canSignup&&!data.actor.isBeta)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>characterEditor(),data.characters.length?'quiet':'primary'));
- for(const [label,hash] of [['Meine Charaktere','charaktere'],['Meine Prios','prioseiten'],['P0+ Liste','punkte'],['Postfach','postfach']]){const a=node('a',label,'quiet');a.href='#'+hash;actions.append(a);}
-
+ for(const [label,hash] of [['Meine Charaktere','charaktere'],['Meine Prios','prioseiten'],['P0+ Liste','punkte'],['Postfach','postfach']]){const a=node('a',label);a.href='#'+hash;actions.append(a);}
  account.append(actions);host.append(next,account);
 }
+const overviewSearch=$('raidSearch');if(overviewSearch){overviewSearch.addEventListener('input',()=>{if(data)renderRaids();});$('raidSearchForm').addEventListener('submit',e=>{e.preventDefault();if(data){renderRaids();$('termine').scrollIntoView({block:'start',behavior:'smooth'});}});}
 function renderRaids(){
  const list=$('raidList');list.replaceChildren();const group=$('groupFilter').value;
- const raids=data.raids.filter(r=>(!group||r.group_id===group)&&($('viewFilter').value==='archive'||!window.ForeverLayout||window.ForeverLayout.withinWindow(r)));
- if(!raids.length){const empty=node('div',undefined,'empty');empty.append(node('h3','Platz für euren nächsten Abend.'),node('p',data.actor.canManage?'Erstelle einen Raid, einen Dungeonabend oder euren ersten Forever-Treff.':'Hier erscheinen die Termine eurer Leitung. Lege schon jetzt deinen Forever-Charakter an.'));if(data.actor.canManage)empty.append(button('Ersten Termin erstellen',()=>raidEditor(),'primary'));list.append(empty);}
+ const search=($('raidSearch')?.value||'').trim().toLocaleLowerCase('de');
+ const raids=data.raids.filter(r=>(!group||r.group_id===group)&&($('viewFilter').value==='archive'||!window.ForeverLayout||window.ForeverLayout.withinWindow(r))&&(!search||[r.title,labels[r.kind],r.group_name,r.description,...r.signups.map(s=>s.name)].join(' ').toLocaleLowerCase('de').includes(search)));
+ const heading=document.querySelector('#termine .section-title h2');if(heading)heading.textContent=$('viewFilter').value==='archive'?'Vergangene Raids':'Kommende Raids';
+ const sections=new Map();for(const size of [...new Set(raids.map(r=>r.size))].sort((a,b)=>b-a)){const section=node('section',undefined,'raid-size-group'),grid=node('div',undefined,'raid-size-grid');section.append(node('h3',size===5?'5ER DUNGEONS':size+'ER RAIDS','raid-size-title'),grid);list.append(section);sections.set(size,grid);}
+ if(!raids.length){const empty=node('div',undefined,'empty');empty.append(node('h3',search?'Keine passenden Termine gefunden.':'Platz für euren nächsten Abend.'),node('p',search?'Ändere den Suchbegriff oder lösche die Suche, um wieder alle Termine zu sehen.':data.actor.canManage?'Erstelle einen Raid, einen Dungeonabend oder euren ersten Forever-Treff.':'Hier erscheinen die Termine eurer Leitung.'));if(data.actor.canManage)empty.append(button('Ersten Termin erstellen',()=>raidEditor(),'primary'));list.append(empty);}
  for(const raid of raids){
-  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;card.append(window.foreverRaidArt(raid));
-  const raidLabel=node('div',labels[raid.kind]||'Gildenabend','raid-heading');card.append(raidLabel);
-  const top=node('div',undefined,'raid-top'),tile=node('div',undefined,'date-tile'),d=new Date(raid.starts_at);
-  tile.append(node('strong',new Intl.DateTimeFormat('de-DE',{day:'2-digit',timeZone:'Europe/Berlin'}).format(d)),node('small',new Intl.DateTimeFormat('de-DE',{month:'short',timeZone:'Europe/Berlin'}).format(d)));
-  const info=node('div',undefined,'raid-info');info.append(node('h3',raid.title),node('p',`${new Intl.DateTimeFormat('de-DE',{weekday:'long',timeZone:'Europe/Berlin'}).format(d)} · ${raid.time} Uhr · ${raid.group_name||'Gildenweiter Termin'}`,'raid-meta'));
-  const tags=node('div',undefined,'card-tags');tags.append(node('span',labels[raid.status],'tag'));info.append(tags);top.append(tile,info);card.append(top);
-  const body=node('div',undefined,'raid-body');if(raid.description)body.append(node('p',raid.description,'description'));
+  const card=node('article',undefined,'raid-card');card.id='raid-'+raid.id;card.dataset.kind=raid.kind;
+
+  const top=node('div',undefined,'raid-top'),d=new Date(raid.starts_at);
+  const info=node('div',undefined,'raid-info');info.append(node('h3',raid.title),node('p',`${new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeZone:'Europe/Berlin'}).format(d)} · ${raid.time} Uhr`,'raid-meta'));
+  const tags=node('div',undefined,'card-tags');tags.append(node('span',labels[raid.status],'tag'));info.append(tags);top.append(window.foreverRaidArt(raid),info);card.append(top);
+  const body=node('div',undefined,'raid-body');
   const signed=raid.signups.filter(s=>s.status==='signed'),targets=[raid.tanks,raid.heals,raid.size-raid.tanks-raid.heals];
-  const counts=node('div',undefined,'role-counts');['tank','heal','dd'].forEach((role,i)=>{const n=signed.filter(s=>s.role===role||(role==='dd'&&['melee','ranged'].includes(s.role))).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.prepend(node('span',{tank:'🛡️',heal:'✨',dd:'⚔️'}[role],'role-icon'));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});body.append(counts);
+  const counts=node('div',undefined,'role-counts');['tank','heal','dd'].forEach((role,i)=>{const n=signed.filter(s=>s.role===role||(role==='dd'&&['melee','ranged'].includes(s.role))).length,box=node('div',labels[role],'role-box'+(n<targets[i]?' missing':''));box.prepend(node('span',{tank:'🛡️',heal:'✨',dd:'⚔️'}[role],'role-icon'));box.append(node('b',`${n} / ${targets[i]}`));box.title=n<targets[i]?`Noch ${targets[i]-n} ${labels[role]} gesucht`:'Rollenbedarf gedeckt';counts.append(box);});const metrics=node('div',undefined,'raid-metrics');for(const [value,label] of [[raid.size,'Plätze'],[signed.length,'Angemeldet'],[raid.signups.filter(s=>s.status==='bench').length,'Ersatzbank']]){const metric=node('div');metric.append(node('strong',String(value)),node('span',label));metrics.append(metric);}body.append(metrics);
   const bar=node('div',undefined,'fill-line'),fill=node('i');fill.style.width=Math.min(100,signed.length/raid.size*100)+'%';bar.append(fill);body.append(bar);
   const capacity=node('div',undefined,'capacity');capacity.append(node('span',`${signed.length} / ${raid.size} Plätze belegt`),node('span',`${raid.signups.filter(s=>s.status==='bench').length} auf Ersatzbank`));body.append(capacity);
-  const mine=raid.signups.find(s=>s.mine);if(mine)body.append(node('p',`${labels[mine.status]} · ${mine.name} · ${labels[mine.role]}`,'my-status'));
+  const mine=raid.signups.find(s=>s.mine);body.append(node('p',mine?`${labels[mine.status]} · ${mine.name}`:labels[raid.status],mine?'my-status':'raid-join-status'));
   const actions=node('div',undefined,'raid-actions');
   if(raid.status==='open'&&new Date(raid.starts_at)>new Date()&&data.actor.canSignup)actions.append(button(mine?'Anmeldung ändern':'Anmelden',()=>beginSignup(raid,mine),'primary'));
   if(['hyjal','barrow','onyxia'].includes(raid.kind))actions.append(button('Loot & Prioseiten',()=>{const u=new URL('forever-'+raid.kind+'.html',location.href);u.searchParams.set('guild',data.guild.slug);u.searchParams.set('loot',raid.kind);u.searchParams.set('raid',raid.id);u.hash='prioseiten';location.href=u.href;}));
   actions.append(button(`Teilnehmer (${raid.signups.length})`,()=>showRoster(raid)));
   if(data.actor.canManage)actions.append(button('Raid löschen',async()=>{if(!confirm('Raid „'+raid.title+'“ löschen? Er verschwindet aus der Übersicht. Vorhandene Anmeldungen, Loot- und Punktedaten bleiben gespeichert.'))return;try{await api('deleteRaid',{raidId:raid.id,revision:raid.revision});await load();notice('Raid gelöscht.');}catch(e){notice(e.message,true);}},'quiet danger'));
-  const more=node('details',undefined,'raid-more'),summary=node('summary','Weitere Aktionen'),extra=node('div',undefined,'raid-extra');more.append(summary,extra);extra.append(button('Zum Kalender hinzufügen',()=>calendar(raid)),button('Terminlink kopieren',()=>copyLink(raid)));
+  const more=node('details',undefined,'raid-more'),summary=node('summary','Raidinformationen'),extra=node('div',undefined,'raid-extra');more.append(summary);if(raid.description)more.append(node('p',raid.description,'description'));more.append(counts,extra);extra.append(button('Zum Kalender hinzufügen',()=>calendar(raid)),button('Terminlink kopieren',()=>copyLink(raid)));
   if((data.actor.canManage||raid.delegated_lead))extra.append(button('Termin bearbeiten',()=>raidEditor(raid)));if(data.actor.canManage)extra.append(button('Raid kopieren',()=>raidEditor({...raid,id:null,revision:null,title:raid.title+' · Kopie',status:'open'})));
   if((data.actor.canManage||raid.delegated_lead)){const post=data.discordPosts?.find(p=>p.raid_id===raid.id);extra.append(button(post?.message_id?'Discord-Anmelder aktualisieren':'Discord-Anmelder veröffentlichen',async()=>{try{const result=await api('discordPublish',{raidId:raid.id});notice(result.message);await load();}catch(e){notice(e.message,true);}}));if(post?.message_id){const a=node('a','Discord-Post öffnen');a.href='https://discord.com/channels/'+post.discord_guild_id+'/'+post.channel_id+'/'+post.message_id;a.target='_blank';a.rel='noopener';extra.append(a);}if(post?.last_error)body.append(node('p',post.last_error,'form-error'));}
 
-  body.append(actions,more);card.append(body);list.append(card);
+  body.append(actions,more);card.append(body);sections.get(raid.size).append(card);
  }
  pages.replaceChildren();if(raidPage>0)pages.append(button('← Vorherige Termine',()=>{raidPage--;load().catch(e=>notice(e.message,true));}));if(data.hasMore)pages.append(button('Weitere Termine →',()=>{raidPage++;load().catch(e=>notice(e.message,true));}));
  const wanted=new URLSearchParams(location.search).get('raid');
