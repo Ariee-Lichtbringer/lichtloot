@@ -1,3 +1,4 @@
+import {betaDungeons,isBetaDungeon} from './forever-beta-access.js';
 import {addonLootSchema,runAddonLoot,discoveredItems} from './forever-addon-loot.js';
 import {readForeverLayout} from './forever-layout.js';
 import {prioritySchema,priorityActions,createForeverPriorities} from './forever-priorities.js';
@@ -42,7 +43,7 @@ export function raidInput(body) {
   if (tanks + heals > size) throw fail('Tanks und Heiler dürfen zusammen nicht mehr Plätze als die Gruppe belegen.');
   return {
     title: text(body.title, 100, 'Titel'), date, time, size, tanks, heals,
-    kind: choice(body.kind, ['hyjal', 'barrow', 'onyxia', 'dungeon', 'other'], 'Ziel'),
+    kind: choice(body.kind, ['hyjal', 'barrow', 'onyxia', 'dungeon', 'other',...Object.keys(betaDungeons)], 'Ziel'),
     groupId: body.groupId ? uuid(body.groupId) : null,
     discordChannelId: clean(body.discordChannelId),
     description: text(body.description, 1500, 'Beschreibung', true),
@@ -165,9 +166,10 @@ export function createForeverRaids({ pool, query }) {
       const discordPosts=actor.canManage?(await query('select raid_id,message_id,channel_id,discord_guild_id,last_error from forever_discord_posts where guild_id=$1',[guild.id])).rows:[];
       const members=actor.guildCanManage?(await query("select p.id,(select c.name from forever_characters c where c.guild_id=p.guild_id and c.player_id=p.id order by c.created_at limit 1) as name from players p where p.guild_id=$1 and p.approval_status='approved' and not p.is_blocked",[guild.id])).rows:[];
       const templates=actor.guildCanManage?(await query('select name,config from forever_raid_templates where guild_id=$1 order by name',[guild.id])).rows:[];
-      return { success: true,layout:await readForeverLayout(query,guild.id),templates,members, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||'',announcement:config.announcement||null}, guild: { slug: guild.slug, name: guild.name }, actor: { canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
+      return { success: true,layout:await readForeverLayout(query,guild.id),templates,members, discord,discordPosts, settings:{rules:config.rules||'',discordUrl:config.discordUrl||'',announcement:config.announcement||null}, guild: { slug: guild.slug, name: guild.name }, actor: { isBeta:!!actor.isBeta, canAdmin:!!actor.canAdmin, canManage: actor.canManage, canSignup: !!actor.playerId, label: actor.label }, groups: groups.rows, characters: characters.rows, page,hasMore:raids.rows.length>100,raids: raids.rows.slice(0,100) };
     }
     if (action === 'saveCharacter') {
+      if(actor.isBeta)throw fail('Für einen anderen Beta-Namen bitte abmelden und neu einloggen.',403);
       if (!actor.playerId) throw fail('Für eigene Charaktere bitte mit dem SpielerLogin anmelden.', 403);
       const id = body.id ? uuid(body.id) : randomUUID(), name = body.firstName !== undefined || body.lastName !== undefined ? foreverCharacterName(body.firstName,body.lastName) : text(body.name, 60, 'Charaktername');
       const ruleset = choice(body.ruleset, ['normal','pvp','rp'], 'Regelwerk'), cls = choice(body.className, classes, 'Klasse'), role = choice(body.role, roles, 'Rolle');
@@ -254,6 +256,7 @@ export function createForeverRaids({ pool, query }) {
       return transaction(async db => {
         const raid=(await db.query('select * from forever_raids where guild_id=$1 and id=$2 for update',[guild.id,raidId])).rows[0];
         if(!raid) throw fail('Termin nicht gefunden.',404);
+        if(actor.isBeta&&!isBetaDungeon(raid.kind))throw fail('Der Beta-PIN gilt für Anmeldungen zu den kleinen Instanzen.',403);
         if(['cancelled','completed','archived'].includes(raid.status) || (!manage && (raid.status!=='open' || new Date(raid.starts_at)<=new Date()))) throw fail('Die Anmeldung für diesen Termin ist geschlossen.',409);
         const character=(await db.query('select * from forever_characters where guild_id=$1 and id=$2',[guild.id,characterId])).rows[0];
         if(!character || (!manage && character.player_id!==actor.playerId)) throw fail('Dieser Charakter gehört nicht zu deinem SpielerLogin.',403);
@@ -304,6 +307,7 @@ export function installForeverRaids(app, dependencies) {
     try {
       const body=req.body||{};
       dependencies.rateLimit(req,'forever',120,15*60*1000);
+      if(body.betaPin!==undefined)dependencies.rateLimit(req,'forever-beta',60,15*60*1000);
       const guild=await dependencies.requireGuild(dependencies.explicitGuild(body.guild));
       const actor=await dependencies.authorize(guild,body);
       return res.json(await service.run(guild,actor,body));

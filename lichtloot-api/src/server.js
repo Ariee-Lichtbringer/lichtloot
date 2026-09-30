@@ -1,3 +1,4 @@
+import {createBetaAccess} from './forever-beta-access.js';
 import {createInvitations,installInvitations} from './forever-invitations.js';
 import {installEraImport} from './forever-era-import.js';
 import {createP0SignupCorrection} from './p0-signup-correction.js';
@@ -660,6 +661,10 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 installRaidArchive(app, {query, requireGuild, resolveGuildSlug, getPublishedPrios, getItemMetadata:ids=>archiveItemMetadata(ids,getRaidAnalysisItemMetadataByIds)});
 installRaidLootAssignments(app,{pool,query,requireGuild,resolveGuildSlug,authorize:(guild,code)=>requireMasterCodeForGuild(guild,code,'guildAssignArchiveLoot')});
+const betaRaids=createForeverRaids({pool:foreverPool,query:foreverQuery});
+const betaAccess=createBetaAccess({pool:foreverPool,query:foreverQuery,raids:betaRaids});
+const normalForeverAuthorize=foreverAccess.authorize;
+foreverAccess.authorize=async(guild,body)=>body.betaPin!==undefined?betaAccess.authorize(guild,body):normalForeverAuthorize(guild,body);
 const foreverInvitations=createInvitations({query:foreverQuery,eraQuery:query,pool:foreverPool,access:foreverAccess});
 installInvitations(app,foreverInvitations,enforceSecurityRateLimit);
 installForeverDiscord(app,{invites:foreverInvitations,pool:foreverPool,query:foreverQuery,access:foreverAccess,raids:createForeverRaids({pool:foreverPool,query:foreverQuery}),token:lichtbotQueueToken});

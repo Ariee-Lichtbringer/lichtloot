@@ -2,7 +2,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const base = ['localhost','127.0.0.1'].includes(location.hostname) ? location.origin : 'https://lichtloot-production.up.railway.app';
-const labels = {tank:'Tank',heal:'Heiler',dd:'Schaden (offen)',melee:'Nahkampf',ranged:'Fernkampf',signed:'Zugesagt',bench:'Ersatzbank',late:'Komme später',tentative:'Vielleicht',absent:'Abgesagt',open:'Anmeldung offen',closed:'Anmeldung geschlossen',cancelled:'Termin abgesagt',running:'Raid läuft',archived:'Archiviert',completed:'Abgeschlossen',unrecorded:'Nicht erfasst',present:'Anwesend',noshow:'Nicht erschienen',excused:'Entschuldigt',normal:'Normal',pvp:'PvP',rp:'Rollenspiel',warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide',hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeon',other:'Gildenabend / Sonstiges'};
+const labels = {tank:'Tank',heal:'Heiler',dd:'Schaden (offen)',melee:'Nahkampf',ranged:'Fernkampf',signed:'Zugesagt',bench:'Ersatzbank',late:'Komme später',tentative:'Vielleicht',absent:'Abgesagt',open:'Anmeldung offen',closed:'Anmeldung geschlossen',cancelled:'Termin abgesagt',running:'Raid läuft',archived:'Archiviert',completed:'Abgeschlossen',unrecorded:'Nicht erfasst',present:'Anwesend',noshow:'Nicht erschienen',excused:'Entschuldigt',normal:'Normal',pvp:'PvP',rp:'Rollenspiel',warrior:'Krieger',paladin:'Paladin',hunter:'Jäger',rogue:'Schurke',priest:'Priester',shaman:'Schamane',mage:'Magier',warlock:'Hexenmeister',druid:'Druide',ragefire:'Ragefireabgrund',deadmines:'Todesminen',wailing:'Höhlen des Wehklagens',shadowfang:'Burg Schattenfang',blackfathom:'Tiefschwarze Grotte',stockades:'Verlies',razorfen:'Kral der Klingenhauer',gnomeregan:'Gnomeregan',hyjal:'Hyjal Summit',barrow:'Barrow Deeps',onyxia:'Onyxias Hort',dungeon:'Dungeon',other:'Gildenabend / Sonstiges'};
 const roleKeys=['tank','heal','dd','melee','ranged'], classKeys=['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'];
 const dateFormat = new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',timeZone:'Europe/Berlin'});
 let raidPage=0;
@@ -17,7 +17,7 @@ async function api(action,extra={}) {
  if(!session)throw Error('Bitte zuerst anmelden.');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
  try {
-  const response=await fetch(base+'/api/forever',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...extra,action,guild:session.guild,...(session.mode==='lead'?{masterCode:session.code}:{playerPin:session.code})}),signal:controller.signal});
+  const response=await fetch(base+'/api/forever',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...extra,action,guild:session.guild,...(session.mode==='beta'?{betaPin:session.code,characterName:session.characterName,className:session.className}:session.mode==='lead'?{masterCode:session.code}:{playerPin:session.code})}),signal:controller.signal});
   const result=await response.json().catch(()=>({}));
   if(!response.ok || !result.success)throw Error(result.error||'Die Forever-Planung ist gerade nicht erreichbar. Bitte erneut versuchen.');
   return result;
@@ -35,7 +35,7 @@ async function load() {
   $('guildName').textContent=result.guild.name;
   let announcement=$('guildAnnouncement');if(!announcement){announcement=node('section',undefined,'panel');announcement.id='guildAnnouncement';$('guildName').parentElement.after(announcement);}announcement.replaceChildren();const a=result.settings.announcement;announcement.hidden=!a?.message;if(a?.message)announcement.append(node('h3',a.title),node('p',a.message));
   $('newRaid').hidden=$('newGroup').hidden=!result.actor.canManage;
-  $('newCharacter').hidden=!result.actor.canSignup;
+  $('newCharacter').hidden=!result.actor.canSignup||result.actor.isBeta;
   window.ForeverLayout?.apply(result.layout);document.body.classList.add('forever-signed-in');render();dispatchEvent(new CustomEvent('forever-session',{detail:{guild:result.guild,canManage:result.actor.canManage,canSignup:result.actor.canSignup,canAdmin:result.actor.canAdmin,settings:result.settings,layout:result.layout}}));
  }finally{if(version===generation)$('refresh').disabled=false;}
 }
@@ -59,9 +59,10 @@ async function initialize(){
  }catch(error){$('guildSelect').replaceChildren(option('','Gilden konnten nicht geladen werden'));notice(error.message+' Bitte die Seite neu laden.',true);}
 }
 $('guildSelect').onchange=()=>{selectedGuild=$('guildSelect').value;$('loginForm').elements.code.value='';};
+const betaForm=$('loginForm');betaForm.elements.mode.addEventListener('change',()=>{const beta=betaForm.elements.mode.value==='beta';betaForm.querySelector('[data-beta-fields]').hidden=!beta;for(const name of ['characterName','className']){betaForm.elements[name].disabled=!beta;betaForm.elements[name].required=beta;}});
 $('loginForm').onsubmit=async event=>{
  event.preventDefault();const form=event.currentTarget, submit=form.querySelector('button');submit.disabled=true;notice('');
- session={guild:form.elements.guild.value,mode:form.elements.mode.value,code:form.elements.code.value.trim()};
+ session={guild:form.elements.guild.value,mode:form.elements.mode.value,code:form.elements.code.value.trim(),characterName:form.elements.characterName.value.trim(),className:form.elements.className.value};
  try{await load();store(credentialKey(session.guild),JSON.stringify(session));store('guildloot:forever:selectedGuild',session.guild);const url=new URL(location.href);url.searchParams.set('guild',session.guild);history.replaceState(null,'',url);form.elements.code.value='';}
  catch(error){session=null;notice(error.message,true);}finally{submit.disabled=false;}
 };
@@ -78,7 +79,7 @@ function render(){
  renderDashboard();renderRaids();
  $('characterList').replaceChildren();
  if(!data.characters.length)$('characterList').append(node('p',data.actor.canSignup?'Noch kein Forever-Charakter angelegt. Starte mit deinem ersten Charakter.':'Mit dem SpielerLogin kannst du eigene Charaktere anlegen und dich anmelden.','subtle'));
- for(const c of data.characters){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',c.name),node('small',`${labels[c.class_name]} · ${labels[c.role]} · ${labels[c.ruleset]}`));window.foreverClassIdentity(row,info,c.class_name);row.append(button('Bearbeiten',()=>characterEditor(c)));$('characterList').append(row);}
+ for(const c of data.characters){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',c.name),node('small',`${labels[c.class_name]} · ${labels[c.role]} · ${labels[c.ruleset]}`));window.foreverClassIdentity(row,info,c.class_name);if(!data.actor.isBeta)row.append(button('Bearbeiten',()=>characterEditor(c)));$('characterList').append(row);}
  $('groupList').replaceChildren();
  if(!data.groups.length)$('groupList').append(node('p',data.actor.canManage?'Legt eine Stammgruppe an – etwa „Freitagsraid“. Termine sind auch ohne feste Gruppe möglich.':'Eure Leitung hat noch keine feste Gruppe angelegt.','subtle'));
  for(const g of data.groups){const row=node('div',undefined,'list-row'),info=node('div');info.append(node('strong',g.name),node('small',`${data.raids.filter(r=>r.group_id===g.id).length} Termine in dieser Ansicht`));row.append(info);if(data.actor.canManage)row.append(button('Umbenennen',()=>groupEditor(g)));$('groupList').append(row);}
@@ -92,7 +93,7 @@ function showAccount(){
  for(const c of data.characters){const row=node('div'),info=node('div');info.append(node('strong',c.name),node('small',(labels[c.class_name]||c.class_name)+' · '+(labels[c.role]||c.role)));window.foreverClassIdentity(row,info,c.class_name);characters.append(row);}
  if(!data.characters.length)characters.append(node('p',data.actor.canSignup?'Noch kein Charakter angelegt.':'Du bist mit dem Leitungszugang angemeldet. Eigene Charaktere gehören zu deinem SpielerLogin.','subtle'));
  accountDialog.append(characters);const actions=node('div',undefined,'account-shortcuts');
- if(data.actor.canSignup)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>{accountDialog.close();characterEditor();},'primary'));
+ if(data.actor.canSignup&&!data.actor.isBeta)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>{accountDialog.close();characterEditor();},'primary'));
  for(const [label,hash] of [['Meine Charaktere','charaktere'],['Meine Prios','prioseiten'],['P0+ Liste','punkte'],['Postfach','postfach']]){
   if(hash==='charaktere'&&!data.actor.canSignup)continue;
   const a=node('a',label);a.href='#'+hash;a.onclick=()=>accountDialog.close();actions.append(a);
@@ -128,7 +129,7 @@ function renderDashboard(){
  }else{next.append(node('h2','Noch kein kommender Raid'),node('p',data.actor.canManage?'Plane euren nächsten gemeinsamen Abend.':'Hier erscheint euer nächster Raid, sobald die Leitung einen Termin anlegt.'));if(data.actor.canManage)next.append(button('Raid erstellen',()=>raidEditor(),'primary'));}
  const account=node('article',undefined,'panel dashboard-account');account.append(node('span','MEIN GUILDLOOT','eyebrow'),node('h2',data.actor.label),node('p',data.characters.length+' Forever-Charakter'+(data.characters.length===1?'':'e')));
  const actions=node('div',undefined,'dashboard-shortcuts');
- if(data.actor.canSignup)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>characterEditor(),data.characters.length?'quiet':'primary'));
+ if(data.actor.canSignup&&!data.actor.isBeta)actions.append(button(data.characters.length?'Charakter hinzufügen':'Ersten Charakter anlegen',()=>characterEditor(),data.characters.length?'quiet':'primary'));
  for(const [label,hash] of [['Meine Charaktere','charaktere'],['Meine Prios','prioseiten'],['P0+ Liste','punkte'],['Postfach','postfach']]){const a=node('a',label,'quiet');a.href='#'+hash;actions.append(a);}
 
  account.append(actions);host.append(next,account);
@@ -192,7 +193,7 @@ function characterEditor(c={}){editor(c.id?'Charakter bearbeiten':'Forever-Chara
 function groupEditor(g={}){editor(g.id?'Raidgruppe umbenennen':'Raidgruppe anlegen',[field('name','Name der Gruppe','text',g.name,null,true),field('discordChannelId','Eigener Discord-Kanal (ID, optional)','text',g.discord_channel_id||'',null,true)],v=>api('saveGroup',{...v,id:g.id}));}
 function raidEditor(r={}){
  const requestKey=crypto.randomUUID();
- const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal','barrow','onyxia','dungeon','other'].filter(k=>k===r.kind||!data.layout?.supportedRaids||data.layout.supportedRaids.includes(k)))),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','running','completed','cancelled','archived'])),field('rolePolicy','Rollenplätze','select',r.strict_roles?'strict':'soft',[['soft','Sollwerte · freie Rollenwahl'],['strict','Feste Rollenplätze · danach Ersatzbank']]),field('imageUrl','Discord-Raidbild (HTTPS, optional)','url',r.image_url||'',null,true),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
+ const fields=[field('title','Titel','text',r.title,null,true),field('kind','Ziel','select',r.kind||'hyjal',choices(['hyjal', 'barrow', 'onyxia', 'dungeon', 'ragefire', 'deadmines', 'wailing', 'shadowfang', 'blackfathom', 'stockades', 'razorfen', 'gnomeregan', 'other'].filter(k=>k===r.kind||!data.layout?.supportedRaids||data.layout.supportedRaids.includes(k)))),field('groupId','Raidgruppe','select',r.group_id||'',[['','Gildenweiter Termin'],...data.groups.map(g=>[g.id,g.name])]),field('date','Datum','date',r.date),field('time','Uhrzeit · Europe/Berlin','time',r.time||'20:00'),field('size','Plätze insgesamt','number',r.size||20),field('tanks','Davon Tanks','number',r.tanks??2),field('heals','Davon Heiler','number',r.heals??4),field('status','Anmeldung / Terminstatus','select',r.status||'open',choices(['open','closed','running','completed','cancelled','archived'])),field('rolePolicy','Rollenplätze','select',r.strict_roles?'strict':'soft',[['soft','Sollwerte · freie Rollenwahl'],['strict','Feste Rollenplätze · danach Ersatzbank']]),field('imageUrl','Discord-Raidbild (HTTPS, optional)','url',r.image_url||'',null,true),field('description','Treffpunkt, Hinweise & Regeln (optional)','textarea',r.description,null,true)];
  if(!r.id&&data.templates?.length)fields.unshift(field('template','Vorlage verwenden','select','',[['','Ohne Vorlage'],...data.templates.map(t=>[t.name,t.name])]));
  if(data.actor.canManage){const members=[['','Gildenleitung / nicht zugewiesen'],...(data.members||[]).map(p=>[p.id,p.name||'Spieler'])];fields.push(field('raidleadId','Raidleitung','select',r.raidlead_id||'',members),field('lootmasterId','Plündermeister','select',r.lootmaster_id||'',members));}
  if(!r.id)fields.push(field('repeatWeeks','Wöchentliche Termine insgesamt','number',1));
@@ -201,7 +202,7 @@ function raidEditor(r={}){
  if(form.elements.template)form.elements.template.onchange=e=>{const template=data.templates.find(t=>t.name===e.target.value);if(template){const c=template.config;raidEditor({...c,group_id:c.groupId,date:'',status:'open'});}};
  if(data.actor.canManage){const save=button('Als Vorlage speichern',async()=>{if(!form.reportValidity())return;const name=prompt('Vorlagenname');if(!name?.trim())return;save.disabled=true;try{await api('saveTemplate',{name,config:Object.fromEntries(new FormData(form))});await load();$('editorError').textContent='Vorlage gespeichert.';}catch(e){$('editorError').textContent=e.message;}finally{save.disabled=false;}});$('editorFields').append(save);}
 
- if(!r.id)form.elements.kind.onchange=()=>{const defaults={hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8],dungeon:[5,1,1],other:[10,1,2]}[form.elements.kind.value];['size','tanks','heals'].forEach((key,i)=>form.elements[key].value=defaults[i]);};
+ if(!r.id)form.elements.kind.onchange=()=>{const defaults={hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8],dungeon:[5,1,1],other:[10,1,2]}[form.elements.kind.value]||[5,1,1];['size','tanks','heals'].forEach((key,i)=>form.elements[key].value=defaults[i]);};
 }
 function signupEditor(r,signup,manage=false){
  const c=data.characters.find(c=>c.id===signup?.characterId)||data.characters[0];
@@ -235,7 +236,7 @@ function calendar(r){
 window.foreverPlanning={
  get data(){return data;},
  createCharacter:()=>characterEditor(),
- createRaid:kind=>{if(!data?.actor.canManage)return;const [size,tanks,heals]=({hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8]})[kind]||[20,2,4];raidEditor({kind,size,tanks,heals});},
+ createRaid:kind=>{if(!data?.actor.canManage)return;const [size,tanks,heals]=({hyjal:[20,2,4],barrow:[10,2,2],onyxia:[40,2,8]})[kind]||[5,1,1];raidEditor({kind,size,tanks,heals});},
  roster:id=>{const r=data?.raids.find(r=>r.id===id);if(r)showRoster(r);},
  refresh:()=>load(),
  publishDiscord:raidId=>api('discordPublish',{raidId}),
