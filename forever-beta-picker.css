@@ -1,0 +1,13 @@
+#betaClassPicker{display:grid;gap:8px;margin-bottom:18px;color:#cbd5e1}
+.beta-class-menu{position:relative;color:#eef3fa}
+.beta-class-menu summary{display:flex;align-items:center;gap:12px;min-height:54px;padding:10px 14px;box-sizing:border-box;border:1px solid #435665;border-radius:9px;background:#071521;cursor:pointer;list-style:none}
+.beta-class-menu summary::-webkit-details-marker{display:none}
+.beta-class-menu summary:after{content:'▾';margin-left:auto;color:#e8c46b}
+.beta-class-menu img{width:30px;height:30px;object-fit:cover;border-radius:5px;flex-shrink:0}
+.beta-class-menu fieldset{position:absolute;z-index:30;top:100%;left:0;right:0;max-height:320px;overflow-y:auto;margin:5px 0 0;padding:6px;border:1px solid #bda15d;border-radius:10px;background:#0a1a28;box-shadow:0 12px 30px #0009;min-width:0}
+.beta-class-menu fieldset label{display:flex;align-items:center;gap:12px;margin:0;padding:9px 10px;cursor:pointer;border-radius:6px}
+.beta-class-menu fieldset label:hover,.beta-class-menu fieldset label:focus-within{background:#243e52}
+.beta-class-menu input[type=radio]{width:17px;height:17px;margin:0;accent-color:#e8c46b;flex-shrink:0}
+.beta-class-menu summary:focus-visible{outline:3px solid #60bafa;outline-offset:2px}
+#betaSpecialization{box-sizing:border-box;min-height:54px;width:100%;padding:10px 14px;border:1px solid #435665;border-radius:9px;background:#071521;color:#eef3fa;font:inherit}
+#betaSpecialization:disabled{opacity:.6}

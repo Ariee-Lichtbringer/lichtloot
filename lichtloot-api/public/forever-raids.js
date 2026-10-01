@@ -207,7 +207,7 @@ function signupEditor(r,signup,manage=false){
  const c=data.characters.find(c=>c.id===signup?.characterId)||data.characters[0];
  const fields=[];
  if(!manage)fields.push(field('characterId','Dein Forever-Charakter','select',signup?.characterId||c?.id,data.characters.map(c=>[c.id,`${c.name} · ${labels[c.class_name]}`]),true));
- fields.push(field('role','Rolle für diesen Termin','select',signup?.role||c?.role||'dd',choices(roleKeys)),field('status','Deine Teilnahme','select',signup?.status||'signed',choices(['signed','bench','late','tentative','absent'])),field('note','Hinweis (z. B. „ab 20:30 Uhr“, optional)','textarea',signup?.note,null,true));
+ fields.push(field('role','Rolle für diesen Termin','select',signup?.role||c?.role||'dd',choices(roleKeys)),field('status','Deine Teilnahme','select',signup?.status||'signed',choices(['signed','bench','late','tentative','absent'])),field('note','Hinweis (z. B. „ab 20:30 Uhr“, optional)','textarea',signup?.note||(session.mode==='beta'&&session.specialization?'Skillung: '+session.specialization:''),null,true));
  editor(manage?`${signup.name} · Teilnahme bearbeiten`:'Deine Anmeldung',fields,v=>api(manage?'manageSignup':'signup',{...v,raidId:r.id,...(manage?{characterId:signup.characterId}:{})}));
  if(!manage)$('editorForm').elements.characterId.onchange=e=>{$('editorForm').elements.role.value=data.characters.find(c=>c.id===e.target.value)?.role||'dd';};
 }
