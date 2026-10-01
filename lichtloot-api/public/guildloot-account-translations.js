@@ -163,5 +163,16 @@ window.GuildLootAccountTranslations = {
   "Forever entdecken ↗": "Explore Forever ↗",
   "Items, Talente & Berufe": "Items, talents & professions",
   "Zur Raidübersicht →": "Go to raid overview →",
-  "Vor- und Nachname dürfen Buchstaben, Bindestriche und Apostrophe enthalten.": "First and last names may contain letters, hyphens and apostrophes."
+  "Vor- und Nachname dürfen Buchstaben, Bindestriche und Apostrophe enthalten.": "First and last names may contain letters, hyphens and apostrophes.",
+  "Bitte einen Charakternamen mit 2–60 Zeichen eingeben.": "Please enter a character name with 2–60 characters.",
+  "Gilde oder Beta-PIN stimmt nicht.": "The guild or beta PIN is incorrect.",
+  "Bitte eine Klasse auswählen.": "Please choose a class.",
+  "Bitte eine zur Klasse passende Skillung auswählen.": "Please choose a specialization for your class.",
+  "Bitte eine gültige Rolle auswählen.": "Please choose a valid role.",
+  "Dieser Name gehört bereits einem SpielerLogin. Bitte diesen Login oder einen anderen Beta-Namen verwenden.": "This name already belongs to a player account. Use that login or a different beta name.",
+  "Die Forever-Datenbank ist noch nicht verfügbar. Bitte später erneut versuchen.": "The Forever database is not available yet. Please try again later.",
+  "Forever-Gilde nicht gefunden.": "Forever guild not found.",
+  "Ungültiger Forever-Leitungscode.": "Invalid Forever leadership code.",
+  "Bitte mit einem freigegebenen Forever-SpielerLogin anmelden.": "Please log in with an approved Forever player account.",
+  "Gildenmitglied": "Guild member"
 };
