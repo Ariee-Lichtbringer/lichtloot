@@ -1,7 +1,8 @@
 ## Interface: 16001
 ## Title: GuildLoot Forever
-## Notes: Erfasst beobachtete Instanzbeute für die getrennte Forever-Datenbank.
+## Notes: Records observed dungeon and raid loot for the separate Forever database.
+## Notes-deDE: Erfasst beobachtete Instanzbeute für die getrennte Forever-Datenbank.
 ## Author: GuildLoot
-## Version: 0.1.0-beta
+## Version: 0.1.1-beta
 ## SavedVariables: GuildLootForeverDB
 Core.lua

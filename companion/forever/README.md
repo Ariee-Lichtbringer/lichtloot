@@ -78,3 +78,5 @@ je Anfrage; der Uploader teilt größere Exporte automatisch auf.
 Vor Freigabe: im echten Forever-Client ein Lootfenster öffnen, mit `/reload`
 speichern, hochladen, Fundseite prüfen und dieselbe Datei erneut hochladen.
 Der zweite Upload muss 0 neue/ergänzte Einträge melden.
+
+Language follows the system locale. Use `--lang en` or `--lang de` to choose explicitly.

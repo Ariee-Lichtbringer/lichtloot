@@ -53,3 +53,12 @@ test('Era translation is scoped to entry/navigation and leaves raid content inta
  assert.equal(w.document.querySelector('#user-content').textContent,'Krieger');
  assert.equal(w.document.querySelector('[data-guild-brand]').textContent,'Schutz');dom.window.close();
 });
+test('Forever installation guide uses English copy and versioned downloads',()=>{
+ const dom=new JSDOM(read('forever-addon.html'),{url:'https://example.test/forever-addon.html?lang=en',runScripts:'outside-only'}),w=dom.window;
+ for(const f of ['guildloot-account-translations.js','guildloot-addon-translations.js','forever-i18n.js'])w.eval(read(f));
+ assert.equal(w.document.querySelector('h1').textContent,'Discover new loot.Share what you find.');
+ assert.match(w.document.querySelector('pre').textContent,/\/path\/to\/GuildLootForever.lua/);
+ const links=[...w.document.querySelectorAll('a[download]')];assert.equal(links.length,2);
+ for(const link of links)assert.match(link.href,/0\.1\.1-beta\.zip$/);
+ dom.window.close();
+});

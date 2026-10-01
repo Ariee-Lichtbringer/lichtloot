@@ -1,5 +1,6 @@
 local addon = ...
 local db
+local function T(de,en) return GetLocale()=='deDE' and de or en end
 local function say(message) print('|cffffcc00GuildLoot Forever:|r '..message) end
 local function quote(s)
   return '"'..tostring(s):gsub('[%z\1-\31\\"]', function(c)
@@ -26,20 +27,20 @@ local function emit(o)
   local key=o.build..':'..o.guid..':'..o.itemId
   local signature=tostring(o.quantity)..meta
   if db.seen[key]==signature then return end
-  if #db.events>=20000 then error('Speicher voll. Erst exportieren, dann /gfl clear CONFIRM verwenden.') end
+  if #db.events>=20000 then error(T('Speicher voll. Erst exportieren, dann /gfl clear CONFIRM verwenden.','Storage full. Export first, then use /gfl clear CONFIRM.')) end
   local json='{"version":1,"game":"forever","sourceGuid":'..quote(o.guid)..',"itemId":'..o.itemId..',"quantity":'..o.quantity..',"itemName":'..quote(values[1] or o.name)..',"itemLink":'..quote(o.link)..',"sourceName":'..quote(o.sourceName)..',"zoneName":'..quote(o.zone)..',"instanceId":'..o.instance..',"clientBuild":'..quote(o.build)..',"metadata":'..meta..',"observedAt":'..o.at..'}'
   table.insert(db.events,'GFL1:'..hex(json));db.seen[key]=signature
   if not values[1] then
     pending[o.itemId]=pending[o.itemId] or {};pending[o.itemId][key]=o
     if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(o.itemId) end
   end
-  say(o.name..' erfasst. /reload speichert für den Upload.')
+  say(o.name..T(' erfasst. /reload speichert für den Upload.',' recorded. /reload saves it for upload.'))
 end
 local function capture()
   if not db or db.paused then return end
   local version,build=GetBuildInfo()
-  if not version:match('^1%.60%.') then error('Dieser Client ist nicht als Forever 1.60 erkannt. Erfassung gestoppt.') end
-  if not GetLootSourceInfo or not GetLootSlotLink or not GetLootSlotInfo then error('Loot-API fehlt in diesem Client.') end
+  if not version:match('^1%.60%.') then error(T('Dieser Client ist nicht als Forever 1.60 erkannt. Erfassung gestoppt.','This client was not recognized as Forever 1.60. Recording stopped.')) end
+  if not GetLootSourceInfo or not GetLootSlotLink or not GetLootSlotInfo then error(T('Loot-API fehlt in diesem Client.','The loot API is unavailable in this client.')) end
   local zone,_,_,_,_,_,_,instance=GetInstanceInfo()
   local observations={}
   for slot=1,GetNumLootItems() do
@@ -70,7 +71,7 @@ local exportFrame
 local function export()
   if not exportFrame then
     exportFrame=CreateFrame('Frame',nil,UIParent,'BasicFrameTemplateWithInset')
-    exportFrame:SetSize(660,420);exportFrame:SetPoint('CENTER');exportFrame.TitleText:SetText('Forever Loot – Export kopieren')
+    exportFrame:SetSize(660,420);exportFrame:SetPoint('CENTER');exportFrame.TitleText:SetText(T('Forever Loot – Export kopieren','Forever Loot – Copy export'))
     local scroll=CreateFrame('ScrollFrame',nil,exportFrame,'UIPanelScrollFrameTemplate')
     scroll:SetPoint('TOPLEFT',16,-36);scroll:SetPoint('BOTTOMRIGHT',-34,16)
     local edit=CreateFrame('EditBox',nil,scroll);edit:SetMultiLine(true);edit:SetFontObject(ChatFontNormal);edit:SetWidth(590);edit:SetAutoFocus(false)
@@ -83,11 +84,11 @@ SLASH_GUILDLOOTFOREVER1='/gfl'
 SlashCmdList.GUILDLOOTFOREVER=function(message)
   if not db then return end
   local command,arg=message:match('^(%S+)%s*(.-)$')
-  if command=='start' then db.paused=false;say('Itemerfassung aktiv; keine Raid-ID erforderlich.')
-  elseif command=='stop' then db.paused=true;say('Itemerfassung pausiert; Protokoll bleibt gespeichert.')
+  if command=='start' then db.paused=false;say(T('Itemerfassung aktiv; keine Raid-ID erforderlich.','Item recording active; no raid ID required.'))
+  elseif command=='stop' then db.paused=true;say(T('Itemerfassung pausiert; Protokoll bleibt gespeichert.','Item recording paused; the log remains saved.'))
   elseif command=='export' then export()
-  elseif command=='clear' and arg=='CONFIRM' then db.events={};db.seen={};say('Lokales Protokoll geleert. Bereits hochgeladene Daten bleiben erhalten.')
-  else say((db.paused and 'Pausiert' or 'Aktiv')..' · '..#db.events..' Einträge. /gfl start · /gfl stop · /gfl export · /reload. Leeren nach gesichertem Upload: /gfl clear CONFIRM') end
+  elseif command=='clear' and arg=='CONFIRM' then db.events={};db.seen={};say(T('Lokales Protokoll geleert. Bereits hochgeladene Daten bleiben erhalten.','Local log cleared. Previously uploaded data is kept.'))
+  else say((db.paused and T('Pausiert','Paused') or T('Aktiv','Active'))..' · '..#db.events..T(' Einträge. /gfl start · /gfl stop · /gfl export · /reload. Leeren nach gesichertem Upload: /gfl clear CONFIRM',' entries. /gfl start · /gfl stop · /gfl export · /reload. Clear after a successful upload: /gfl clear CONFIRM')) end
 end
 local frame=CreateFrame('Frame')
 frame:RegisterEvent('ADDON_LOADED');frame:RegisterEvent('LOOT_OPENED');frame:RegisterEvent('GET_ITEM_INFO_RECEIVED')
@@ -95,12 +96,12 @@ frame:SetScript('OnEvent',function(_,event,name,success)
   if event=='ADDON_LOADED' and name==addon then
     GuildLootForeverDB=GuildLootForeverDB or {events={},seen={}}
     db=GuildLootForeverDB;db.events=db.events or {};db.seen=db.seen or {}
-    say('Automatische Itemerfassung bereit. /gfl zeigt den Status.')
+    say(T('Automatische Itemerfassung bereit. /gfl zeigt den Status.','Automatic item recording ready. Use /gfl to view status.'))
   elseif event=='GET_ITEM_INFO_RECEIVED' and success and pending[name] then
     local entries=pending[name];pending[name]=nil
-    for _,o in pairs(entries) do local ok,err=pcall(emit,o);if not ok then say('Itemdaten: '..tostring(err)) end end
+    for _,o in pairs(entries) do local ok,err=pcall(emit,o);if not ok then say(T('Itemdaten: ','Item data: ')..tostring(err)) end end
   elseif event=='LOOT_OPENED' then
     local ok,err=pcall(capture)
-    if not ok then say('Erfassung nicht möglich: '..tostring(err)) end
+    if not ok then say(T('Erfassung nicht möglich: ','Unable to record: ')..tostring(err)) end
   end
 end)

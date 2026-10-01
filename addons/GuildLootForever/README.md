@@ -1,4 +1,4 @@
-# GuildLoot Forever 0.1.0 Beta
+# GuildLoot Forever 0.1.1 Beta
 
 Collects newly observed item drops in WoW Forever 1.60.x (Interface 16001).
 Install the GuildLootForever folder into Interface/AddOns.
@@ -10,3 +10,6 @@ Requires an approved Forever player login for uploads.
 No network calls or credentials in the add-on. No automatic point or loot awards.
 Community observations are unverified and stored only in the Forever database.
 Locally tested; real Forever client verification is pending.
+
+UI language follows the WoW client: German for deDE, English otherwise.
+Item names, source names and exported metadata keep the client language.

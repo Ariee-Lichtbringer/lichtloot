@@ -20,6 +20,18 @@ class ReaderTests(unittest.TestCase):
             path=Path(folder)/'export.txt'
             path.write_text('GFL1:'+json.dumps({'version':1,'game':'era'}).encode().hex())
             with self.assertRaises(ValueError):module.read_events(path)
+    def test_language_does_not_change_export_data(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'export.txt'
+            item={'version':1,'game':'forever','itemName':'Neuer Fund','metadata':{'locale':'deDE'}}
+            path.write_text('GFL1:'+json.dumps(item).encode().hex())
+            for language in ['de','en']:
+                with patch.object(module,'language',language):
+                    self.assertEqual(module.read_events(path),[item])
+                    expected='Weiterleitung' if language=='de' else 'Redirect rejected'
+                    with self.assertRaisesRegex(ValueError,expected):
+                        module.NoRedirect().redirect_request(None,None,302,'',{},'https://other.example')
+
     def test_no_redirects(self):
         with self.assertRaises(ValueError):module.NoRedirect().redirect_request(None,None,302,'',{},'https://other.example')
     def test_batches_and_fixed_endpoint(self):

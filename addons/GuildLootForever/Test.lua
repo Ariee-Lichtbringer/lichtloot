@@ -3,7 +3,11 @@ local handler
 function CreateFrame() return {RegisterEvent=function() end,SetScript=function(_,_,f) handler=f end} end
 SlashCmdList={}
 function GetBuildInfo() return '1.60.1','69977' end
-function GetLocale() return 'deDE' end
+local locale=(arg and arg[1]) or 'deDE'
+function GetLocale() return locale end
+local messages={}
+local originalPrint=print
+function print(message) messages[#messages+1]=message end
 function GetInstanceInfo() return 'Hyjal','raid',1,'',20,0,0,123 end
 function GetNumLootItems() return 2 end
 function GetLootSlotLink() return '|Hitem:240123::::::::|h[Neuer Fund]|h' end
@@ -27,4 +31,7 @@ local old=GetBuildInfo;function GetBuildInfo() return '1.15.9','12345' end
 handler(nil,'LOOT_OPENED');assert(#GuildLootForeverDB.events==2)
 local record=GuildLootForeverDB.events[2]:sub(6):gsub('..',function(h)return string.char(tonumber(h,16))end)
 assert(record:find('"quantity":3',1,true));assert(record:find('"itemLevel":80',1,true));assert(not record:find('raidId',1,true))
-print('Lua capture tests passed: unknown item, asynchronous cache, dedup, aggregate quantity, pause, Era rejection')
+assert(messages[1]:find(locale=='deDE' and 'Automatische Itemerfassung bereit.' or 'Automatic item recording ready.',1,true))
+assert(record:find('"locale":"'..locale..'"',1,true))
+assert(record:find('Neuer Fund',1,true))
+originalPrint('Lua capture tests passed: unknown item, asynchronous cache, dedup, aggregate quantity, pause, Era rejection')
