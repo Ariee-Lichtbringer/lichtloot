@@ -12,6 +12,7 @@ export function createBetaAccess({pool,query,raids}){
   verifyBetaPin(guild,body.betaPin);
   const name=betaName(body.characterName),key=name.toLocaleLowerCase('de');
   const className=String(body.className||'');if(!['warrior','paladin','hunter','rogue','priest','shaman','mage','warlock','druid'].includes(className))throw fail('Bitte eine Klasse auswählen.');
+  const role=body.role===undefined?null:String(body.role);if(role!==null&&!['tank','dd','heal','melee','ranged'].includes(role))throw fail('Bitte eine gültige Rolle auswählen.');
   // Ensure the regular tables before creating the isolated, non-login guest records.
   await raids.run(guild,{label:'Beta',canManage:false},{action:'overview',page:0});await ensure();
   const db=await pool.connect();let guest;
@@ -20,9 +21,9 @@ export function createBetaAccess({pool,query,raids}){
     if((await db.query('select id from forever_characters where guild_id=$1 and lower(name)=lower($2)',[guild.id,name])).rows.length)throw fail('Dieser Name gehört bereits einem SpielerLogin. Bitte diesen Login oder einen anderen Beta-Namen verwenden.',409);
     const player=randomUUID(),character=randomUUID();
     await db.query("insert into players(id,guild_id,player_pin,role,approval_status,is_blocked,blocked_reason) values($1,$2,$3,'member','pending',true,'Beta-Gast: ausschließlich Instanzanmeldung mit Gilden-PIN')",[player,guild.id,randomBytes(32).toString('hex')]);
-    await db.query("insert into forever_characters(id,guild_id,player_id,name,ruleset,class_name,role) values($1,$2,$3,$4,'normal',$5,'dd')",[character,guild.id,player,name,className]);
+    await db.query("insert into forever_characters(id,guild_id,player_id,name,ruleset,class_name,role) values($1,$2,$3,$4,'normal',$5,$6)",[character,guild.id,player,name,className,role||'dd']);
     await db.query('insert into forever_beta_guests(guild_id,name_key,player_id,character_id) values($1,$2,$3,$4)',[guild.id,key,player,character]);guest={player_id:player,character_id:character};
-   }else await db.query('update forever_characters set class_name=$3 where guild_id=$1 and id=$2',[guild.id,guest.character_id,className]);
+   }else await db.query('update forever_characters set class_name=$3,role=coalesce($4,role) where guild_id=$1 and id=$2',[guild.id,guest.character_id,className,role]);
    await db.query('commit');
   }catch(e){await db.query('rollback');throw e;}finally{db.release();}
   return {playerId:guest.player_id,label:name+' (Beta)',canManage:false,canAdmin:false,isBeta:true,betaCharacterId:guest.character_id};

@@ -63,7 +63,7 @@ export function createForeverDiscord({query,pool,access,raids,invites}){
  const {guild}=await published(body),user=snow(body.discordUserId);
  if(['betaContext','betaSignup'].includes(action)){
   const k='beta:'+guild.id+':'+user,now=Date.now();for(const [key,v] of attempts)if(v.until<now)attempts.delete(key);const t=attempts.get(k)||{n:0,until:now+15*60e3};if(++t.n>30)throw fail('Zu viele Beta-Versuche. Bitte später erneut versuchen.',429);attempts.set(k,t);
-  const a=await access.authorize(guild,{betaPin:body.betaPin??'',characterName:body.characterName,className:body.className});
+  const a=await access.authorize(guild,{betaPin:body.betaPin??'',characterName:body.characterName,className:body.className,role:body.role});
   if(action==='betaSignup')return raids.run(guild,a,{action:'signup',raidId:body.raidId,characterId:a.betaCharacterId,role:body.role,status:body.status,note:body.note||''});
   const result=await raids.run(guild,a,{action:'overview',raidId:body.raidId});const raid=result.raids.find(r=>r.id===body.raidId);
   if(!raid||!isBetaDungeon(raid.kind))throw fail('Beta-Anmeldung ist für diesen Termin nicht verfügbar.',403);
