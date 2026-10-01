@@ -1,0 +1,6 @@
+{
+  "name": "guildloot-browser-tests",
+  "private": true,
+  "scripts": {"test:i18n": "node --test account-i18n.cjs"},
+  "devDependencies": {"jsdom": "30.1.1"}
+}

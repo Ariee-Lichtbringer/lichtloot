@@ -4,6 +4,7 @@ let lang=new URLSearchParams(location.search).get('lang');
 if(!['de','en'].includes(lang)){try{lang=localStorage.getItem('guildloot_forever_language');}catch{} }
 if(!['de','en'].includes(lang))lang='de';
 document.documentElement.lang=lang;
+try{localStorage.setItem('guildloot_forever_language',lang);}catch{}
 const pairs=`Bekannte Classic-Rezepte|Known Classic recipes
 813 Rezeptgegenstände, nach Beruf sortiert.|813 recipe items, grouped by profession.
 Dieser Bestand ist auch in Classic gelistet und bestätigt keine neuen Forever-Rezepte. Klassenzauberbücher und Bücher zum Erhöhen der Berufsstufe sind ausgeklammert. Reine Lehrerrezepte sind nicht enthalten. Zutaten und Herstellungseffekte zeigt die Detailkarte, soweit verfügbar.|These items are also listed in Classic and do not confirm new Forever recipes. Class spellbooks and profession-rank manuals are excluded. Trainer-only recipes are not included. Available reagents and crafting effects are shown in the detail card.
@@ -422,19 +423,20 @@ Für diesen Raid gibt es noch keine Prioliste.|There is no priority list for thi
 Alle Forever-Lootseiten|All Forever loot pages
 · Lootdaten folgen mit der Beta|· Loot data will follow with the beta`;
 const dict=Object.fromEntries((pairs+'\n'+extra).split('\n').map(line=>{const i=line.indexOf('|');return [line.slice(0,i),line.slice(i+1)];}));
-function t(text){if(lang!=='en')return text;const key=String(text).replace(/\s+/g,' ').trim();if(dict[key])return dict[key];
+Object.assign(dict,window.GuildLootAccountTranslations||{});
+function t(text){if(lang!=='en')return text;const key=String(text).replace(/\s+/g,' ').trim();if(dict[key])return dict[key];if(/^Willkommen /.test(key))return 'Welcome '+key.slice(11);
 let value=key.replace(/Gegenstände, Bosse und Dropquellen für (.+) ergänzen wir mit den Daten aus der Beta\./,'Items, bosses and drop sources for $1 will be added with beta data.').replace(/Prio-Auswahl/g,'Priority selection').replace(/Beta ausstehend/g,'Awaiting beta').replace(/(\d+) Spieler/g,'$1 players').replace(/([\d.,]+) von ([\d.,]+) Gegenständen/,(_,a,b)=>a.replaceAll('.',',')+' of '+b.replaceAll('.',',')+' items').replace(/^Seite (\d+) von (\d+)$/,'Page $1 of $2').replace(/Gegenstandsstufe/g,'Item level').replace(/Benötigt Stufe/g,'Requires level').replace(/Punkte frei/g,'points left').replace(/Stufe/g,'Level').replace(/Rang/g,'Rank').replace(/Punkte in früheren Reihen/g,'points in previous tiers').replace(/Voraussetzung:/g,'Requirement:').replace(/Punkte in /g,'points in ').replace(/★ Neu/g,'★ New').replace(/◆ Geändert/g,'◆ Changed').replace(/✓ Classic bestätigt/g,'✓ Classic confirmed').replace(/\? Noch nicht bestätigt/g,'? Not yet confirmed');
 if(value.includes(' · '))value=value.split(' · ').map(x=>dict[x]||x).join(' · ');
 return value;
 }
-function apply(container=document.body){if(lang!=='en'||!container)return;const walker=document.createTreeWalker(container,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(n.parentElement?.closest('script,style,textarea,[data-no-translate]'))continue;const value=t(n.nodeValue);if(value&&value!==n.nodeValue.trim()){n.nodeValue=n.nodeValue.match(/^\s*/)[0]+value+n.nodeValue.match(/\s*$/)[0];}}
+function apply(container=document.body){if(lang!=='en'||!container)return;const walker=document.createTreeWalker(container,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(n.parentElement?.closest('script,style,textarea,.guild-name,[data-no-translate]'))continue;if(n.parentElement?.tagName==='OPTION'&&!n.parentElement.hasAttribute('value'))n.parentElement.value=n.parentElement.textContent;const value=t(n.nodeValue);if(value&&value!==n.nodeValue.trim()){n.nodeValue=n.nodeValue.match(/^\s*/)[0]+value+n.nodeValue.match(/\s*$/)[0];}}
 for(const e of container.querySelectorAll?.('[placeholder],[aria-label],[title],[alt]')||[]){for(const a of ['placeholder','aria-label','title','alt']){const value=e.getAttribute(a);if(value&&t(value)!==value)e.setAttribute(a,t(value));}}
 }
 window.ForeverI18n={lang,t,apply};
 document.title=t(document.title);
 const switcher=document.createElement('div');switcher.className='forever-language';switcher.role='group';switcher.setAttribute('aria-label',t('Sprache auswählen'));
 for(const [code,label] of [['de','Deutsch'],['en','English']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.lang=code;b.setAttribute('aria-pressed',String(lang===code));b.onclick=()=>{if(code===lang)return;try{localStorage.setItem('guildloot_forever_language',code);}catch{}const u=new URL(location.href);u.searchParams.set('lang',code);location.assign(u.href);};switcher.append(b);}
-document.querySelector('.main,.forever-main')?.prepend(switcher);
+document.querySelector('.main,.forever-main,main')?.prepend(switcher);
 apply();
 let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;apply();});}).observe(document.body,{subtree:true,childList:true,characterData:true});
 })();
