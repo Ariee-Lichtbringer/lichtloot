@@ -41,11 +41,10 @@ export function createAccountGuildTransfer({pool, query}) {
       if (!targetGuild) throw fail('Bitte eine andere Classic-Era-Lootgilde auswählen.');
       let target = (await db.query(`select * from players where guild_id=$1 and player_pin=$2 ${write?'for update':''}`,[targetGuild.id,pin])).rows[0];
       if (target?.is_blocked || target?.approval_status==='rejected') throw fail('Der Account in der Zielgilde ist gesperrt oder abgelehnt. Bitte wende dich an deren Gildenleitung.',403);
-      // A coincidentally identical PIN must never merge two people's accounts.
-      if (target && (!source.security_answer || !source.security_question ||
-        source.security_answer!==target.security_answer || source.security_question!==target.security_question)) {
-        throw fail('Der SpielerLogin ist in der Zielgilde bereits anders hinterlegt. Bitte die Gildenleitung um Prüfung bitten.',409);
-      }
+      // Independently salted recovery hashes cannot be compared for equality.
+      // Matching PINs alone must not authorize merging different accounts.
+      const identityMismatch = target && (!source.security_answer || !source.security_question ||
+        source.security_answer!==target.security_answer || source.security_question!==target.security_question);
       const targetCharacters = (await db.query(`select c.*,p.id as owner_id from characters c
         join players p on p.id=c.player_id where p.guild_id=$1`,[targetGuild.id])).rows;
       const matches = new Map();
@@ -58,6 +57,13 @@ export function createAccountGuildTransfer({pool, query}) {
       const plan={...base,targetGuild:{slug:targetGuild.slug,name:targetGuild.name},approvalStatus,
         addedCharacters:characters.length-matches.size,existingCharacters:matches.size,
         characters:base.characters.map((c,i)=>({...c,alreadyPresent:matches.has(characters[i].id)}))};
+      if (identityMismatch) {
+        if (plan.addedCharacters) throw fail('Der SpielerLogin ist in der Zielgilde bereits anders hinterlegt. Bitte die Gildenleitung um Prüfung bitten.',409);
+        // Everything is already present: report success without changing any
+        // destination data, credentials, main selection, approval or rights.
+        await db.query('rollback');
+        return write ? {...plan,completed:true} : plan;
+      }
       if (!write) {await db.query('rollback'); return plan;}
       if(!target) target=(await db.query(`insert into players(guild_id,player_pin,security_question,security_answer,role,approval_status)
         values($1,$2,$3,$4,'member','pending') returning *`,[targetGuild.id,pin,source.security_question,source.security_answer])).rows[0];

@@ -36,7 +36,12 @@ const retry=await transfer(source,params,true);assert.equal(retry.addedCharacter
 assert.equal((await q('select count(*)::int n from characters')).rows[0].n,4);
 assert.deepEqual((await q('select * from players where id=$1',[player.id])).rows[0],player,'source retained unchanged');
 await q("update players set security_answer='different' where id=$1",[dest.id]);
+const existingBefore=JSON.stringify((await q('select * from characters order by id')).rows);
+assert.equal((await transfer(source,params,true)).addedCharacters,0,'different salted hashes allow only a no-op when all characters exist');
+assert.equal(JSON.stringify((await q('select * from characters order by id')).rows),existingBefore);
+await q("insert into characters(player_id,name,server) values($1,'NewPending','Everlook')",[player.id]);
 await assert.rejects(transfer(source,params,true),{statusCode:409});
+await q("delete from characters where name='NewPending'");
 await q("update players set security_answer='a',is_blocked=true where id=$1",[dest.id]);
 await assert.rejects(transfer(source,params,true),{statusCode:403});
 await q('update players set is_blocked=false where id=$1',[dest.id]);
