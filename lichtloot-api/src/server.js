@@ -1,3 +1,4 @@
+import { createAccountGuildTransfer } from './account-guild-transfer.js';
 import { ensureRaidOccurrenceGuard } from './raid-occurrence-guard.js';
 import {createBetaAccess} from './forever-beta-access.js';
 import {createInvitations,installInvitations} from './forever-invitations.js';
@@ -91,6 +92,7 @@ const supportInbox = createSupportInbox({query,gmailApi,ensureReplySchema:ensure
 const raidSheetBridge=createRaidSheetBridge(query);
 const armorRequests=createArmorRequests({pool,query});
 const characterProfessions = createCharacterProfessions({query,pool,getCharactersByPin});
+const accountGuildTransfer = createAccountGuildTransfer({query,pool});
 const guildBank = createGuildBank({query,pool,getCharactersByPin,lookupItem:id=>getWowheadClassicItemTooltip(id)});
 const app = express();
 app.use(responseCompression);
@@ -32059,6 +32061,14 @@ app.post("/api/apps-script", async (req, res, next) => {
   try {
     if(req.body?.__transport === "get"){req.query={...req.body};delete req.query.callback;delete req.query.__transport;return legacyAppsScript(req,res,next);}
     const action = clean(req.body?.action || req.query?.action);
+    if (action === "previewAccountGuildTransfer" || action === "copyAccountToGuild") {
+      enforceSecurityRateLimit(req, "account-guild-transfer", 30, 15 * 60 * 1000);
+      const params = req.body || {};
+      const guild = await requireGuild(requireExplicitGuildSlug(params.guild));
+      requireMatchingGuildId(guild, params);
+      res.set('Cache-Control', 'no-store');
+      return res.json(await accountGuildTransfer(guild, params, action === "copyAccountToGuild"));
+    }
     if (action === "saveCharacterProfessions" || action === "getCharacterProfessions") {
       const params = req.body || {};
       const guild = await requireGuild(resolveGuildSlug(params.guild));

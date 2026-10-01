@@ -3356,6 +3356,7 @@ html,body{max-width:100%;overflow-x:hidden}
           <p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p>
           <div class="quick-actions">
             <button class="right-inline-btn mailbox-launch" onclick="openPlayerMailbox()"><span aria-hidden="true">✉</span> Postfach <span id="playerMailboxBadge"></span></button>
+            <button class="right-inline-btn" type="button" onclick="openGuildAccountTransfer()">Account in weitere Lootgilde übernehmen</button>
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
           <div class="account-private-row"><div id="startPoLoginCallout" class="account-private-pin hidden" aria-live="polite"><div class="account-private-pin-badge" aria-hidden="true">P0!</div><div class="account-private-pin-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Nur hier sichtbar. Beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><section class="character-overview-card account-current-raids"><div class="character-overview-head"><strong>Meine Raidanmeldungen</strong><small>Ausgewählter Charakter · Prios</small></div><div id="dashboardCharacterRaidCards" class="character-raid-list"><div class="character-overview-empty">Noch kein Charakter ausgewählt.</div></div></section><button class="account-guild-switch" type="button" onclick="openGlobalGuildMenuFromAccount(event)"><img src="images/content.png" data-account-guild-logo alt="" loading="lazy" decoding="async"><span><small>Aktive Lootgilde · wechseln</small><strong data-guild-brand="guildName">Lichtbringer</strong></span><b aria-hidden="true">⌄</b></button></div>
@@ -10233,5 +10234,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 <script src="/addon-beta-download.js?v=20260912-sync0318e"></script>
 <script src="raid-archive.js?v=20260909-4"></script>
 <script src="character-professions.js?v=20260910-1"></script>
+<script src="guild-account-transfer.js?v=20261001-1" defer></script>
 </body>
 </html>
