@@ -1,4 +1,4 @@
-#betaClassPicker{display:grid;gap:8px;margin-bottom:18px;color:#cbd5e1}
+#betaClassPicker,#betaSpecPicker{display:grid;gap:8px;margin-bottom:18px;color:#cbd5e1}
 .beta-class-menu{position:relative;color:#eef3fa}
 .beta-class-menu summary{display:flex;align-items:center;gap:12px;min-height:54px;padding:10px 14px;box-sizing:border-box;border:1px solid #435665;border-radius:9px;background:#071521;cursor:pointer;list-style:none}
 .beta-class-menu summary::-webkit-details-marker{display:none}
@@ -11,3 +11,5 @@
 .beta-class-menu summary:focus-visible{outline:3px solid #60bafa;outline-offset:2px}
 #betaSpecialization{box-sizing:border-box;min-height:54px;width:100%;padding:10px 14px;border:1px solid #435665;border-radius:9px;background:#071521;color:#eef3fa;font:inherit}
 #betaSpecialization:disabled{opacity:.6}
+
+.beta-spec-menu summary[aria-disabled="true"]{opacity:.6;cursor:not-allowed}
