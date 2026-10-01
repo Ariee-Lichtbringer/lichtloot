@@ -1225,6 +1225,8 @@ body.guild-gate-active .logo-banner{
 .p0plus-item.uncommon,.p0plus-summary-left .uncommon{color:#4ade80!important}
 .p0plus-item.legendary,.p0plus-summary-left .legendary{color:#fb923c!important}
 
+
+.forever-public-entry{display:flex;align-items:center;gap:22px;width:min(1420px,calc(100% - 24px));box-sizing:border-box;margin:20px auto;padding:16px 24px;border:1px solid #277387;border-radius:18px;background:linear-gradient(110deg,#0a2935,#081921);color:#f0d69e;text-decoration:none;box-shadow:0 12px 30px #0004}.forever-public-entry:hover{border-color:#64dce7;background:#113440}.forever-public-entry:focus-visible{outline:3px solid #64dce7;outline-offset:4px}.forever-public-entry img{width:130px;height:74px;object-fit:contain;border-radius:10px}.forever-public-entry span{display:grid;gap:7px}.forever-public-entry strong{font-size:21px}.forever-public-entry small{color:#b3cbd3;font-size:14px;line-height:1.5}.forever-public-entry b{margin-left:auto;color:#64dce7;font-size:26px}@media(max-width:650px){.forever-public-entry{padding:13px;gap:14px}.forever-public-entry img{width:88px;height:64px}.forever-public-entry strong{font-size:17px}.forever-public-entry small{font-size:12px}}
 </style>
 <style>
 /* === Neue schlanke Startseite: nur Erklärung, SpielerLogin und Mein LichtLoot === */
@@ -1538,7 +1540,9 @@ body.show-mylichtloot .account-creation-panel{display:none}
 @media(max-width:1000px){.header .portal-nav{display:flex;grid-column:1/-1;grid-row:2;height:auto;padding-bottom:12px;gap:10px}.header .portal-profile{grid-column:2;grid-row:1}.header{row-gap:0}.portal-nav .portal-addon-download{min-width:0}.portal-nav a[data-guild-support]{padding:0 12px}}
 @media(max-width:650px){.portal-nav .portal-addon-download{flex:1;padding:7px 9px;gap:8px}.portal-addon-download .portal-addon-icon{width:30px;height:30px}.portal-addon-download strong{font-size:12px}.portal-addon-download small{font-size:11px}.portal-nav a[data-guild-support]{padding:0 4px;font-size:12px}}
 </style>
-</head>
+<link rel="stylesheet" href="guildloot-game-entry.css?v=20260920-clarity">
+<link rel="stylesheet" href="game-switcher.css?v=20260920-guilds"><script defer src="game-switcher.js?v=20260923-forever-guilds"></script>
+<link rel="stylesheet" href="guildloot-language.css?v=20261001"><script defer src="guildloot-account-translations.js?v=20261001"></script><script defer src="guildloot-raid-translations.js?v=20261001"></script><script defer src="guildloot-era-account-translations.js?v=20261001"></script><script defer src="forever-i18n.js?v=20261001-era-account"></script></head>
 <body>
 <div class="overlay">
   <div class="header">
@@ -1553,6 +1557,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
       <span class="portal-profile-arrow">⌄</span>
     </button>
   </div>
+  <div data-game-switcher="era"></div>
   <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für GuildLoot beantragen.</div>
 
   <section id="guildGate" class="guild-gate hidden">
@@ -1660,6 +1665,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     </div>
   </section>
 
+  <div class="era-context"><span>CLASSIC ERA</span><h2>Dein Era-Gildenbereich</h2><p>Die Charaktere, Prios und Punkte unten gehören zu Classic Era.</p></div>
   <main class="start-shell">
     <section class="welcome-panel">
       <h1 id="brandWelcomeTitle">Willkommen auf GuildLoot</h1>
@@ -1696,21 +1702,21 @@ body.show-mylichtloot .account-creation-panel{display:none}
 
         <div id="loggedInPanel" class="hidden">
           <h2 id="welcomeTitle">Willkommen</h2>
-          <p><span class="ok">✓ SpielerLogin aktiv</span><br>Dein Login ist gespeichert. Du kannst dich jetzt für mehrere Raids eintragen.</p>
+          <p><span class="ok">✓ SpielerLogin aktiv</span><br>Du bist in deinem Classic-Era-Gildenbereich angemeldet.</p>
           <div class="dashboard-guild-picker">
           <button id="dashboardGuildButton" class="dashboard-guild" type="button" aria-expanded="false" onclick="toggleDashboardGuildMenu()">
             <img id="dashboardGuildLogo" src="images/guild-defaults/default-logo.webp" alt="" loading="lazy" decoding="async">
-            <span class="dashboard-guild-copy"><span>Aktive Lootgilde · wechseln</span><strong id="dashboardGuildName">Lootgilde</strong></span>
+            <span class="dashboard-guild-copy"><span>Aktive Lootgilde · wechseln</span><strong id="dashboardGuildName" data-no-translate>Lootgilde</strong></span>
             <span class="dashboard-guild-arrow">⌄</span>
           </button>
-          <div id="dashboardGuildMenu" class="dashboard-guild-menu hidden"></div>
+          <div id="dashboardGuildMenu" data-no-translate class="dashboard-guild-menu hidden"></div>
           </div>
           <div class="dashboard-box">
-            <div class="dashboard-title">Deine Charaktere</div>
+            <div class="dashboard-title">Deine Era-Charaktere</div>
             <div id="dashboardCharacters" class="dashboard-characters">Charaktere werden geladen …</div>
           </div>
           <div class="dashboard-actions">
-            <a id="dashboardRaidLink" class="big-btn dashboard-link" href="start.html">Zu den Raids</a>
+            <a id="dashboardRaidLink" class="big-btn dashboard-link" href="start.html">Zu den Era-Raids</a>
             <button class="big-btn subtle" onclick="logoutPlayerLogin()">Abmelden</button>
           </div>
           <button class="dashboard-forgot-login" type="button" onclick="openPlayerLoginResetModal()">SpielerLogin vergessen?</button>
@@ -1849,7 +1855,7 @@ body.show-mylichtloot .account-creation-panel{display:none}
     </div>
 
     <div class="form-actions hidden" id="createdLoginOutput">
-      <div id="fixedPlayerPin" class="pin-output">----</div>
+      <div id="fixedPlayerPin" data-no-translate class="pin-output">----</div>
       <button id="copyPlayerPinBtn" class="copy-btn hidden" onclick="copyText('fixedPlayerPin')">Kopieren</button>
     </div>
 
@@ -2096,6 +2102,8 @@ body.show-mylichtloot .account-creation-panel{display:none}
 </div>
 
 <script>
+function eraText(text){return window.ForeverI18n?.t(text) ?? text;}
+
 const RAID_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 
@@ -2180,7 +2188,7 @@ async function loadGuildDropdowns(){
     loginGuilds=guilds;
     const options=guilds.map(guild=>{
       const name=displayGuildName(guild);
-      return `<option value="${safeHtml(name)}">${safeHtml(name)}</option>`;
+      return `<option class="guild-name" value="${safeHtml(name)}">${safeHtml(name)}</option>`;
     }).join("");
     selects.forEach(select=>{
       const previous=String(select.value || "").trim();
@@ -2459,13 +2467,14 @@ function applyGuildBrand(guild){
   const dashboardGuildLogo=document.getElementById("dashboardGuildLogo");
   const dashboardGuildName=document.getElementById("dashboardGuildName");
 
-  if(welcome) welcome.textContent="Willkommen auf " + brand;
-  if(text) text.textContent=brand+" ist das Prio- und Punktesystem deiner Gilde. Über deinen SpielerLogin greifst du auf deine Charaktere, Prios und Punkte zu.";
-  if(how) how.textContent="So funktioniert " + brand;
-  if(newLogin) newLogin.textContent="Ich bin neu bei " + brand;
-  if(myLoot) myLoot.textContent="Mein " + brand;
-  if(actionTitle) actionTitle.textContent="Mein " + brand;
-  if(copyright) copyright.innerHTML="&copy; 2026 " + safeHtml(brand) + ". Alle Rechte vorbehalten.";
+  const brandHtml='<span data-no-translate>'+safeHtml(brand)+'</span>';
+  if(welcome) welcome.innerHTML='<span>Willkommen auf</span> '+brandHtml;
+  if(text) text.innerHTML=brandHtml+' <span>ist das Prio- und Punktesystem deiner Gilde. Über deinen SpielerLogin greifst du auf deine Charaktere, Prios und Punkte zu.</span>';
+  if(how) how.innerHTML='<span>So funktioniert</span> '+brandHtml;
+  if(newLogin) newLogin.innerHTML='<span>Ich bin neu bei</span> '+brandHtml;
+  if(myLoot) myLoot.innerHTML='<span>Mein</span> '+brandHtml;
+  if(actionTitle) actionTitle.innerHTML='<span>Mein</span> '+brandHtml;
+  if(copyright) copyright.innerHTML='&copy; 2026 '+brandHtml+'. <span>Alle Rechte vorbehalten.</span>';
   if(logoEl && logo) logoEl.src=logo;
   if(dashboardGuildLogo) dashboardGuildLogo.src=guildLogoUrl(guild);
   if(dashboardGuildName) dashboardGuildName.textContent=guildName;
@@ -2550,7 +2559,7 @@ function loadGuildImageFile(kind){
   const file=input?.files?.[0];
   if(!file || !target) return;
   if(file.size > 650000){
-    alert("Das Bild ist zu groß. Bitte nimm ein kleineres Bild oder eine Bild-URL.");
+    alert(eraText("Das Bild ist zu groß. Bitte nimm ein kleineres Bild oder eine Bild-URL."));
     input.value="";
     return;
   }
@@ -2598,7 +2607,7 @@ function copyGuildConfigLinks(){
     "Gildenleitung: "+new URL(withGuildSlugUrl("gildenleitung.html", slug), location.href).href,
     "Raidlead: "+new URL(withGuildSlugUrl("raidlead-panel.html", slug), location.href).href
   ].join("\n");
-  navigator.clipboard?.writeText(links).then(()=>alert("Links kopiert.")).catch(()=>alert(links));
+  navigator.clipboard?.writeText(links).then(()=>alert(eraText("Links kopiert."))).catch(()=>alert(links));
 }
 
 function goHomeView(){
@@ -3167,7 +3176,7 @@ async function resetPlayerPinFromSheet(){
   const status=document.getElementById("playerPinStatus");
 
   if(!input){
-    alert("Bitte Charaktername und Server eingeben.");
+    alert(eraText("Bitte Charaktername und Server eingeben."));
     return;
   }
 
@@ -3369,10 +3378,10 @@ async function raidleadLogin(){
       return;
     }
 
-    alert("Falsche Raidlead-PIN.");
+    alert(eraText("Falsche Raidlead-PIN."));
   }catch(error){
     console.error(error);
-    alert("Raidlead-Login konnte nicht geprüft werden.");
+    alert(eraText("Raidlead-Login konnte nicht geprüft werden."));
   }
 }
 
@@ -3387,7 +3396,7 @@ function openLootWithPin(raid){
   const pin=input.value.trim();
 
   if(!pin){
-    alert("Bitte Prio PIN eingeben.");
+    alert(eraText("Bitte Prio PIN eingeben."));
     return;
   }
 
@@ -4946,7 +4955,7 @@ async function submitPlayerLoginResetModal(){
     sessionStorage.setItem(playerLoginStorageKey(),savedPin);
     document.getElementById('modalResetSecurityAnswer').value='';
     document.getElementById('modalResetNewPlayerPin').value='';
-    status.innerHTML='<span class="ok">✓ SpielerLogin wurde zurückgesetzt.</span><br><strong>Neuer SpielerLogin: '+safeHtml(savedPin)+'</strong><br>Der neue Login wurde in diesem Browser gespeichert.';
+    status.innerHTML='<span class="ok">✓ SpielerLogin wurde zurückgesetzt.</span><br><strong><span>Neuer SpielerLogin:</span> <span data-no-translate>'+safeHtml(savedPin)+'</span></strong><br>Der neue Login wurde in diesem Browser gespeichert.';
   }catch(error){status.innerHTML=playerResetErrorText(error);}
 }
 function showAddCharacter(){
@@ -5094,13 +5103,13 @@ async function loadDashboardForPin(pin){
   const first=rawChars[0] || {};
   const firstName=first.char || first.player || first.name || first.Charakter || 'Spieler';
   const welcome=document.getElementById('welcomeTitle');
-  if(welcome) welcome.textContent='Willkommen ' + firstName;
+  if(welcome) welcome.innerHTML='<span>'+eraText('Willkommen')+'</span> <span data-no-translate>'+safeHtml(firstName)+'</span>';
   const profileName=document.getElementById('portalProfileName');
   const profileStatus=document.getElementById('portalProfileStatus');
   const welcomeHero=document.getElementById('brandWelcomeTitle');
-  if(profileName) profileName.textContent=firstName;
+  if(profileName){profileName.setAttribute('data-no-translate','');profileName.textContent=firstName;}
   if(profileStatus){profileStatus.textContent='SpielerLogin aktiv';profileStatus.style.color='#86efac';}
-  if(welcomeHero) welcomeHero.textContent='Willkommen zurück, ' + firstName;
+  if(welcomeHero) welcomeHero.innerHTML='<span>'+eraText('Willkommen zurück,')+'</span> <span data-no-translate>'+safeHtml(firstName)+'</span>';
 
   if(charsBox){
     charsBox.innerHTML=rawChars.map(ch=>{
@@ -5109,12 +5118,12 @@ async function loadDashboardForPin(pin){
       const server=ch.server || ch.Server || '';
       return '<span class="dashboard-char '+classColorClass(cls)+'">'
         +'<img class="dashboard-class-icon" src="'+safeHtml(classIconUrl(cls))+'" alt="'+safeHtml(cls)+'" loading="lazy" decoding="async">'
-        +'<span class="dashboard-char-copy"><strong class="dashboard-char-name">'+safeHtml(name)+'</strong><small>'+safeHtml(cls)+(server?' · '+safeHtml(server):'')+'</small></span>'
+        +'<span class="dashboard-char-copy"><strong class="dashboard-char-name" data-no-translate>'+safeHtml(name)+'</strong><small>'+safeHtml(cls)+(server?' · '+safeHtml(server):'')+'</small></span>'
         +'</span>';
     }).join('');
   }
 
-  if(dashStatus) dashStatus.innerHTML='<span class="ok">✓ SpielerLogin gespeichert.</span> Du kannst jetzt auf mehreren Raidseiten deine Prios setzen.';
+  if(dashStatus) dashStatus.innerHTML='<span class="ok">✓ SpielerLogin gespeichert.</span> Bereit für deine Era-Raids und Priolisten.';
   return true;
 }
 async function homePlayerLogin(){
@@ -5198,5 +5207,6 @@ document.addEventListener('DOMContentLoaded',async function(){
 
 <footer data-ariee-copyright style="display:block;box-sizing:border-box;clear:both;flex:0 0 auto;width:100%;padding:18px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif;color:inherit;opacity:.8;">© Ariee-Everlook</footer>
 <script src="/support-form.js?v=20260909-archive-professions" defer></script>
+<script src="guildloot-game-entry.js?v=20260920-clarity" defer></script>
 </body>
 </html>

@@ -1,4 +1,6 @@
 window.GuildLootRaidTranslations = {
+  "Gildensprache für Discord-Raidbeiträge": "Guild language for Discord raid posts",
+  "Bitte Deutsch oder Englisch als Gildensprache auswählen.": "Please select German or English as the guild language.",
   "Forever · Meine Gilde | GuildLoot": "Forever · My guild — GuildLoot",
   "Zum Inhalt": "Skip to content",
   "GuildLoot-Menü": "GuildLoot menu",

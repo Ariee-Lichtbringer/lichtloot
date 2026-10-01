@@ -52,4 +52,7 @@ assert.equal((await raids.run(guild,lead,{action:'discordChannelOptions'})).chan
 const selected=await raids.run(guild,lead,{action:'saveRaid',title:'Kanalwahl',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal',discordChannelId:'1552674848592109729',repeatWeeks:2});
 for(const id of selected.ids)assert.equal((await query('select channel_id from forever_discord_posts where raid_id=$1',[id])).rows[0].channel_id,'1552674848592109729');
 await assert.rejects(raids.run(other,lead,{action:'saveRaid',title:'Fremd',date:'2030-09-21',time:'20:00',size:10,tanks:1,heals:2,kind:'hyjal',discordChannelId:'1552674848592109729'}),/verfügbaren Discord/);
+assert.equal((await bot.run({action:'poll'})).posts[0].guild.language,'de');
+await query("update guild_settings set layout_json=jsonb_set(layout_json,'{forever}','{\"language\":\"en\"}'::jsonb) where guild_id=$1",[guild.id]);
+assert.equal((await bot.run({action:'poll'})).posts[0].guild.language,'en');
 await db.close();console.log('Forever Discord passed: token required, admin publication, idempotent post, leases, exact message/channel/guild binding, account linking, blocked accounts, character ownership, shared capacity, no secrets in poll.');

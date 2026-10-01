@@ -5,7 +5,8 @@ export function foreverSettingsInput(body){
  const name=String(body.name||'').trim(),rules=String(body.rules||'').trim(),discord=String(body.discordUrl||'').trim();
  if(!name||name.length>100||rules.length>12000)throw fail('Bitte Gildenname (maximal 100 Zeichen) und Regeln (maximal 12.000 Zeichen) prüfen.');
  if(discord){let url;try{url=new URL(discord);}catch{throw fail('Bitte einen gültigen Discord-Einladungslink eingeben.');}if(url.protocol!=='https:'||url.username||url.password||!((url.hostname==='discord.gg'&&/^\/[A-Za-z0-9-]+\/?$/.test(url.pathname))||(url.hostname==='discord.com'&&/^\/invite\/[A-Za-z0-9-]+\/?$/.test(url.pathname))))throw fail('Bitte einen HTTPS-Einladungslink von discord.gg oder discord.com/invite verwenden.');}
- return {name,rules,discordUrl:discord};
+ if(body.language!==undefined&&!['de','en'].includes(body.language))throw fail('Bitte Deutsch oder Englisch als Gildensprache auswählen.');
+ return {name,rules,discordUrl:discord,...(body.language===undefined?{}:{language:body.language})};
 }
 export function createForeverAdmin({pool,query}){
  async function tx(work){const db=await pool.connect();try{await db.query('begin');const result=await work(db);await db.query('commit');return result;}catch(e){await db.query('rollback');throw e;}finally{db.release();}}
@@ -37,7 +38,7 @@ export function createForeverAdmin({pool,query}){
    const history=await query('select action,actor,detail,created_at from forever_audit where guild_id=$1 order by id desc limit 40',[guild.id]);
    const c=config.rows[0]?.config||{};
    const discord=(await query('select discord_guild_id,channel_id from forever_discord_channels where guild_id=$1',[guild.id])).rows[0]||null;
-   return {success:true,layout:await readForeverLayout(query,guild.id),actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0,announcement:c.announcement||null},discordCheck:(await query('select id,kind,status,result,created_at,updated_at from forever_discord_checks where guild_id=$1 order by created_at desc limit 1',[guild.id])).rows[0]||null,history:history.rows};
+   return {success:true,layout:await readForeverLayout(query,guild.id),actor:{canAdmin:!!actor.canAdmin,canManage:!!actor.canManage},discord,guild:{slug:guild.slug,name:guild.name},players:players.rows,groups:groups.rows,counts:counts.rows[0],settings:{language:c.language==='en'?'en':'de',rules:c.rules||'',discordUrl:c.discordUrl||'',revision:c.revision||0,announcement:c.announcement||null},discordCheck:(await query('select id,kind,status,result,created_at,updated_at from forever_discord_checks where guild_id=$1 order by created_at desc limit 1',[guild.id])).rows[0]||null,history:history.rows};
   }
   if(body.action==='adminPlayer'){
    if(!/^[0-9a-f-]{36}$/i.test(String(body.playerId)))throw fail('Ungültiger Spieler.');
@@ -61,7 +62,7 @@ export function createForeverAdmin({pool,query}){
    const values=foreverSettingsInput(body);
    return tx(async db=>{const row=await db.query('select layout_json from guild_settings where guild_id=$1 for update',[guild.id]);if(!row.rows.length)throw fail('Gildeneinstellungen nicht gefunden.',404);const layout=row.rows[0].layout_json||{},previous=layout.forever||{};
     if(Number(body.revision)!==Number(previous.revision||0))throw fail('Die Einstellungen wurden zwischenzeitlich geändert. Bitte neu laden.',409);
-    layout.forever={...previous,rules:values.rules,discordUrl:values.discordUrl,revision:Number(previous.revision||0)+1};
+    layout.forever={...previous,...(values.language===undefined?{}:{language:values.language}),rules:values.rules,discordUrl:values.discordUrl,revision:Number(previous.revision||0)+1};
     await db.query('update guild_settings set layout_json=$2::jsonb,updated_at=now() where guild_id=$1',[guild.id,JSON.stringify(layout)]);await db.query('update guilds set name=$2,updated_at=now() where id=$1',[guild.id,values.name]);await audit(db,guild,actor,'guild_settings','Gildenname, Raidregeln und Discord-Link aktualisiert');return {success:true};
    });
   }

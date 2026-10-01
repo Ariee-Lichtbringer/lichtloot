@@ -36,4 +36,12 @@ assert.equal((await query('select layout_json from guild_settings where guild_id
 assert.equal((await api.run(other,lead,{action:'adminOverview'})).history.length,0);
 if(!process.env.FOREVER_DATABASE_URL)assert.throws(()=>foreverQuery('select 1'),e=>e.statusCode===503);
 await assert.rejects(query('insert into forever_priority_entries(guild_id,character_id,raid_id,item_id,priority) values($1,$2,$3,123,1)',[other.id,char,randomUUID()]),/foreign key/);
+assert.equal(overview.settings.language,'de');
+await api.run(guild,lead,{action:'adminSettings',name:'Neuer Name',language:'en',revision:1});
+assert.equal((await api.run(guild,lead,{action:'adminOverview'})).settings.language,'en');
+assert.equal((await api.run(guild,lead,{action:'overview'})).settings.language,'en');
+await api.run(guild,lead,{action:'adminSettings',name:'Neuer Name',revision:2});
+assert.equal((await api.run(guild,lead,{action:'adminOverview'})).settings.language,'en');
+assert.equal((await api.run(other,lead,{action:'adminOverview'})).settings.language,'de');
+await assert.rejects(api.run(guild,lead,{action:'adminSettings',name:'Name',language:'fr',revision:3}),/Gildensprache/);
 await db.close();console.log('Forever admin/database tests passed: isolated auth, approval, roles, blocked access, cross-guild rejection, settings revisions, audit, secret redaction, no Era fallback, loot foreign keys.');

@@ -64,3 +64,19 @@ test('dynamic messages translate without translating guild names',async()=>{
  assert.equal(name.textContent,'Krieger');assert.equal(guild.textContent,'Schatten');
  assert.equal(notice.textContent,'Login code changed. Log in with your new code.');dom.window.close();
 });
+test('Era account English keeps stored class/security values and protects credentials',async()=>{
+ const dom=new JSDOM(read('index.html'),{url:'https://example.test/index.html?lang=en',runScripts:'outside-only'}),w=dom.window;
+ const before=[...w.document.querySelector('#pinClass').options].map(o=>o.value);
+ for(const file of ['guildloot-account-translations.js','guildloot-raid-translations.js','guildloot-era-account-translations.js','forever-i18n.js'])w.eval(read(file));
+ assert.equal(w.document.documentElement.lang,'en');
+ assert.equal(w.document.querySelectorAll('.forever-language').length,1);
+ assert.deepEqual([...w.document.querySelector('#pinClass').options].map(o=>o.value),before);
+ assert.equal(w.document.querySelector('#pinClass').options[1].text,'Warrior');
+ const question=w.document.querySelector('#securityQuestion');question.value='pet';
+ assert.equal(question.value,'pet');
+ const pin=w.document.querySelector('#fixedPlayerPin');pin.textContent='Krieger';
+ const name=w.document.querySelector('#portalProfileName');name.setAttribute('data-no-translate','');name.textContent='Schatten';
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(pin.textContent,'Krieger');assert.equal(name.textContent,'Schatten');
+ dom.window.close();
+});
