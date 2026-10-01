@@ -423,20 +423,26 @@ Für diesen Raid gibt es noch keine Prioliste.|There is no priority list for thi
 Alle Forever-Lootseiten|All Forever loot pages
 · Lootdaten folgen mit der Beta|· Loot data will follow with the beta`;
 const dict=Object.fromEntries((pairs+'\n'+extra).split('\n').map(line=>{const i=line.indexOf('|');return [line.slice(0,i),line.slice(i+1)];}));
-Object.assign(dict,window.GuildLootAccountTranslations||{});
+Object.assign(dict,window.GuildLootAccountTranslations||{},window.GuildLootRaidTranslations||{});
 function t(text){if(lang!=='en')return text;const key=String(text).replace(/\s+/g,' ').trim();if(dict[key])return dict[key];if(/^Willkommen /.test(key))return 'Welcome '+key.slice(11);
 let value=key.replace(/Gegenstände, Bosse und Dropquellen für (.+) ergänzen wir mit den Daten aus der Beta\./,'Items, bosses and drop sources for $1 will be added with beta data.').replace(/Prio-Auswahl/g,'Priority selection').replace(/Beta ausstehend/g,'Awaiting beta').replace(/(\d+) Spieler/g,'$1 players').replace(/([\d.,]+) von ([\d.,]+) Gegenständen/,(_,a,b)=>a.replaceAll('.',',')+' of '+b.replaceAll('.',',')+' items').replace(/^Seite (\d+) von (\d+)$/,'Page $1 of $2').replace(/Gegenstandsstufe/g,'Item level').replace(/Benötigt Stufe/g,'Requires level').replace(/Punkte frei/g,'points left').replace(/Stufe/g,'Level').replace(/Rang/g,'Rank').replace(/Punkte in früheren Reihen/g,'points in previous tiers').replace(/Voraussetzung:/g,'Requirement:').replace(/Punkte in /g,'points in ').replace(/★ Neu/g,'★ New').replace(/◆ Geändert/g,'◆ Changed').replace(/✓ Classic bestätigt/g,'✓ Classic confirmed').replace(/\? Noch nicht bestätigt/g,'? Not yet confirmed');
 if(value.includes(' · '))value=value.split(' · ').map(x=>dict[x]||x).join(' · ');
 return value;
 }
-function apply(container=document.body){if(lang!=='en'||!container)return;const walker=document.createTreeWalker(container,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(n.parentElement?.closest('script,style,textarea,.guild-name,[data-no-translate]'))continue;if(n.parentElement?.tagName==='OPTION'&&!n.parentElement.hasAttribute('value'))n.parentElement.value=n.parentElement.textContent;const value=t(n.nodeValue);if(value&&value!==n.nodeValue.trim()){n.nodeValue=n.nodeValue.match(/^\s*/)[0]+value+n.nodeValue.match(/\s*$/)[0];}}
-for(const e of container.querySelectorAll?.('[placeholder],[aria-label],[title],[alt]')||[]){for(const a of ['placeholder','aria-label','title','alt']){const value=e.getAttribute(a);if(value&&t(value)!==value)e.setAttribute(a,t(value));}}
+function applyTree(container=document.body){if(lang!=='en'||!container)return;const walker=document.createTreeWalker(container,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(n.parentElement?.closest('script,style,textarea,.guild-name,.guildloot-user-content,[data-guild-brand],#globalGuildMenu,[data-no-translate]'))continue;if(n.parentElement?.tagName==='OPTION'&&!n.parentElement.hasAttribute('value'))n.parentElement.value=n.parentElement.textContent;const value=t(n.nodeValue);if(value&&value!==n.nodeValue.trim()){n.nodeValue=n.nodeValue.match(/^\s*/)[0]+value+n.nodeValue.match(/\s*$/)[0];}}
+for(const e of [container,...container.querySelectorAll?.('[placeholder],[aria-label],[title],[alt]')||[]]){for(const a of ['placeholder','aria-label','title','alt']){const value=e.getAttribute(a);if(value&&t(value)!==value)e.setAttribute(a,t(value));}}
+}
+function apply(container=document.body){
+ const scope=window.GuildLootTranslationScope;
+ if(scope&&container===document.body){for(const el of container.querySelectorAll(scope))applyTree(el);}
+ else applyTree(container);
 }
 window.ForeverI18n={lang,t,apply};
 document.title=t(document.title);
 const switcher=document.createElement('div');switcher.className='forever-language';switcher.role='group';switcher.setAttribute('aria-label',t('Sprache auswählen'));
 for(const [code,label] of [['de','Deutsch'],['en','English']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.lang=code;b.setAttribute('aria-pressed',String(lang===code));b.onclick=()=>{if(code===lang)return;try{localStorage.setItem('guildloot_forever_language',code);}catch{}const u=new URL(location.href);u.searchParams.set('lang',code);location.assign(u.href);};switcher.append(b);}
 document.querySelector('.main,.forever-main,main')?.prepend(switcher);
+const modalHost=document.querySelector('[data-language-switch]');if(modalHost){const copy=switcher.cloneNode(true);[...copy.querySelectorAll('button')].forEach((b,i)=>b.onclick=switcher.children[i].onclick);modalHost.append(copy);}
 apply();
 let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;apply();});}).observe(document.body,{subtree:true,childList:true,characterData:true});
 })();
