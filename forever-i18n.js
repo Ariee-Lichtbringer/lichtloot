@@ -441,7 +441,8 @@ window.ForeverI18n={lang,t,apply};
 document.title=t(document.title);
 const switcher=document.createElement('div');switcher.className='forever-language';switcher.role='group';switcher.setAttribute('aria-label',t('Sprache auswählen'));
 for(const [code,label] of [['de','Deutsch'],['en','English']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.lang=code;b.setAttribute('aria-pressed',String(lang===code));b.onclick=()=>{if(code===lang)return;try{localStorage.setItem('guildloot_forever_language',code);}catch{}const u=new URL(location.href);u.searchParams.set('lang',code);location.assign(u.href);};switcher.append(b);}
-document.querySelector('.main,.forever-main,main')?.prepend(switcher);
+const eraContext=document.querySelector('.era-context');
+if(eraContext)eraContext.append(switcher);else document.querySelector('.main,.forever-main,main')?.prepend(switcher);
 const modalHost=document.querySelector('[data-language-switch]');if(modalHost){const copy=switcher.cloneNode(true);[...copy.querySelectorAll('button')].forEach((b,i)=>b.onclick=switcher.children[i].onclick);modalHost.append(copy);}
 apply();
 let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;apply();});}).observe(document.body,{subtree:true,childList:true,characterData:true});

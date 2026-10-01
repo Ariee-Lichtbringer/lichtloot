@@ -70,6 +70,8 @@ test('Era account English keeps stored class/security values and protects creden
  for(const file of ['guildloot-account-translations.js','guildloot-raid-translations.js','guildloot-era-account-translations.js','forever-i18n.js'])w.eval(read(file));
  assert.equal(w.document.documentElement.lang,'en');
  assert.equal(w.document.querySelectorAll('.forever-language').length,1);
+ assert.ok(w.document.querySelector('.era-context > .forever-language'));
+ assert.equal(w.document.querySelector('.start-shell > .forever-language'),null);
  assert.deepEqual([...w.document.querySelector('#pinClass').options].map(o=>o.value),before);
  assert.equal(w.document.querySelector('#pinClass').options[1].text,'Warrior');
  const question=w.document.querySelector('#securityQuestion');question.value='pet';
