@@ -1,3 +1,4 @@
+import { ensureRaidOccurrenceGuard } from './raid-occurrence-guard.js';
 import {createBetaAccess} from './forever-beta-access.js';
 import {createInvitations,installInvitations} from './forever-invitations.js';
 import {installEraImport} from './forever-era-import.js';
@@ -4051,6 +4052,7 @@ async function ensureP0OnlySchema() {
   await p0Query(`create index if not exists idx_p0_only_events_lookup on p0_only_events(guild_id, raid_type, raid_date, raid_time)`);
   await p0Query(`create index if not exists idx_p0_only_events_linked_raid on p0_only_events(guild_id, linked_raid_id) where linked_raid_id <> ''`);
   await p0Query(`create index if not exists idx_p0_only_signups_event on p0_only_signups(guild_id, event_id)`);
+  await ensureRaidOccurrenceGuard(p0Query, 'p0_only_events', raidTypeSearchValues);
 }
 
 async function ensureRaidSchema() {
@@ -4119,6 +4121,7 @@ async function ensureRaidSchema() {
        updated_at timestamptz not null default now()
      )`
   );
+  await ensureRaidOccurrenceGuard(query, 'raids', raidTypeSearchValues);
   await query(`alter table raids drop constraint if exists raids_guild_id_raid_type_raid_date_key`);
   await query(
     `create unique index if not exists idx_raids_guild_external_raid_id
@@ -22462,7 +22465,14 @@ async function createRandomRaid({ guildId, query: params }) {
   return { ...created, quickRaid: { announcementQueued: false, poSignupQueued: false, prioIdCreated: createPrioId, templateId: "" } };
 }
 
-async function createRaidRecord({ guildId, query: params }) {
+async function createRaidRecord(args) {
+  return inTransaction(async () => {
+    await query("select pg_advisory_xact_lock(hashtext($1), hashtext('raid-occurrence'))", [args.guildId]);
+    return createRaidRecordLocked(args);
+  });
+}
+
+async function createRaidRecordLocked({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(raidType);
   await requireConfiguredSpecialRaidType(guildId, raidType);
@@ -22483,7 +22493,7 @@ async function createRaidRecord({ guildId, query: params }) {
     !["0", "false", "no", "nein", "off"].includes(clean(rawRaidHelperEnabled).toLowerCase());
 
   const updateExisting = ["1", "true", "yes", "ja"].includes(clean(params.updateExisting).toLowerCase());
-  if (raidType && raidDate && raidTime && !updateExisting) {
+  if (raidType && raidDate && raidTime) {
     const existing = await query(
       `select *
        from raids
@@ -22491,16 +22501,16 @@ async function createRaidRecord({ guildId, query: params }) {
          and deleted_at is null
          and lower(raid_type) = any($2)
          and raid_date = $3
-         and coalesce(raid_time, '') = $4
-         and raidhelper_enabled = $6
-         and coalesce(status, '') not in ('archiviert', 'archive', 'gelöscht', 'geloescht')
+         and coalesce(nullif(trim(raid_time),''),'00:00')::time = $4::time
+         and lower(coalesce(status, '')) not in ('gelöscht', 'geloescht', 'deleted', 'abgesagt', 'cancelled', 'canceled')
        order by
          case when external_raid_id = $5 then 0 else 1 end,
          created_at asc
        limit 1`,
-      [guildId, raidTypeSearchValues(raidType), raidDate, raidTime, externalRaidId, raidHelperEnabled]
+      [guildId, raidTypeSearchValues(raidType), raidDate, raidTime, externalRaidId]
     );
     if (existing.rows[0] && existing.rows[0].external_raid_id !== externalRaidId) {
+      if (updateExisting) throw Object.assign(new Error('Für diesen Raidtermin gibt es bereits einen Anmelder. Bitte den vorhandenen Anmelder bearbeiten.'), { statusCode: 409 });
       return { success: true, reused: true, ...normalizeRaidRow(existing.rows[0]) };
     }
   }
@@ -24651,6 +24661,22 @@ async function getManagedP0OnlyEvents(guildId, { historyDays = 0 } = {}) {
 
 async function createP0OnlyEvent({ guildId, params }) {
   await ensureP0OnlySchema();
+  const client = await p0Pool.connect();
+  try {
+    await client.query('begin');
+    await client.query("select pg_advisory_xact_lock(hashtext($1), hashtext('raid-occurrence'))", [guildId]);
+    const event = await createP0OnlyEventLocked({ guildId, params }, client.query.bind(client));
+    await client.query('commit');
+    await resolveLinkedRegularRaidForP0Event(guildId, event, { persist: true });
+    const refreshed = await p0Query('select * from p0_only_events where guild_id=$1 and id=$2', [guildId,event.id]);
+    return normalizeP0OnlyEventRow(refreshed.rows[0] || event);
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally { client.release(); }
+}
+
+async function createP0OnlyEventLocked({ guildId, params }, p0Query) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidTime = clean(params.raidTime || params.uhrzeit || params.time) || null;
@@ -24659,6 +24685,18 @@ async function createP0OnlyEvent({ guildId, params }) {
     ? requestedId || `P0-${raidType}-${Date.now()}`
     : `P0-${requestedId}`;
   const requestedLinkedRaidId = clean(params.linkedRaidId || params.linked_raid_id || params.normalRaidId);
+  if (raidType && raidDate) {
+    const existing = await p0Query(`select * from p0_only_events
+      where guild_id=$1 and lower(raid_type)=any($2) and raid_date=$3
+        and coalesce(nullif(trim(raid_time),''),'00:00')::time=coalesce($4,'00:00')::time
+        and deleted_at is null
+        and lower(coalesce(status,'')) not in ('gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+      order by case when external_p0_id=$5 then 0 else 1 end,created_at asc limit 1`,
+      [guildId,raidTypeSearchValues(raidType),raidDate,raidTime,externalP0Id]);
+    if (existing.rows[0] && existing.rows[0].external_p0_id !== externalP0Id) {
+      return normalizeP0OnlyEventRow(existing.rows[0]);
+    }
+  }
   const result = await p0Query(
     `insert into p0_only_events (
        guild_id, external_p0_id, raid_type, raid_name, raid_date, raid_time,
@@ -24684,13 +24722,7 @@ async function createP0OnlyEvent({ guildId, params }) {
       clean(params.title || params.postTitle), clean(params.mode || params.postMode) || "signup",
       clean(params.description || params.note || params.message), requestedLinkedRaidId]
   );
-  const savedEvent = normalizeP0OnlyEventRow(result.rows[0]);
-  await resolveLinkedRegularRaidForP0Event(guildId, savedEvent, { persist: true });
-  const refreshed = await p0Query(
-    `select * from p0_only_events where guild_id=$1 and id=$2 limit 1`,
-    [guildId, savedEvent.id]
-  );
-  return normalizeP0OnlyEventRow(refreshed.rows[0] || result.rows[0]);
+  return normalizeP0OnlyEventRow(result.rows[0]);
 }
 
 async function resolveLinkedRegularRaidForP0Event(guildId, event, { persist = false } = {}) {
@@ -28077,7 +28109,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
-  if(['abgesagt','cancelled','canceled'].includes(clean(raid.status).toLowerCase()))throw Object.assign(new Error('Für abgesagte Raids werden keine P0+-Punkte übertragen.'),{statusCode:409});
+  if(raid.deleted_at || ['gelöscht','geloescht','deleted','abgesagt','cancelled','canceled'].includes(clean(raid.status).toLowerCase()))throw Object.assign(new Error('Für gelöschte oder abgesagte Raids werden keine P0+-Punkte übertragen.'),{statusCode:409});
   requireRaidP0PlusEnabled(eraConfig.layout, raid.raid_type);
   const completion=await loadRaidCompletion(client,guildId,raid);
   if(completion==='manual')throw Object.assign(new Error('P0+ wurde für diesen Raid als manuell erledigt markiert. Bitte die Aufgabe in der Gildenleitung zuerst wieder öffnen.'),{statusCode:409});
@@ -28109,8 +28141,11 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      from raids r
      where r.guild_id = $1
        and lower(r.raid_type) = any($2)
-       and r.raid_date = $3`,
-    [guildId, isGenericZgSource ? [sourceRaidType] : raidTypeSearchValues(sourceRaidType), raid.raid_date]
+       and r.raid_date = $3
+       and coalesce(nullif(trim(r.raid_time),''),'00:00')::time = coalesce(nullif($4,''),'00:00')::time
+       and r.deleted_at is null
+       and lower(coalesce(r.status, '')) not in ('gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')`,
+    [guildId, isGenericZgSource ? [sourceRaidType] : raidTypeSearchValues(sourceRaidType), raid.raid_date, clean(raid.raid_time)]
   );
   const relatedRaids = [
     raid,
@@ -28137,9 +28172,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      from prios pr
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
-     join items i on i.id = pr.p1_item_id
+     left join items i on i.id = pr.p1_item_id
      where pr.raid_id = any($2::uuid[])
-     order by case when pr.raid_id = $3 then 0 else 1 end, pr.updated_at desc, pr.character_id, pr.id`,
+     order by pr.updated_at desc, case when pr.raid_id = $3 then 0 else 1 end, pr.character_id, pr.id`,
     [guildId, relatedRaidIds, raid.id]
   );
 
@@ -28184,8 +28219,17 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     receivedResult.rows.push({...receipt,deleted_points:points,pending:true});
   }
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
-  const candidates = priosResult.rows.filter(row =>
-    commentMeta(row.comment).p0Plus === "ja" &&
+  // Resolve the latest selection before filtering P0+. A normal priority also
+  // supersedes an older P0 signup left behind by a recreated Discord post.
+  const latestCharacters = new Set();
+  const currentPrios = priosResult.rows.filter(row => {
+    const key = normalizeTransferKey(row.player) + ':' + clean(row.server).toLowerCase();
+    if (latestCharacters.has(key)) return false;
+    latestCharacters.add(key);
+    return true;
+  });
+  const candidates = currentPrios.filter(row =>
+    row.item_id && commentMeta(row.comment).p0Plus === "ja" &&
     !receivedCharacters.has(clean(row.character_id))
   );
   let dedupedCandidates = [];
@@ -28193,7 +28237,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   const skipped = [];
 
   for (const row of candidates) {
-    const characterKey = normalizeTransferKey(row.player) || clean(row.character_id).toLowerCase();
+    const characterKey = (normalizeTransferKey(row.player) || clean(row.character_id).toLowerCase()) + ':' + clean(row.server).toLowerCase();
 
     if (seenCharacters.has(characterKey)) {
       skipped.push({ player: row.player || "", item: row.item_name || "", reason: "charakter-doppelt" });
@@ -33210,7 +33254,8 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
   console.error("API request failed", {status:error.statusCode||500, path:redactAccessDetails(req.path)});
-  res.status(error.statusCode || 500).json({
+  const conflict = error.code === '23505' && error.constraint === 'raid_occurrence_unique';
+  res.status(conflict ? 409 : (error.statusCode || 500)).json({
     success: false,
     error: error.statusCode && error.statusCode < 500 ? error.message : "Interner Fehler. Bitte den Support kontaktieren."
   });

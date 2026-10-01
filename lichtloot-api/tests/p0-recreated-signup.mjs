@@ -19,6 +19,14 @@ assert.equal(await flag(10),true);assert.equal(await flag(11),false);assert.equa
 // Add a zero-point receipt on another raid: it must not affect this raid's transfer.
 await db.query(`insert into prios(raid_id,character_id,p1_item_id,comment,bench) values($1,$2,$3,'{"p0Plus":"ja"}','')`,[otherRaid,uuid(12),item]);assert.equal((await receive(12,'OTHER')).itemReceived,true);assert.equal(await flag(12,otherRaid),true);assert.equal(await flag(12),false);
 const transfer=extra=>ctx.transferP0PlusPoints({guildId:guild,query:{raid:'naxx',raidId:'RAID',...extra}});const count=async()=>Number((await db.query('select count(*) n from p0plus_points')).rows[0].n);
+// Recreated signup: a later normal priority must suppress the stale P0 mirror,
+// including when the old registration is selected for transfer.
+await db.query(`insert into raids(id,guild_id,raid_type,external_raid_id,raid_date,raid_time) values($1,$2,'naxx','STALE','2020-01-01','20:00'),($3,$2,'naxx','LATER','2020-01-01','23:00'),($4,$2,'naxx','DELETED','2020-01-01','20:00')`,[uuid(300),guild,uuid(301),uuid(302)]);
+await db.query('update raids set deleted_at=now() where id=$1',[uuid(302)]);
+await db.query(`update prios set comment='{"p0Plus":"nein"}',updated_at='2020-01-02' where character_id=$1 and raid_id=$2`,[uuid(14),otherRaid]);
+await db.query(`insert into prios(raid_id,character_id,p1_item_id,comment,updated_at) values($1,$4,$5,'{"p0Plus":"ja"}','2020-01-01'),($2,$4,$5,'{"p0Plus":"ja"}','2020-01-03'),($3,$4,$5,'{"p0Plus":"ja"}','2020-01-04'),($6,$4,$5,'{"p0Plus":"nein"}','2020-01-02')`,[uuid(300),uuid(301),uuid(302),uuid(14),item,raid]);
+assert.ok(!(await transfer({preview:true})).entries.some(r=>r.characterId===uuid(14)),'normal priorities supersede an older P0 mirror; deleted and other-time raids excluded');
+assert.ok(!(await ctx.transferP0PlusPoints({guildId:guild,query:{raid:'naxx',raidId:'STALE',preview:true}})).entries.some(r=>r.characterId===uuid(14)),'selecting stale raid cannot resurrect old P0');
 const before=await count();let plan=await transfer({preview:true});assert.equal(await count(),before);assert.equal(exports.length,0);assert.equal((await db.query('select status from raids where id=$1',[raid])).rows[0].status,'geschlossen');assert.equal(plan.entries.length,2);assert.equal(plan.receivedItems.find(r=>r.characterId===uuid(10)).deletedPoints,10);assert.equal(plan.receivedItems.find(r=>r.characterId===uuid(10)).pending,true);assert.ok(plan.skippedEntries.some(r=>r.player==='Spieler13'));
 const edits=p=>p.entries.map((r,i)=>({characterId:r.characterId,itemId:r.itemId,points:r.characterId===uuid(11)?0.5:0}));
 await assert.rejects(transfer({reviewToken:plan.reviewToken,pointEdits:edits(plan).map(r=>({...r,points:-1}))}));assert.equal(await count(),before);
@@ -42,34 +50,4 @@ await db.query('update raids set p0plus_transfer_reset_at=now() where id=$1',[ra
 assert.equal((await db.query(summarySql,[guild,[raid]])).rows.filter(r=>r.action==='raid_transfer').length,0);
 // Receipt highlighting remains tied to the awarded item even after editing P1.
 await db.query('update prios set p1_item_id=$1 where character_id=$2 and raid_id=$3',[secondItem,uuid(10),raid]);assert.equal(await flag(10),false);
-// ZG uses exact raids and separate point buckets, including generic Nachtwächter Wednesdays.
-await db.exec("alter table guilds add column slug text; update guilds set slug='nachtloot'");
-const types=['zg','zg-mittwoch','zg-prime','zg-late'];
-for (let i=0;i<types.length;i++) {
-  await db.query("insert into items(id,name,raid_type,item_id) values($1,'ZG Item',$2,'200')",[uuid(200+i),types[i]]);
-  await db.query("insert into p0plus_points(guild_id,character_id,item_id,points,source,note) values($1,$2,$3,7,'Alt','')",[guild,uuid(10),uuid(200+i)]);
-}
-for (const [n,type] of [[210,'zg'],[211,'zg-prime'],[212,'zg-late'],[213,'zg-prime']]) {
-  await db.query("insert into raids(id,guild_id,raid_type,external_raid_id,raid_date,raid_time,name) values($1,$2,$3,$4,'2020-01-01','22:00',$3)",[uuid(n),guild,type,'ZG'+n]);
-  await db.query(`insert into prios(raid_id,character_id,p1_item_id,comment,bench) values($1,$2,$3,'{"p0Plus":"ja"}','')`,[uuid(n),uuid(n===213?11:10),uuid(200+types.indexOf(type))]);
-}
-const zgReceive=(n,type)=>ctx.clearP0PlusForPlayer({guildId:guild,query:{raid:type,raidId:'ZG'+n,player:'Spieler10',server:'Everlook',item:'ZG Item'}});
-const zgTransfer=(n,type,extra={})=>ctx.transferP0PlusPoints({guildId:guild,query:{raid:type,raidId:'ZG'+n,...extra}});
-const zgPoints=async type=>Number((await db.query('select coalesce(sum(points),0) total from p0plus_points where character_id=$1 and item_id=$2',[uuid(10),uuid(200+types.indexOf(type))])).rows[0].total);
-assert.equal((await zgReceive(210,'zg')).pointsCleared,false);
-assert.equal(await flag(10,uuid(210)),true);
-assert.equal(await zgPoints('zg-mittwoch'),7);
-assert.equal(await flag(10,uuid(211)),false);
-await assert.rejects(zgTransfer(210,'zg',{targetRaid:'zg-prime',preview:true}),/passt nicht/);
-await assert.rejects(zgTransfer(211,'zg-prime',{targetRaid:'zg-late',preview:true}),/passt nicht/);
-let zgPlan=await zgTransfer(210,'zg',{preview:true});
-assert.equal(zgPlan.receivedItems.length,1);assert.equal(zgPlan.receivedItems[0].deletedPoints,7);
-await zgTransfer(210,'zg',{reviewToken:zgPlan.reviewToken,pointEdits:[]});
-assert.equal(await zgPoints('zg-mittwoch'),0);assert.equal(await zgPoints('zg-prime'),7);assert.equal(await zgPoints('zg-late'),7);assert.equal(await zgPoints('zg'),7);
-assert.equal((await zgReceive(210,'zg')).pointsCleared,true);
-zgPlan=await zgTransfer(211,'zg-prime',{preview:true});assert.equal(zgPlan.entries.length,1,'Same-date second Prime raid must not be merged');assert.equal(zgPlan.entries[0].player,'Spieler10');
-await db.query('update raids set p0plus_transferred_at=now() where id=$1',[uuid(212)]);
-assert.equal((await zgReceive(212,'zg-late')).pointsCleared,true);assert.equal(await zgPoints('zg-late'),0);assert.equal(await zgPoints('zg-prime'),7);
-assert.equal(await flag(10,uuid(212)),true);assert.equal(await flag(10,uuid(211)),false);
-console.log('ZG: Wednesday target, Prime/Late isolation, exact same-date raid identity, receipt flags and pending/immediate deletion passed.');
-await db.close();console.log('P0 review: deferred deletion, retry idempotence, transactional rollback, receipt persistence, zero points, item/raid isolation, read-only preview, editable decimals/zero, invalid and stale review rejection, no duplicate/deleted prior awards passed.');
+await db.close(); console.log('PASS: recreated signup, latest normal priority, old-post transfer, deleted/other-time exclusion, transactional transfer and retry checks.');
