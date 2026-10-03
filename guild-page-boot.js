@@ -75,37 +75,3 @@
   window.addEventListener("online",flush);
   setInterval(install,1000);setInterval(flush,30000);install();setTimeout(flush,1500);
 })();
-
-/* Temporary incident notice: remove after Railway recovery has been verified. */
-(function () {
-  function showHostingNotice() {
-    if (document.getElementById('lichtlootHostingNotice')) return;
-    const notice = document.createElement('aside');
-    notice.id = 'lichtlootHostingNotice';
-    notice.setAttribute('role', 'status');
-    notice.setAttribute('aria-label', 'Hinweis zur Hosting-Störung');
-    notice.style.cssText = 'position:fixed;z-index:2147483500;right:16px;bottom:16px;box-sizing:border-box;width:min(540px,calc(100vw - 32px));padding:18px 48px 18px 20px;border:1px solid #d69e36;border-radius:14px;background:#fff4d6;color:#382b12;box-shadow:0 8px 32px #0004;font:15px/1.5 system-ui,sans-serif;text-align:left';
-    const title = document.createElement('strong');
-    title.textContent = 'Aktuelle Hosting-Störung · 3. Oktober';
-    title.style.cssText = 'display:block;margin-bottom:6px;font-size:16px;color:#60400a';
-    const message = document.createElement('p');
-    message.style.margin = '0 0 8px';
-    message.textContent = 'Unser Hosting-Anbieter Railway hat derzeit technische Probleme. Deshalb kann Lichtloot langsamer laden oder Fehlermeldungen anzeigen. Bitte prüfe beim Speichern, ob eine Bestätigung erscheint.';
-    const link = document.createElement('a');
-    link.href = 'https://status.railway.com/';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.textContent = 'Aktuellen Anbieterstatus ansehen ↗';
-    link.style.cssText = 'color:#60400a;text-decoration:underline;font-weight:650';
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.setAttribute('aria-label', 'Hosting-Hinweis schließen');
-    close.textContent = '×';
-    close.style.cssText = 'position:absolute;right:6px;top:6px;width:40px;height:40px;border:0;border-radius:8px;background:transparent;color:#60400a;font:28px/1 system-ui;cursor:pointer';
-    close.addEventListener('click', () => notice.remove());
-    notice.append(title, message, link, close);
-    document.body.appendChild(notice);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showHostingNotice, { once: true });
-  else showHostingNotice();
-})();
