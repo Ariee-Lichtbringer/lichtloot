@@ -1,3 +1,4 @@
+import { createSchemaInitialization } from './schema-initialization.js';
 import { createAccountGuildTransfer } from './account-guild-transfer.js';
 import { ensureRaidOccurrenceGuard } from './raid-occurrence-guard.js';
 import {createBetaAccess} from './forever-beta-access.js';
@@ -84,6 +85,7 @@ const dkpService = createDkpService({pool,query,authorize:(guild,params)=>requir
 
 const raidTaskReviewService=createRaidTaskReviewService({pool,authorize:(guild,params)=>requireMasterCodeForGuild(guild,params.masterCode,'guildRaidTaskReview',params),authorizeWrite:(guild,params)=>requireRaidleadP0MasterCodeForGuild(guild,params.masterCode)});
 
+const ensureSchema = createSchemaInitialization(pool);
 let prioSchemaReadyPromise = null;
 let poPostEntriesSchemaReadyPromise = null;
 const gmailApi = createGmailApi({query});
@@ -1567,7 +1569,9 @@ async function listGuilds(game = "era") {
 }
 
 async function ensureGuildDiscordConfigSchema() {
-  await query(`alter table guilds add column if not exists discord_guild_id text not null default ''`);
+  return ensureSchema("ensureGuildDiscordConfigSchema", async (query) => {
+    await query(`alter table guilds add column if not exists discord_guild_id text not null default ''`);
+  });
 }
 
 async function listGuildsForBot({ query: params }) {
@@ -1639,17 +1643,23 @@ async function ensureGuildLayoutSchema() {
   await ensureGuildLayoutSchemaPromise;
 }
 
+async function ensureGuildReadinessSchema() {
+  return ensureSchema("ensureGuildReadinessSchema", async (query) => {
+    await query(
+      `create table if not exists guild_master_codes (
+         guild_id uuid primary key references guilds(id) on delete cascade,
+         master_code text not null,
+         updated_at timestamptz not null default now()
+       )`
+    );
+  });
+}
+
 async function evaluateGuildReadiness(slug) {
   await ensureGuildDiscordConfigSchema();
   await ensureGuildLayoutSchema();
   await ensureDiscordChannelSchema();
-  await query(
-    `create table if not exists guild_master_codes (
-       guild_id uuid primary key references guilds(id) on delete cascade,
-       master_code text not null,
-       updated_at timestamptz not null default now()
-     )`
-  );
+  await ensureGuildReadinessSchema();
   let result = await query(
     `select g.slug,
             nullif(g.discord_guild_id, '') is not null as discord_server_configured,
@@ -4395,56 +4405,58 @@ async function mergeUnlinkedP0PlusForCharacter(client, guildId, character) {
 }
 
 async function ensureDiscordChannelSchema() {
-  await query(
-    `create table if not exists discord_bot_channels (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       discord_guild_id text,
-       discord_guild_name text,
-       channel_id text not null,
-       channel_name text not null,
-       channel_type text,
-       category_name text,
-       position integer,
-       can_send boolean not null default true,
-       updated_at timestamptz not null default now(),
-       unique (guild_id, channel_id)
-     )`
-  );
-  await query(
-    `create index if not exists idx_discord_bot_channels_guild
-       on discord_bot_channels(guild_id, category_name, position, channel_name)`
-  );
-  await query(
-    `create table if not exists discord_bot_roles (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       discord_guild_id text,
-       role_id text not null,
-       role_name text not null,
-       color integer,
-       position integer,
-       updated_at timestamptz not null default now(),
-       unique (guild_id, role_id)
-     )`
-  );
-  await query(
-    `create table if not exists discord_bot_members (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       discord_guild_id text,
-       user_id text not null,
-       username text not null,
-       display_name text,
-       global_name text,
-       avatar_url text,
-       bot boolean not null default false,
-       updated_at timestamptz not null default now(),
-       unique (guild_id, user_id)
-     )`
-  );
-  await query(`alter table discord_bot_members add column if not exists role_ids jsonb not null default '[]'::jsonb`);
-  await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
+  return ensureSchema("ensureDiscordChannelSchema", async (query) => {
+    await query(
+      `create table if not exists discord_bot_channels (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         discord_guild_id text,
+         discord_guild_name text,
+         channel_id text not null,
+         channel_name text not null,
+         channel_type text,
+         category_name text,
+         position integer,
+         can_send boolean not null default true,
+         updated_at timestamptz not null default now(),
+         unique (guild_id, channel_id)
+       )`
+    );
+    await query(
+      `create index if not exists idx_discord_bot_channels_guild
+         on discord_bot_channels(guild_id, category_name, position, channel_name)`
+    );
+    await query(
+      `create table if not exists discord_bot_roles (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         discord_guild_id text,
+         role_id text not null,
+         role_name text not null,
+         color integer,
+         position integer,
+         updated_at timestamptz not null default now(),
+         unique (guild_id, role_id)
+       )`
+    );
+    await query(
+      `create table if not exists discord_bot_members (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         discord_guild_id text,
+         user_id text not null,
+         username text not null,
+         display_name text,
+         global_name text,
+         avatar_url text,
+         bot boolean not null default false,
+         updated_at timestamptz not null default now(),
+         unique (guild_id, user_id)
+       )`
+    );
+    await query(`alter table discord_bot_members add column if not exists role_ids jsonb not null default '[]'::jsonb`);
+    await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
+  });
 }
 
 async function ensureRaidHelperTemplateSchema() {
@@ -4737,95 +4749,97 @@ async function setLootMasterAccessPassword({guildId,query:params={}}){
 }
 
 async function ensureBuffTables() {
-  await query(
-    `create table if not exists hordenbuff_events (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       buff text not null default 'Rend',
-       event_date date not null,
-       event_time text not null,
-       faction text not null default 'Horde',
-       status text not null default 'offen',
-       note text,
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now(),
-       unique (guild_id, buff, event_date, event_time)
-     )`
-  );
-  await query(
-    `create table if not exists hordenbuff_entries (
-       id uuid primary key default gen_random_uuid(),
-       event_id uuid not null references hordenbuff_events(id) on delete cascade,
-       ally_char text,
-       horde_char text,
-       status text not null default 'offen',
-       note text,
-       source text not null default 'railway',
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now()
-     )`
-  );
-  await query(`alter table hordenbuff_events add column if not exists rend_caster text`);
-  await query(
-    `create table if not exists worldbuff_events (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       buff text not null,
-       event_date date not null,
-       event_time text not null,
-       guild_name text,
-       status text not null default 'offen',
-       note text,
-       source text not null default 'railway',
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now(),
-       unique (guild_id, buff, event_date, event_time, guild_name)
-     )`
-  );
-  await query(
-    `create table if not exists worldbuff_entries (
-       id uuid primary key default gen_random_uuid(),
-       event_id uuid not null references worldbuff_events(id) on delete cascade,
-       caster text,
-       discord_name text,
-       status text not null default 'offen',
-       note text,
-       source text not null default 'railway',
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now()
-    )`
-  );
-  await query(
-    `create table if not exists worldbuff_poster_events (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       buff text not null,
-       event_date date not null,
-       event_time text not null,
-       guild_name text not null,
-       source text not null default 'wb_poster',
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now(),
-       unique (guild_id, buff, event_date, event_time, guild_name)
-     )`
-  );
-  await query(
-    `create table if not exists worldbuff_deleted_events (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       buff text not null,
-       event_date date not null,
-       event_time text not null,
-       guild_name text not null,
-       event_snapshot jsonb not null default '{}'::jsonb,
-       entry_snapshot jsonb,
-       deleted_at timestamptz not null default now(),
-       unique (guild_id, buff, event_date, event_time, guild_name)
-     )`
-  );
-  await query(`create index if not exists hordenbuff_events_guild_date_idx on hordenbuff_events (guild_id, event_date, event_time)`);
-  await query(`create index if not exists worldbuff_events_guild_date_idx on worldbuff_events (guild_id, event_date, event_time)`);
-  await query(`create index if not exists worldbuff_poster_events_guild_date_idx on worldbuff_poster_events (guild_id, event_date, event_time)`);
+  return ensureSchema("ensureBuffTables", async (query) => {
+    await query(
+      `create table if not exists hordenbuff_events (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         buff text not null default 'Rend',
+         event_date date not null,
+         event_time text not null,
+         faction text not null default 'Horde',
+         status text not null default 'offen',
+         note text,
+         created_at timestamptz not null default now(),
+         updated_at timestamptz not null default now(),
+         unique (guild_id, buff, event_date, event_time)
+       )`
+    );
+    await query(
+      `create table if not exists hordenbuff_entries (
+         id uuid primary key default gen_random_uuid(),
+         event_id uuid not null references hordenbuff_events(id) on delete cascade,
+         ally_char text,
+         horde_char text,
+         status text not null default 'offen',
+         note text,
+         source text not null default 'railway',
+         created_at timestamptz not null default now(),
+         updated_at timestamptz not null default now()
+       )`
+    );
+    await query(`alter table hordenbuff_events add column if not exists rend_caster text`);
+    await query(
+      `create table if not exists worldbuff_events (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         buff text not null,
+         event_date date not null,
+         event_time text not null,
+         guild_name text,
+         status text not null default 'offen',
+         note text,
+         source text not null default 'railway',
+         created_at timestamptz not null default now(),
+         updated_at timestamptz not null default now(),
+         unique (guild_id, buff, event_date, event_time, guild_name)
+       )`
+    );
+    await query(
+      `create table if not exists worldbuff_entries (
+         id uuid primary key default gen_random_uuid(),
+         event_id uuid not null references worldbuff_events(id) on delete cascade,
+         caster text,
+         discord_name text,
+         status text not null default 'offen',
+         note text,
+         source text not null default 'railway',
+         created_at timestamptz not null default now(),
+         updated_at timestamptz not null default now()
+      )`
+    );
+    await query(
+      `create table if not exists worldbuff_poster_events (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         buff text not null,
+         event_date date not null,
+         event_time text not null,
+         guild_name text not null,
+         source text not null default 'wb_poster',
+         created_at timestamptz not null default now(),
+         updated_at timestamptz not null default now(),
+         unique (guild_id, buff, event_date, event_time, guild_name)
+       )`
+    );
+    await query(
+      `create table if not exists worldbuff_deleted_events (
+         id uuid primary key default gen_random_uuid(),
+         guild_id uuid not null references guilds(id) on delete cascade,
+         buff text not null,
+         event_date date not null,
+         event_time text not null,
+         guild_name text not null,
+         event_snapshot jsonb not null default '{}'::jsonb,
+         entry_snapshot jsonb,
+         deleted_at timestamptz not null default now(),
+         unique (guild_id, buff, event_date, event_time, guild_name)
+       )`
+    );
+    await query(`create index if not exists hordenbuff_events_guild_date_idx on hordenbuff_events (guild_id, event_date, event_time)`);
+    await query(`create index if not exists worldbuff_events_guild_date_idx on worldbuff_events (guild_id, event_date, event_time)`);
+    await query(`create index if not exists worldbuff_poster_events_guild_date_idx on worldbuff_poster_events (guild_id, event_date, event_time)`);
+  });
 }
 
 function isUuid(value) {
