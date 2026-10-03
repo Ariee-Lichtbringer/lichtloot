@@ -81,7 +81,10 @@ export function installAccessSecurity(app, { allowedOrigins, now = Date.now, enf
         res.json = function(body) {
           const characterLookup = params.action === 'getCharactersByPin' || /\/players\/(?:characters$|by-pin\/)/.test(req.path);
           const emptyLogin = characterLookup && Array.isArray(body?.characters) && body.characters.length === 0;
-          if (!counted && (emptyLogin || res.statusCode >= 400 || body?.success === false || body?.error)) {
+          const rejectedCredentials = res.statusCode === 401 || res.statusCode === 403;
+          const missingAccount = res.statusCode < 400 && emptyLogin;
+          // Infrastructure failures and validation errors are not failed logins.
+          if (!counted && (rejectedCredentials || missingAccount)) {
             counted = true;
             entry.count++;
           }
