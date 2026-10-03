@@ -33343,6 +33343,8 @@ async function runRaidHelperScheduleTick(){
         console.warn("Wöchentlicher Raidanmelder konnte nicht verarbeitet werden:", error.message || error);
       });
     }
+  }catch(error){
+    console.warn("Raidplanung vorübergehend nicht verfügbar:", error.message || error);
   }finally{
     raidHelperScheduleTickRunning = false;
   }
