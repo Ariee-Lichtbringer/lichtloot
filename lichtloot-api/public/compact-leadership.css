@@ -1,0 +1,30 @@
+/* Compact presentation only; existing authentication and actions remain authoritative. */
+.compact-leadership-link{display:block;padding:16px;border:1px solid #facc15;border-radius:12px;color:#facc15;text-decoration:none;font-weight:700;text-align:center;margin-top:16px}
+body.compact-leadership .app-frame{display:block!important}
+body.compact-leadership .sidebar{display:none!important}
+body.compact-leadership .dashboard-main{width:100%;max-width:850px;margin:auto;padding:16px;min-width:0}
+body.compact-leadership .dashboard-main>:not(.compact-leadership-header):not(.auth-panel):not(.dashboard-grid){display:none!important}
+.compact-leadership-header{margin-bottom:18px}.compact-leadership-header h1{font-size:26px;margin:0 0 10px}.compact-leadership-header p{line-height:1.5;color:#cbd5e1}.compact-leadership-header a{color:#facc15;display:inline-block;padding:12px 0}
+body.compact-leadership .dashboard-grid{display:block!important}
+body.compact-leadership .dashboard-column>*:not(#raidHelperPanel){display:none!important}
+body.compact-leadership .dashboard-grid>.dashboard-column{display:block!important}
+body.compact-leadership .auth-panel .login-summary-card,body.compact-leadership .auth-panel .dashboard-quick-action,body.compact-leadership .worldbuff-login-field,body.compact-leadership [onclick="loginWorldbuffManagement()"]{display:none!important}
+body.compact-leadership .unlock{display:flex!important;flex-direction:column;align-items:stretch}
+body.compact-leadership .raid-helper-tools,body.compact-leadership .raid-helper-body>.raid-helper-tabs,body.compact-leadership #raidHelperPanel>summary,body.compact-leadership .guild-raid-tabs,body.compact-leadership .raid-unified-toolbar,body.compact-leadership #raidHelperBulkActions,body.compact-leadership .raid-helper-signup-number-edit{display:none!important}
+body.compact-leadership .raid-unified-pane[data-guild-raid-panel]:not([data-guild-raid-panel="Teilnehmer"]){display:none!important}
+body.compact-leadership .raid-helper-tab-panel:not(#raidHelperTab-currentEvents){display:none!important}
+body.compact-leadership .raid-unified-columns,body.compact-leadership .raid-helper-current-grid,body.compact-leadership .raid-helper-current-toolbar,body.compact-leadership .raid-helper-current-detail-head,body.compact-leadership .raid-helper-signup-row{display:grid!important;grid-template-columns:minmax(0,1fr)!important;min-width:0}
+body.compact-leadership .raid-helper-current-detail-banner{max-width:100%;height:110px;object-fit:cover}
+body.compact-leadership .raid-helper-signup-actions{display:flex;flex-wrap:wrap;gap:8px}
+body.compact-leadership button,body.compact-leadership input,body.compact-leadership select{min-height:44px;font-size:16px;max-width:100%}
+body.compact-leadership .raid-helper-body,body.compact-leadership #raidHelperPanel{padding:12px;min-width:0;max-width:100%}
+body.compact-leadership .raid-helper-current-detail,body.compact-leadership .raid-unified-pane{min-width:0;max-width:100%}
+body.compact-leadership :focus-visible{outline:2px solid #facc15;outline-offset:3px}
+
+body.compact-leadership .raid-select-checkbox,body.compact-leadership .raid-helper-current-card-actions button:not(:first-child){display:none!important}
+body.compact-leadership .raid-helper-manual-signup,body.compact-leadership .raid-helper-loot-inactive{grid-template-columns:minmax(0,1fr)!important}
+body.compact-leadership .raid-helper-loot-grid{column-count:1}
+
+body.compact-leadership .compact-leadership-header{display:block!important}
+body.compact-leadership:not(.guild-locked) .auth-panel .unlock{display:none!important}
+body.compact-leadership.raid-unified-open #raidHelperTab-currentEvents>.raid-helper-view-head,body.compact-leadership.raid-unified-open .raid-helper-current-toolbar{display:none!important}

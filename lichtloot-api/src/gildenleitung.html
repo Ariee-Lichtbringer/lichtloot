@@ -5546,6 +5546,8 @@ body.worldbuff-only .master-only{display:none!important}
 @media(prefers-reduced-motion:reduce){.leadership-task{transition:none}}
 </style>
 <link rel="stylesheet" href="/support-form.css?v=20260906-2">
+<link rel="stylesheet" href="/compact-leadership.css?v=20261006-1">
+<script defer src="/compact-leadership.js?v=20261006-1"></script>
 </head>
 <body class="guild-locked">
 <div class="app-frame">
@@ -7801,6 +7803,7 @@ async function loadOverview(options){
     loadLeadershipTasks();
     handleRaidHelperDeepLink();
     handlePlayerLoginDeepLink();
+    window.activateCompactLeadership?.();
     loadDashboardRaidStats();
     loadTrafficStats();
     loadRaidHelperDiscordChannels();
@@ -12437,7 +12440,7 @@ function renderRaidHelperSignupAdminRow(row){
         <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupRole('${escapeAttr(id)}','multi','${escapeAttr(player)}')">Multi Char</button>
         <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','tentative','${escapeAttr(player)}')">Vorläufig</button>
         <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent','${escapeAttr(player)}')">Abwesend</button>
-        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}','${escapeAttr(player)}')">Verwerfen</button>
+        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}','${escapeAttr(player)}')">${new URLSearchParams(location.search).get('view') === 'compact' ? 'Abmelden' : 'Verwerfen'}</button>
       </div>
     </div>
   `;
