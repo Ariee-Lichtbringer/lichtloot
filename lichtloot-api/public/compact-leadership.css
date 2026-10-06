@@ -28,3 +28,4 @@ body.compact-leadership .raid-helper-loot-grid{column-count:1}
 body.compact-leadership .compact-leadership-header{display:block!important}
 body.compact-leadership:not(.guild-locked) .auth-panel .unlock{display:none!important}
 body.compact-leadership.raid-unified-open #raidHelperTab-currentEvents>.raid-helper-view-head,body.compact-leadership.raid-unified-open .raid-helper-current-toolbar{display:none!important}
+body.compact-leadership.guild-locked .dashboard-main > section.compact-leadership-header{display:block!important}
