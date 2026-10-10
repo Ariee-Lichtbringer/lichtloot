@@ -3501,8 +3501,19 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
     // kopiert.
     await client.query(
       `insert into characters (player_id, name, server, class_name, is_main)
-       select $1, source_char.name, source_char.server, source_char.class_name, source_char.is_main
-       from characters source_char
+       select $1, source_char.name, source_char.server, source_char.class_name,
+              source_char.is_main
+              and source_char.main_rank = 1
+              and not exists (
+                select 1 from characters existing_main
+                where existing_main.player_id = $1 and existing_main.is_main
+              )
+       from (
+         select c.*, row_number() over (
+           order by c.is_main desc, c.created_at asc, c.id asc
+         ) as main_rank
+         from characters c where c.player_id = $2
+       ) source_char
        where source_char.player_id = $2
          and not exists (
            select 1
@@ -28736,6 +28747,9 @@ async function setMainCharacter({ guildId, pin, charName, server }) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    // Serialize main changes with other changes to this player (including
+    // cross-guild character imports, whose player upsert takes this lock).
+    await client.query("select id from players where id = $1 for update", [player.id]);
     await client.query(
       "update characters set is_main = false, updated_at = now() where player_id = $1",
       [player.id]

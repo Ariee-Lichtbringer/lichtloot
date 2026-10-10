@@ -4253,7 +4253,7 @@ function getSelectedDashboardCharacterName(){
   }
 
   if(Array.isArray(myLichtlootCharacters) && myLichtlootCharacters.length){
-    const main=myLichtlootCharacters.find(char=>char && (char.isMain || char.main || char.mainChar === char.name));
+    const main=myLichtlootCharacters.find(char=>char && (char.isMain));
     const chosen=main || myLichtlootCharacters[0];
     return String(chosen.name || chosen.char || chosen.player || "").trim();
   }
@@ -7687,7 +7687,10 @@ function normalizeLichtlootCharEntry(char){
   const server=char.server || char.Server || "";
   const className=char.className || char.class || char.Klasse || "";
   const mainChar=char.mainChar || char.MainChar || "";
-  const isMain=Boolean(char.isMain || char.is_main || char.Main);
+  const mainFlag=char.isMain ?? char.is_main ?? char.Main;
+  const isMain=mainFlag == null
+    ? Boolean(mainChar && String(name).trim().toLowerCase()===String(mainChar).trim().toLowerCase())
+    : mainFlag===true || mainFlag===1 || mainFlag==='true';
   const playerRole=normalizePlayerLoginRole(char.playerRole || char.role || char.Rolle || char.rolle);
 
   if(!String(name).trim()) return null;
@@ -7713,7 +7716,7 @@ function getMainLichtLootCharacter(){
   if(!Array.isArray(myLichtlootCharacters) || !myLichtlootCharacters.length) return null;
   return myLichtlootCharacters.find(char=>{
     if(!char) return false;
-    return char.isMain || (char.mainChar && String(char.name || "").toLowerCase() === String(char.mainChar || "").toLowerCase());
+    return char.isMain;
   }) || myLichtlootCharacters[0];
 }
 
@@ -7820,8 +7823,8 @@ async function loadLichtLootCharacters(){
     });
 
     chars.sort((a,b)=>{
-      const aMain=a.isMain || (a.mainChar && a.name.toLowerCase()===a.mainChar.toLowerCase()) ? 0 : 1;
-      const bMain=b.isMain || (b.mainChar && b.name.toLowerCase()===b.mainChar.toLowerCase()) ? 0 : 1;
+      const aMain=a.isMain ? 0 : 1;
+      const bMain=b.isMain ? 0 : 1;
       if(aMain!==bMain) return aMain-bMain;
       return a.name.localeCompare(b.name,"de");
     });
@@ -7938,7 +7941,7 @@ async function setSelectedMainCharacter(){
     if(status) status.innerHTML='<span class="bad">Bitte zuerst einen Charakter auswählen.</span>';
     return;
   }
-  if(character.isMain){
+  if(character.isMain && myLichtlootCharacters.filter(char=>char.isMain).length===1){
     if(status) status.innerHTML='<span class="ok">'+safeHtml(character.name)+' ist bereits dein Main.</span>';
     return;
   }
